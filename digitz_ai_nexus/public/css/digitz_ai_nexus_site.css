@@ -1,0 +1,2777 @@
+:root{
+  --primary:#214dbb;
+  --primary-dark:#0f2f7f;
+  --gold:#e0a62f;
+  --text:#1d2756;
+  --muted:#6d7696;
+  --line:#e4e9f7;
+  --white:#ffffff;
+  --bg:#f7f8fd;
+  --card-shadow:0 10px 30px rgba(31,72,169,0.10);
+  --radius:18px;
+  --container:1280px;
+}
+
+/* =========================
+   Frappe wrapper neutralization
+   ========================= */
+.page-card,
+.page_content,
+.page-content,
+.page-wrapper,
+.website-content,
+.web-page-content,
+.page-body,
+.page-container,
+.layout-main-section,
+.layout-main,
+.page-form,
+main,
+main .page-content,
+main .page_content,
+main .web-page-content,
+main .website-content,
+main .page-wrapper,
+div.page_content,
+div.page-content,
+div.website-content,
+div.web-page-content{
+  margin:0 !important;
+  padding:0 !important;
+  width:100% !important;
+  max-width:none !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+}
+
+.page_content > .container,
+.page-content > .container,
+.website-content > .container,
+.web-page-content > .container,
+.page-wrapper > .container,
+main > .container,
+.container-fluid{
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+.navbar,
+.web-footer,
+footer.web-footer{
+  display:none !important;
+}
+
+/* =========================
+   Base
+   ========================= */
+.digitz-website,
+.digitz-website *,
+.digitz-website *::before,
+.digitz-website *::after{
+  box-sizing:border-box;
+}
+
+.digitz-website{
+  width:100%;
+  min-height:100%;
+  margin:0;
+  padding:0;
+  overflow-x:hidden;
+  font-family:Inter, "Segoe UI", Arial, sans-serif;
+  color:var(--text);
+  background:linear-gradient(180deg,#ffffff 0%,#f6f8ff 45%,#f7f8fd 100%);
+}
+
+.digitz-website a{
+  text-decoration:none;
+  color:inherit;
+}
+
+.digitz-website img{
+  display:block;
+  max-width:100%;
+}
+
+.digitz-website h1,
+.digitz-website h2,
+.digitz-website h3,
+.digitz-website h4,
+.digitz-website h5,
+.digitz-website h6,
+.digitz-website p,
+.digitz-website ul,
+.digitz-website li{
+  margin:0;
+}
+
+.digitz-website .container{
+  width:min(var(--container), calc(100% - 40px));
+  max-width:var(--container);
+  margin:0 auto;
+}
+
+/* =========================
+   Header
+   ========================= */
+.digitz-website .site-header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(255,255,255,0.95);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(228,233,247,0.85);
+}
+
+.digitz-website .nav-wrap{
+  min-height:94px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:32px;
+}
+
+.digitz-website .logo{
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+}
+
+.nexus-home .nexus-logo-wrap{
+  min-height:74px;
+  padding:4px 0;
+}
+
+.nexus-home .nexus-logo-img{
+  height:103px;
+  width:auto;
+  max-width:none;
+  object-fit:contain;
+}
+
+.digitz-website .nav{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:34px;
+  font-weight:600;
+  color:#2a3669;
+}
+
+.digitz-website .nav a{
+  font-size:1rem;
+  font-weight:700;
+  letter-spacing:0.01em;
+  color:#2a3669;
+  transition:color 0.2s ease;
+}
+
+.digitz-website .nav a:hover{
+  color:var(--primary);
+}
+
+.digitz-website .nav-cta{
+  padding:13px 20px;
+  border-radius:14px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--primary) 0%,#456dff 100%);
+  box-shadow:0 12px 24px rgba(39,87,213,0.20);
+}
+
+/* =========================
+   Hero
+   ========================= */
+.digitz-website .hero{
+  position:relative;
+  overflow:hidden;
+  color:#fff;
+}
+
+.nexus-home .nexus-hero{
+  background:
+    radial-gradient(circle at 76% 24%, rgba(138,177,255,0.30) 0%, rgba(138,177,255,0) 29%),
+    radial-gradient(circle at 88% 16%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 18%),
+    linear-gradient(135deg,#081f5d 0%, #12348c 30%, #214dbb 62%, #163989 100%);
+}
+
+.digitz-website .hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:32px 32px;
+  opacity:0.18;
+  pointer-events:none;
+}
+
+.digitz-website .hero-grid{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:1.02fr 1fr;
+  gap:24px;
+  align-items:center;
+}
+
+.nexus-home .nexus-hero-grid{
+  min-height:500px;
+  padding:38px 0 46px;
+  gap:28px;
+}
+
+.nexus-home .nexus-hero-copy{
+  max-width:620px;
+}
+
+.digitz-website .hero-copy .eyebrow{
+  margin-bottom:10px;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+
+.digitz-website .hero-copy .eyebrow .gold{
+  color:var(--gold);
+}
+
+.nexus-home .nexus-hero-copy h1{
+  max-width:640px;
+  font-size:3.02rem;
+  line-height:1.03;
+  font-weight:800;
+  letter-spacing:-1.1px;
+  color:#fff;
+}
+
+.nexus-home .hero-lead,
+.nexus-home .nexus-hero-copy p{
+  max-width:560px;
+  margin-top:16px;
+  font-size:1.03rem;
+  line-height:1.72;
+  color:rgba(255,255,255,0.90);
+}
+
+.digitz-website .hero-actions{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.nexus-home .nexus-hero-actions,
+.nexus-home .hero-actions{
+  margin-top:24px;
+}
+
+.digitz-website .btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:180px;
+  padding:15px 24px;
+  border-radius:14px;
+  font-size:0.98rem;
+  font-weight:700;
+  line-height:1.2;
+  transition:transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.nexus-home .nexus-hero-actions .btn{
+  min-width:200px;
+  padding:14px 22px;
+}
+
+.digitz-website .btn-primary{
+  background:linear-gradient(135deg,var(--gold) 0%, #f4bf4e 100%);
+  color:#fff;
+  box-shadow:0 14px 28px rgba(224,166,47,0.25);
+}
+
+.digitz-website .btn-secondary{
+  background:linear-gradient(135deg,#3258db 0%, #5e82ff 100%);
+  color:#fff;
+  box-shadow:0 14px 28px rgba(69,109,255,0.18);
+}
+
+.digitz-website .btn:hover{
+  transform:translateY(-2px);
+}
+
+/* =========================
+   Hero visual
+   ========================= */
+.nexus-home .nexus-hero-visual{
+  position:relative;
+  height:450px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.nexus-home .nexus-visual-wrap{
+  position:relative;
+  width:400px;
+  height:400px;
+}
+
+.nexus-home .nexus-visual-wrap::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:350px;
+  height:350px;
+  transform:translate(-50%, -50%);
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 0 50px rgba(138,177,255,0.12);
+  pointer-events:none;
+}
+
+.nexus-home .nexus-visual-wrap::after{
+  content:"";
+  position:absolute;
+  inset:78px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.00) 72%);
+  filter:blur(12px);
+  pointer-events:none;
+}
+
+.nexus-home .nexus-core{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:136px;
+  height:136px;
+  border-radius:50%;
+  background:radial-gradient(circle, #ffffff 0%, #eef4ff 70%, #dce7ff 100%);
+  box-shadow:
+    0 0 36px rgba(255,255,255,0.42),
+    0 0 90px rgba(33,77,187,0.38),
+    inset 0 0 22px rgba(255,255,255,0.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:3;
+}
+
+.nexus-home .nexus-core-logo{
+  width:92px;
+  height:auto;
+}
+
+.nexus-home .nexus-ring{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:292px;
+  height:292px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.20);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 0 40px rgba(255,255,255,0.08);
+}
+
+.nexus-home .nexus-node{
+  position:absolute;
+  min-width:90px;
+  padding:9px 14px;
+  border-radius:999px;
+  text-align:center;
+  font-size:0.82rem;
+  font-weight:800;
+  color:#214dbb;
+  background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,245,255,0.95));
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.10),
+    0 0 0 1px rgba(255,255,255,0.30);
+}
+
+.nexus-home .n1{ top:8px; left:50%; transform:translateX(-50%); }
+.nexus-home .n2{ right:6px; top:50%; transform:translateY(-50%); }
+.nexus-home .n3{ bottom:8px; left:50%; transform:translateX(-50%); }
+.nexus-home .n4{ left:6px; top:50%; transform:translateY(-50%); }
+
+.nexus-home .n1::after,
+.nexus-home .n2::after,
+.nexus-home .n3::after,
+.nexus-home .n4::after{
+  content:"";
+  position:absolute;
+  opacity:0.8;
+}
+
+.nexus-home .n1::after{
+  left:50%;
+  top:100%;
+  width:1px;
+  height:26px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0.08));
+}
+
+.nexus-home .n3::after{
+  left:50%;
+  bottom:100%;
+  width:1px;
+  height:26px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.42));
+}
+
+.nexus-home .n2::after{
+  right:100%;
+  top:50%;
+  width:26px;
+  height:1px;
+  transform:translateY(-50%);
+  background:linear-gradient(90deg, rgba(255,255,255,0.42), rgba(255,255,255,0.08));
+}
+
+.nexus-home .n4::after{
+  left:100%;
+  top:50%;
+  width:26px;
+  height:1px;
+  transform:translateY(-50%);
+  background:linear-gradient(90deg, rgba(255,255,255,0.42), rgba(255,255,255,0.08));
+}
+
+/* =========================
+   Intro strip
+   ========================= */
+.nexus-home .nexus-intro-strip{
+  position:relative;
+  z-index:8;
+  padding-top:0;
+  margin-top:-34px;
+}
+
+.nexus-home .nexus-intro-panel{
+  display:grid;
+  grid-template-columns:1.12fr 1fr;
+  gap:22px;
+  padding:32px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(91,134,255,0.12) 0%, rgba(91,134,255,0) 24%),
+    linear-gradient(180deg,#ffffff 0%, #f4f8ff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:
+    0 18px 38px rgba(31,72,169,0.10),
+    0 6px 16px rgba(31,72,169,0.05);
+}
+
+.nexus-home .nexus-intro-copy h2{
+  font-size:2rem;
+  line-height:1.16;
+  font-weight:800;
+  color:#23356b;
+}
+
+.nexus-home .nexus-intro-copy p{
+  margin-top:14px;
+  max-width:640px;
+  font-size:1.04rem;
+  line-height:1.8;
+  color:#5f6d90;
+}
+
+.nexus-home .nexus-intro-stat-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  align-content:start;
+}
+
+.nexus-home .nexus-stat-card{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:120px;
+  padding:20px 18px;
+  border-radius:20px;
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 10px 22px rgba(31,72,169,0.08);
+}
+
+.nexus-home .nexus-stat-card strong{
+  font-size:1rem;
+  font-weight:800;
+  color:#224099;
+}
+
+.nexus-home .nexus-stat-card span{
+  font-size:0.94rem;
+  line-height:1.65;
+  color:#5c6888;
+  font-weight:600;
+}
+
+/* =========================
+   Section headings
+   ========================= */
+.digitz-website .section{
+  position:relative;
+  padding:72px 0;
+}
+
+.digitz-website .section.soft{
+  background:
+    radial-gradient(circle at 20% 30%, rgba(90,113,200,0.05), transparent 25%),
+    linear-gradient(180deg,#fbfcff 0%, #f3f6ff 100%);
+}
+
+.digitz-website .section-head{
+  max-width:920px;
+  margin:0 auto 44px;
+  text-align:center;
+}
+
+.digitz-website .section-head h2{
+  font-size:2.5rem;
+  line-height:1.18;
+  letter-spacing:-0.8px;
+  font-weight:800;
+  color:#243164;
+}
+
+.digitz-website .section-head h2 .em{
+  color:#1f2e67;
+  font-weight:900;
+}
+
+.digitz-website .section-head p{
+  max-width:860px;
+  margin:18px auto 0;
+  font-size:1.12rem;
+  line-height:1.75;
+  color:var(--muted);
+}
+
+.digitz-website .section-head-highlight{
+  position:relative;
+  width:100%;
+  max-width:none;
+  margin:0 0 38px;
+  padding:26px 34px 22px;
+  border-radius:28px;
+  background:linear-gradient(135deg, rgba(11,39,110,0.98) 0%, rgba(31,72,169,0.96) 52%, rgba(224,166,47,0.92) 140%);
+  box-shadow:0 24px 46px rgba(17,42,118,0.16);
+  overflow:hidden;
+  text-align:center;
+}
+
+.digitz-website .section-head-highlight::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.16), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(255,255,255,0.12), transparent 18%),
+    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size:auto, auto, 26px 26px, 26px 26px;
+  pointer-events:none;
+}
+
+.digitz-website .section-head-highlight > *{
+  position:relative;
+  z-index:1;
+}
+
+.digitz-website .section-kicker{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:14px;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.14);
+  border:1px solid rgba(255,255,255,0.22);
+  color:#f7fbff;
+  font-size:0.84rem;
+  font-weight:800;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+}
+
+.digitz-website .section-head-highlight h2{
+  font-size:3rem;
+  line-height:1.08;
+  letter-spacing:-1.1px;
+  color:#fff;
+}
+
+.digitz-website .section-head-highlight h2 .em{
+  color:#ffe199;
+}
+
+.digitz-website .section-head-highlight p{
+  max-width:820px;
+  margin:18px auto 0;
+  font-size:1.08rem;
+  line-height:1.8;
+  color:rgba(243,247,255,0.92);
+}
+
+/* =========================
+   Live experience section
+   ========================= */
+.nexus-home .nexus-live-experience{
+  background:
+    radial-gradient(circle at 10% 16%, rgba(33,77,187,0.05), transparent 24%),
+    radial-gradient(circle at 88% 12%, rgba(224,166,47,0.08), transparent 24%),
+    linear-gradient(180deg,#fbfcff 0%, #f6f9ff 100%);
+}
+
+.nexus-home .nexus-live-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+}
+
+.nexus-home .nexus-live-card{
+  background:#ffffff;
+  border-radius:22px;
+  padding:22px;
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 12px 30px rgba(31,72,169,0.10);
+}
+
+.nexus-home .nexus-live-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  margin-bottom:16px;
+}
+
+.nexus-home .nexus-live-header strong{
+  font-size:1.12rem;
+  color:#243164;
+}
+
+.nexus-home .powered-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 12px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#eef3ff 0%, #dde8ff 100%);
+  border:1px solid #d7e2ff;
+  color:#214dbb;
+  font-size:0.74rem;
+  font-weight:800;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+
+.nexus-home .nexus-chat-demo{
+  min-height:280px;
+  padding:14px;
+  border-radius:16px;
+  background:linear-gradient(180deg,#f8fbff 0%, #eef4ff 100%);
+  border:1px solid rgba(33,77,187,0.10);
+}
+
+.nexus-home .nexus-demo-message{
+  max-width:82%;
+  margin-bottom:12px;
+  padding:11px 13px;
+  border-radius:14px;
+  font-size:0.92rem;
+  line-height:1.58;
+  font-weight:600;
+}
+
+.nexus-home .nexus-demo-message.ai{
+  background:#ffffff;
+  color:#29406e;
+  border:1px solid rgba(33,77,187,0.08);
+  box-shadow:0 8px 16px rgba(31,72,169,0.05);
+}
+
+.nexus-home .nexus-demo-message.user{
+  margin-left:auto;
+  background:linear-gradient(135deg,#214dbb 0%, #3a67eb 100%);
+  color:#ffffff;
+}
+
+.nexus-home .nexus-demo-input{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+
+.nexus-home .nexus-demo-input input{
+  flex:1 1 auto;
+  min-width:0;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #dbe2ff;
+  background:#ffffff;
+  font-size:0.94rem;
+  color:#223870;
+  outline:none;
+}
+
+.nexus-home .nexus-demo-input button{
+  flex:0 0 auto;
+  padding:12px 18px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#214dbb 0%, #3a67eb 100%);
+  color:#ffffff;
+  font-size:0.92rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.nexus-home .nexus-demo-footer{
+  margin-top:12px;
+  color:#6a7593;
+  font-size:0.88rem;
+  line-height:1.6;
+}
+
+.nexus-home .nexus-qa-list{
+  display:grid;
+  gap:12px;
+}
+
+.nexus-home .nexus-qa-item{
+  padding:14px 14px 12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#f9fbff 0%, #f2f6ff 100%);
+  border:1px solid rgba(33,77,187,0.08);
+}
+
+.nexus-home .nexus-qa-item h4{
+  margin-bottom:6px;
+  font-size:0.96rem;
+  color:#1f2e67;
+  font-weight:800;
+}
+
+.nexus-home .nexus-qa-item p{
+  font-size:0.92rem;
+  line-height:1.65;
+  color:#5f6c8c;
+}
+
+.nexus-home .nexus-faq-strip{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+}
+
+.nexus-home .nexus-faq-strip span{
+  padding:9px 12px;
+  border-radius:999px;
+  background:#ffffff;
+  border:1px solid rgba(33,77,187,0.12);
+  color:#23479d;
+  font-size:0.80rem;
+  font-weight:800;
+}
+
+/* =========================
+   Cards / use case section
+   ========================= */
+.digitz-website .cards{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:22px;
+  align-items:stretch;
+}
+
+.digitz-website .card{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  min-height:290px;
+  padding:28px 26px 24px;
+  border-radius:20px;
+  background:linear-gradient(180deg,#ffffff 0%, #f9fbff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 8px 22px rgba(31,72,169,0.08);
+  transition:all 0.25s ease;
+}
+
+.digitz-website .card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:4px;
+  border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg, var(--primary), #4d75ff, var(--gold));
+}
+
+.digitz-website .card:hover{
+  border-color:rgba(33,77,187,0.26);
+  box-shadow:0 14px 36px rgba(31,72,169,0.14);
+  transform:translateY(-3px);
+}
+
+.digitz-website .card-title{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.digitz-website .card-icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--primary) 0%, #4d75ff 100%);
+  box-shadow:0 10px 18px rgba(33,77,187,0.18);
+  position:relative;
+  flex-shrink:0;
+}
+
+.digitz-website .card-icon::before{
+  content:"";
+  position:absolute;
+  left:7px;
+  top:7px;
+  width:14px;
+  height:11px;
+  background:#fff;
+  border-radius:2px 4px 2px 2px;
+}
+
+.digitz-website .card-icon::after{
+  content:"";
+  position:absolute;
+  right:5px;
+  bottom:5px;
+  width:8px;
+  height:8px;
+  background:var(--gold);
+  border-radius:2px;
+}
+
+.digitz-website .card h3{
+  font-size:1.5rem;
+  line-height:1.2;
+  letter-spacing:-0.4px;
+  font-weight:800;
+  color:#27346a;
+}
+
+.digitz-website .card p{
+  flex-grow:1;
+  font-size:1.02rem;
+  line-height:1.75;
+  color:#5f6c8c;
+}
+
+.digitz-website .card-bottom-dual{
+  margin-top:24px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:14px;
+}
+
+.digitz-website .card-feature-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+  width:100%;
+}
+
+.digitz-website .pill-btn-feature{
+  width:100%;
+  min-width:0;
+  padding:12px 16px;
+  border-radius:12px;
+  text-align:center;
+  font-size:0.95rem;
+  font-weight:800;
+  color:#4760a1;
+  background:linear-gradient(135deg,#eef2ff 0%, #dfe8ff 100%);
+  border:1px solid #dbe4ff;
+  box-shadow:0 8px 18px rgba(31,72,169,0.08);
+  transition:transform 0.2s ease;
+}
+
+.digitz-website .pill-btn-feature:hover{
+  transform:translateY(-1px);
+}
+
+.digitz-website .pill-btn-overview{
+  background:#fff;
+  color:#214dbb;
+  border:1.5px solid rgba(33,77,187,0.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.96),
+    0 4px 12px rgba(33,77,187,0.05);
+}
+
+.digitz-website .pill-btn-gold{
+  background:linear-gradient(135deg,#fff4d8 0%, #ffe7af 100%);
+  color:#8c5d00;
+  border:1px solid #f0d28a;
+}
+
+/* =========================
+   Commercial section
+   ========================= */
+.nexus-home .nexus-experience-section{
+  background:
+    radial-gradient(circle at 10% 16%, rgba(33,77,187,0.07), transparent 24%),
+    radial-gradient(circle at 88% 12%, rgba(224,166,47,0.10), transparent 24%),
+    linear-gradient(180deg,#fbfcff 0%, #f2f6ff 100%);
+}
+
+.nexus-home .nexus-experience-layout{
+  display:grid;
+  grid-template-columns:1.08fr 0.92fr;
+  gap:24px;
+  align-items:stretch;
+}
+
+.nexus-home .nexus-experience-card{
+  height:100%;
+  padding:24px;
+  border-radius:26px;
+  background:linear-gradient(180deg,#ffffff 0%, #f7faff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 18px 38px rgba(31,72,169,0.10);
+}
+
+.nexus-home .commercial-card{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.nexus-home .commercial-lines{
+  display:grid;
+  gap:14px;
+  width:100%;
+}
+
+.nexus-home .commercial-line{
+  padding:16px 18px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#eef2ff 0%, #dfe8ff 100%);
+  border:1px solid rgba(33,77,187,0.10);
+  color:#27408a;
+  font-size:1rem;
+  font-weight:800;
+  box-shadow:0 8px 18px rgba(31,72,169,0.06);
+}
+
+.nexus-home .nexus-experience-right{
+  display:grid;
+  gap:18px;
+}
+
+.nexus-home .nexus-experience-mini{
+  padding:24px 22px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 10px 22px rgba(31,72,169,0.08);
+}
+
+.nexus-home .nexus-experience-mini h3{
+  margin-bottom:10px;
+  font-size:1.28rem;
+  line-height:1.24;
+  color:#26386d;
+  font-weight:800;
+}
+
+.nexus-home .nexus-experience-mini p{
+  font-size:0.98rem;
+  line-height:1.72;
+  color:#5f6c8c;
+}
+
+/* =========================
+   CTA
+   ========================= */
+.digitz-website .cta{
+  position:relative;
+  overflow:hidden;
+  padding:95px 0 100px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(95,132,255,0.12), transparent 28%),
+    linear-gradient(135deg,#0d2c77 0%, #1e49b0 55%, #123889 100%);
+  color:#fff;
+}
+
+.digitz-website .cta::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:36px 36px;
+  opacity:0.15;
+}
+
+.digitz-website .cta-box{
+  position:relative;
+  z-index:2;
+  max-width:980px;
+  margin:0 auto;
+  text-align:center;
+}
+
+.digitz-website .cta h2{
+  font-size:2.6rem;
+  line-height:1.14;
+  font-weight:800;
+  letter-spacing:-0.9px;
+  color:#fff;
+}
+
+.digitz-website .cta p{
+  max-width:760px;
+  margin:18px auto 0;
+  font-size:1.12rem;
+  line-height:1.8;
+  color:rgba(255,255,255,0.9);
+}
+
+.digitz-website .cta-actions{
+  margin-top:30px;
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+@media (max-width: 1200px){
+  .digitz-website .nav{
+    gap:28px;
+  }
+
+  .nexus-home .nexus-logo-img{
+    height:103px;
+  }
+
+  .nexus-home .nexus-hero-copy h1{
+    font-size:2.82rem;
+  }
+
+  .nexus-home .nexus-visual-wrap{
+    width:360px;
+    height:360px;
+  }
+
+  .nexus-home .nexus-ring{
+    width:270px;
+    height:270px;
+  }
+
+  .nexus-home .nexus-visual-wrap::before{
+    width:320px;
+    height:320px;
+  }
+}
+
+@media (max-width: 1100px){
+  .digitz-website .hero-grid{
+    grid-template-columns:1fr;
+    gap:32px;
+  }
+
+  .nexus-home .nexus-hero-grid{
+    min-height:auto;
+  }
+
+  .nexus-home .nexus-intro-panel,
+  .nexus-home .nexus-live-grid,
+  .nexus-home .nexus-experience-layout{
+    grid-template-columns:1fr;
+  }
+
+  .nexus-home .nexus-hero-visual{
+    height:430px;
+  }
+
+  .digitz-website .cards{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width: 820px){
+  .digitz-website .container{
+    width:min(var(--container), calc(100% - 24px));
+  }
+
+  .digitz-website .nav-wrap{
+    min-height:auto;
+    flex-direction:column;
+    align-items:flex-start;
+    padding:18px 0;
+  }
+
+  .digitz-website .nav{
+    gap:16px 18px;
+    justify-content:flex-start;
+  }
+
+  .digitz-website .nav a{
+    font-size:0.96rem;
+  }
+
+  .nexus-home .nexus-logo-img{
+    height:77px;
+  }
+
+  .nexus-home .nexus-hero-grid{
+    padding:38px 0 48px;
+  }
+
+  .nexus-home .nexus-hero-copy h1{
+    font-size:2.28rem;
+  }
+
+  .nexus-home .hero-lead,
+  .nexus-home .nexus-hero-copy p{
+    font-size:1rem;
+    line-height:1.72;
+  }
+
+  .digitz-website .hero-actions{
+    width:100%;
+  }
+
+  .digitz-website .btn{
+    min-width:160px;
+    width:100%;
+  }
+
+  .nexus-home .nexus-hero-visual{
+    height:390px;
+  }
+
+  .nexus-home .nexus-visual-wrap{
+    width:300px;
+    height:300px;
+  }
+
+  .nexus-home .nexus-core{
+    width:118px;
+    height:118px;
+  }
+
+  .nexus-home .nexus-core-logo{
+    width:78px;
+  }
+
+  .nexus-home .nexus-ring{
+    width:220px;
+    height:220px;
+  }
+
+  .nexus-home .nexus-visual-wrap::before{
+    width:268px;
+    height:268px;
+  }
+
+  .nexus-home .nexus-node{
+    min-width:82px;
+    font-size:0.74rem;
+    padding:8px 10px;
+  }
+
+  .nexus-home .n1::after,
+  .nexus-home .n2::after,
+  .nexus-home .n3::after,
+  .nexus-home .n4::after{
+    display:none;
+  }
+
+  .nexus-home .nexus-intro-strip{
+    margin-top:-18px;
+  }
+
+  .digitz-website .section{
+    padding:58px 0;
+  }
+
+  .digitz-website .section-head h2{
+    font-size:2rem;
+  }
+
+  .digitz-website .section-head p{
+    font-size:1rem;
+    line-height:1.72;
+  }
+
+  .digitz-website .section-head-highlight{
+    margin-bottom:30px;
+    padding:20px 18px 18px;
+    border-radius:22px;
+  }
+
+  .digitz-website .section-head-highlight h2{
+    font-size:2rem;
+    line-height:1.14;
+  }
+
+  .digitz-website .section-head-highlight p{
+    font-size:1rem;
+    line-height:1.7;
+  }
+
+  .nexus-home .nexus-intro-panel{
+    padding:22px;
+    border-radius:22px;
+  }
+
+  .nexus-home .nexus-intro-copy h2{
+    font-size:1.72rem;
+  }
+
+  .nexus-home .nexus-intro-stat-grid,
+  .digitz-website .card-feature-actions{
+    grid-template-columns:1fr;
+  }
+
+  .nexus-home .nexus-live-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .nexus-home .nexus-demo-input{
+    flex-direction:column;
+  }
+
+  .nexus-home .nexus-experience-card{
+    padding:16px;
+    border-radius:20px;
+  }
+}
+
+@media (max-width: 560px){
+  .nexus-home .nexus-logo-img{
+    height:62px;
+  }
+
+  .nexus-home .nexus-hero-copy h1{
+    font-size:1.95rem;
+  }
+
+  .nexus-home .hero-lead,
+  .nexus-home .nexus-hero-copy p{
+    max-width:100%;
+  }
+
+  .nexus-home .nexus-hero-visual{
+    height:330px;
+  }
+
+  .nexus-home .nexus-visual-wrap{
+    width:240px;
+    height:240px;
+  }
+
+  .nexus-home .nexus-core{
+    width:96px;
+    height:96px;
+  }
+
+  .nexus-home .nexus-core-logo{
+    width:66px;
+  }
+
+  .nexus-home .nexus-ring{
+    width:178px;
+    height:178px;
+  }
+
+  .nexus-home .nexus-visual-wrap::before{
+    width:214px;
+    height:214px;
+  }
+
+  .nexus-home .nexus-node{
+    font-size:0.68rem;
+    padding:6px 8px;
+    min-width:72px;
+  }
+
+  .nexus-home .nexus-live-card{
+    padding:16px;
+  }
+
+  .nexus-home .nexus-chat-demo{
+    min-height:240px;
+  }
+}
+/* =========================
+   Commercial strip
+   ========================= */
+.nexus-home .nexus-commercial-strip{
+  padding:72px 0 64px;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(33,77,187,0.05), transparent 24%),
+    radial-gradient(circle at 88% 24%, rgba(224,166,47,0.08), transparent 22%),
+    linear-gradient(180deg,#f8faff 0%, #f3f6ff 100%);
+}
+
+.nexus-home .nexus-commercial-panel{
+  display:grid;
+  grid-template-columns:1.05fr 0.95fr;
+  gap:28px;
+  align-items:center;
+  padding:34px 36px;
+  border-radius:28px;
+  background:linear-gradient(135deg,#ffffff 0%, #f7faff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:
+    0 20px 44px rgba(31,72,169,0.10),
+    0 8px 18px rgba(31,72,169,0.05);
+}
+
+.nexus-home .commercial-kicker{
+  color:#214dbb;
+  background:linear-gradient(135deg,#eef3ff 0%, #dde8ff 100%);
+  border:1px solid #d7e2ff;
+}
+
+.nexus-home .nexus-commercial-copy h2{
+  margin-top:8px;
+  font-size:2.35rem;
+  line-height:1.16;
+  letter-spacing:-0.8px;
+  font-weight:800;
+  color:#243164;
+}
+
+.nexus-home .nexus-commercial-copy p{
+  margin-top:16px;
+  max-width:720px;
+  font-size:1.05rem;
+  line-height:1.78;
+  color:#5f6c8c;
+}
+
+.nexus-home .nexus-commercial-points{
+  display:grid;
+  gap:14px;
+}
+
+.nexus-home .nexus-commercial-point{
+  position:relative;
+  padding:18px 18px 18px 54px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#eef2ff 0%, #dfe8ff 100%);
+  border:1px solid rgba(33,77,187,0.10);
+  color:#26408a;
+  font-size:1rem;
+  line-height:1.5;
+  font-weight:800;
+  box-shadow:0 10px 22px rgba(31,72,169,0.06);
+}
+
+.nexus-home .nexus-commercial-point::before{
+  content:"";
+  position:absolute;
+  left:18px;
+  top:50%;
+  transform:translateY(-50%);
+  width:22px;
+  height:22px;
+  border-radius:7px;
+  background:linear-gradient(135deg,#214dbb 0%, #4d75ff 100%);
+  box-shadow:0 8px 16px rgba(33,77,187,0.18);
+}
+
+.nexus-home .nexus-commercial-point::after{
+  content:"";
+  position:absolute;
+  left:25px;
+  top:50%;
+  transform:translateY(-50%);
+  width:8px;
+  height:8px;
+  border-radius:2px;
+  background:#ffffff;
+}
+
+@media (max-width: 1100px){
+  .nexus-home .nexus-commercial-panel{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width: 820px){
+  .nexus-home .nexus-commercial-strip{
+    padding:58px 0 52px;
+  }
+
+  .nexus-home .nexus-commercial-panel{
+    padding:24px 22px;
+    border-radius:22px;
+  }
+
+  .nexus-home .nexus-commercial-copy h2{
+    font-size:1.95rem;
+  }
+
+  .nexus-home .nexus-commercial-copy p{
+    font-size:1rem;
+    line-height:1.72;
+  }
+}
+
+@media (max-width: 560px){
+  .nexus-home .nexus-commercial-copy h2{
+    font-size:1.72rem;
+  }
+
+  .nexus-home .nexus-commercial-point{
+    padding:16px 16px 16px 48px;
+    font-size:0.94rem;
+  }
+}
+.nexus-usecase-grid{
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+}
+
+.nexus-usecase-card{
+  min-height:320px;
+}
+
+.nexus-custom-implementation{
+  background:
+    radial-gradient(circle at 14% 18%, rgba(33,77,187,0.06), transparent 24%),
+    radial-gradient(circle at 84% 16%, rgba(224,166,47,0.08), transparent 22%),
+    linear-gradient(180deg,#fbfcff 0%, #f3f7ff 100%);
+}
+
+@media (max-width: 1100px){
+  .nexus-usecase-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* =========================
+   Nexus Chat Flow
+   ========================= */
+.nexus-home .nexus-chat-flow-section{
+  padding-top:10px;
+  padding-bottom:72px;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(33,77,187,0.05), transparent 24%),
+    radial-gradient(circle at 86% 18%, rgba(224,166,47,0.07), transparent 22%),
+    linear-gradient(180deg,#f8fbff 0%, #f5f8ff 100%);
+}
+
+.nexus-home .nexus-chat-flow-wrap{
+  padding:34px 30px 30px;
+  border-radius:28px;
+  background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 18px 40px rgba(31,72,169,0.08);
+}
+
+.nexus-home .nexus-chat-flow-head{
+  max-width:920px;
+  margin:0 auto 30px;
+  text-align:center;
+}
+
+.nexus-home .nexus-flow-kicker{
+  color:#214dbb;
+  background:linear-gradient(135deg,#eef3ff 0%, #dde8ff 100%);
+  border:1px solid #d7e2ff;
+}
+
+.nexus-home .nexus-chat-flow-head h2{
+  margin-top:6px;
+  font-size:2.35rem;
+  line-height:1.14;
+  letter-spacing:-0.8px;
+  font-weight:800;
+  color:#243164;
+}
+
+.nexus-home .nexus-chat-flow-head h2 .em{
+  color:#214dbb;
+}
+
+.nexus-home .nexus-chat-flow-head p{
+  max-width:820px;
+  margin:14px auto 0;
+  font-size:1.03rem;
+  line-height:1.8;
+  color:#5f6c8c;
+}
+
+.nexus-home .nexus-chat-flow-grid{
+  display:grid;
+  grid-template-columns:repeat(9, minmax(0, 1fr));
+  gap:14px;
+  align-items:stretch;
+}
+
+.nexus-home .nexus-flow-card{
+  position:relative;
+  grid-column:span 1;
+  min-height:280px;
+  padding:22px 18px 20px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#ffffff 0%, #f7faff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 10px 24px rgba(31,72,169,0.08);
+  text-align:center;
+}
+
+.nexus-home .nexus-chat-flow-grid > .nexus-flow-card{
+  grid-column:span 1;
+}
+
+.nexus-home .nexus-chat-flow-grid{
+  grid-template-columns:repeat(5, minmax(0, 1fr));
+}
+
+.nexus-home .nexus-flow-arrow{
+  position:relative;
+  align-self:center;
+  justify-self:center;
+  width:52px;
+  height:2px;
+  background:linear-gradient(90deg,#4d75ff 0%, #214dbb 100%);
+}
+
+.nexus-home .nexus-flow-arrow::after{
+  content:"";
+  position:absolute;
+  right:-1px;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-top:2px solid #214dbb;
+  border-right:2px solid #214dbb;
+  transform:translateY(-50%) rotate(45deg);
+}
+
+.nexus-home .nexus-chat-flow-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr) 36px minmax(0,1fr) 36px minmax(0,1fr) 36px minmax(0,1fr);
+  gap:10px;
+}
+
+.nexus-home .nexus-flow-step{
+  position:absolute;
+  top:16px;
+  left:16px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#214dbb 0%, #3a67eb 100%);
+  color:#fff;
+  font-size:0.95rem;
+  font-weight:800;
+  box-shadow:0 10px 18px rgba(33,77,187,0.18);
+}
+
+.nexus-home .nexus-flow-icon{
+  width:82px;
+  height:82px;
+  margin:28px auto 18px;
+  border-radius:50%;
+  background:linear-gradient(180deg,#eef3ff 0%, #dfe8ff 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.nexus-home .nexus-flow-card h3{
+  font-size:1.12rem;
+  line-height:1.3;
+  font-weight:800;
+  color:#26386d;
+}
+
+.nexus-home .nexus-flow-card p{
+  margin-top:12px;
+  font-size:0.95rem;
+  line-height:1.72;
+  color:#5f6c8c;
+}
+
+.nexus-home .nexus-chat-flow-note{
+  margin-top:18px;
+  padding:16px 18px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#eef3ff 0%, #f7faff 100%);
+  border:1px solid rgba(33,77,187,0.10);
+  color:#43609b;
+  font-size:0.96rem;
+  line-height:1.7;
+  text-align:center;
+}
+
+.nexus-home .nexus-chat-flow-note strong{
+  color:#214dbb;
+}
+
+.nexus-home .nexus-flow-icon.visitor span{
+  position:relative;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#214dbb;
+  box-shadow:0 24px 0 6px #214dbb;
+}
+
+.nexus-home .nexus-flow-icon.visitor::after{
+  content:"";
+  position:absolute;
+  right:14px;
+  top:18px;
+  width:26px;
+  height:20px;
+  border-radius:8px 8px 8px 2px;
+  background:#9bb6f8;
+}
+
+.nexus-home .nexus-flow-icon.visitor::before{
+  content:"";
+  position:absolute;
+  right:26px;
+  top:34px;
+  width:10px;
+  height:10px;
+  background:#9bb6f8;
+  transform:rotate(45deg);
+}
+
+.nexus-home .nexus-flow-icon.category{
+  display:grid;
+  grid-template-columns:repeat(2, 16px);
+  gap:8px;
+  place-content:center;
+}
+
+.nexus-home .nexus-flow-icon.category span{
+  width:16px;
+  height:16px;
+  border-radius:5px;
+}
+
+.nexus-home .nexus-flow-icon.category span:nth-child(1){ background:#214dbb; }
+.nexus-home .nexus-flow-icon.category span:nth-child(2){ background:#f0ac28; }
+.nexus-home .nexus-flow-icon.category span:nth-child(3){ background:#7d97d6; }
+.nexus-home .nexus-flow-icon.category span:nth-child(4){ background:#8ebd76; }
+
+.nexus-home .nexus-flow-icon.agent span{
+  position:relative;
+  width:32px;
+  height:24px;
+  border-radius:10px;
+  background:#214dbb;
+}
+
+.nexus-home .nexus-flow-icon.agent span::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  top:8px;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:15px 0 0 #fff;
+}
+
+.nexus-home .nexus-flow-icon.agent span::after{
+  content:"";
+  position:absolute;
+  left:12px;
+  bottom:-8px;
+  width:8px;
+  height:8px;
+  border-left:2px solid #214dbb;
+  border-bottom:2px solid #214dbb;
+  transform:rotate(-45deg);
+}
+
+.nexus-home .nexus-flow-icon.response span{
+  position:relative;
+  width:34px;
+  height:24px;
+  border-radius:8px;
+  background:#3a67eb;
+}
+
+.nexus-home .nexus-flow-icon.response span::before{
+  content:"";
+  position:absolute;
+  left:6px;
+  top:8px;
+  width:22px;
+  height:3px;
+  border-radius:999px;
+  background:#fff;
+  box-shadow:0 8px 0 #fff;
+}
+
+.nexus-home .nexus-flow-icon.response span::after{
+  content:"";
+  position:absolute;
+  left:10px;
+  bottom:-7px;
+  width:10px;
+  height:10px;
+  background:#3a67eb;
+  transform:rotate(45deg);
+}
+
+.nexus-home .nexus-flow-icon.escalate span{
+  position:relative;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:#214dbb;
+  box-shadow:0 28px 0 6px #214dbb;
+}
+
+.nexus-home .nexus-flow-icon.escalate::before{
+  content:"";
+  position:absolute;
+  right:10px;
+  bottom:12px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#f0ac28;
+  box-shadow:0 0 0 4px #fff;
+}
+
+.nexus-home .nexus-flow-icon.escalate::after{
+  content:"";
+  position:absolute;
+  right:15px;
+  bottom:18px;
+  width:8px;
+  height:4px;
+  border-left:2px solid #fff;
+  border-bottom:2px solid #fff;
+  transform:rotate(-45deg);
+}
+
+@media (max-width: 1180px){
+  .nexus-home .nexus-chat-flow-grid{
+    grid-template-columns:repeat(3, minmax(0,1fr));
+    gap:16px;
+  }
+
+  .nexus-home .nexus-flow-arrow{
+    display:none;
+  }
+}
+
+@media (max-width: 820px){
+  .nexus-home .nexus-chat-flow-section{
+    padding-top:4px;
+    padding-bottom:58px;
+  }
+
+  .nexus-home .nexus-chat-flow-wrap{
+    padding:24px 18px 20px;
+    border-radius:22px;
+  }
+
+  .nexus-home .nexus-chat-flow-head h2{
+    font-size:1.92rem;
+  }
+
+  .nexus-home .nexus-chat-flow-grid{
+    grid-template-columns:1fr;
+  }
+
+  .nexus-home .nexus-flow-card{
+    min-height:auto;
+  }
+}
+
+
+/* =========================
+   Enhanced Chat Flow Icons
+   ========================= */
+.nexus-home .nexus-flow-card{
+  overflow:hidden;
+}
+
+.nexus-home .nexus-flow-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at 50% 0%, rgba(86,126,255,0.08), transparent 34%);
+  pointer-events:none;
+}
+
+.nexus-home .nexus-flow-icon{
+  width:96px;
+  height:96px;
+  margin:24px auto 18px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95), rgba(255,255,255,0.38) 34%, transparent 35%),
+    linear-gradient(180deg,#edf3ff 0%, #dbe7ff 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    0 12px 22px rgba(33,77,187,0.10);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.nexus-home .nexus-flow-icon::after{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,0.55);
+  pointer-events:none;
+}
+
+.nexus-home .nexus-flow-icon svg{
+  width:72px;
+  height:72px;
+  display:block;
+}
+
+.nexus-home .nexus-flow-icon.visitor{
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.98), rgba(255,255,255,0.42) 34%, transparent 35%),
+    linear-gradient(180deg,#eef3ff 0%, #dfe8ff 100%);
+}
+
+.nexus-home .nexus-flow-icon.category{
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.98), rgba(255,255,255,0.42) 34%, transparent 35%),
+    linear-gradient(180deg,#f2f6ff 0%, #e3ebff 100%);
+}
+
+.nexus-home .nexus-flow-icon.agent{
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.98), rgba(255,255,255,0.42) 34%, transparent 35%),
+    linear-gradient(180deg,#edf2ff 0%, #d7e3ff 100%);
+}
+
+.nexus-home .nexus-flow-icon.response{
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.98), rgba(255,255,255,0.42) 34%, transparent 35%),
+    linear-gradient(180deg,#edf4ff 0%, #dce8ff 100%);
+}
+
+.nexus-home .nexus-flow-icon.escalate{
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,0.98), rgba(255,255,255,0.42) 34%, transparent 35%),
+    linear-gradient(180deg,#eef3ff 0%, #dce6ff 100%);
+}
+
+.nexus-home .nexus-flow-card h3{
+  position:relative;
+}
+
+.nexus-home .nexus-flow-card p{
+  position:relative;
+}
+
+/* retire older simple icon shapes */
+.nexus-home .nexus-flow-icon.visitor span,
+.nexus-home .nexus-flow-icon.category span,
+.nexus-home .nexus-flow-icon.agent span,
+.nexus-home .nexus-flow-icon.response span,
+.nexus-home .nexus-flow-icon.escalate span,
+.nexus-home .nexus-flow-icon.visitor::before,
+.nexus-home .nexus-flow-icon.visitor::after,
+.nexus-home .nexus-flow-icon.agent span::before,
+.nexus-home .nexus-flow-icon.agent span::after,
+.nexus-home .nexus-flow-icon.response span::before,
+.nexus-home .nexus-flow-icon.response span::after,
+.nexus-home .nexus-flow-icon.escalate::before,
+.nexus-home .nexus-flow-icon.escalate::after{
+  content:none;
+  box-shadow:none;
+}
+
+@media (max-width: 820px){
+  .nexus-home .nexus-flow-icon{
+    width:88px;
+    height:88px;
+  }
+
+  .nexus-home .nexus-flow-icon svg{
+    width:66px;
+    height:66px;
+  }
+}
+
+
+/* =========================
+   Refined Q&A Experience - Balanced Final
+   Replace the existing "Refined Q&A Experience - Final" block with this.
+   ========================= */
+.nexus-home .nexus-qa-experience-section,
+.nexus-qna-section,
+section[id="qna-experience"]{
+  padding:76px 0 86px;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(77,163,255,0.14), transparent 28%),
+    radial-gradient(circle at 88% 18%, rgba(33,77,187,0.08), transparent 26%),
+    radial-gradient(circle at 50% 100%, rgba(224,166,47,0.06), transparent 28%),
+    linear-gradient(180deg,#ffffff 0%, #f4f8ff 48%, #edf5ff 100%);
+  color:#243164;
+  border-top:1px solid rgba(33,77,187,0.08);
+  border-bottom:1px solid rgba(33,77,187,0.08);
+}
+
+.nexus-home .nexus-qa-experience-section .container,
+.nexus-qna-section .container,
+section[id="qna-experience"] .container{
+  width:min(1280px, calc(100% - 40px));
+  max-width:1280px;
+}
+
+.nexus-home .nexus-qa-experience-head{
+  max-width:960px;
+  margin:0 auto 34px;
+  text-align:center;
+}
+
+.nexus-home .nexus-qa-kicker{
+  color:#214dbb;
+  background:linear-gradient(135deg,#eef3ff 0%, #dde8ff 100%);
+  border:1px solid #d7e2ff;
+  box-shadow:0 8px 18px rgba(31,72,169,0.08);
+}
+
+.nexus-home .nexus-qa-experience-head h2{
+  margin-top:8px;
+  font-size:2.65rem;
+  line-height:1.12;
+  letter-spacing:-0.9px;
+  font-weight:900;
+  color:#243164;
+}
+
+.nexus-home .nexus-qa-experience-head h2 .em{
+  color:#214dbb;
+}
+
+.nexus-home .nexus-qa-experience-head p{
+  max-width:860px;
+  margin:16px auto 0;
+  font-size:1.06rem;
+  line-height:1.78;
+  color:#5f6c8c;
+}
+
+.nexus-home .nexus-qa-experience-panel{
+  width:100%;
+  max-width:1180px;
+  margin:0 auto;
+  padding:28px;
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(91,134,255,0.18), transparent 30%),
+    radial-gradient(circle at 88% 8%, rgba(224,166,47,0.12), transparent 26%),
+    linear-gradient(135deg,#071b55 0%, #12348c 52%, #214dbb 100%);
+  border:1px solid rgba(255,255,255,0.30);
+  box-shadow:0 28px 70px rgba(31,72,169,0.22);
+}
+
+.nexus-home .nexus-qa-search-card{
+  padding:24px;
+  border-radius:22px;
+  background:rgba(255,255,255,0.97);
+  border:1px solid rgba(255,255,255,0.46);
+  box-shadow:0 14px 32px rgba(5,24,78,0.12);
+}
+
+.nexus-home .nexus-qa-search-title{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.nexus-home .nexus-qa-search-title h3{
+  font-size:1.42rem;
+  line-height:1.25;
+  color:#182b67;
+  font-weight:900;
+}
+
+.nexus-home .nexus-qa-search-title p{
+  margin-top:6px;
+  font-size:0.98rem;
+  line-height:1.65;
+  color:#5f6c8c;
+}
+
+.nexus-home .nexus-qa-search-title span{
+  flex:0 0 auto;
+  padding:8px 12px;
+  border-radius:999px;
+  background:#eef3ff;
+  border:1px solid #dbe5ff;
+  color:#214dbb;
+  font-size:0.74rem;
+  font-weight:900;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+
+.nexus-home .nexus-qa-full-input{
+  display:flex;
+  width:100%;
+  gap:12px;
+  padding:8px;
+  border-radius:18px;
+  background:#f2f6ff;
+  border:1px solid #dce6ff;
+}
+
+.nexus-home .nexus-qa-full-input input{
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+  padding:16px 16px;
+  border:none;
+  border-radius:14px;
+  background:#ffffff;
+  color:#223870;
+  font-size:1rem;
+  line-height:1.4;
+  outline:none;
+  box-shadow:inset 0 0 0 1px rgba(33,77,187,0.07);
+}
+
+.nexus-home .nexus-qa-full-input input:focus{
+  box-shadow:
+    inset 0 0 0 1.5px rgba(33,77,187,0.35),
+    0 0 0 4px rgba(33,77,187,0.08);
+}
+
+.nexus-home .nexus-qa-full-input button,
+.nexus-home .nexus-qa-modal-input-row button{
+  flex:0 0 auto;
+  min-width:120px;
+  padding:14px 22px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,#214dbb 0%, #3a67eb 100%);
+  color:#ffffff;
+  font-size:0.96rem;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 12px 22px rgba(33,77,187,0.18);
+  transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nexus-home .nexus-qa-full-input button:hover,
+.nexus-home .nexus-qa-modal-input-row button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 16px 28px rgba(33,77,187,0.22);
+}
+
+.nexus-home .nexus-dynamic-faq-card{
+  margin-top:18px;
+  padding:24px;
+  border-radius:22px;
+  background:rgba(255,255,255,0.97);
+  border:1px solid rgba(255,255,255,0.46);
+  box-shadow:0 14px 32px rgba(5,24,78,0.10);
+}
+
+.nexus-home .nexus-dynamic-faq-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+.nexus-home .nexus-dynamic-faq-head span{
+  color:#214dbb;
+  font-size:0.78rem;
+  font-weight:900;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+}
+
+.nexus-home .nexus-dynamic-faq-head h3{
+  font-size:1.18rem;
+  line-height:1.35;
+  color:#182b67;
+  font-weight:900;
+  text-align:right;
+}
+
+.nexus-home .nexus-dynamic-faq-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:12px;
+}
+
+.nexus-home .nexus-faq-suggestion{
+  min-height:72px;
+  padding:14px 14px;
+  border-radius:16px;
+  border:1px solid rgba(33,77,187,0.12);
+  background:linear-gradient(180deg,#f9fbff 0%, #eef4ff 100%);
+  color:#26386d;
+  font-size:0.92rem;
+  line-height:1.45;
+  font-weight:800;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(31,72,169,0.05);
+  transition:transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nexus-home .nexus-faq-suggestion:hover{
+  transform:translateY(-2px);
+  border-color:rgba(33,77,187,0.28);
+  box-shadow:0 12px 24px rgba(31,72,169,0.10);
+}
+
+body.nexus-qa-modal-open{
+  overflow:hidden;
+}
+
+.nexus-home .nexus-qa-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+}
+
+.nexus-home .nexus-qa-modal.is-open{
+  display:flex;
+}
+
+.nexus-home .nexus-qa-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(10,26,72,0.62);
+  backdrop-filter:blur(8px);
+}
+
+.nexus-home .nexus-qa-modal-dialog{
+  position:relative;
+  z-index:1;
+  width:min(1100px, 100%);
+  min-height:72vh;
+  max-height:88vh;
+  overflow:auto;
+  padding:32px;
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(77,163,255,0.14), transparent 32%),
+    linear-gradient(180deg,#ffffff 0%, #f7faff 100%);
+  border:1px solid rgba(255,255,255,0.65);
+  box-shadow:0 34px 90px rgba(5,24,78,0.34);
+}
+
+.nexus-home .nexus-qa-modal-close{
+  position:absolute;
+  top:16px;
+  right:16px;
+  width:38px;
+  height:38px;
+  border:none;
+  border-radius:50%;
+  background:#eef3ff;
+  color:#214dbb;
+  font-size:1.6rem;
+  line-height:1;
+  cursor:pointer;
+  font-weight:400;
+}
+
+.nexus-home .nexus-qa-modal-head{
+  padding-right:42px;
+}
+
+.nexus-home .nexus-qa-modal-head h3{
+  margin-top:8px;
+  font-size:1.86rem;
+  line-height:1.2;
+  color:#243164;
+  font-weight:900;
+}
+
+.nexus-home .nexus-qa-modal-input-row{
+  display:flex;
+  gap:12px;
+  margin-top:22px;
+  padding:8px;
+  border-radius:18px;
+  background:#f2f6ff;
+  border:1px solid #dce6ff;
+}
+
+.nexus-home .nexus-qa-modal-input-row input{
+  flex:1 1 auto;
+  min-width:0;
+  padding:15px 16px;
+  border:none;
+  border-radius:14px;
+  background:#ffffff;
+  color:#223870;
+  font-size:1rem;
+  outline:none;
+}
+
+.nexus-home .nexus-qa-modal-answer{
+  margin-top:20px;
+  padding:24px;
+  border-radius:22px;
+  background:#ffffff;
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 10px 24px rgba(31,72,169,0.08);
+}
+
+.nexus-home .nexus-qa-modal-answer h4{
+  margin-top:10px;
+  color:#1f2e67;
+  font-size:1.24rem;
+  line-height:1.35;
+  font-weight:900;
+}
+
+.nexus-home .nexus-qa-modal-answer p{
+  margin-top:10px;
+  color:#5f6c8c;
+  font-size:1rem;
+  line-height:1.78;
+}
+
+.nexus-home .nexus-qa-modal-faq{
+  margin-top:18px;
+  padding:24px;
+  border-radius:22px;
+  background:linear-gradient(180deg,#f8fbff 0%, #eef4ff 100%);
+  border:1px solid rgba(33,77,187,0.10);
+}
+
+.nexus-home .nexus-qa-modal-faq h4{
+  margin-bottom:12px;
+  font-size:1.08rem;
+  color:#243164;
+  font-weight:900;
+}
+
+.nexus-home .nexus-qa-modal-faq-list{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+}
+
+.nexus-home .nexus-modal-faq-item{
+  padding:12px 14px;
+  border-radius:14px;
+  background:#ffffff;
+  border:1px solid rgba(33,77,187,0.10);
+  color:#304678;
+  font-size:0.92rem;
+  line-height:1.45;
+  font-weight:800;
+}
+
+@media (max-width: 980px){
+  .nexus-home .nexus-dynamic-faq-grid{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 820px){
+  .nexus-home .nexus-qa-experience-section,
+  .nexus-qna-section,
+  section[id="qna-experience"]{
+    padding:58px 0;
+  }
+
+  .nexus-home .nexus-qa-experience-head h2{
+    font-size:2rem;
+  }
+
+  .nexus-home .nexus-qa-experience-panel,
+  .nexus-home .nexus-qa-search-card,
+  .nexus-home .nexus-dynamic-faq-card{
+    padding:18px;
+    border-radius:22px;
+  }
+
+  .nexus-home .nexus-qa-search-title,
+  .nexus-home .nexus-dynamic-faq-head,
+  .nexus-home .nexus-qa-full-input,
+  .nexus-home .nexus-qa-modal-input-row{
+    flex-direction:column;
+  }
+
+  .nexus-home .nexus-qa-search-title span{
+    align-self:flex-start;
+  }
+
+  .nexus-home .nexus-dynamic-faq-head h3{
+    text-align:left;
+  }
+
+  .nexus-home .nexus-qa-full-input button,
+  .nexus-home .nexus-qa-modal-input-row button{
+    width:100%;
+  }
+
+  .nexus-home .nexus-qa-modal{
+    padding:14px;
+  }
+
+  .nexus-home .nexus-qa-modal-dialog{
+    min-height:auto;
+    padding:20px;
+    border-radius:22px;
+  }
+
+  .nexus-home .nexus-qa-modal-head h3{
+    font-size:1.42rem;
+  }
+}
+
+@media (max-width: 560px){
+  .nexus-home .nexus-dynamic-faq-grid,
+  .nexus-home .nexus-qa-modal-faq-list{
+    grid-template-columns:1fr;
+  }
+}
+/* =========================
+   AI Support & Ticketing
+   ========================= */
+.nexus-home .nexus-support-section{
+  background:
+    radial-gradient(circle at 12% 18%, rgba(33,77,187,0.07), transparent 24%),
+    radial-gradient(circle at 88% 18%, rgba(224,166,47,0.08), transparent 22%),
+    linear-gradient(180deg,#fbfcff 0%, #f3f7ff 100%);
+}
+
+.nexus-home .nexus-support-head{
+  margin-bottom:38px;
+}
+
+.nexus-home .card-label{
+  display:block;
+  margin-bottom:6px;
+  color:#214dbb;
+  font-size:0.78rem;
+  font-weight:900;
+  letter-spacing:0.10em;
+  text-transform:uppercase;
+}
+/* =========================================================
+   Enterprise Theme Refinement Overrides
+   Add this at the END of digitz_ai_nexus_site.css
+   ========================================================= */
+
+:root{
+  --primary:#214dbb;
+  --primary-deep:#0b2a6f;
+  --primary-dark:#071f5d;
+  --primary-soft:#4d75ff;
+
+  --gold:#e0a62f;
+  --gold-soft:#fff3d2;
+
+  --text:#1d2756;
+  --muted:#5f6c8c;
+  --line:rgba(33,77,187,0.10);
+
+  --bg-soft:#f4f7ff;
+  --card-bg:#ffffff;
+
+  --card-shadow:0 8px 20px rgba(31,72,169,0.08);
+  --card-shadow-hover:0 14px 32px rgba(31,72,169,0.13);
+}
+
+/* Hero refinement */
+.nexus-home .nexus-hero{
+  background:
+    radial-gradient(circle at 76% 24%, rgba(138,177,255,0.22), transparent 30%),
+    radial-gradient(circle at 88% 16%, rgba(255,255,255,0.10), transparent 18%),
+    linear-gradient(135deg,#071f5d 0%, #12348c 42%, #214dbb 100%);
+}
+
+/* Softer page sections */
+.digitz-website .section.soft,
+.nexus-home .nexus-chat-flow-section,
+.nexus-home .nexus-support-section,
+.nexus-custom-implementation,
+.nexus-home .nexus-experience-section,
+.nexus-home .nexus-commercial-strip{
+  background:linear-gradient(180deg,#fbfcff 0%, #f4f7ff 100%);
+}
+
+/* Enterprise section highlight */
+.digitz-website .section-head-highlight{
+  background:linear-gradient(135deg,#0b2a6f 0%, #214dbb 100%);
+  border:1px solid rgba(255,255,255,0.16);
+  box-shadow:0 20px 42px rgba(17,42,118,0.15);
+}
+
+.digitz-website .section-head-highlight::before{
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.12), transparent 24%),
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:auto, 30px 30px, 30px 30px;
+}
+
+.digitz-website .section-head-highlight h2 .em{
+  color:var(--gold);
+}
+
+/* Gold should stay as accent only */
+.digitz-website .btn-primary{
+  background:linear-gradient(135deg,#e0a62f 0%, #f4bf4e 100%);
+  color:#ffffff;
+  box-shadow:0 12px 24px rgba(224,166,47,0.24);
+}
+
+.digitz-website .pill-btn-gold{
+  background:#fff8e6;
+  color:#8c5d00;
+  border:1px solid #f0d28a;
+}
+
+/* Cleaner cards */
+.digitz-website .card,
+.nexus-home .nexus-stat-card,
+.nexus-home .nexus-flow-card,
+.nexus-home .nexus-experience-mini,
+.nexus-home .nexus-experience-card,
+.nexus-home .nexus-live-card{
+  background:#ffffff;
+  border:1px solid var(--line);
+  box-shadow:var(--card-shadow);
+}
+
+.digitz-website .card:hover,
+.nexus-home .nexus-flow-card:hover,
+.nexus-home .nexus-stat-card:hover,
+.nexus-home .nexus-experience-mini:hover{
+  border-color:rgba(33,77,187,0.22);
+  box-shadow:var(--card-shadow-hover);
+}
+
+/* Reduce card top-line dominance */
+.digitz-website .card::before{
+  height:3px;
+  background:linear-gradient(90deg,#214dbb 0%, #4d75ff 72%, #e0a62f 100%);
+}
+
+/* Intro panel refinement */
+.nexus-home .nexus-intro-panel{
+  background:linear-gradient(180deg,#ffffff 0%, #f7faff 100%);
+  border:1px solid var(--line);
+  box-shadow:0 16px 36px rgba(31,72,169,0.09);
+}
+
+/* Q&A section: premium but not over-dark */
+.nexus-home .nexus-qa-experience-section,
+.nexus-qna-section,
+section[id="qna-experience"]{
+  background:
+    radial-gradient(circle at 12% 16%, rgba(77,163,255,0.10), transparent 28%),
+    linear-gradient(180deg,#ffffff 0%, #f5f8ff 52%, #edf4ff 100%);
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+/* Main Q&A panel fix */
+.nexus-home .nexus-qa-experience-panel{
+  background:
+    radial-gradient(circle at 10% 10%, rgba(77,163,255,0.12), transparent 30%),
+    linear-gradient(180deg,#f7faff 0%, #eef4ff 100%);
+  border:1px solid rgba(33,77,187,0.14);
+  box-shadow:0 20px 50px rgba(31,72,169,0.12);
+}
+
+/* Q&A inner cards */
+.nexus-home .nexus-qa-search-card,
+.nexus-home .nexus-dynamic-faq-card{
+  background:#ffffff;
+  border:1px solid rgba(33,77,187,0.10);
+  box-shadow:0 10px 26px rgba(31,72,169,0.08);
+}
+
+/* Q&A suggestions */
+.nexus-home .nexus-faq-suggestion{
+  background:#f8fbff;
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:none;
+}
+
+.nexus-home .nexus-faq-suggestion:hover{
+  background:#ffffff;
+  border-color:rgba(33,77,187,0.28);
+  box-shadow:0 10px 22px rgba(31,72,169,0.10);
+}
+
+/* Support section card grid cleanup */
+.nexus-home .nexus-support-section .card{
+  background:#ffffff;
+}
+
+/* Commercial panel cleanup */
+.nexus-home .nexus-commercial-panel{
+  background:#ffffff;
+  border:1px solid var(--line);
+  box-shadow:0 16px 36px rgba(31,72,169,0.09);
+}
+
+.nexus-home .nexus-commercial-point,
+.nexus-home .commercial-line{
+  background:#f7faff;
+  border:1px solid rgba(33,77,187,0.10);
+  box-shadow:none;
+}
+
+/* CTA keeps strong enterprise finish */
+.digitz-website .cta{
+  background:
+    radial-gradient(circle at 50% 20%, rgba(95,132,255,0.10), transparent 28%),
+    linear-gradient(135deg,#071f5d 0%, #12348c 52%, #214dbb 100%);
+}
+/* =========================================================
+   Reduce Back-to-Back Blue Blocks
+   Keep enterprise contrast without repeating heavy blue
+   ========================================================= */
+
+/* Keep Support as strong blue because it introduces a new major section */
+.nexus-home .nexus-support-section .section-head-highlight{
+  background:linear-gradient(135deg,#0b2a6f 0%, #214dbb 100%);
+}
+
+/* Convert Custom Implementation header to premium white panel */
+.nexus-home .nexus-custom-implementation .section-head-highlight{
+  background:
+    radial-gradient(circle at 12% 10%, rgba(77,163,255,0.10), transparent 28%),
+    linear-gradient(180deg,#ffffff 0%, #f7faff 100%);
+  border:1px solid rgba(33,77,187,0.12);
+  box-shadow:0 14px 34px rgba(31,72,169,0.09);
+}
+
+.nexus-home .nexus-custom-implementation .section-head-highlight::before{
+  display:none;
+}
+
+.nexus-home .nexus-custom-implementation .section-head-highlight .section-kicker{
+  color:#214dbb;
+  background:#eef3ff;
+  border:1px solid #dbe5ff;
+}
+
+.nexus-home .nexus-custom-implementation .section-head-highlight h2{
+  color:#243164;
+}
+
+.nexus-home .nexus-custom-implementation .section-head-highlight h2 .em{
+  color:#e0a62f;
+}
+
+.nexus-home .nexus-custom-implementation .section-head-highlight p{
+  color:#5f6c8c;
+}
+
+/* Convert Platform Value header to clean centered normal heading */
+.nexus-home .nexus-experience-section .section-head-highlight{
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  margin-bottom:42px;
+}
+
+.nexus-home .nexus-experience-section .section-head-highlight::before{
+  display:none;
+}
+
+.nexus-home .nexus-experience-section .section-head-highlight .section-kicker{
+  color:#214dbb;
+  background:#eef3ff;
+  border:1px solid #dbe5ff;
+}
+
+.nexus-home .nexus-experience-section .section-head-highlight h2{
+  color:#243164;
+}
+
+.nexus-home .nexus-experience-section .section-head-highlight p{
+  color:#5f6c8c;
+}
+
+/* Give more breathing space between these blocks */
+.nexus-home .nexus-support-section{
+  padding-bottom:76px;
+}
+
+.nexus-home .nexus-custom-implementation{
+  padding-top:76px;
+  padding-bottom:76px;
+}
+
+.nexus-home .nexus-experience-section{
+  padding-top:76px;
+}
+
+/* Slightly soften the small card top accent lines */
+.nexus-home .nexus-support-section .card::before,
+.nexus-home .nexus-experience-section .card::before{
+  height:2px;
+  background:linear-gradient(90deg,#214dbb 0%, #4d75ff 80%, #e0a62f 100%);
+}
+/* =========================================================
+   Fresh Colorful Intro Section Below Hero
+   ========================================================= */
+
+.nexus-home .nexus-intro-strip{
+  background:
+    radial-gradient(circle at 10% 20%, rgba(77,163,255,0.18), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(224,166,47,0.16), transparent 26%),
+    linear-gradient(180deg,#ffffff 0%, #eef5ff 100%);
+  padding:56px 0 64px;
+  margin-top:0;
+}
+
+.nexus-home .nexus-intro-panel{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(77,163,255,0.20), transparent 30%),
+    radial-gradient(circle at 88% 18%, rgba(224,166,47,0.18), transparent 28%),
+    linear-gradient(135deg,#ffffff 0%, #f5f9ff 48%, #eef5ff 100%);
+  border:1px solid rgba(33,77,187,0.14);
+  box-shadow:0 22px 50px rgba(31,72,169,0.12);
+}
+
+.nexus-home .nexus-intro-panel::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(135deg, rgba(33,77,187,0.05) 0%, transparent 36%),
+    radial-gradient(circle at 30% 100%, rgba(77,163,255,0.14), transparent 30%);
+  pointer-events:none;
+}
+
+.nexus-home .nexus-intro-panel > *{
+  position:relative;
+  z-index:1;
+}
+
+.nexus-home .nexus-intro-copy .section-kicker{
+  color:#214dbb;
+  background:linear-gradient(135deg,#eef3ff 0%, #ffffff 100%);
+  border:1px solid rgba(33,77,187,0.16);
+  box-shadow:0 8px 18px rgba(31,72,169,0.08);
+}
+
+.nexus-home .nexus-intro-copy h2{
+  color:#132c72;
+}
+
+.nexus-home .nexus-intro-copy h2::after{
+  content:"";
+  display:block;
+  width:86px;
+  height:4px;
+  margin-top:18px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#214dbb 0%, #4d75ff 56%, #e0a62f 100%);
+}
+
+.nexus-home .nexus-intro-stat-grid{
+  gap:18px;
+}
+
+.nexus-home .nexus-stat-card{
+  position:relative;
+  overflow:hidden;
+  border:none;
+  background:#ffffff;
+  box-shadow:0 14px 28px rgba(31,72,169,0.10);
+}
+
+.nexus-home .nexus-stat-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:0.95;
+  pointer-events:none;
+}
+
+.nexus-home .nexus-stat-card:nth-child(1)::before{
+  background:linear-gradient(135deg,rgba(33,77,187,0.12),rgba(77,163,255,0.08));
+}
+
+.nexus-home .nexus-stat-card:nth-child(2)::before{
+  background:linear-gradient(135deg,rgba(224,166,47,0.16),rgba(255,255,255,0.04));
+}
+
+.nexus-home .nexus-stat-card:nth-child(3)::before{
+  background:linear-gradient(135deg,rgba(77,163,255,0.14),rgba(33,77,187,0.07));
+}
+
+.nexus-home .nexus-stat-card:nth-child(4)::before{
+  background:linear-gradient(135deg,rgba(33,77,187,0.10),rgba(224,166,47,0.12));
+}
+
+.nexus-home .nexus-stat-card strong,
+.nexus-home .nexus-stat-card span{
+  position:relative;
+  z-index:1;
+}
+
+.nexus-home .nexus-stat-card strong{
+  color:#163a96;
+}
+
+.nexus-home .nexus-stat-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 20px 38px rgba(31,72,169,0.16);
+}

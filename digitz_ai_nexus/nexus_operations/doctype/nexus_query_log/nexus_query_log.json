@@ -1,0 +1,185 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "format:NQL-.{#####}",
+  "creation": "2026-04-29 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "tenant",
+    "business_unit",
+    "project",
+    "caller_system",
+    "use_case",
+    "status",
+    "section_query",
+    "query",
+    "context",
+    "sub_context",
+    "entity_type",
+    "entity",
+    "topic",
+    "section_user",
+    "user_id",
+    "user_roles",
+    "section_result",
+    "access_status",
+    "retrieved_chunks",
+    "answer",
+    "confidence",
+    "llm_model",
+    "error_message"
+  ],
+  "fields": [
+    {
+      "fieldname": "tenant",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Tenant",
+      "options": "Nexus Tenant"
+    },
+    {
+  "fieldname": "business_unit",
+  "label": "Business Unit",
+  "fieldtype": "Data",
+  "in_list_view": 1
+  },
+  {
+    "fieldname": "project",
+    "label": "Project",
+    "fieldtype": "Data",
+    "in_list_view": 1
+  },
+    {
+      "fieldname": "caller_system",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Caller System"
+    },
+    {
+      "fieldname": "use_case",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Use Case"
+    },
+    {
+      "default": "Success",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Success\nFailed"
+    },
+    {
+      "fieldname": "section_query",
+      "fieldtype": "Section Break",
+      "label": "Query"
+    },
+    {
+      "fieldname": "query",
+      "fieldtype": "Long Text",
+      "label": "Query"
+    },
+    {
+      "fieldname": "context",
+      "fieldtype": "Data",
+      "label": "Context"
+    },
+    {
+      "fieldname": "sub_context",
+      "fieldtype": "Data",
+      "label": "Sub Context"
+    },
+    {
+      "fieldname": "entity_type",
+      "fieldtype": "Data",
+      "label": "Entity Type"
+    },
+    {
+      "fieldname": "entity",
+      "fieldtype": "Data",
+      "label": "Entity"
+    },
+    {
+      "fieldname": "topic",
+      "fieldtype": "Data",
+      "label": "Topic"
+    },
+    {
+      "fieldname": "section_user",
+      "fieldtype": "Section Break",
+      "label": "User"
+    },
+    {
+      "fieldname": "user_id",
+      "fieldtype": "Data",
+      "label": "User ID"
+    },
+    {
+      "fieldname": "user_roles",
+      "fieldtype": "Small Text",
+      "label": "User Roles"
+    },
+    {
+      "fieldname": "section_result",
+      "fieldtype": "Section Break",
+      "label": "Result"
+    },
+    {
+      "fieldname": "access_status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Access Status",
+      "options": "allowed\nrestricted\nno_context\nerror"
+    },
+    {
+      "fieldname": "retrieved_chunks",
+      "fieldtype": "Small Text",
+      "label": "Retrieved Chunks"
+    },
+    {
+      "fieldname": "answer",
+      "fieldtype": "Long Text",
+      "label": "Answer"
+    },
+    {
+      "fieldname": "confidence",
+      "fieldtype": "Float",
+      "label": "Confidence"
+    },
+    {
+      "fieldname": "llm_model",
+      "fieldtype": "Data",
+      "label": "LLM Model"
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "Error Message"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-04-29 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Nexus Operations",
+  "name": "Nexus Query Log",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

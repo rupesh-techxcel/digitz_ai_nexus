@@ -1,0 +1,147 @@
+body {
+	font-family: 'Exo 2', sans-serif;
+	margin: 0;
+	background: #ffffff;
+	color: #1a2b4c;
+}
+
+.nx-container {
+	width: 90%;
+	max-width: 1200px;
+	margin: auto;
+}
+
+/* HEADER */
+.nx-header {
+	background: #ffffff;
+	border-bottom: 1px solid #e6ecff;
+}
+
+.nx-header-inner {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 0;
+}
+
+.nx-logo {
+	height: 42px;
+}
+
+.nx-nav a {
+	margin-right: 20px;
+	color: #214dbb;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.nx-btn-primary {
+	background: #214dbb;
+	color: white;
+	padding: 10px 18px;
+	border-radius: 8px;
+	border: none;
+	cursor: pointer;
+}
+
+.nx-btn-outline {
+	border: 2px solid #214dbb;
+	color: #214dbb;
+	background: white;
+	padding: 10px 18px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+/* HERO */
+.nx-hero {
+	background: linear-gradient(135deg, #214dbb, #4da3ff);
+	color: white;
+	padding: 100px 0;
+	text-align: center;
+}
+
+.nx-hero h1 {
+	font-size: 48px;
+	line-height: 1.2;
+}
+
+.nx-hero span {
+	color: #ffb020;
+}
+
+.nx-hero p {
+	max-width: 600px;
+	margin: 20px auto;
+	opacity: 0.9;
+}
+
+/* SEARCH */
+.nx-search-section {
+	padding: 60px 0;
+	text-align: center;
+}
+
+.nx-search-box {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+.nx-search-box input {
+	width: 60%;
+	padding: 14px;
+	border-radius: 8px 0 0 8px;
+	border: 1px solid #cfe0ff;
+}
+
+.nx-search-box button {
+	background: #214dbb;
+	color: white;
+	padding: 14px 20px;
+	border: none;
+	border-radius: 0 8px 8px 0;
+}
+
+.nx-faq button {
+	margin: 10px;
+	padding: 8px 14px;
+	border-radius: 20px;
+	border: 1px solid #cfe0ff;
+	background: #f5f8ff;
+	cursor: pointer;
+}
+
+/* CHAT RESULT */
+.nx-chat-window {
+	background: #f7faff;
+	padding: 20px;
+	border-radius: 12px;
+	min-height: 200px;
+}
+
+/* FEATURES */
+.nx-features {
+	padding: 80px 0;
+}
+
+.nx-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 20px;
+}
+
+.nx-card {
+	background: white;
+	border: 1px solid #e6ecff;
+	padding: 20px;
+	border-radius: 12px;
+}
+
+/* FOOTER */
+.nx-footer {
+	background: #214dbb;
+	color: white;
+	text-align: center;
+	padding: 20px;
+}

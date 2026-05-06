@@ -27,9 +27,17 @@ app_license = "mit"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/digitz_ai_nexus/css/digitz_ai_nexus.css"
 # app_include_js = "/assets/digitz_ai_nexus/js/digitz_ai_nexus.js"
-
+app_include_css = ["/assets/digitz_ai_nexus/css/digitz_desk_premium.css"]
 # include js, css files in header of web template
 # web_include_css = "/assets/digitz_ai_nexus/css/digitz_ai_nexus.css"
+web_include_css = [
+    "/assets/digitz_ai_nexus/css/nexus_experience_hub.css"
+]
+
+web_include_js = [
+    "/assets/digitz_ai_nexus/js/nexus_chat_widget.js",
+    "/assets/digitz_ai_nexus/js/nexus_experience_hub.js"
+]
 # web_include_js = "/assets/digitz_ai_nexus/js/digitz_ai_nexus.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -83,7 +91,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "digitz_ai_nexus.install.before_install"
-# after_install = "digitz_ai_nexus.install.after_install"
+# after_install = "digitz_ai_nexus.setup.install.after_install"
 
 # Uninstallation
 # ------------

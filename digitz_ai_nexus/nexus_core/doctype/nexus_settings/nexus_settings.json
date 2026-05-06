@@ -1,0 +1,210 @@
+{
+ "actions": [],
+ "creation": "2026-04-29 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "default_tenant",
+  "section_llm",
+  "llm_provider",
+  "llm_model",
+  "api_key",
+  "openai_project_id",
+  "section_embedding",
+  "embedding_provider",
+  "embedding_model",
+  "section_chunking",
+  "chunk_size",
+  "chunk_overlap",
+  "section_retrieval",
+  "top_k",
+  "retrieval_candidate_limit",
+  "rerank_candidate_limit",
+  "strict_mode",
+  "section_hybrid_scoring",
+  "vector_weight",
+  "keyword_weight",
+  "business_term_weight",
+  "project_boost_weight",
+  "section_retrieval_features",
+  "enable_multi_query",
+  "enable_reranking",
+  "enable_retrieval_debug"
+ ],
+ "fields": [
+  {
+   "fieldname": "default_tenant",
+   "fieldtype": "Link",
+   "label": "Default Tenant",
+   "options": "Nexus Tenant"
+  },
+  {
+   "fieldname": "section_llm",
+   "fieldtype": "Section Break",
+   "label": "LLM Settings"
+  },
+  {
+   "fieldname": "llm_provider",
+   "fieldtype": "Link",
+   "label": "LLM Provider",
+   "options": "Nexus LLM Provider"
+  },
+  {
+   "default": "gpt-4o-mini",
+   "fieldname": "llm_model",
+   "fieldtype": "Data",
+   "label": "LLM Model"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "openai_project_id",
+   "fieldtype": "Data",
+   "label": "Open AI Project ID"
+  },
+  {
+   "fieldname": "section_embedding",
+   "fieldtype": "Section Break",
+   "label": "Embedding Settings"
+  },
+  {
+   "fieldname": "embedding_provider",
+   "fieldtype": "Link",
+   "label": "Embedding Provider",
+   "options": "Nexus LLM Provider"
+  },
+  {
+   "default": "text-embedding-3-small",
+   "fieldname": "embedding_model",
+   "fieldtype": "Data",
+   "label": "Embedding Model"
+  },
+  {
+   "fieldname": "section_chunking",
+   "fieldtype": "Section Break",
+   "label": "Chunking Settings"
+  },
+  {
+   "default": "800",
+   "fieldname": "chunk_size",
+   "fieldtype": "Int",
+   "label": "Chunk Size"
+  },
+  {
+   "default": "120",
+   "fieldname": "chunk_overlap",
+   "fieldtype": "Int",
+   "label": "Chunk Overlap"
+  },
+  {
+   "fieldname": "section_retrieval",
+   "fieldtype": "Section Break",
+   "label": "Retrieval Settings"
+  },
+  {
+   "default": "5",
+   "fieldname": "top_k",
+   "fieldtype": "Int",
+   "label": "Top K"
+  },
+  {
+   "default": "30",
+   "fieldname": "retrieval_candidate_limit",
+   "fieldtype": "Int",
+   "label": "Retrieval Candidate Limit",
+   "description": "Maximum number of candidate chunks considered before final ranking."
+  },
+  {
+   "default": "20",
+   "fieldname": "rerank_candidate_limit",
+   "fieldtype": "Int",
+   "label": "Re-rank Candidate Limit",
+   "description": "Maximum number of top hybrid-ranked chunks passed into the re-ranking stage."
+  },
+  {
+   "default": "1",
+   "fieldname": "strict_mode",
+   "fieldtype": "Check",
+   "label": "Strict Mode"
+  },
+  {
+   "fieldname": "section_hybrid_scoring",
+   "fieldtype": "Section Break",
+   "label": "Hybrid Scoring Settings"
+  },
+  {
+   "default": "0.50",
+   "fieldname": "vector_weight",
+   "fieldtype": "Float",
+   "label": "Vector Weight"
+  },
+  {
+   "default": "0.25",
+   "fieldname": "keyword_weight",
+   "fieldtype": "Float",
+   "label": "Keyword Weight"
+  },
+  {
+   "default": "0.15",
+   "fieldname": "business_term_weight",
+   "fieldtype": "Float",
+   "label": "Business Term Weight"
+  },
+  {
+   "default": "0.10",
+   "fieldname": "project_boost_weight",
+   "fieldtype": "Float",
+   "label": "Project Boost Weight"
+  },
+  {
+   "fieldname": "section_retrieval_features",
+   "fieldtype": "Section Break",
+   "label": "Retrieval Feature Flags"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_multi_query",
+   "fieldtype": "Check",
+   "label": "Enable Multi-query Retrieval"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_reranking",
+   "fieldtype": "Check",
+   "label": "Enable Re-ranking"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_retrieval_debug",
+   "fieldtype": "Check",
+   "label": "Enable Retrieval Debug"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-04 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Core",
+ "name": "Nexus Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

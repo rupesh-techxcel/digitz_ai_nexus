@@ -1,0 +1,234 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:NKU-.{#####}",
+ "creation": "2026-04-29 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tenant",
+  "business_unit",
+  "project",
+  "title",
+  "status",
+  "version",
+  "section_source",
+  "source_type",
+  "source_reference",
+  "content",
+  "section_context",
+  "context",
+  "sub_context",
+  "entity_type",
+  "entity",
+  "topic",
+  "context_path",
+  "section_access",
+  "default_access_policy",
+  "sensitivity",
+  "section_processing",
+  "content_hash",
+  "chunk_count",
+  "embedding_status",
+  "approved_by",
+  "approved_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1
+  },
+  {
+  "fieldname": "business_unit",
+  "label": "Business Unit",
+  "fieldtype": "Data",
+  "in_list_view": 1
+},
+{
+  "fieldname": "project",
+  "label": "Project",
+  "fieldtype": "Data",
+  "in_list_view": 1
+},
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nReview\nApproved\nActive\nArchived",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "version",
+   "fieldtype": "Int",
+   "label": "Version"
+  },
+  {
+   "fieldname": "section_source",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "default": "Manual",
+   "fieldname": "source_type",
+   "fieldtype": "Select",
+   "label": "Source Type",
+   "options": "Manual\nDocument\nERP\nWebsite\nSupport\nTraining",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_reference",
+   "fieldtype": "Data",
+   "label": "Source Reference"
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Long Text",
+   "label": "Content",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_context",
+   "fieldtype": "Section Break",
+   "label": "Context"
+  },
+  {
+   "fieldname": "context",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Context",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sub_context",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sub Context",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entity_type",
+   "fieldtype": "Data",
+   "label": "Entity Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entity",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Entity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "topic",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Topic",
+   "reqd": 1
+  },
+  {
+   "fieldname": "context_path",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Context Path",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_access",
+   "fieldtype": "Section Break",
+   "label": "Access"
+  },
+  {
+   "fieldname": "default_access_policy",
+   "fieldtype": "Link",
+   "label": "Default Access Policy",
+   "options": "Nexus Access Policy",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sensitivity",
+   "fieldtype": "Select",
+   "label": "Sensitivity",
+   "options": "public\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_processing",
+   "fieldtype": "Section Break",
+   "label": "Processing"
+  },
+  {
+   "fieldname": "content_hash",
+   "fieldtype": "Data",
+   "label": "Content Hash",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "chunk_count",
+   "fieldtype": "Int",
+   "label": "Chunk Count",
+   "read_only": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "embedding_status",
+   "fieldtype": "Select",
+   "label": "Embedding Status",
+   "options": "Pending\nCompleted\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-04-29 16:39:14.880632",
+ "modified_by": "Administrator",
+ "module": "Nexus Knowledge",
+ "name": "Nexus Knowledge Unit",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title"
+}

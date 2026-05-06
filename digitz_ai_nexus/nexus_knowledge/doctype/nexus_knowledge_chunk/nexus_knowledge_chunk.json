@@ -1,0 +1,198 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "format:NKC-.{#####}",
+  "creation": "2026-04-29 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "knowledge_unit",
+    "tenant",
+    "business_unit",
+    "project",
+    "disabled",
+    "chunk_index",
+    "priority",
+    "chunk_text",
+    "chunk_hash",
+    "section_context",
+    "context",
+    "sub_context",
+    "entity_type",
+    "entity",
+    "topic",
+    "context_path",
+    "section_access",
+    "access_policy",
+    "sensitivity",
+    "section_embedding",
+    "embedding",
+    "embedding_model",
+    "embedding_status"
+  ],
+  "fields": [
+    {
+      "fieldname": "knowledge_unit",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Knowledge Unit",
+      "options": "Nexus Knowledge Unit",
+      "reqd": 1
+    },
+    {
+      "fieldname": "tenant",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Tenant",
+      "options": "Nexus Tenant",
+      "reqd": 1
+    },
+    {
+  "fieldname": "business_unit",
+  "label": "Business Unit",
+  "fieldtype": "Data",
+  "in_list_view": 1
+},
+{
+  "fieldname": "project",
+  "label": "Project",
+  "fieldtype": "Data",
+  "in_list_view": 1
+},
+    {
+      "default": "0",
+      "fieldname": "disabled",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Disabled"
+    },
+    {
+      "fieldname": "chunk_index",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Chunk Index",
+      "reqd": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "priority",
+      "fieldtype": "Int",
+      "label": "Priority"
+    },
+    {
+      "fieldname": "chunk_text",
+      "fieldtype": "Long Text",
+      "label": "Chunk Text",
+      "reqd": 1
+    },
+    {
+      "fieldname": "chunk_hash",
+      "fieldtype": "Data",
+      "label": "Chunk Hash"
+    },
+    {
+      "fieldname": "section_context",
+      "fieldtype": "Section Break",
+      "label": "Context"
+    },
+    {
+      "fieldname": "context",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Context"
+    },
+    {
+      "fieldname": "sub_context",
+      "fieldtype": "Data",
+      "label": "Sub Context"
+    },
+    {
+      "fieldname": "entity_type",
+      "fieldtype": "Data",
+      "label": "Entity Type"
+    },
+    {
+      "fieldname": "entity",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Entity"
+    },
+    {
+      "fieldname": "topic",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Topic"
+    },
+    {
+      "fieldname": "context_path",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Context Path"
+    },
+    {
+      "fieldname": "section_access",
+      "fieldtype": "Section Break",
+      "label": "Access"
+    },
+    {
+      "fieldname": "access_policy",
+      "fieldtype": "Link",
+      "label": "Access Policy",
+      "options": "Nexus Access Policy",
+      "reqd": 1
+    },
+    {
+      "fieldname": "sensitivity",
+      "fieldtype": "Select",
+      "label": "Sensitivity",
+      "options": "public\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_embedding",
+      "fieldtype": "Section Break",
+      "label": "Embedding"
+    },
+    {
+      "fieldname": "embedding",
+      "fieldtype": "Long Text",
+      "label": "Embedding"
+    },
+    {
+      "fieldname": "embedding_model",
+      "fieldtype": "Data",
+      "label": "Embedding Model"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "embedding_status",
+      "fieldtype": "Select",
+      "label": "Embedding Status",
+      "options": "Pending\nCompleted\nFailed"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-04-29 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Nexus Knowledge",
+  "name": "Nexus Knowledge Chunk",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
