@@ -46,3 +46,42 @@ def split_text_into_chunks(text: str, chunk_size: int = 800, chunk_overlap: int 
         chunks.append(current.strip())
 
     return chunks
+
+def chunk_text(text, max_chars=1800, overlap_chars=200):
+    """
+    Simple MVP chunker.
+    Splits text into overlapping chunks.
+    """
+
+    if not text:
+        return []
+
+    text = str(text).strip()
+
+    if len(text) <= max_chars:
+        return [{"text": text}]
+
+    chunks = []
+    start = 0
+    index = 1
+
+    while start < len(text):
+        end = start + max_chars
+        chunk = text[start:end].strip()
+
+        if chunk:
+            chunks.append({
+                "index": index,
+                "text": chunk,
+            })
+            index += 1
+
+        start = end - overlap_chars
+
+        if start < 0:
+            start = 0
+
+        if start >= len(text):
+            break
+
+    return chunks

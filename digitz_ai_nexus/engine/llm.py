@@ -11,9 +11,10 @@ def get_openai_client():
 
     return OpenAI(
         api_key=api_key,
-        project=settings.openai_project_id or None
+        project=settings.openai_project_id or None,
+        timeout=20.0,
+        max_retries=1,
     )
-
 
 class OpenAILLMProvider:
     def __init__(self):
@@ -22,22 +23,31 @@ class OpenAILLMProvider:
         self.model = settings.llm_model or "gpt-4o-mini"
 
     def generate(self, prompt: str):
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are DIGITZ AI Nexus, a controlled enterprise knowledge assistant."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.2
-        )
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are DIGITZ AI Nexus, a controlled enterprise knowledge assistant."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.2
+            )
 
-        return response.choices[0].message.content
+            return response.choices[0].message.content
+
+        except Exception:
+            frappe.log_error(
+                frappe.get_traceback(),
+                "Nexus LLM Generation Failed"
+            )
+            raise
 
 
 def get_default_llm_provider():

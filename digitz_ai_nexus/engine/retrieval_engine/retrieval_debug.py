@@ -46,6 +46,14 @@ def build_candidate_debug_row(candidate):
         "rerank_reasons": candidate.get("rerank_reasons") or [],
         "selected": 1 if candidate.get("selected") else 0,
         "debug_reason": candidate.get("debug_reason") or "",
+        # Retrieval stability visibility
+        "retrieval_stability_score": safe_float(candidate.get("retrieval_stability_score")),
+        "stable_final_score": safe_float(candidate.get("stable_final_score")),
+        "stable_vector_score": safe_float(candidate.get("stable_vector_score")),
+        "stable_keyword_score": safe_float(candidate.get("stable_keyword_score")),
+        "stable_priority_score": safe_float(candidate.get("stable_priority_score")),
+        "stable_project_score": safe_float(candidate.get("stable_project_score")),
+        "stable_rerank_score": safe_float(candidate.get("stable_rerank_score")),
     }
 
 

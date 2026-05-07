@@ -1,0 +1,183 @@
+{
+  "doctype": "DocType",
+  "name": "Nexus Knowledge Source",
+  "module": "Nexus Knowledge",
+  "custom": 0,
+  "is_submittable": 0,
+  "track_changes": 1,
+  "autoname": "field:title",
+  "title_field": "title",
+  "field_order": [
+    "title",
+    "source_type",
+    "source_file",
+    "manual_content",
+    "classification_section",
+    "tenant",
+    "business_unit",
+    "project",
+    "context",
+    "sub_context",
+    "entity_type",
+    "entity",
+    "topic",
+    "governance_section",
+    "access_policy",
+    "priority",
+    "status",
+    "processing_section",
+    "processing_status",
+    "chunk_count",
+    "embedding_status",
+    "last_processed_on",
+    "error_log"
+  ],
+  "fields": [
+    {
+      "fieldname": "title",
+      "label": "Title",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "source_type",
+      "label": "Source Type",
+      "fieldtype": "Select",
+      "options": "PDF\nDOCX\nTXT\nManual",
+      "reqd": 1,
+      "default": "Manual"
+    },
+    {
+      "fieldname": "source_file",
+      "label": "Source File",
+      "fieldtype": "Attach",
+      "depends_on": "eval:doc.source_type!='Manual'"
+    },
+    {
+      "fieldname": "manual_content",
+      "label": "Manual Content",
+      "fieldtype": "Long Text",
+      "depends_on": "eval:doc.source_type=='Manual'"
+    },
+    {
+      "fieldname": "classification_section",
+      "label": "Classification",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "tenant",
+      "label": "Tenant",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "business_unit",
+      "label": "Business Unit",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "project",
+      "label": "Project",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "context",
+      "label": "Context",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "sub_context",
+      "label": "Sub Context",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "entity_type",
+      "label": "Entity Type",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "entity",
+      "label": "Entity",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "topic",
+      "label": "Topic",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "governance_section",
+      "label": "Governance",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "access_policy",
+      "label": "Access Policy",
+      "fieldtype": "Link",
+      "options": "Nexus Access Policy"
+    },
+    {
+      "fieldname": "priority",
+      "label": "Priority",
+      "fieldtype": "Int",
+      "default": 0
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "Draft\nPublished\nDisabled",
+      "default": "Draft",
+      "reqd": 1
+    },
+    {
+      "fieldname": "processing_section",
+      "label": "Processing",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "processing_status",
+      "label": "Processing Status",
+      "fieldtype": "Select",
+      "options": "Pending\nProcessing\nProcessed\nFailed",
+      "default": "Pending",
+      "read_only": 1
+    },
+    {
+      "fieldname": "chunk_count",
+      "label": "Chunk Count",
+      "fieldtype": "Int",
+      "read_only": 1
+    },
+    {
+      "fieldname": "embedding_status",
+      "label": "Embedding Status",
+      "fieldtype": "Select",
+      "options": "Pending\nCompleted\nFailed",
+      "default": "Pending",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_processed_on",
+      "label": "Last Processed On",
+      "fieldtype": "Datetime",
+      "read_only": 1
+    },
+    {
+      "fieldname": "error_log",
+      "label": "Error Log",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ]
+}

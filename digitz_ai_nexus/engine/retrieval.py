@@ -255,7 +255,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
         query_variants = [query]
 
     candidate_chunks = get_candidate_chunks(query_contract)
-
     weights = get_retrieval_weights()
 
     merged_candidates = {}
@@ -303,9 +302,39 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             candidate["chunk_text"] = row.chunk_text
             candidate["sensitivity"] = row.sensitivity
             candidate["context_path"] = row.context_path
+            candidate["knowledge_unit"] = row.knowledge_unit
+            candidate["business_unit"] = row.business_unit
+            candidate["tenant"] = row.tenant
+            candidate["context"] = row.context
+            candidate["sub_context"] = row.sub_context
+            candidate["entity_type"] = row.entity_type
+            candidate["entity"] = row.entity
+            candidate["topic"] = row.topic
             candidate["scope_type"] = "project" if row_project else "general"
             candidate["priority"] = row.priority or 0
             candidate["project"] = row_project
+
+            # Retrieval stability fields
+            candidate["stable_vector_score"] = float(candidate.get("vector_score") or 0)
+            candidate["stable_keyword_score"] = float(candidate.get("keyword_score") or 0)
+            candidate["stable_priority_score"] = float(candidate.get("priority_score") or 0)
+            candidate["stable_project_score"] = float(candidate.get("project_boost") or 0)
+            candidate["stable_rerank_score"] = 0.0
+
+            candidate["stable_final_score"] = round(
+                (
+                    candidate["stable_vector_score"] * 0.45
+                    + candidate["stable_keyword_score"] * 0.25
+                    + candidate["stable_priority_score"] * 0.10
+                    + candidate["stable_project_score"] * 0.10
+                    + candidate["stable_rerank_score"] * 0.10
+                ),
+                6,
+            )
+
+            # Do not override existing final_score before reranking.
+            # Use stable score only as a safe fallback/debug value.
+            candidate["retrieval_stability_score"] = candidate["stable_final_score"]
 
             chunk_name = candidate.get("chunk")
             if not chunk_name:
@@ -325,13 +354,20 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
                 "project_boost",
                 "hybrid_score",
                 "final_score",
+                "stable_vector_score",
+                "stable_keyword_score",
+                "stable_priority_score",
+                "stable_project_score",
+                "stable_rerank_score",
+                "stable_final_score",
+                "retrieval_stability_score",
             ]:
                 existing[score_key] = max(
                     float(existing.get(score_key) or 0),
                     float(candidate.get(score_key) or 0),
                 )
 
-            existing["score"] = existing["hybrid_score"]
+            existing["score"] = existing.get("hybrid_score") or 0
 
             matched_queries = existing.get("matched_queries") or []
             matched_queries.extend(candidate.get("matched_queries") or [])
@@ -341,8 +377,10 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
         merged_candidates.values(),
         key=lambda x: (
             float(x.get("hybrid_score") or 0),
+            float(x.get("retrieval_stability_score") or 0),
             float(x.get("keyword_score") or 0),
             float(x.get("vector_score") or 0),
+            float(x.get("priority_score") or 0),
         ),
         reverse=True,
     )
@@ -359,13 +397,54 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             requested_project=requested_project,
             limit=rerank_candidate_limit,
         )
+
+        for index, candidate in enumerate(reranked, start=1):
+            candidate["rank_after_rerank"] = candidate.get("rank_after_rerank") or index
+            candidate["stable_rerank_score"] = float(candidate.get("rerank_bonus") or 0)
+
+            candidate["stable_final_score"] = round(
+                (
+                    float(candidate.get("stable_vector_score") or candidate.get("vector_score") or 0) * 0.45
+                    + float(candidate.get("stable_keyword_score") or candidate.get("keyword_score") or 0) * 0.25
+                    + float(candidate.get("stable_priority_score") or candidate.get("priority_score") or 0) * 0.10
+                    + float(candidate.get("stable_project_score") or candidate.get("project_boost") or 0) * 0.10
+                    + float(candidate.get("stable_rerank_score") or 0) * 0.10
+                ),
+                6,
+            )
+
+            candidate["retrieval_stability_score"] = candidate["stable_final_score"]
+
+            # Preserve reranker final_score if already calculated.
+            # Otherwise safely fallback to stable final score.
+            candidate["final_score"] = (
+                candidate.get("final_score")
+                or candidate.get("rerank_score")
+                or candidate.get("retrieval_stability_score")
+                or candidate.get("hybrid_score")
+                or 0
+            )
     else:
         reranked = scored
         for index, candidate in enumerate(reranked, start=1):
             candidate["rank_after_rerank"] = index
             candidate["rerank_bonus"] = 0.0
             candidate["rerank_score"] = candidate.get("hybrid_score") or 0
-            candidate["final_score"] = candidate.get("hybrid_score") or 0
+            candidate["stable_rerank_score"] = 0.0
+
+            candidate["stable_final_score"] = round(
+                (
+                    float(candidate.get("stable_vector_score") or candidate.get("vector_score") or 0) * 0.45
+                    + float(candidate.get("stable_keyword_score") or candidate.get("keyword_score") or 0) * 0.25
+                    + float(candidate.get("stable_priority_score") or candidate.get("priority_score") or 0) * 0.10
+                    + float(candidate.get("stable_project_score") or candidate.get("project_boost") or 0) * 0.10
+                    + float(candidate.get("stable_rerank_score") or 0) * 0.10
+                ),
+                6,
+            )
+
+            candidate["retrieval_stability_score"] = candidate["stable_final_score"]
+            candidate["final_score"] = candidate.get("hybrid_score") or candidate["stable_final_score"]
             candidate["rerank_reasons"] = []
 
     # Preserve your existing scope balance logic
@@ -380,11 +459,22 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
     for row in reranked:
         row["selected"] = row.get("chunk") in final_names
-        row["score"] = row.get("final_score") or row.get("hybrid_score") or 0
+        row["score"] = (
+            row.get("final_score")
+            or row.get("retrieval_stability_score")
+            or row.get("hybrid_score")
+            or 0
+        )
 
     for row in final_results:
         row["selected"] = True
-        row["score"] = row.get("final_score") or row.get("hybrid_score") or row.get("score") or 0
+        row["score"] = (
+            row.get("final_score")
+            or row.get("retrieval_stability_score")
+            or row.get("hybrid_score")
+            or row.get("score")
+            or 0
+        )
 
     return {
         "results": final_results,
@@ -401,10 +491,53 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             "keyword": weights.get("keyword_weight"),
             "business_keyword": weights.get("business_term_weight"),
             "project_boost": weights.get("project_boost_weight"),
+            "stability_vector": 0.45,
+            "stability_keyword": 0.25,
+            "stability_priority": 0.10,
+            "stability_project": 0.10,
+            "stability_rerank": 0.10,
         },
         "features": {
             "multi_query": bool(enable_multi_query),
             "reranking": bool(enable_reranking),
             "retrieval_debug": bool(enable_retrieval_debug),
         },
+    }
+    
+def clamp_score(value, minimum=0.0, maximum=1.0):
+    try:
+        value = float(value or 0)
+    except Exception:
+        value = 0.0
+
+    return max(minimum, min(value, maximum))
+
+def calculate_retrieval_final_score(
+    vector_score=0,
+    keyword_score=0,
+    priority_score=0,
+    project_score=0,
+    rerank_score=0,
+):
+    vector_score = clamp_score(vector_score)
+    keyword_score = clamp_score(keyword_score)
+    priority_score = clamp_score(priority_score)
+    project_score = clamp_score(project_score)
+    rerank_score = clamp_score(rerank_score)
+
+    final_score = (
+        vector_score * 0.45
+        + keyword_score * 0.25
+        + priority_score * 0.10
+        + project_score * 0.10
+        + rerank_score * 0.10
+    )
+
+    return {
+        "vector_score": vector_score,
+        "keyword_score": keyword_score,
+        "priority_score": priority_score,
+        "project_score": project_score,
+        "rerank_score": rerank_score,
+        "final_score": round(final_score, 6),
     }
