@@ -30,7 +30,14 @@
     "chunk_count",
     "embedding_status",
     "last_processed_on",
-    "error_log"
+    "generated_knowledge_unit",
+    "error_log",
+    "preview_section",
+    "extracted_text_preview",
+    "generated_chunks_html",
+    "test_section",
+    "last_test_query",
+    "last_test_result"
   ],
   "fields": [
     {
@@ -165,8 +172,49 @@
       "read_only": 1
     },
     {
+      "fieldname": "generated_knowledge_unit",
+      "label": "Generated Knowledge Unit",
+      "fieldtype": "Link",
+      "options": "Nexus Knowledge Unit",
+      "read_only": 1
+    },
+    {
       "fieldname": "error_log",
       "label": "Error Log",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "preview_section",
+      "label": "Source Preview / Quality Panel",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "extracted_text_preview",
+      "label": "Extracted Text Preview",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "generated_chunks_html",
+      "label": "Generated Chunks",
+      "fieldtype": "HTML",
+      "read_only": 1
+    },
+    {
+      "fieldname": "test_section",
+      "label": "Source Testing",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "last_test_query",
+      "label": "Last Test Query",
+      "fieldtype": "Small Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_test_result",
+      "label": "Last Test Result",
       "fieldtype": "Long Text",
       "read_only": 1
     }

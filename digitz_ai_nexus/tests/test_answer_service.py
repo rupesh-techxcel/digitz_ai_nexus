@@ -13,7 +13,7 @@ class MockLLMProvider:
         return "Hire Return valuation is handled based on the approved project knowledge."
 
 
-def fake_allowed_retrieval(payload, embedding_provider=None):
+def fake_allowed_retrieval(payload, query_embedding=None, embedding_provider=None, **kwargs):
     return {
         "results": [
             {
@@ -45,8 +45,7 @@ def fake_allowed_retrieval(payload, embedding_provider=None):
         "project_scope_mode": "with_general",
     }
 
-
-def fake_no_context_retrieval(payload, embedding_provider=None):
+def fake_no_context_retrieval(payload, query_embedding=None, embedding_provider=None, **kwargs):
     return {
         "results": [],
         "denied": [],
@@ -58,7 +57,7 @@ def fake_no_context_retrieval(payload, embedding_provider=None):
     }
 
 
-def fake_restricted_retrieval(payload, embedding_provider=None):
+def fake_restricted_retrieval(payload, query_embedding=None, embedding_provider=None, **kwargs):
     return {
         "results": [],
         "denied": [

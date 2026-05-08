@@ -1,0 +1,3 @@
+openai
+PyMuPDF==1.24.14
+python-docx

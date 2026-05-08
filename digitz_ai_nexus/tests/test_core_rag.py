@@ -264,10 +264,11 @@ class TestNexusCoreRAG(FrappeTestCase):
         res = ask(
             payload,
             llm_provider=FakeLLMProvider(),
-            retrieval_fn=lambda payload, embedding_provider=None: retrieve_allowed_chunks(
+            retrieval_fn=lambda payload, query_embedding=None, embedding_provider=None, **kwargs: retrieve_allowed_chunks(
                 payload,
                 query_embedding=[1.0, 0.0, 0.0],
             ),
+            
         )
 
         self.assertEqual(res["status"], "success")
@@ -290,7 +291,7 @@ class TestNexusCoreRAG(FrappeTestCase):
         res = ask(
             payload,
             llm_provider=FakeLLMProvider(),
-            retrieval_fn=lambda payload, embedding_provider=None: {
+            retrieval_fn=lambda payload, query_embedding=None, embedding_provider=None, **kwargs: {
                 "results": [],
                 "denied": [],
                 "candidate_count": 0,
@@ -352,7 +353,7 @@ class TestNexusCoreRAG(FrappeTestCase):
         res = ask(
             payload,
             llm_provider=ExplodingLLMProvider(),
-            retrieval_fn=lambda payload, embedding_provider=None: {
+            retrieval_fn=lambda payload, query_embedding=None, embedding_provider=None, **kwargs: {
                 "results": [],
                 "denied": [],
                 "candidate_count": 0,

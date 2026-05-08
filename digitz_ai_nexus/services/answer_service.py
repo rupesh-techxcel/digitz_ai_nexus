@@ -8,18 +8,13 @@ from digitz_ai_nexus.engine.llm import generate_answer
 RESTRICTED_ANSWER = "You do not have permission to access this information."
 
 
-def answer_query(payload, retrieval_fn=None, embedding_provider=None, llm_provider=None):
-    """
-    Main Nexus answer pipeline.
-
-    Flow:
-    query contract
-    -> retrieve allowed chunks
-    -> build grounded prompt
-    -> generate LLM answer
-    -> return answer + confidence + sources
-    """
-
+def answer_query(
+    payload,
+    retrieval_fn=None,
+    embedding_provider=None,
+    llm_provider=None,
+    query_embedding=None,
+):
     if not payload:
         frappe.throw("Payload is required")
 
@@ -31,11 +26,18 @@ def answer_query(payload, retrieval_fn=None, embedding_provider=None, llm_provid
 
     retrieval_result = retrieval_fn(
         payload,
+        query_embedding=query_embedding,
         embedding_provider=embedding_provider,
     )
 
     chunks = retrieval_result.get("results") or []
     denied = retrieval_result.get("denied") or []
+    
+    if retrieval_result.get("access_status") == "restricted":
+        return build_restricted_response(
+            retrieval_result=retrieval_result,
+            denied=denied,
+        )
 
     if not chunks:
         if denied:
@@ -78,22 +80,20 @@ def answer_query(payload, retrieval_fn=None, embedding_provider=None, llm_provid
             confidence=confidence,
         )
 
+    sources = build_sources(chunks)
+
     return {
         "status": "success",
         "access_status": "allowed",
         "answer": answer,
         "confidence": confidence,
-        "sources": build_sources(chunks),
+        "sources": sources,
+        "citations": build_citation_summary(sources),
         "retrieval_result": retrieval_result,
         "fallback_used": 0,
     }
 
-
 def build_sources(chunks):
-    """
-    Build source citation contract from retrieved chunks.
-    """
-
     sources = []
     seen = set()
 
@@ -136,11 +136,27 @@ def build_sources(chunks):
     return sources
 
 
-def calculate_confidence(chunks):
-    """
-    Basic MVP confidence calculation from retrieval scores.
-    """
+def build_citation_summary(sources):
+    if not sources:
+        return []
 
+    citation_summary = []
+
+    for idx, source in enumerate(sources, start=1):
+        citation_summary.append({
+            "source_no": idx,
+            "chunk": source.get("chunk"),
+            "knowledge_unit": source.get("knowledge_unit"),
+            "context_path": source.get("context_path"),
+            "business_unit": source.get("business_unit"),
+            "project": source.get("project"),
+            "score": source.get("score"),
+        })
+
+    return citation_summary
+
+
+def calculate_confidence(chunks):
     if not chunks:
         return 0.0
 
@@ -171,13 +187,7 @@ def calculate_confidence(chunks):
 
 
 def get_minimum_confidence():
-    """
-    Read minimum confidence from Nexus Settings if available.
-    Defaults to 0.20.
-    """
-
     settings = frappe.get_single("Nexus Settings")
-
     value = getattr(settings, "minimum_confidence", None)
 
     if value is None:
@@ -190,10 +200,6 @@ def get_minimum_confidence():
 
 
 def is_fallback_answer(answer):
-    """
-    Detect model-generated fallback and normalize it.
-    """
-
     normalized = (answer or "").strip().lower()
     fallback = SAFE_FALLBACK_ANSWER.strip().lower()
 
@@ -207,6 +213,7 @@ def build_safe_fallback(retrieval_result=None, denied=None, confidence=0.0):
         "answer": SAFE_FALLBACK_ANSWER,
         "confidence": round(float(confidence or 0), 2),
         "sources": [],
+        "citations": [],
         "retrieval_result": retrieval_result or {},
         "denied": denied or [],
         "fallback_used": 1,
@@ -220,6 +227,7 @@ def build_restricted_response(retrieval_result=None, denied=None):
         "answer": RESTRICTED_ANSWER,
         "confidence": 0,
         "sources": [],
+        "citations": [],
         "retrieval_result": retrieval_result or {},
         "denied": denied or [],
         "fallback_used": 1,

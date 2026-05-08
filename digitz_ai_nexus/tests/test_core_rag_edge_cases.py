@@ -227,6 +227,12 @@ class TestNexusCoreRAGEdgeCases(FrappeTestCase):
         doc.context_path = f"ERP/General/Product/DIGITZ ERP/{topic}"
         doc.access_policy = policy
         doc.sensitivity = "public"
+        
+        if doc.meta.has_field("allowed_roles"):
+            doc.allowed_roles = "[]"
+
+        if doc.meta.has_field("denied_roles"):
+            doc.denied_roles = "[]"
 
         if embedding is None:
             doc.embedding = None

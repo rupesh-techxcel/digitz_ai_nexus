@@ -37,6 +37,17 @@ CHUNK_FIELDS = [
     "chunk_text",
     "embedding",
     "access_policy",
+
+    # Role fields
+    "allowed_roles",
+    "roles",
+    "user_roles",
+
+    # Deny fields
+    "denied_roles",
+    "excluded_roles",
+    "deny_roles",
+
     "sensitivity",
     "context",
     "sub_context",
@@ -46,7 +57,6 @@ CHUNK_FIELDS = [
     "context_path",
     "priority",
 ]
-
 
 def normalize_project(value):
     return (value or "").strip()
@@ -58,6 +68,7 @@ def tokenize(text):
 
     tokens = re.findall(r"[A-Za-z0-9]+", text.lower())
     return [t for t in tokens if t not in STOP_WORDS and len(t) > 1]
+
 
 def apply_scope_balance(scored, top_k, requested_project, scope_mode):
     if not requested_project or scope_mode == "strict" or top_k <= 1:
@@ -77,8 +88,6 @@ def apply_scope_balance(scored, top_k, requested_project, scope_mode):
     if not best_project or not best_general:
         return top_results
 
-    balanced = []
-
     if best_project["score"] >= best_general["score"]:
         balanced = [best_project, best_general]
     else:
@@ -95,6 +104,7 @@ def apply_scope_balance(scored, top_k, requested_project, scope_mode):
             break
 
     return balanced[:top_k]
+
 
 def cosine_similarity(vec1, vec2):
     if not vec1 or not vec2:
@@ -169,13 +179,73 @@ def build_context_filters(query_contract):
     return filters
 
 
-def fetch_chunks(filters):
-    return frappe.get_all(
-        "Nexus Knowledge Chunk",
-        filters=filters,
-        fields=CHUNK_FIELDS,
+def enrich_chunk_roles_from_unit(rows):
+    if not rows:
+        return rows
+
+    unit_names = list({
+        row.get("knowledge_unit")
+        for row in rows
+        if row.get("knowledge_unit")
+    })
+
+    if not unit_names:
+        return rows
+
+    unit_meta = frappe.get_meta("Nexus Knowledge Unit")
+
+    role_fields = [
+        "allowed_roles",
+        "denied_roles",
+        "excluded_roles",
+        "deny_roles",
+    ]
+
+    valid_unit_fields = [
+        field for field in role_fields
+        if unit_meta.has_field(field)
+    ]
+
+    if not valid_unit_fields:
+        return rows
+
+    units = frappe.get_all(
+        "Nexus Knowledge Unit",
+        filters={"name": ["in", unit_names]},
+        fields=["name"] + valid_unit_fields,
         limit_page_length=500,
     )
+
+    unit_map = {unit.name: unit for unit in units}
+
+    for row in rows:
+        unit = unit_map.get(row.get("knowledge_unit"))
+        if not unit:
+            continue
+
+        for field in role_fields:
+            if field not in row or not row.get(field):
+                row[field] = unit.get(field)
+
+    return rows
+
+
+def fetch_chunks(filters):
+    meta = frappe.get_meta("Nexus Knowledge Chunk")
+
+    valid_fields = [
+        field for field in CHUNK_FIELDS
+        if field == "name" or meta.has_field(field)
+    ]
+
+    rows = frappe.get_all(
+        "Nexus Knowledge Chunk",
+        filters=filters,
+        fields=valid_fields,
+        limit_page_length=500,
+    )
+
+    return enrich_chunk_roles_from_unit(rows)
 
 
 def get_candidate_chunks(query_contract):
@@ -210,6 +280,71 @@ def hybrid_final_score(vector_score, keyword_score_value, priority_score_value):
         + (keyword_score_value * KEYWORD_WEIGHT)
         + (priority_score_value * PRIORITY_WEIGHT)
     )
+
+
+def row_value(row, fieldname):
+    if isinstance(row, dict):
+        return row.get(fieldname)
+
+    return getattr(row, fieldname, None)
+
+
+def build_restricted_response(
+    denied,
+    query_variants,
+    candidate_chunks,
+    scope_mode,
+    weights,
+    enable_multi_query,
+    enable_reranking,
+    enable_retrieval_debug,
+    strongest_denied,
+):
+    return {
+        "results": [],
+        "debug": [],
+        "denied": denied,
+        "query_variants": query_variants,
+        "candidate_count": len(candidate_chunks),
+        "allowed_count": 0,
+        "denied_count": len(denied),
+        "retrieval_mode": "hybrid_grounded_rag",
+        "project_scope_mode": scope_mode,
+        "access_status": "restricted",
+        "access_reason": strongest_denied.get("reason") or "Restricted",
+        "restricted_chunk": strongest_denied,
+        "weights": {
+            "vector": weights.get("vector_weight"),
+            "keyword": weights.get("keyword_weight"),
+            "business_keyword": weights.get("business_term_weight"),
+            "project_boost": weights.get("project_boost_weight"),
+            "stability_vector": 0.45,
+            "stability_keyword": 0.25,
+            "stability_priority": 0.10,
+            "stability_project": 0.10,
+            "stability_rerank": 0.10,
+        },
+        "features": {
+            "multi_query": bool(enable_multi_query),
+            "reranking": bool(enable_reranking),
+            "retrieval_debug": bool(enable_retrieval_debug),
+        },
+    }
+def build_denied_debug_row(row, query, reason, vector_score=0):
+    return {
+        "chunk": row_value(row, "name"),
+        "knowledge_unit": row_value(row, "knowledge_unit"),
+        "reason": reason,
+        "access_policy": row_value(row, "access_policy"),
+        "keyword_score": keyword_score(
+            query,
+            row_value(row, "chunk_text"),
+            row_value(row, "context_path"),
+        ),
+        "vector_score": float(vector_score or 0),
+        "chunk_text": row_value(row, "chunk_text"),
+        "context_path": row_value(row, "context_path"),
+    }
 
 
 def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_provider=None):
@@ -259,6 +394,7 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
     merged_candidates = {}
     denied = []
+    denied_relevance = {}
 
     for variant_query in query_variants:
         variant_embedding = query_embedding
@@ -273,13 +409,51 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             allowed, reason = can_access_chunk(user_context, row)
 
             if not allowed:
+                denied_vector_score = 0
+
+                try:
+                    if row.embedding and variant_embedding:
+                        denied_vector_score = cosine_similarity(
+                            variant_embedding,
+                            json.loads(row.embedding)
+                        )
+                except Exception:
+                    denied_vector_score = 0
+
+                denied_row = build_denied_debug_row(
+                    row,
+                    variant_query,
+                    reason,
+                    denied_vector_score,
+                )
+
+                denied_chunk = denied_row.get("chunk")
+
+                if denied_chunk:
+                    existing = denied_relevance.get(denied_chunk) or {}
+
+                    existing_score = max(
+                        float(existing.get("keyword_score") or 0),
+                        float(existing.get("vector_score") or 0),
+                    )
+
+                    new_score = max(
+                        float(denied_row.get("keyword_score") or 0),
+                        float(denied_row.get("vector_score") or 0),
+                    )
+
+                    if new_score >= existing_score:
+                        denied_relevance[denied_chunk] = denied_row
+
                 already_denied = any(d.get("chunk") == row.name for d in denied)
+
                 if not already_denied:
                     denied.append({
                         "chunk": row.name,
                         "reason": reason,
                         "access_policy": row.access_policy,
                     })
+
                 continue
 
             if not row.embedding:
@@ -296,7 +470,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
                 weights=weights,
             )
 
-            # Preserve old keys expected by existing Ask API / Testing Lab
             candidate["score"] = candidate.get("hybrid_score") or 0
             candidate["priority_score"] = priority_score(row.priority)
             candidate["chunk_text"] = row.chunk_text
@@ -314,7 +487,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             candidate["priority"] = row.priority or 0
             candidate["project"] = row_project
 
-            # Retrieval stability fields
             candidate["stable_vector_score"] = float(candidate.get("vector_score") or 0)
             candidate["stable_keyword_score"] = float(candidate.get("keyword_score") or 0)
             candidate["stable_priority_score"] = float(candidate.get("priority_score") or 0)
@@ -332,8 +504,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
                 6,
             )
 
-            # Do not override existing final_score before reranking.
-            # Use stable score only as a safe fallback/debug value.
             candidate["retrieval_stability_score"] = candidate["stable_final_score"]
 
             chunk_name = candidate.get("chunk")
@@ -346,7 +516,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
             existing = merged_candidates[chunk_name]
 
-            # Keep strongest scores across multi-query variants
             for score_key in [
                 "vector_score",
                 "keyword_score",
@@ -387,6 +556,34 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
     scored = scored[:retrieval_candidate_limit]
 
+    strongest_denied_score = 0.0
+    strongest_denied = None
+
+    for denied_row in denied_relevance.values():
+        denied_score = max(
+            float(denied_row.get("keyword_score") or 0),
+            float(denied_row.get("vector_score") or 0),
+        )
+
+        if denied_score >= strongest_denied_score:
+            strongest_denied_score = denied_score
+            strongest_denied = denied_row
+
+    restricted_threshold = 0.01
+
+    if strongest_denied and strongest_denied_score >= restricted_threshold:
+        return build_restricted_response(
+            denied=denied,
+            query_variants=query_variants,
+            candidate_chunks=candidate_chunks,
+            scope_mode=scope_mode,
+            weights=weights,
+            enable_multi_query=enable_multi_query,
+            enable_reranking=enable_reranking,
+            enable_retrieval_debug=enable_retrieval_debug,
+            strongest_denied=strongest_denied,
+        )
+
     for index, candidate in enumerate(scored, start=1):
         candidate["rank_before_rerank"] = index
 
@@ -415,8 +612,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
             candidate["retrieval_stability_score"] = candidate["stable_final_score"]
 
-            # Preserve reranker final_score if already calculated.
-            # Otherwise safely fallback to stable final score.
             candidate["final_score"] = (
                 candidate.get("final_score")
                 or candidate.get("rerank_score")
@@ -426,6 +621,7 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             )
     else:
         reranked = scored
+
         for index, candidate in enumerate(reranked, start=1):
             candidate["rank_after_rerank"] = index
             candidate["rerank_bonus"] = 0.0
@@ -447,7 +643,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             candidate["final_score"] = candidate.get("hybrid_score") or candidate["stable_final_score"]
             candidate["rerank_reasons"] = []
 
-    # Preserve your existing scope balance logic
     final_results = apply_scope_balance(
         scored=reranked,
         top_k=top_k,
@@ -503,7 +698,7 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             "retrieval_debug": bool(enable_retrieval_debug),
         },
     }
-    
+
 def clamp_score(value, minimum=0.0, maximum=1.0):
     try:
         value = float(value or 0)
@@ -511,6 +706,7 @@ def clamp_score(value, minimum=0.0, maximum=1.0):
         value = 0.0
 
     return max(minimum, min(value, maximum))
+
 
 def calculate_retrieval_final_score(
     vector_score=0,

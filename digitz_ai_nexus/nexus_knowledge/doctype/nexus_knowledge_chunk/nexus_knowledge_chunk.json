@@ -17,6 +17,8 @@
   "chunk_hash",
   "column_break_lpct",
   "knowledge_source",
+  "allowed_roles",
+  "denied_roles",
   "section_context",
   "context",
   "sub_context",
@@ -181,11 +183,21 @@
    "fieldtype": "Link",
    "label": "Knowledge Source",
    "options": "Nexus Knowledge Source"
+  },
+  {
+   "fieldname": "allowed_roles",
+   "fieldtype": "Text",
+   "label": "Allowed Roles"
+  },
+  {
+   "fieldname": "denied_roles",
+   "fieldtype": "Text",
+   "label": "Denied Roles"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-07 07:46:03.998230",
+ "modified": "2026-05-08 15:05:40.107475",
  "modified_by": "Administrator",
  "module": "Nexus Knowledge",
  "name": "Nexus Knowledge Chunk",
