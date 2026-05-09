@@ -75,8 +75,8 @@ function process_knowledge_source(frm) {
 
 
 function refresh_quality_panel(frm) {
-    frappe.call({
-        method: "digitz_ai_nexus.digitz_ai_nexus.doctype.nexus_knowledge_source.nexus_knowledge_source.get_source_quality_panel",
+    frappe.call({                
+        method: "digitz_ai_nexus.nexus_knowledge.doctype.nexus_knowledge_source.nexus_knowledge_source.get_source_quality_panel",
         args: {
             source_name: frm.doc.name
         },

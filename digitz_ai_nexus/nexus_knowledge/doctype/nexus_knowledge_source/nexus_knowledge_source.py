@@ -34,20 +34,32 @@ def get_source_quality_panel(source_name):
     chunks = []
 
     if source.generated_knowledge_unit:
+        chunk_fields = [
+            "name",
+            "knowledge_unit",
+            "chunk_index",
+            "embedding",
+            "creation",
+            "modified"
+        ]
+
+        chunk_meta = frappe.get_meta("Nexus Knowledge Chunk")
+
+        if chunk_meta.has_field("content"):
+            chunk_fields.append("content")
+
+        if chunk_meta.has_field("chunk_text"):
+            chunk_fields.append("chunk_text")
+
+        if chunk_meta.has_field("text"):
+            chunk_fields.append("text")
+
         chunks = frappe.get_all(
             "Nexus Knowledge Chunk",
             filters={
                 "knowledge_unit": source.generated_knowledge_unit
             },
-            fields=[
-                "name",
-                "knowledge_unit",
-                "chunk_index",
-                "content",
-                "embedding",
-                "creation",
-                "modified"
-            ],
+            fields=chunk_fields,
             order_by="chunk_index asc",
             limit_page_length=100
         )
@@ -57,6 +69,13 @@ def get_source_quality_panel(source_name):
     for chunk in chunks:
         if chunk.get("embedding"):
             embedded_count += 1
+
+        chunk["content"] = (
+            chunk.get("content")
+            or chunk.get("chunk_text")
+            or chunk.get("text")
+            or ""
+        )
 
     if chunks:
         if embedded_count == len(chunks):

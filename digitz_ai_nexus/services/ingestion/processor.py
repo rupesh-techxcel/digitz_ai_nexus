@@ -273,6 +273,13 @@ def process_knowledge_source(source_name):
         created_chunks = create_knowledge_chunks(source_doc, unit_doc, chunks)
 
         embedding_status = get_embedding_status_for_chunks(created_chunks)
+        processed_time = frappe.utils.now()
+
+        set_if_field(unit_doc, "embedding_status", embedding_status)
+        set_if_field(unit_doc, "chunk_count", len(created_chunks))
+        set_if_field(unit_doc, "last_processed_on", processed_time)
+        set_if_field(unit_doc, "processed_on", processed_time)
+        unit_doc.save(ignore_permissions=True)
 
         preview_text = normalized_text[:5000] if normalized_text else ""
 
@@ -286,9 +293,8 @@ def process_knowledge_source(source_name):
         set_if_field(source_doc, "processing_status", "Processed")
         set_if_field(source_doc, "embedding_status", embedding_status)
 
-        set_if_field(source_doc, "processed_on", frappe.utils.now())
-        set_if_field(source_doc, "last_processed_on", frappe.utils.now())
-
+        set_if_field(source_doc, "processed_on", processed_time)
+        set_if_field(source_doc, "last_processed_on", processed_time)
         set_if_field(source_doc, "processed_by", frappe.session.user)
 
         success_log = (
@@ -316,7 +322,6 @@ def process_knowledge_source(source_name):
         frappe.db.rollback()
 
         source_doc = frappe.get_doc("Nexus Knowledge Source", source_name)
-
         traceback = frappe.get_traceback()
 
         set_if_field(source_doc, "processing_status", "Failed")
