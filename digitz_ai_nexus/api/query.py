@@ -17,9 +17,18 @@ def get_query_embedding_override(payload):
     """
     payload = payload or {}
 
+    if payload.get("tenant") != "TEST-NEXUS":
+        return None
+
+    if payload.get("entity") == "Nexus Test Orbit":
+        return SYNTHETIC_TEST_EMBEDDING
+
     if (
-        payload.get("tenant") == "TEST-NEXUS"
-        and payload.get("entity") == "Nexus Test Orbit"
+        payload.get("context") == "Nexus Live"
+        and payload.get("sub_context") == "Operational Validation"
+        and payload.get("entity_type") == "Live Scenario"
+        and payload.get("entity") == "Nexus Live Synthetic Validation"
+        and payload.get("topic") == "Live Interaction"
     ):
         return SYNTHETIC_TEST_EMBEDDING
 

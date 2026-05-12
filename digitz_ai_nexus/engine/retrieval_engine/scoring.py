@@ -19,6 +19,13 @@ def normalize_text(value):
     return (value or "").strip().lower()
 
 
+def row_value(row, fieldname, default=None):
+    if isinstance(row, dict):
+        return row.get(fieldname, default)
+
+    return getattr(row, fieldname, default)
+
+
 def tokenize(text):
     text = normalize_text(text)
     return [t for t in re.split(r"[^a-zA-Z0-9_]+", text) if len(t) > 2]
@@ -42,11 +49,6 @@ def parse_embedding(value):
 
 
 def compute_vector_score(query_embedding, chunk_embedding):
-    """
-    Calculates cosine similarity between query embedding and chunk embedding.
-    Returns score between 0 and 1.
-    """
-
     query_vector = parse_embedding(query_embedding)
     chunk_vector = parse_embedding(chunk_embedding)
 
@@ -72,11 +74,6 @@ def compute_vector_score(query_embedding, chunk_embedding):
 
 
 def compute_keyword_score(query, chunk_text, metadata=None):
-    """
-    Basic keyword score based on query terms, exact phrase match, and metadata match.
-    This works even when Nexus Business Keyword seed data is not available.
-    """
-
     query_l = normalize_text(query)
     text_l = normalize_text(chunk_text)
 
@@ -96,15 +93,13 @@ def compute_keyword_score(query, chunk_text, metadata=None):
 
     if metadata and query_terms:
         meta_text = normalize_text(
-            " ".join(
-                [
-                    str(metadata.get("topic") or ""),
-                    str(metadata.get("entity") or ""),
-                    str(metadata.get("entity_type") or ""),
-                    str(metadata.get("business_unit") or ""),
-                    str(metadata.get("project") or ""),
-                ]
-            )
+            " ".join([
+                str(metadata.get("topic") or ""),
+                str(metadata.get("entity") or ""),
+                str(metadata.get("entity_type") or ""),
+                str(metadata.get("business_unit") or ""),
+                str(metadata.get("project") or ""),
+            ])
         )
 
         if meta_text:
@@ -115,15 +110,10 @@ def compute_keyword_score(query, chunk_text, metadata=None):
 
 
 def get_enabled_business_keywords():
-    """
-    Reads configured high-priority business keywords.
-    Safe when DocType exists but no seed records are available.
-    """
-
     if not frappe.db.exists("DocType", "Nexus Business Keyword"):
         return []
 
-    rows = frappe.get_all(
+    return frappe.get_all(
         "Nexus Business Keyword",
         filters={"enabled": 1},
         fields=[
@@ -135,17 +125,10 @@ def get_enabled_business_keywords():
             "synonyms",
         ],
         limit_page_length=500,
-    )
-
-    return rows or []
+    ) or []
 
 
 def get_category_weight(category):
-    """
-    Reads category weight from Nexus Keyword Category.
-    Safe fallback = 1.0.
-    """
-
     if not category:
         return 1.0
 
@@ -153,19 +136,10 @@ def get_category_weight(category):
         return 1.0
 
     weight = frappe.db.get_value("Nexus Keyword Category", category, "weight")
-
     return safe_float(weight, 1.0)
 
 
 def compute_business_keyword_boost(query, chunk_text):
-    """
-    Boosts chunks when configured business keywords match both:
-    - user query
-    - documentation chunk
-
-    If no keyword seed exists, returns 0.0 safely.
-    """
-
     query_l = normalize_text(query)
     text_l = normalize_text(chunk_text)
 
@@ -173,9 +147,8 @@ def compute_business_keyword_boost(query, chunk_text):
         return 0.0
 
     boost = 0.0
-    keywords = get_enabled_business_keywords()
 
-    for row in keywords:
+    for row in get_enabled_business_keywords():
         terms = []
 
         if row.get("keyword"):
@@ -207,11 +180,6 @@ def compute_business_keyword_boost(query, chunk_text):
 
 
 def compute_project_boost(chunk_project, requested_project, project_scope=None):
-    """
-    Project boost is only a ranking signal.
-    It must never override access control or project scope filtering.
-    """
-
     chunk_project = normalize_text(chunk_project)
     requested_project = normalize_text(requested_project)
     project_scope = normalize_text(project_scope)
@@ -222,7 +190,12 @@ def compute_project_boost(chunk_project, requested_project, project_scope=None):
     if chunk_project == requested_project:
         return 1.0
 
-    if project_scope in ("fallback", "project_with_general_fallback", "project + general fallback"):
+    if project_scope in (
+        "fallback",
+        "with_general",
+        "project_with_general_fallback",
+        "project + general fallback",
+    ):
         if not chunk_project:
             return 0.30
 
@@ -230,11 +203,6 @@ def compute_project_boost(chunk_project, requested_project, project_scope=None):
 
 
 def get_retrieval_weights():
-    """
-    Reads scoring weights from Nexus Settings.
-    Uses safe defaults if fields are missing.
-    """
-
     settings = frappe.get_single("Nexus Settings")
 
     return {
@@ -252,10 +220,6 @@ def compute_hybrid_score(
     project_boost,
     weights=None,
 ):
-    """
-    Final hybrid score used for initial ranking.
-    """
-
     weights = weights or get_retrieval_weights()
 
     score = (
@@ -276,28 +240,24 @@ def build_scored_candidate(
     project_scope=None,
     weights=None,
 ):
-    """
-    Converts a Knowledge Chunk row into a scored retrieval candidate.
-    """
-
     chunk_text = (
-        getattr(row, "chunk_text", None)
-        or getattr(row, "content", None)
-        or getattr(row, "text", None)
+        row_value(row, "chunk_text")
+        or row_value(row, "content")
+        or row_value(row, "text")
         or ""
     )
 
-    chunk_embedding = getattr(row, "embedding", None)
+    chunk_embedding = row_value(row, "embedding")
 
     candidate = {
-        "chunk": getattr(row, "name", None),
-        "knowledge_unit": getattr(row, "knowledge_unit", None),
-        "business_unit": getattr(row, "business_unit", None),
-        "project": getattr(row, "project", None),
-        "topic": getattr(row, "topic", None),
-        "entity_type": getattr(row, "entity_type", None),
-        "entity": getattr(row, "entity", None),
-        "access_policy": getattr(row, "access_policy", None),
+        "chunk": row_value(row, "name"),
+        "knowledge_unit": row_value(row, "knowledge_unit"),
+        "business_unit": row_value(row, "business_unit"),
+        "project": row_value(row, "project"),
+        "topic": row_value(row, "topic"),
+        "entity_type": row_value(row, "entity_type"),
+        "entity": row_value(row, "entity"),
+        "access_policy": row_value(row, "access_policy"),
         "text": chunk_text,
         "matched_queries": [query],
     }

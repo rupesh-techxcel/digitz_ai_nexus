@@ -161,11 +161,26 @@ def can_access_chunk(user_context, chunk):
         return True, "Allowed"
 
     if normalized_policy == "restricted":
+        public_roles = {"Guest", "Public", "All"}
+
+        if chunk_allowed_roles:
+            if user_roles.intersection(chunk_allowed_roles):
+                return True, "Allowed"
+
+            if chunk_allowed_roles.intersection(public_roles):
+                return True, "Allowed"
+
         return can_access_policy(user_context, access_policy)
 
     if normalized_policy == "role_based":
+        
         if chunk_allowed_roles:
+            public_roles = {"Guest", "Public", "All"}
+
             if user_roles.intersection(chunk_allowed_roles):
+                return True, "Allowed"
+
+            if chunk_allowed_roles.intersection(public_roles):
                 return True, "Allowed"
 
             return False, "Role not allowed"

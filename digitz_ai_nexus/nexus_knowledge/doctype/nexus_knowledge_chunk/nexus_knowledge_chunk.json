@@ -185,6 +185,38 @@
    "options": "Nexus Knowledge Source"
   },
   {
+  "default": "1",
+  "fieldname": "source_version",
+  "fieldtype": "Int",
+  "in_list_view": 1,
+  "label": "Source Version"
+},
+{
+  "default": "0",
+  "fieldname": "archived",
+  "fieldtype": "Check",
+  "in_list_view": 1,
+  "label": "Archived"
+},
+{
+  "default": "0",
+  "fieldname": "character_count",
+  "fieldtype": "Int",
+  "label": "Character Count"
+},
+{
+  "default": "Pending",
+  "fieldname": "diagnostics_status",
+  "fieldtype": "Select",
+  "label": "Diagnostics Status",
+  "options": "Pending\nHealthy\nWarning\nCritical"
+},
+{
+  "fieldname": "diagnostics_message",
+  "fieldtype": "Small Text",
+  "label": "Diagnostics Message"
+},
+  {
    "fieldname": "allowed_roles",
    "fieldtype": "Text",
    "label": "Allowed Roles"

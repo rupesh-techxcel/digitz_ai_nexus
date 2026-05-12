@@ -7,6 +7,7 @@ from frappe.tests.utils import FrappeTestCase
 from digitz_ai_nexus.engine.access import can_access_policy
 from digitz_ai_nexus.engine.prompt import SAFE_FALLBACK_ANSWER, build_prompt
 from digitz_ai_nexus.engine.retrieval import retrieve_allowed_chunks
+from digitz_ai_nexus.nexus_knowledge.doctype.nexus_knowledge_source.nexus_knowledge_source import get_source_quality_panel
 
 
 class TestNexusCoreRAGEdgeCases(FrappeTestCase):
@@ -242,6 +243,21 @@ class TestNexusCoreRAGEdgeCases(FrappeTestCase):
             doc.embedding_status = "Completed"
 
         doc.embedding_model = "fake-test-model"
+        
+        if doc.meta.has_field("archived"):
+            doc.archived = 0
+
+        if doc.meta.has_field("source_version"):
+            doc.source_version = 1
+
+        if doc.meta.has_field("character_count"):
+            doc.character_count = len(chunk_text or "")
+
+        if doc.meta.has_field("diagnostics_status"):
+            doc.diagnostics_status = "Healthy"
+
+        if doc.meta.has_field("diagnostics_message"):
+            doc.diagnostics_message = "Test chunk passed diagnostics"
         doc.save(ignore_permissions=True)
 
         return doc.name
@@ -320,8 +336,8 @@ class TestNexusCoreRAGEdgeCases(FrappeTestCase):
         )
 
         self.assertIn(SAFE_FALLBACK_ANSWER, prompt)
-        self.assertIn("APPROVED KNOWLEDGE:", prompt)
-        self.assertIn("USER QUESTION:", prompt)
+        self.assertIn("APPROVED KNOWLEDGE:", prompt)        
+        self.assertIn("CURRENT USER MESSAGE:", prompt)
 
     def test_prompt_handles_missing_optional_chunk_metadata(self):
         prompt = build_prompt(
@@ -488,5 +504,138 @@ class TestNexusCoreRAGEdgeCases(FrappeTestCase):
 
         chunk.disabled = 0
         chunk.save(ignore_permissions=True)
+        
+    def test_archived_disabled_chunk_is_ignored_by_retrieval(self):
+        chunk = frappe.get_doc("Nexus Knowledge Chunk", self.general_chunk)
+
+        if chunk.meta.has_field("archived"):
+            chunk.archived = 1
+
+        chunk.disabled = 1
+        chunk.save(ignore_permissions=True)
+
+        payload = self.base_payload(
+            topic="Overview",
+            query="What is DIGITZ ERP?",
+        )
+
+        res = retrieve_allowed_chunks(payload, query_embedding=[1.0, 0.0, 0.0])
+
+        returned_chunks = {row.get("chunk") for row in res["results"]}
+
+        self.assertNotIn(self.general_chunk, returned_chunks)
+
+        if chunk.meta.has_field("archived"):
+            chunk.archived = 0
+
+        chunk.disabled = 0
+        chunk.save(ignore_permissions=True)
+
+    def test_quality_panel_calculates_readiness_from_active_chunks_only(self):
+        source_name = "TEST-EDGE-SOURCE-OBSERVATORY"
+
+        if frappe.db.exists("Nexus Knowledge Source", source_name):
+            source = frappe.get_doc("Nexus Knowledge Source", source_name)
+        else:
+            source = frappe.new_doc("Nexus Knowledge Source")
+            source.title = source_name
+
+        source.source_type = "Manual"
+        source.manual_content = "DIGITZ ERP is an enterprise resource planning system."
+        source.tenant = self.TENANT
+        source.business_unit = self.BUSINESS_UNIT
+        source.context = "ERP"
+        source.sub_context = "General"
+        source.entity_type = "Product"
+        source.entity = "DIGITZ ERP"
+        source.topic = "Overview"
+        source.status = "Published"
+        source.processing_status = "Processed"
+        source.embedding_status = "Completed"
+
+        if source.meta.has_field("processing_version"):
+            source.processing_version = 2
+
+        if source.meta.has_field("diagnostics_status"):
+            source.diagnostics_status = "Healthy"
+
+        if source.meta.has_field("retrieval_ready"):
+            source.retrieval_ready = 1
+
+        source.save(ignore_permissions=True)
+
+        unit = self.upsert_unit(
+            name="TEST-EDGE-UNIT-OBSERVATORY",
+            title="TEST EDGE Observatory Unit",
+            business_unit=self.BUSINESS_UNIT,
+            project="",
+            topic="Overview",
+            policy="TEST_EDGE_PUBLIC",
+            content="DIGITZ ERP is an enterprise resource planning system.",
+        )
+
+        archived_chunk = self.upsert_chunk(
+            name="TEST-EDGE-CHUNK-OBSERVATORY-OLD",
+            unit=unit,
+            business_unit=self.BUSINESS_UNIT,
+            project="",
+            topic="Overview",
+            policy="TEST_EDGE_PUBLIC",
+            chunk_text="DIGITZ ERP is an enterprise resource planning system.",
+            embedding=[1.0, 0.0, 0.0],
+        )
+
+        active_chunk = self.upsert_chunk(
+            name="TEST-EDGE-CHUNK-OBSERVATORY-ACTIVE",
+            unit=unit,
+            business_unit=self.BUSINESS_UNIT,
+            project="",
+            topic="Overview",
+            policy="TEST_EDGE_PUBLIC",
+            chunk_text="DIGITZ ERP is an enterprise resource planning system.",
+            embedding=[1.0, 0.0, 0.0],
+        )
+
+        old_doc = frappe.get_doc("Nexus Knowledge Chunk", archived_chunk)
+        old_doc.knowledge_source = source.name
+        old_doc.disabled = 1
+
+        if old_doc.meta.has_field("archived"):
+            old_doc.archived = 1
+
+        if old_doc.meta.has_field("source_version"):
+            old_doc.source_version = 1
+
+        old_doc.save(ignore_permissions=True)
+
+        active_doc = frappe.get_doc("Nexus Knowledge Chunk", active_chunk)
+        active_doc.knowledge_source = source.name
+        active_doc.disabled = 0
+
+        if active_doc.meta.has_field("archived"):
+            active_doc.archived = 0
+
+        if active_doc.meta.has_field("source_version"):
+            active_doc.source_version = 2
+
+        if active_doc.meta.has_field("diagnostics_status"):
+            active_doc.diagnostics_status = "Healthy"
+
+        active_doc.save(ignore_permissions=True)
+
+        source.generated_knowledge_unit = unit
+        source.chunk_count = 2
+
+        if source.meta.has_field("active_chunk_count"):
+            source.active_chunk_count = 1
+
+        source.save(ignore_permissions=True)
+
+        panel = get_source_quality_panel(source.name)
+
+        self.assertEqual(panel["active_chunk_count"], 1)
+        self.assertEqual(panel["duplicate_count"], 0)
+        self.assertEqual(panel["diagnostics_status"], "Healthy")
+        self.assertEqual(panel["retrieval_ready"], 1)
       
     

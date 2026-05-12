@@ -1,4 +1,5 @@
 import os
+import hashlib
 import frappe
 
 from digitz_ai_nexus.services.ingestion.parser_pdf import extract_pdf_text
@@ -22,6 +23,66 @@ def set_if_field(doc, fieldname, value):
         return
 
     doc.set(fieldname, value)
+
+
+def get_text_hash(text):
+    return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
+
+
+def diagnose_chunk(chunk_text_value, chunk_hash, seen_hashes):
+    text = (chunk_text_value or "").strip()
+    length = len(text)
+
+    if not text:
+        return "Critical", "Empty chunk content"
+
+    if length < 50:
+        return "Warning", "Chunk is too small"
+
+    if length > 6000:
+        return "Warning", "Chunk is too large"
+
+    if chunk_hash in seen_hashes:
+        return "Warning", "Duplicate chunk content"
+
+    return "Healthy", "Chunk passed diagnostics"
+
+
+def archive_existing_chunks(source_name):
+    existing = frappe.get_all(
+        "Nexus Knowledge Chunk",
+        filters={"knowledge_source": source_name},
+        pluck="name",
+    )
+
+    for chunk_name in existing:
+        chunk_doc = frappe.get_doc("Nexus Knowledge Chunk", chunk_name)
+
+        set_if_field(chunk_doc, "archived", 1)
+        set_if_field(chunk_doc, "disabled", 1)
+        set_if_field(chunk_doc, "is_active", 0)
+        set_if_field(chunk_doc, "enabled", 0)
+
+        chunk_doc.save(ignore_permissions=True)
+
+
+def disable_existing_knowledge_units(source_doc):
+    old_unit = source_doc.get("generated_knowledge_unit") or source_doc.get("knowledge_unit")
+
+    if not old_unit:
+        return
+
+    if not frappe.db.exists("Nexus Knowledge Unit", old_unit):
+        return
+
+    unit_doc = frappe.get_doc("Nexus Knowledge Unit", old_unit)
+
+    set_if_field(unit_doc, "disabled", 1)
+    set_if_field(unit_doc, "is_active", 0)
+    set_if_field(unit_doc, "enabled", 0)
+    set_if_field(unit_doc, "status", "Archived")
+
+    unit_doc.save(ignore_permissions=True)
 
 
 def get_file_path(file_url):
@@ -89,16 +150,17 @@ def extract_source_text(source_doc):
     frappe.throw(f"Unsupported source type: {source_type}")
 
 
-def create_knowledge_unit(source_doc, normalized_text):
+def create_knowledge_unit(source_doc, normalized_text, processing_version):
     unit = frappe.new_doc("Nexus Knowledge Unit")
 
-    title = source_doc.get("title") or source_doc.get("source_name") or source_doc.name
+    base_title = source_doc.get("title") or source_doc.get("source_name") or source_doc.name
+    title = f"{base_title} - v{processing_version}"
 
     context = source_doc.get("context") or "General"
     sub_context = source_doc.get("sub_context") or "General"
     entity_type = source_doc.get("entity_type") or "Knowledge Source"
-    entity = source_doc.get("entity") or title
-    topic = source_doc.get("topic") or title
+    entity = source_doc.get("entity") or base_title
+    topic = source_doc.get("topic") or base_title
 
     access_policy = (
         source_doc.get("default_access_policy")
@@ -131,19 +193,22 @@ def create_knowledge_unit(source_doc, normalized_text):
     )
 
     set_if_field(unit, "scope_type", source_doc.get("scope_type") or "general")
-
     set_if_field(unit, "default_access_policy", access_policy)
     set_if_field(unit, "access_policy", access_policy)
-
     set_if_field(unit, "allowed_roles", source_doc.get("allowed_roles"))
     set_if_field(unit, "denied_roles", source_doc.get("denied_roles"))
+    set_if_field(unit, "disabled", 0 if source_doc.get("status") == "Published" else 1)
 
     unit.insert(ignore_permissions=True)
     return unit
 
 
-def create_knowledge_chunks(source_doc, unit_doc, chunks):
+def create_knowledge_chunks(source_doc, unit_doc, chunks, processing_version):
     created = []
+    embedded_count = 0
+    warning_count = 0
+    critical_count = 0
+    seen_hashes = set()
 
     title = unit_doc.get("title") or unit_doc.name
 
@@ -170,6 +235,26 @@ def create_knowledge_chunks(source_doc, unit_doc, chunks):
     scope_type = source_doc.get("scope_type") or unit_doc.get("scope_type") or "general"
 
     for index, chunk in enumerate(chunks, start=1):
+        chunk_text_value = str(chunk or "").strip()
+
+        if not chunk_text_value:
+            continue
+
+        chunk_hash = get_text_hash(chunk_text_value)
+
+        diagnostics_status, diagnostics_message = diagnose_chunk(
+            chunk_text_value,
+            chunk_hash,
+            seen_hashes,
+        )
+
+        if diagnostics_status == "Critical":
+            critical_count += 1
+        elif diagnostics_status == "Warning":
+            warning_count += 1
+
+        seen_hashes.add(chunk_hash)
+
         chunk_doc = frappe.new_doc("Nexus Knowledge Chunk")
 
         set_if_field(chunk_doc, "title", f"{title} - Chunk {index}")
@@ -179,9 +264,12 @@ def create_knowledge_chunks(source_doc, unit_doc, chunks):
 
         set_if_field(chunk_doc, "chunk_index", index)
         set_if_field(chunk_doc, "chunk_no", index)
-        set_if_field(chunk_doc, "chunk_text", chunk)
-        set_if_field(chunk_doc, "content", chunk)
-        set_if_field(chunk_doc, "text", chunk)
+        set_if_field(chunk_doc, "chunk_text", chunk_text_value)
+        set_if_field(chunk_doc, "content", chunk_text_value)
+        set_if_field(chunk_doc, "text", chunk_text_value)
+        set_if_field(chunk_doc, "chunk_hash", chunk_hash)
+        set_if_field(chunk_doc, "character_count", len(chunk_text_value))
+        set_if_field(chunk_doc, "source_version", processing_version)
 
         set_if_field(chunk_doc, "tenant", source_doc.get("tenant") or unit_doc.get("tenant"))
         set_if_field(chunk_doc, "business_unit", source_doc.get("business_unit") or unit_doc.get("business_unit"))
@@ -202,13 +290,19 @@ def create_knowledge_chunks(source_doc, unit_doc, chunks):
         set_if_field(chunk_doc, "denied_roles", source_doc.get("denied_roles") or unit_doc.get("denied_roles"))
 
         set_if_field(chunk_doc, "status", "Approved")
-        set_if_field(chunk_doc, "is_active", 1)
-        set_if_field(chunk_doc, "enabled", 1)
+        set_if_field(chunk_doc, "archived", 0)
+        set_if_field(chunk_doc, "disabled", 0 if source_doc.get("status") == "Published" else 1)
+        set_if_field(chunk_doc, "is_active", 1 if source_doc.get("status") == "Published" else 0)
+        set_if_field(chunk_doc, "enabled", 1 if source_doc.get("status") == "Published" else 0)
+
+        set_if_field(chunk_doc, "diagnostics_status", diagnostics_status)
+        set_if_field(chunk_doc, "diagnostics_message", diagnostics_message)
 
         try:
-            embedding_json = generate_embedding_json(chunk)
+            embedding_json = generate_embedding_json(chunk_text_value)
             set_if_field(chunk_doc, "embedding", embedding_json)
             set_if_field(chunk_doc, "embedding_status", "Completed")
+            embedded_count += 1
         except Exception:
             set_if_field(chunk_doc, "embedding_status", "Failed")
             set_if_field(chunk_doc, "embedding_error", frappe.get_traceback())
@@ -216,7 +310,12 @@ def create_knowledge_chunks(source_doc, unit_doc, chunks):
         chunk_doc.insert(ignore_permissions=True)
         created.append(chunk_doc.name)
 
-    return created
+    return {
+        "created_chunks": created,
+        "embedded_count": embedded_count,
+        "warning_count": warning_count,
+        "critical_count": critical_count,
+    }
 
 
 def get_embedding_status_for_chunks(chunk_names):
@@ -253,6 +352,8 @@ def process_knowledge_source(source_name):
     try:
         set_if_field(source_doc, "processing_status", "Processing")
         set_if_field(source_doc, "embedding_status", "Pending")
+        set_if_field(source_doc, "diagnostics_status", "Pending")
+        set_if_field(source_doc, "retrieval_ready", 0)
         set_if_field(source_doc, "error_log", "")
         set_if_field(source_doc, "processing_log", "")
         source_doc.save(ignore_permissions=True)
@@ -264,16 +365,42 @@ def process_knowledge_source(source_name):
         if not normalized_text:
             frappe.throw("No readable text could be extracted from this source.")
 
+        next_version = int(source_doc.get("processing_version") or 0) + 1
+
+        archive_existing_chunks(source_doc.name)
+        disable_existing_knowledge_units(source_doc)
+
         chunks = chunk_text(normalized_text, chunk_size=650, overlap=100)
 
         if not chunks:
             frappe.throw("No chunks could be generated from this source.")
 
-        unit_doc = create_knowledge_unit(source_doc, normalized_text)
-        created_chunks = create_knowledge_chunks(source_doc, unit_doc, chunks)
+        unit_doc = create_knowledge_unit(source_doc, normalized_text, next_version)
+        chunk_result = create_knowledge_chunks(source_doc, unit_doc, chunks, next_version)
+
+        created_chunks = chunk_result["created_chunks"]
+        embedded_count = chunk_result["embedded_count"]
+        warning_count = chunk_result["warning_count"]
+        critical_count = chunk_result["critical_count"]
 
         embedding_status = get_embedding_status_for_chunks(created_chunks)
         processed_time = frappe.utils.now()
+
+        if critical_count > 0:
+            diagnostics_status = "Critical"
+        elif warning_count > 0:
+            diagnostics_status = "Warning"
+        elif created_chunks:
+            diagnostics_status = "Healthy"
+        else:
+            diagnostics_status = "Critical"
+
+        retrieval_ready = (
+            source_doc.get("status") == "Published"
+            and embedding_status == "Completed"
+            and diagnostics_status == "Healthy"
+            and len(created_chunks) > 0
+        )
 
         set_if_field(unit_doc, "embedding_status", embedding_status)
         set_if_field(unit_doc, "chunk_count", len(created_chunks))
@@ -289,9 +416,13 @@ def process_knowledge_source(source_name):
         set_if_field(source_doc, "knowledge_unit", unit_doc.name)
         set_if_field(source_doc, "generated_knowledge_unit", unit_doc.name)
 
+        set_if_field(source_doc, "processing_version", next_version)
         set_if_field(source_doc, "chunk_count", len(created_chunks))
+        set_if_field(source_doc, "active_chunk_count", len(created_chunks) if source_doc.get("status") == "Published" else 0)
         set_if_field(source_doc, "processing_status", "Processed")
         set_if_field(source_doc, "embedding_status", embedding_status)
+        set_if_field(source_doc, "diagnostics_status", diagnostics_status)
+        set_if_field(source_doc, "retrieval_ready", 1 if retrieval_ready else 0)
 
         set_if_field(source_doc, "processed_on", processed_time)
         set_if_field(source_doc, "last_processed_on", processed_time)
@@ -299,7 +430,7 @@ def process_knowledge_source(source_name):
 
         success_log = (
             f"Processed successfully. Created Knowledge Unit {unit_doc.name} "
-            f"and {len(created_chunks)} chunks."
+            f"and {len(created_chunks)} chunks. Version {next_version}."
         )
 
         set_if_field(source_doc, "processing_log", success_log)
@@ -313,8 +444,12 @@ def process_knowledge_source(source_name):
             "source": source_doc.name,
             "knowledge_unit": unit_doc.name,
             "generated_knowledge_unit": unit_doc.name,
+            "processing_version": next_version,
             "chunk_count": len(created_chunks),
+            "active_chunk_count": len(created_chunks) if source_doc.get("status") == "Published" else 0,
             "embedding_status": embedding_status,
+            "diagnostics_status": diagnostics_status,
+            "retrieval_ready": 1 if retrieval_ready else 0,
             "chunks": created_chunks,
         }
 
@@ -326,6 +461,8 @@ def process_knowledge_source(source_name):
 
         set_if_field(source_doc, "processing_status", "Failed")
         set_if_field(source_doc, "embedding_status", "Failed")
+        set_if_field(source_doc, "diagnostics_status", "Critical")
+        set_if_field(source_doc, "retrieval_ready", 0)
         set_if_field(source_doc, "processing_log", traceback)
         set_if_field(source_doc, "error_log", traceback)
         set_if_field(source_doc, "last_processed_on", frappe.utils.now())

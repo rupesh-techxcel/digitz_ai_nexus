@@ -12,6 +12,10 @@ frappe.ui.form.on("Nexus Knowledge Source", {
             refresh_quality_panel(frm);
         }, __("Source Quality"));
 
+        frm.add_custom_button(__("Chunk Observatory"), function () {
+            refresh_quality_panel(frm);
+        }, __("Source Quality"));
+
         frm.add_custom_button(__("Preview Extracted Text"), function () {
             show_extracted_text_preview(frm);
         }, __("Source Quality"));
@@ -49,8 +53,15 @@ function process_knowledge_source(frm) {
                         frappe.msgprint({
                             title: __("Processed"),
                             message: __(
-                                "Knowledge Source processed successfully.<br><br>Knowledge Unit: {0}<br>Chunks Created: {1}",
-                                [r.message.knowledge_unit || "-", r.message.chunk_count || 0]
+                                `
+                                <div style="line-height:1.8;">
+                                    <div><b>Knowledge Unit:</b> ${r.message.knowledge_unit || "-"}</div>
+                                    <div><b>Chunks Created:</b> ${r.message.chunk_count || 0}</div>
+                                    <div><b>Processing Version:</b> ${r.message.processing_version || 0}</div>
+                                    <div><b>Diagnostics:</b> ${r.message.diagnostics_status || "-"}</div>
+                                    <div><b>Retrieval Ready:</b> ${r.message.retrieval_ready ? "Yes" : "No"}</div>
+                                </div>
+                                `
                             ),
                             indicator: "green"
                         });
@@ -75,7 +86,7 @@ function process_knowledge_source(frm) {
 
 
 function refresh_quality_panel(frm) {
-    frappe.call({                
+    frappe.call({
         method: "digitz_ai_nexus.nexus_knowledge.doctype.nexus_knowledge_source.nexus_knowledge_source.get_source_quality_panel",
         args: {
             source_name: frm.doc.name
@@ -97,16 +108,33 @@ function refresh_quality_panel(frm) {
             frm.set_value("processing_status", data.processing_status || frm.doc.processing_status);
             frm.set_value("embedding_status", data.embedding_status || frm.doc.embedding_status);
             frm.set_value("chunk_count", data.chunk_count || 0);
-            frm.set_value("last_processed_on", data.last_processed_on || data.last_processed_time || frm.doc.last_processed_on);
+
+            if (frm.doc.hasOwnProperty("processing_version")) {
+                frm.set_value("processing_version", data.processing_version || 0);
+            }
+
+            if (frm.doc.hasOwnProperty("active_chunk_count")) {
+                frm.set_value("active_chunk_count", data.active_chunk_count || 0);
+            }
+
+            if (frm.doc.hasOwnProperty("diagnostics_status")) {
+                frm.set_value("diagnostics_status", data.diagnostics_status || "Pending");
+            }
+
+            if (frm.doc.hasOwnProperty("retrieval_ready")) {
+                frm.set_value("retrieval_ready", data.retrieval_ready || 0);
+            }
+
+            frm.set_value("last_processed_on", data.last_processed_on || frm.doc.last_processed_on);
             frm.set_value("generated_knowledge_unit", data.generated_knowledge_unit || frm.doc.generated_knowledge_unit);
             frm.set_value("extracted_text_preview", data.extracted_text_preview || frm.doc.extracted_text_preview);
 
-            render_generated_chunks(frm, data.chunks || []);
+            render_generated_chunks(frm, data);
 
             frm.refresh_fields();
 
             frappe.show_alert({
-                message: __("Source quality panel refreshed."),
+                message: __("Chunk Observatory refreshed."),
                 indicator: "green"
             });
         }
@@ -181,7 +209,7 @@ function open_generated_chunks(frm) {
     }
 
     frappe.set_route("List", "Nexus Knowledge Chunk", {
-        knowledge_unit: frm.doc.generated_knowledge_unit
+        knowledge_source: frm.doc.name
     });
 }
 
@@ -204,8 +232,7 @@ function test_this_source(frm) {
                 fieldtype: "Small Text",
                 fieldname: "test_query",
                 label: __("Test Query"),
-                reqd: 1,
-                description: __("Ask a question that should be answered from this knowledge source.")
+                reqd: 1
             },
             {
                 fieldtype: "HTML",
@@ -241,7 +268,7 @@ function test_this_source(frm) {
                 freeze_message: __("Testing source..."),
                 callback(r) {
                     const result = r.message || {};
-                    const answer = result.answer || result.message || __("No answer returned.");
+                    const answer = result.answer || __("No answer returned.");
                     const confidence = result.confidence || 0;
 
                     dialog.fields_dict.result_html.$wrapper.html(`
@@ -252,13 +279,18 @@ function test_this_source(frm) {
                             border: 1px solid #d8e3f8;
                             background: #f8fbff;
                         ">
-                            <div style="font-weight: 700; margin-bottom: 8px;">
-                                ${__("Test Result")}
+                            <div style="font-weight:700;margin-bottom:8px;">
+                                ${__("Grounded Validation")}
                             </div>
-                            <div style="margin-bottom: 8px;">
-                                <b>${__("Confidence")}:</b> ${frappe.utils.escape_html(String(confidence))}
+
+                            <div style="margin-bottom:10px;">
+                                <b>${__("Confidence")}:</b> ${confidence}
                             </div>
-                            <div style="white-space: pre-wrap; line-height: 1.6;">
+
+                            <div style="
+                                white-space: pre-wrap;
+                                line-height:1.6;
+                            ">
                                 ${frappe.utils.escape_html(answer)}
                             </div>
                         </div>
@@ -281,106 +313,156 @@ function render_generated_chunks_placeholder(frm) {
         return;
     }
 
-    if (!frm.doc.generated_knowledge_unit) {
-        frm.fields_dict.generated_chunks_html.$wrapper.html(`
-            <div style="
-                padding: 16px;
-                border: 1px dashed #d8e3f8;
-                border-radius: 14px;
-                background: #f8fbff;
-                color: #64748b;
-            ">
-                ${__("No generated chunks available yet. Process the source first.")}
-            </div>
-        `);
-        return;
-    }
-
     frm.fields_dict.generated_chunks_html.$wrapper.html(`
         <div style="
-            padding: 16px;
+            padding: 18px;
+            border-radius: 18px;
             border: 1px dashed #d8e3f8;
-            border-radius: 14px;
-            background: #f8fbff;
+            background: linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
             color: #64748b;
         ">
-            ${__("Click Refresh Quality Panel to load generated chunks preview.")}
+            ${__("Refresh the Chunk Observatory to inspect generated chunks and diagnostics.")}
         </div>
     `);
 }
 
 
-function render_generated_chunks(frm, chunks) {
+function render_generated_chunks(frm, data) {
     if (!frm.fields_dict.generated_chunks_html) {
         return;
     }
 
-    if (!chunks || !chunks.length) {
+    const chunks = data.chunks || [];
+
+    if (!chunks.length) {
         frm.fields_dict.generated_chunks_html.$wrapper.html(`
             <div style="
-                padding: 16px;
-                border: 1px dashed #d8e3f8;
-                border-radius: 14px;
-                background: #fffaf0;
-                color: #92400e;
+                padding:16px;
+                border-radius:14px;
+                border:1px dashed #f3d37a;
+                background:#fffaf0;
+                color:#92400e;
             ">
-                ${__("No chunks found for this source.")}
+                ${__("No chunks available for this source.")}
             </div>
         `);
         return;
     }
 
-    const rows = chunks.map((chunk, index) => {
-        const content = chunk.content || chunk.chunk_text || "";
-        const short_content = content.length > 600
-            ? content.substring(0, 600) + "..."
+    const retrievalReady = data.retrieval_ready
+        ? `<span style="color:#15803d;font-weight:700;">✓ Retrieval Ready</span>`
+        : `<span style="color:#b91c1c;font-weight:700;">⚠ Retrieval Not Ready</span>`;
+
+    const summaryCards = `
+        <div style="
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+            gap:12px;
+            margin-bottom:18px;
+        ">
+            ${summary_card("Processing Version", data.processing_version || 0)}
+            ${summary_card("Chunk Count", data.chunk_count || 0)}
+            ${summary_card("Active Chunks", data.active_chunk_count || 0)}
+            ${summary_card("Embedded", data.embedded_count || 0)}
+            ${summary_card("Missing Embeddings", data.missing_embedding_count || 0)}
+            ${summary_card("Duplicate Chunks", data.duplicate_count || 0)}
+            ${summary_card("Diagnostics", data.diagnostics_status || "-")}
+            ${summary_card("Retrieval", retrievalReady)}
+        </div>
+    `;
+
+    const rows = chunks.map(chunk => {
+        const content = chunk.content || "";
+        const preview = content.length > 450
+            ? content.substring(0, 450) + "..."
             : content;
 
-        const embedding_status = chunk.embedding || chunk.embedding_status === "Completed"
-            ? __("Embedded")
-            : __("Pending");
+        const embeddingBadge = chunk.has_embedding
+            ? badge("Embedded", "#ecfdf3", "#15803d", "#86efac")
+            : badge("Missing", "#fef2f2", "#b91c1c", "#fecaca");
+
+        const diagnosticsStatus = chunk.diagnostics_status || "Pending";
+
+        let diagnosticsBadge = badge(
+            diagnosticsStatus,
+            "#f8fafc",
+            "#475569",
+            "#cbd5e1"
+        );
+
+        if (diagnosticsStatus === "Healthy") {
+            diagnosticsBadge = badge("Healthy", "#ecfdf3", "#15803d", "#86efac");
+        }
+
+        if (diagnosticsStatus === "Warning") {
+            diagnosticsBadge = badge("Warning", "#fff7ed", "#c2410c", "#fdba74");
+        }
+
+        if (diagnosticsStatus === "Critical") {
+            diagnosticsBadge = badge("Critical", "#fef2f2", "#b91c1c", "#fecaca");
+        }
+
+        const archivedBadge = chunk.archived
+            ? badge("Archived", "#f1f5f9", "#475569", "#cbd5e1")
+            : badge("Active", "#eff6ff", "#1d4ed8", "#93c5fd");
 
         return `
             <div style="
-                margin-bottom: 12px;
-                padding: 14px;
-                border: 1px solid #d8e3f8;
-                border-radius: 14px;
-                background: #ffffff;
-                box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+                margin-bottom:14px;
+                padding:16px;
+                border-radius:16px;
+                border:1px solid #d8e3f8;
+                background:#ffffff;
+                box-shadow:0 4px 18px rgba(15,23,42,0.05);
             ">
                 <div style="
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 12px;
-                    margin-bottom: 8px;
+                    display:flex;
+                    justify-content:space-between;
+                    gap:12px;
+                    margin-bottom:12px;
+                    flex-wrap:wrap;
                 ">
-                    <div style="font-weight: 700; color: #214dbb;">
-                        ${__("Chunk")} ${chunk.chunk_index || index + 1}
-                    </div>
                     <div style="
-                        font-size: 12px;
-                        padding: 3px 9px;
-                        border-radius: 999px;
-                        background: #fff6d8;
-                        color: #8a5a00;
-                        border: 1px solid #f3d37a;
+                        font-size:15px;
+                        font-weight:800;
+                        color:#214dbb;
                     ">
-                        ${embedding_status}
+                        Chunk ${chunk.chunk_index}
+                    </div>
+
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        ${embeddingBadge}
+                        ${diagnosticsBadge}
+                        ${archivedBadge}
                     </div>
                 </div>
 
                 <div style="
-                    white-space: pre-wrap;
-                    line-height: 1.55;
-                    font-size: 13px;
-                    color: #334155;
-                ">${frappe.utils.escape_html(short_content)}</div>
+                    display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+                    gap:10px;
+                    margin-bottom:12px;
+                    font-size:12px;
+                    color:#475569;
+                ">
+                    <div><b>Characters:</b> ${chunk.character_count || 0}</div>
+                    <div><b>Version:</b> ${chunk.source_version || 1}</div>
+                    <div><b>Disabled:</b> ${chunk.disabled ? "Yes" : "No"}</div>
+                </div>
 
-                <div style="margin-top: 10px;">
+                <div style="
+                    white-space:pre-wrap;
+                    line-height:1.6;
+                    color:#334155;
+                    font-size:13px;
+                ">
+                    ${frappe.utils.escape_html(preview)}
+                </div>
+
+                <div style="margin-top:12px;">
                     <a class="btn btn-xs btn-default"
                        href="/app/nexus-knowledge-chunk/${encodeURIComponent(chunk.name)}">
-                        ${__("Open Chunk")}
+                        ${__("Open Full Chunk")}
                     </a>
                 </div>
             </div>
@@ -389,28 +471,87 @@ function render_generated_chunks(frm, chunks) {
 
     frm.fields_dict.generated_chunks_html.$wrapper.html(`
         <div style="
-            padding: 14px;
-            border: 1px solid #d8e3f8;
-            border-radius: 16px;
-            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            padding:16px;
+            border-radius:18px;
+            border:1px solid #d8e3f8;
+            background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);
         ">
             <div style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 14px;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:16px;
+                flex-wrap:wrap;
+                gap:12px;
             ">
                 <div>
-                    <div style="font-size: 15px; font-weight: 800; color: #1e3a8a;">
-                        ${__("Generated Chunks")}
+                    <div style="
+                        font-size:18px;
+                        font-weight:800;
+                        color:#1e3a8a;
+                    ">
+                        ${__("Chunk Observatory")}
                     </div>
-                    <div style="font-size: 12px; color: #64748b;">
-                        ${chunks.length} ${__("chunk(s) generated from this source")}
+
+                    <div style="
+                        margin-top:4px;
+                        font-size:12px;
+                        color:#64748b;
+                    ">
+                        ${__("Governed retrieval observability and diagnostics")}
                     </div>
                 </div>
             </div>
 
+            ${summaryCards}
+
             ${rows}
         </div>
     `);
+}
+
+
+function summary_card(title, value) {
+    return `
+        <div style="
+            padding:14px;
+            border-radius:14px;
+            border:1px solid #d8e3f8;
+            background:#ffffff;
+            box-shadow:0 4px 14px rgba(15,23,42,0.04);
+        ">
+            <div style="
+                font-size:12px;
+                color:#64748b;
+                margin-bottom:6px;
+            ">
+                ${title}
+            </div>
+
+            <div style="
+                font-size:18px;
+                font-weight:800;
+                color:#1e3a8a;
+            ">
+                ${value}
+            </div>
+        </div>
+    `;
+}
+
+
+function badge(label, bg, color, border) {
+    return `
+        <span style="
+            padding:4px 10px;
+            border-radius:999px;
+            background:${bg};
+            color:${color};
+            border:1px solid ${border};
+            font-size:11px;
+            font-weight:700;
+        ">
+            ${label}
+        </span>
+    `;
 }

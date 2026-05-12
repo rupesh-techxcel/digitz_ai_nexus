@@ -184,6 +184,22 @@ class TestNexusCoreRAG(FrappeTestCase):
         doc.sensitivity = sensitivity
         doc.embedding = json.dumps(embedding)
         doc.embedding_model = "fake-test-model"
+        
+        if doc.meta.has_field("archived"):
+            doc.archived = 0
+
+        if doc.meta.has_field("source_version"):
+            doc.source_version = 1
+
+        if doc.meta.has_field("character_count"):
+            doc.character_count = len(chunk_text or "")
+
+        if doc.meta.has_field("diagnostics_status"):
+            doc.diagnostics_status = "Healthy"
+
+        if doc.meta.has_field("diagnostics_message"):
+            doc.diagnostics_message = "Test chunk passed diagnostics"
+        
         doc.embedding_status = "Completed"
         doc.save(ignore_permissions=True)
 

@@ -40,7 +40,7 @@ def answer_query(
         )
 
     if not chunks:
-        if denied:
+        if retrieval_result.get("access_status") == "restricted":
             return build_restricted_response(
                 retrieval_result=retrieval_result,
                 denied=denied,
@@ -92,7 +92,7 @@ def answer_query(
         "retrieval_result": retrieval_result,
         "fallback_used": 0,
     }
-
+    
 def build_sources(chunks):
     sources = []
     seen = set()
@@ -114,10 +114,24 @@ def build_sources(chunks):
         sources.append({
             "chunk": chunk_id,
             "knowledge_unit": row.get("knowledge_unit"),
+            "knowledge_title": (
+                row.get("knowledge_title")
+                or row.get("unit_title")
+                or row.get("knowledge_unit")
+            ),
             "context_path": row.get("context_path"),
             "business_unit": row.get("business_unit"),
             "project": row.get("project"),
+            "tenant": row.get("tenant"),
+            "context": row.get("context"),
+            "sub_context": row.get("sub_context"),
+            "entity_type": row.get("entity_type"),
+            "entity": row.get("entity"),
+            "topic": row.get("topic"),
             "scope_type": row.get("scope_type"),
+            "sensitivity": row.get("sensitivity"),
+            "chunk_preview": row.get("chunk_preview") or (row.get("chunk_text") or "")[:300],
+
             "score": row.get("score"),
             "vector_score": row.get("vector_score"),
             "keyword_score": row.get("keyword_score"),
@@ -131,6 +145,7 @@ def build_sources(chunks):
             "rank_before_rerank": row.get("rank_before_rerank"),
             "rank_after_rerank": row.get("rank_after_rerank"),
             "rerank_reason": row.get("rerank_reason"),
+            "rerank_reasons": row.get("rerank_reasons") or [],
         })
 
     return sources
@@ -147,14 +162,16 @@ def build_citation_summary(sources):
             "source_no": idx,
             "chunk": source.get("chunk"),
             "knowledge_unit": source.get("knowledge_unit"),
+            "knowledge_title": source.get("knowledge_title"),
             "context_path": source.get("context_path"),
             "business_unit": source.get("business_unit"),
             "project": source.get("project"),
+            "topic": source.get("topic"),
+            "scope_type": source.get("scope_type"),
             "score": source.get("score"),
         })
 
     return citation_summary
-
 
 def calculate_confidence(chunks):
     if not chunks:

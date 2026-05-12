@@ -27,8 +27,12 @@
     "status",
     "processing_section",
     "processing_status",
+    "processing_version",
     "chunk_count",
+    "active_chunk_count",
     "embedding_status",
+    "diagnostics_status",
+    "retrieval_ready",
     "last_processed_on",
     "generated_knowledge_unit",
     "error_log",
@@ -37,7 +41,8 @@
     "generated_chunks_html",
     "test_section",
     "last_test_query",
-    "last_test_result"
+    "last_test_result",
+    "last_tested_on"
   ],
   "fields": [
     {
@@ -152,9 +157,24 @@
       "read_only": 1
     },
     {
+      "fieldname": "processing_version",
+      "label": "Processing Version",
+      "fieldtype": "Int",
+      "default": 0,
+      "read_only": 1
+    },
+    {
       "fieldname": "chunk_count",
       "label": "Chunk Count",
       "fieldtype": "Int",
+      "default": 0,
+      "read_only": 1
+    },
+    {
+      "fieldname": "active_chunk_count",
+      "label": "Active Chunk Count",
+      "fieldtype": "Int",
+      "default": 0,
       "read_only": 1
     },
     {
@@ -163,6 +183,21 @@
       "fieldtype": "Select",
       "options": "Pending\nCompleted\nFailed",
       "default": "Pending",
+      "read_only": 1
+    },
+    {
+      "fieldname": "diagnostics_status",
+      "label": "Diagnostics Status",
+      "fieldtype": "Select",
+      "options": "Pending\nHealthy\nWarning\nCritical",
+      "default": "Pending",
+      "read_only": 1
+    },
+    {
+      "fieldname": "retrieval_ready",
+      "label": "Retrieval Ready",
+      "fieldtype": "Check",
+      "default": 0,
       "read_only": 1
     },
     {
@@ -216,6 +251,12 @@
       "fieldname": "last_test_result",
       "label": "Last Test Result",
       "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_tested_on",
+      "label": "Last Tested On",
+      "fieldtype": "Datetime",
       "read_only": 1
     }
   ],

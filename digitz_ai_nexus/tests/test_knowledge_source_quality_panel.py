@@ -155,10 +155,16 @@ class TestKnowledgeSourceQualityPanel(unittest.TestCase):
     def test_quality_panel_works_before_processing(self):
         panel = get_source_quality_panel(self.source.name)
 
-        self.assertEqual(panel.get("source"), self.source.name)
-        self.assertEqual(panel.get("chunk_count"), 0)
+        self.assertEqual(panel.get("source"), self.source.name)        
+        self.assertEqual(panel.get("active_chunk_count"), 0)
+        self.assertEqual(panel.get("retrieval_ready"), 0)
         self.assertFalse(panel.get("generated_knowledge_unit"))
-        self.assertEqual(panel.get("chunks"), [])
+        
+        active_chunks = [
+            row for row in (panel.get("chunks") or [])
+            if row.get("is_active")
+        ]
+        self.assertEqual(active_chunks, [])
 
     @patch(
         "digitz_ai_nexus.services.ingestion.processor.extract_source_text",

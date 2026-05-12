@@ -61,7 +61,48 @@ CHUNK_FIELDS = [
 def normalize_project(value):
     return (value or "").strip()
 
+def get_chunk_preview(row, limit=300):
+    text = row_value(row, "chunk_text") or row_value(row, "content") or ""
+    return text[:limit]
 
+
+def build_context_path(row):
+    existing = row_value(row, "context_path")
+    if existing:
+        return existing
+
+    parts = [
+        row_value(row, "context"),
+        row_value(row, "sub_context"),
+        row_value(row, "entity_type"),
+        row_value(row, "entity"),
+        row_value(row, "topic"),
+    ]
+
+    return "/".join([str(p) for p in parts if p])
+
+
+def build_source_metadata(row):
+    return {
+        "knowledge_unit": row_value(row, "knowledge_unit"),
+        "knowledge_title": (
+            row_value(row, "knowledge_title")
+            or row_value(row, "title")
+            or row_value(row, "unit_title")
+            or row_value(row, "knowledge_unit")
+        ),        
+        "business_unit": row_value(row, "business_unit"),
+        "project": row_value(row, "project"),
+        "tenant": row_value(row, "tenant"),
+        "context": row_value(row, "context"),
+        "sub_context": row_value(row, "sub_context"),
+        "entity_type": row_value(row, "entity_type"),
+        "entity": row_value(row, "entity"),
+        "topic": row_value(row, "topic"),
+        "context_path": build_context_path(row),
+        "chunk_preview": get_chunk_preview(row),
+    }
+    
 def tokenize(text):
     if not text:
         return []
@@ -178,7 +219,6 @@ def build_context_filters(query_contract):
 
     return filters
 
-
 def enrich_chunk_roles_from_unit(rows):
     if not rows:
         return rows
@@ -201,18 +241,25 @@ def enrich_chunk_roles_from_unit(rows):
         "deny_roles",
     ]
 
+    optional_meta_fields = []
+
+    if unit_meta.has_field("title"):
+        optional_meta_fields.append("title")
+
+    if unit_meta.has_field("knowledge_title"):
+        optional_meta_fields.append("knowledge_title")
+
     valid_unit_fields = [
         field for field in role_fields
         if unit_meta.has_field(field)
     ]
 
-    if not valid_unit_fields:
-        return rows
+    fields = ["name"] + valid_unit_fields + optional_meta_fields
 
     units = frappe.get_all(
         "Nexus Knowledge Unit",
         filters={"name": ["in", unit_names]},
-        fields=["name"] + valid_unit_fields,
+        fields=fields,
         limit_page_length=500,
     )
 
@@ -227,8 +274,13 @@ def enrich_chunk_roles_from_unit(rows):
             if field not in row or not row.get(field):
                 row[field] = unit.get(field)
 
-    return rows
+        row["knowledge_title"] = (
+            unit.get("knowledge_title")
+            or unit.get("title")
+            or unit.get("name")
+        )
 
+    return rows
 
 def fetch_chunks(filters):
     meta = frappe.get_meta("Nexus Knowledge Chunk")
@@ -330,22 +382,35 @@ def build_restricted_response(
             "retrieval_debug": bool(enable_retrieval_debug),
         },
     }
+    
 def build_denied_debug_row(row, query, reason, vector_score=0):
+    metadata = build_source_metadata(row)
+
     return {
         "chunk": row_value(row, "name"),
-        "knowledge_unit": row_value(row, "knowledge_unit"),
+        **metadata,
         "reason": reason,
         "access_policy": row_value(row, "access_policy"),
+        "allowed_roles": (
+            row_value(row, "allowed_roles")
+            or row_value(row, "roles")
+            or row_value(row, "user_roles")
+        ),
+        "denied_roles": (
+            row_value(row, "denied_roles")
+            or row_value(row, "excluded_roles")
+            or row_value(row, "deny_roles")
+        ),
+        "excluded_roles": row_value(row, "excluded_roles"),
+        "sensitivity": row_value(row, "sensitivity"),
         "keyword_score": keyword_score(
             query,
             row_value(row, "chunk_text"),
-            row_value(row, "context_path"),
+            build_context_path(row),
         ),
         "vector_score": float(vector_score or 0),
         "chunk_text": row_value(row, "chunk_text"),
-        "context_path": row_value(row, "context_path"),
     }
-
 
 def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_provider=None):
     query = query_contract.get("query")
@@ -389,6 +454,9 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     if not query_variants:
         query_variants = [query]
 
+    if query not in query_variants:
+        query_variants = [query] + query_variants
+
     candidate_chunks = get_candidate_chunks(query_contract)
     weights = get_retrieval_weights()
 
@@ -397,9 +465,9 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     denied_relevance = {}
 
     for variant_query in query_variants:
-        variant_embedding = query_embedding
-
-        if variant_embedding is None or variant_query != query:
+        if query_embedding is not None:
+            variant_embedding = query_embedding
+        else:
             variant_embedding = generate_embedding(
                 variant_query,
                 provider=embedding_provider
@@ -412,10 +480,12 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
                 denied_vector_score = 0
 
                 try:
-                    if row.embedding and variant_embedding:
+                    row_embedding = row_value(row, "embedding")
+
+                    if row_embedding and variant_embedding:
                         denied_vector_score = cosine_similarity(
                             variant_embedding,
-                            json.loads(row.embedding)
+                            json.loads(row_embedding)
                         )
                 except Exception:
                     denied_vector_score = 0
@@ -444,15 +514,14 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
                     if new_score >= existing_score:
                         denied_relevance[denied_chunk] = denied_row
-
-                already_denied = any(d.get("chunk") == row.name for d in denied)
+ 
+                already_denied = any(
+                            d.get("chunk") == row_value(row, "name")
+                            for d in denied
+                        )
 
                 if not already_denied:
-                    denied.append({
-                        "chunk": row.name,
-                        "reason": reason,
-                        "access_policy": row.access_policy,
-                    })
+                    denied.append(denied_row)
 
                 continue
 
@@ -471,20 +540,16 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             )
 
             candidate["score"] = candidate.get("hybrid_score") or 0
-            candidate["priority_score"] = priority_score(row.priority)
-            candidate["chunk_text"] = row.chunk_text
-            candidate["sensitivity"] = row.sensitivity
-            candidate["context_path"] = row.context_path
-            candidate["knowledge_unit"] = row.knowledge_unit
-            candidate["business_unit"] = row.business_unit
-            candidate["tenant"] = row.tenant
-            candidate["context"] = row.context
-            candidate["sub_context"] = row.sub_context
-            candidate["entity_type"] = row.entity_type
-            candidate["entity"] = row.entity
-            candidate["topic"] = row.topic
-            candidate["scope_type"] = "project" if row_project else "general"
-            candidate["priority"] = row.priority or 0
+            candidate["chunk_preview"] = get_chunk_preview(row)
+
+            candidate["priority_score"] = priority_score(row_value(row, "priority"))
+            candidate["chunk_text"] = row_value(row, "chunk_text")
+            candidate["sensitivity"] = row_value(row, "sensitivity")
+            candidate["priority"] = row_value(row, "priority") or 0
+            
+            metadata = build_source_metadata(row)
+            candidate.update(metadata)
+            candidate["scope_type"] = "project" if row_project else "general"            
             candidate["project"] = row_project
 
             candidate["stable_vector_score"] = float(candidate.get("vector_score") or 0)
@@ -569,9 +634,28 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             strongest_denied_score = denied_score
             strongest_denied = denied_row
 
-    restricted_threshold = 0.01
+    restricted_threshold = 0.50
 
-    if strongest_denied and strongest_denied_score >= restricted_threshold:
+    best_allowed_keyword_score = 0.0
+
+    for candidate in scored:
+        best_allowed_keyword_score = max(
+            best_allowed_keyword_score,
+            float(candidate.get("keyword_score") or 0),
+        )
+
+    strongest_denied_keyword_score = 0.0
+
+    if strongest_denied:
+        strongest_denied_keyword_score = float(
+            strongest_denied.get("keyword_score") or 0
+        )
+
+    if (
+        strongest_denied
+        and strongest_denied_keyword_score >= restricted_threshold
+        and strongest_denied_keyword_score >= best_allowed_keyword_score
+    ):
         return build_restricted_response(
             denied=denied,
             query_variants=query_variants,

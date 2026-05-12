@@ -116,6 +116,12 @@ class TestIngestedRetrieval(unittest.TestCase):
 
         set_if_field(source, "processing_status", "Pending")
         set_if_field(source, "embedding_status", "Pending")
+        
+        set_if_field(source, "status", "Published")
+        set_if_field(source, "processing_version", 0)
+        set_if_field(source, "diagnostics_status", "Pending")
+        set_if_field(source, "retrieval_ready", 0)
+        set_if_field(source, "active_chunk_count", 0)
 
         source.insert(ignore_permissions=True, ignore_mandatory=True)
         frappe.db.commit()
@@ -172,6 +178,14 @@ class TestIngestedRetrieval(unittest.TestCase):
             set_if_field(chunk, "is_active", 1)
             set_if_field(chunk, "enabled", 1)
             set_if_field(chunk, "embedding", TEST_EMBEDDING_JSON)
+            
+            set_if_field(chunk, "disabled", 0)
+            set_if_field(chunk, "archived", 0)
+            set_if_field(chunk, "source_version", 1)
+            set_if_field(chunk, "embedding_status", "Completed")
+            set_if_field(chunk, "diagnostics_status", "Healthy")
+            set_if_field(chunk, "diagnostics_message", "Test chunk passed diagnostics")
+            set_if_field(chunk, "character_count", len(chunk.get("chunk_text") or ""))
 
             chunk.save(ignore_permissions=True)
 

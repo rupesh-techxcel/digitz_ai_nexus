@@ -2,7 +2,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from unittest.mock import patch
 
-from digitz_ai_nexus.services.knowledge_source_processor import process_knowledge_source
+from digitz_ai_nexus.services.ingestion.processor import process_knowledge_source
 
 
 def fake_embedding(text, provider=None):
@@ -38,8 +38,8 @@ class TestNexusKnowledgeSourceProcessor(FrappeTestCase):
             frappe.delete_doc("Nexus Knowledge Chunk", chunk, force=True)
 
         units = frappe.get_all(
-            "Nexus Knowledge Unit",
-            filters={"title": self.title},
+            "Nexus Knowledge Unit",            
+            filters={"title": ["like", f"{self.title}%"]},
             pluck="name",
         )
 
@@ -78,10 +78,11 @@ class TestNexusKnowledgeSourceProcessor(FrappeTestCase):
 
         self.source_name = source.name
         return source.name
+    
+    @patch("digitz_ai_nexus.services.ingestion.processor.generate_embedding_json", return_value="[0.1, 0.2, 0.3]")
+    @patch("digitz_ai_nexus.services.ingestion.processor.chunk_text", return_value=["DIGITZ ERP is an enterprise ERP platform. It supports accounting, inventory, HR, payroll, and operational workflows."])
 
-    @patch("digitz_ai_nexus.services.knowledge_source_processor.generate_embedding", fake_embedding)
-    @patch("digitz_ai_nexus.services.knowledge_source_processor.chunk_text", fake_chunk_text)
-    def test_manual_source_process_creates_unit_and_chunk(self):
+    def test_manual_source_process_creates_unit_and_chunk(self, mock_chunk_text, mock_embedding):        
         source_name = self.create_source()
 
         result = process_knowledge_source(source_name)
@@ -125,8 +126,8 @@ class TestNexusKnowledgeSourceProcessor(FrappeTestCase):
 
         chunk = chunks[0]
 
-        self.assertEqual(chunk.knowledge_source, source_name)
-        self.assertEqual(chunk.knowledge_unit, unit[0].name)
+        self.assertEqual(chunk.knowledge_source, source_name)        
+        self.assertEqual(chunk.knowledge_unit, result["knowledge_unit"])
         self.assertEqual(chunk.chunk_index, 1)
         self.assertEqual(chunk.embedding_status, "Completed")
         self.assertEqual(chunk.business_unit, "ERP Product")
