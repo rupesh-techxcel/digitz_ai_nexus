@@ -27,7 +27,7 @@ app_license = "mit"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/digitz_ai_nexus/css/digitz_ai_nexus.css"
 # app_include_js = "/assets/digitz_ai_nexus/js/digitz_ai_nexus.js"
-app_include_css = ["/assets/digitz_ai_nexus/css/digitz_desk_premium.css"]
+app_include_css = ["/assets/digitz_ai_nexus/css/digitz_desk_premium.css","/assets/digitz_ai_nexus/css/digitz_ai_nexus_desk.css"]
 # include js, css files in header of web template
 # web_include_css = "/assets/digitz_ai_nexus/css/digitz_ai_nexus.css"
 web_include_css = [

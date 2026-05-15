@@ -514,11 +514,11 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
 
                     if new_score >= existing_score:
                         denied_relevance[denied_chunk] = denied_row
- 
+
                 already_denied = any(
-                            d.get("chunk") == row_value(row, "name")
-                            for d in denied
-                        )
+                    d.get("chunk") == row_value(row, "name")
+                    for d in denied
+                )
 
                 if not already_denied:
                     denied.append(denied_row)
@@ -546,10 +546,10 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             candidate["chunk_text"] = row_value(row, "chunk_text")
             candidate["sensitivity"] = row_value(row, "sensitivity")
             candidate["priority"] = row_value(row, "priority") or 0
-            
+
             metadata = build_source_metadata(row)
             candidate.update(metadata)
-            candidate["scope_type"] = "project" if row_project else "general"            
+            candidate["scope_type"] = "project" if row_project else "general"
             candidate["project"] = row_project
 
             candidate["stable_vector_score"] = float(candidate.get("vector_score") or 0)
@@ -634,27 +634,35 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             strongest_denied_score = denied_score
             strongest_denied = denied_row
 
-    restricted_threshold = 0.50
-
-    best_allowed_keyword_score = 0.0
+    best_allowed_relevance_score = 0.0
 
     for candidate in scored:
-        best_allowed_keyword_score = max(
-            best_allowed_keyword_score,
+        best_allowed_relevance_score = max(
+            best_allowed_relevance_score,
             float(candidate.get("keyword_score") or 0),
+            float(candidate.get("vector_score") or 0),
+            float(candidate.get("hybrid_score") or 0),
+            float(candidate.get("final_score") or 0),
         )
 
-    strongest_denied_keyword_score = 0.0
+    strongest_denied_relevance_score = 0.0
 
     if strongest_denied:
-        strongest_denied_keyword_score = float(
-            strongest_denied.get("keyword_score") or 0
+        strongest_denied_relevance_score = max(
+            float(strongest_denied.get("keyword_score") or 0),
+            float(strongest_denied.get("vector_score") or 0),
         )
 
+    # Governance rule:
+    # If relevant knowledge exists but the user cannot access it,
+    # return restricted instead of no_context.
+    # This avoids merging "no knowledge found" with "knowledge denied".
     if (
         strongest_denied
-        and strongest_denied_keyword_score >= restricted_threshold
-        and strongest_denied_keyword_score >= best_allowed_keyword_score
+        and (
+            not scored
+            or strongest_denied_relevance_score >= best_allowed_relevance_score
+        )
     ):
         return build_restricted_response(
             denied=denied,
@@ -765,6 +773,7 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
         "denied_count": len(denied),
         "retrieval_mode": "hybrid_grounded_rag",
         "project_scope_mode": scope_mode,
+        "access_status": "allowed" if final_results else "no_context",
         "weights": {
             "vector": weights.get("vector_weight"),
             "keyword": weights.get("keyword_weight"),
@@ -782,7 +791,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             "retrieval_debug": bool(enable_retrieval_debug),
         },
     }
-
 def clamp_score(value, minimum=0.0, maximum=1.0):
     try:
         value = float(value or 0)

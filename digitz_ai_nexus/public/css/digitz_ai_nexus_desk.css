@@ -1,0 +1,588 @@
+/* =========================================================
+   DIGITZ AI Nexus Workspace Theme
+   Finalized Blue + Teal Workspace Theme
+   ========================================================= */
+
+.nexus-ws {
+    max-width: 1180px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    color: #102b67;
+    font-family: inherit;
+}
+
+/* =========================
+   Top Intelligence Panel
+   ========================= */
+
+.nexus-top-panel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 30px;
+    padding: 30px;
+    margin-bottom: 22px;
+    background:
+        radial-gradient(circle at 85% 18%, rgba(77, 200, 255, 0.30), transparent 30%),
+        radial-gradient(circle at 92% 92%, rgba(0, 184, 148, 0.18), transparent 34%),
+        linear-gradient(135deg, #082d8f 0%, #0b58d8 42%, #118fe5 78%, #33c6ec 100%);
+    border: 1.5px solid rgba(77, 200, 255, 0.52);
+    box-shadow:
+        0 22px 52px rgba(33, 77, 187, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -30px 72px rgba(0, 42, 145, 0.16);
+}
+
+.nexus-top-panel::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 42%;
+    height: 7px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(77, 200, 255, 0.70) 38%,
+        rgba(0, 184, 148, 0.90) 100%
+    );
+    border-radius: 999px 0 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 184, 148, 0.18);
+}
+
+.nexus-top-orb {
+    position: absolute;
+    right: 38px;
+    top: 28px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.28), transparent 34%),
+        rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: inset 0 0 42px rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.46);
+    font-size: 98px;
+    font-weight: 950;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.nexus-top-content {
+    position: relative;
+    z-index: 2;
+    max-width: 820px;
+}
+
+.nexus-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.nexus-kicker-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #00b894;
+    box-shadow: 0 0 18px rgba(0, 184, 148, 0.70);
+}
+
+.nexus-top-title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 40px;
+    line-height: 1.12;
+    font-weight: 950;
+    letter-spacing: -0.045em;
+    text-shadow: 0 10px 26px rgba(0, 35, 120, 0.28);
+}
+
+.nexus-top-lead {
+    margin: 14px 0 0;
+    max-width: 820px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 17px;
+    line-height: 1.55;
+    font-weight: 750;
+    text-shadow: 0 8px 22px rgba(0, 35, 120, 0.20);
+}
+
+.nexus-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.nexus-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+/* =========================
+   Active Context Strip
+   ========================= */
+
+.nexus-context-grid {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.nexus-context-card {
+    min-height: 92px;
+    padding: 18px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1.5px solid rgba(33, 119, 255, 0.34);
+    box-shadow: 0 12px 28px rgba(33, 77, 187, 0.07);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.nexus-context-card-primary {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(77, 200, 255, 0.10), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border-color: rgba(33, 119, 255, 0.40);
+    box-shadow: 0 12px 28px rgba(33, 77, 187, 0.08);
+    gap: 14px;
+}
+
+.nexus-context-card-primary::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, #0b6cff, #4dc8ff);
+}
+
+.nexus-context-card-teal {
+    background: linear-gradient(180deg, #ffffff 0%, #f1fffb 100%);
+    border-color: rgba(0, 184, 148, 0.30);
+    box-shadow: 0 12px 28px rgba(0, 184, 148, 0.08);
+}
+
+.nexus-context-card-teal-soft {
+    background: linear-gradient(180deg, #ffffff 0%, #f1fffb 100%);
+    border-color: rgba(0, 184, 148, 0.28);
+    box-shadow: 0 12px 28px rgba(0, 184, 148, 0.06);
+}
+
+.nexus-context-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef6ff;
+    color: #0b6cff;
+    font-size: 20px;
+    font-weight: 950;
+}
+
+.nexus-context-icon-large {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 16px;
+    color: #0b6cff;
+    background: #eef6ff;
+    font-size: 22px;
+    border: 1px solid rgba(11, 108, 255, 0.14);
+}
+
+.nexus-context-icon-mint {
+    background: #dffff6;
+    color: #00b894;
+}
+
+.nexus-context-icon-teal {
+    background: #ecfffb;
+    color: #00b894;
+}
+
+.nexus-context-title {
+    margin: 0;
+    color: #102b67;
+    font-size: 14px;
+    font-weight: 950;
+}
+
+.nexus-context-title-large {
+    font-size: 17px;
+}
+
+.nexus-context-text {
+    margin: 5px 0 0;
+    color: #526887;
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 750;
+}
+
+/* =========================
+   Section Heading
+   ========================= */
+
+.nexus-section {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 0 0 12px;
+    flex-wrap: wrap;
+}
+
+.nexus-section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #0b60d8;
+    border: 1px solid rgba(11, 108, 255, 0.18);
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.nexus-section-badge-teal {
+    background: #ecfffb;
+    color: #008c78;
+    border-color: rgba(0, 184, 148, 0.22);
+}
+
+.nexus-section-title {
+    margin: 0;
+    color: #071d4f;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 950;
+    letter-spacing: -0.035em;
+}
+
+.nexus-section-title::after {
+    content: "";
+    display: inline-block;
+    width: 36px;
+    height: 4px;
+    margin-left: 10px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #00b894, #4dc8ff);
+    vertical-align: middle;
+}
+
+.nexus-section-text {
+    margin: 6px 0 0;
+    color: #526887;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 700;
+}
+
+/* =========================
+   Workspace Cards
+   ========================= */
+
+.nexus-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.nexus-card {
+    position: relative;
+    min-height: 230px;
+    padding: 22px;
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(77, 163, 255, 0.16), transparent 30%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1.5px solid rgba(33, 119, 255, 0.42);
+    box-shadow:
+        0 14px 32px rgba(33, 77, 187, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    color: inherit;
+    text-decoration: none;
+    display: block;
+    overflow: hidden;
+}
+
+.nexus-card:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+.nexus-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #0b6cff, #4dc8ff);
+}
+
+.nexus-card-purple::before {
+    background: linear-gradient(90deg, #725cff, #0b6cff);
+}
+
+.nexus-card-teal::before {
+    background: linear-gradient(90deg, #00b894, #4dc8ff);
+}
+
+.nexus-card-teal-bg {
+    background: linear-gradient(180deg, #ffffff 0%, #f1fffb 100%);
+    border-color: rgba(0, 184, 148, 0.32);
+    box-shadow:
+        0 14px 32px rgba(0, 184, 148, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.nexus-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.nexus-card-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    font-weight: 950;
+    color: #0b6cff;
+    background: #eef6ff;
+}
+
+.nexus-card-icon-purple {
+    color: #725cff;
+    background: #f4f1ff;
+}
+
+.nexus-card-icon-teal {
+    color: #00b894;
+    background: #ecfffb;
+}
+
+.nexus-card-arrow {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #214dbb;
+    background: #ffffff;
+    border: 1.5px solid rgba(33, 119, 255, 0.35);
+    font-weight: 950;
+}
+
+.nexus-card-arrow-teal {
+    color: #008c78;
+    border-color: rgba(0, 184, 148, 0.32);
+}
+
+.nexus-card-title {
+    margin: 0;
+    color: #102b67;
+    font-size: 18px;
+    font-weight: 950;
+}
+
+.nexus-card-subtitle {
+    margin-top: 4px;
+    color: #264579;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.nexus-card-subtitle-teal {
+    color: #008c78;
+}
+
+.nexus-card-text {
+    margin: 7px 0 0;
+    color: #526887;
+    font-size: 12px;
+    line-height: 1.55;
+    font-weight: 700;
+}
+
+.nexus-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.nexus-tag {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #f3f8ff;
+    color: #0b60d8;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1px solid rgba(33, 119, 255, 0.18);
+}
+
+.nexus-tag-purple {
+    background: #f5f2ff;
+    color: #5e49d8;
+    border-color: transparent;
+}
+
+.nexus-tag-teal {
+    background: #edfffb;
+    color: #008c78;
+    border-color: transparent;
+}
+
+.nexus-tag-teal-strong {
+    background: #ecfffb;
+    color: #008c78;
+    border-color: transparent;
+}
+
+/* =========================
+   Capabilities
+   ========================= */
+
+.nexus-capability-panel {
+    padding: 22px;
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(0, 184, 148, 0.06), transparent 24%),
+        #ffffff;
+    border: 1.5px solid rgba(33, 119, 255, 0.42);
+    box-shadow:
+        0 14px 32px rgba(33, 77, 187, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.nexus-capability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.nexus-capability-tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+    padding: 14px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1.5px solid rgba(33, 119, 255, 0.30);
+}
+
+.nexus-capability-tile-teal {
+    background: #f1fffb;
+    border-color: rgba(0, 184, 148, 0.30);
+}
+
+.nexus-capability-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef6ff;
+    color: #0b6cff;
+    font-size: 18px;
+    font-weight: 950;
+}
+
+.nexus-capability-icon-teal {
+    background: #dffff6;
+    color: #00b894;
+}
+
+.nexus-capability-text {
+    margin: 0;
+    color: #102b67;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 850;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 900px) {
+    .nexus-context-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .nexus-top-orb {
+        opacity: 0.35;
+        right: 16px;
+    }
+}
+
+@media (max-width: 640px) {
+    .nexus-top-panel {
+        padding: 24px;
+    }
+
+    .nexus-top-title {
+        font-size: 32px;
+    }
+
+    .nexus-context-grid,
+    .nexus-card-grid,
+    .nexus-capability-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* TEMP TEST - remove after verification */
+.nexus-ws {
+    outline: 4px solid red !important;
+}

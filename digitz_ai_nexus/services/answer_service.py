@@ -32,20 +32,17 @@ def answer_query(
 
     chunks = retrieval_result.get("results") or []
     denied = retrieval_result.get("denied") or []
-    
-    if retrieval_result.get("access_status") == "restricted":
+
+    # IMPORTANT:
+    # If retrieval found denied/restricted knowledge, return restricted.
+    # Do not convert this case into no_context.
+    if retrieval_result.get("access_status") == "restricted" or denied:
         return build_restricted_response(
             retrieval_result=retrieval_result,
             denied=denied,
         )
 
     if not chunks:
-        if retrieval_result.get("access_status") == "restricted":
-            return build_restricted_response(
-                retrieval_result=retrieval_result,
-                denied=denied,
-            )
-
         return build_safe_fallback(
             retrieval_result=retrieval_result,
             denied=denied,
@@ -92,7 +89,7 @@ def answer_query(
         "retrieval_result": retrieval_result,
         "fallback_used": 0,
     }
-    
+        
 def build_sources(chunks):
     sources = []
     seen = set()

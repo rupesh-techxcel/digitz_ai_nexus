@@ -916,3 +916,34 @@ hr,
 .frappe-control[data-fieldtype="Autocomplete"] {
     overflow: visible !important;
 }
+
+/* DIGITZ AI Nexus - Frappe navbar logo sizing */
+header.navbar .navbar-brand.navbar-home {
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 6px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+header.navbar .navbar-brand.navbar-home img.app-logo {
+    height: 42px !important;
+    max-height: 42px !important;
+    width: auto !important;
+    max-width: 190px !important;
+    object-fit: contain !important;
+}
+
+/* Give navbar enough height so the logo is not squeezed */
+header.navbar.navbar-expand {
+    min-height: 60px !important;
+    height: 60px !important;
+    align-items: center !important;
+}
+
+/* Keep navbar inner content vertically aligned */
+header.navbar.navbar-expand .container {
+    min-height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+}
