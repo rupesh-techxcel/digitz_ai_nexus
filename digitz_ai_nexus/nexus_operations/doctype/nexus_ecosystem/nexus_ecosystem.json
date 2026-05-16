@@ -1,0 +1,305 @@
+{
+ "actions": [],
+ "allow_copy": 1,
+ "allow_rename": 1,
+ "autoname": "format:NECO-.{#####}",
+ "creation": "2026-05-15 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "ecosystem_identity_section",
+  "tenant",
+  "ecosystem_name",
+  "ecosystem_type",
+  "enabled",
+  "is_default",
+  "activation_status",
+  "default_context_section",
+  "default_business_unit",
+  "default_project",
+  "default_public_context",
+  "knowledge_defaults_section",
+  "require_approved_knowledge",
+  "strict_tenant_mode",
+  "default_top_k",
+  "qa_defaults_section",
+  "qa_enabled",
+  "default_qa_channel",
+  "qa_fallback_message",
+  "source_citation_required",
+  "live_defaults_section",
+  "live_chat_enabled",
+  "default_chat_channel",
+  "default_live_channel",
+  "default_public_agent",
+  "default_public_escalation_queue",
+  "default_escalation_enabled",
+  "widget_defaults_section",
+  "website_widget_enabled",
+  "widget_title",
+  "widget_welcome_message",
+  "widget_brand_color",
+  "governance_section",
+  "testing_required_before_activation",
+  "last_certified_on",
+  "certification_status",
+  "notes_section",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "ecosystem_identity_section",
+   "fieldtype": "Section Break",
+   "label": "Ecosystem Identity"
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ecosystem_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Ecosystem Name",
+   "reqd": 1
+  },
+  {
+   "default": "Sandbox",
+   "fieldname": "ecosystem_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Ecosystem Type",
+   "options": "\nProduction\nSandbox\nSynthetic Validation\nInternal Platform"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Tenant Default Ecosystem"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "activation_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Activation Status",
+   "options": "\nDraft\nConfigured\nTesting\nCertified\nActive\nSuspended"
+  },
+  {
+   "fieldname": "default_context_section",
+   "fieldtype": "Section Break",
+   "label": "Default Business Context"
+  },
+  {
+   "fieldname": "default_business_unit",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Default Business Unit"
+  },
+  {
+   "fieldname": "default_project",
+   "fieldtype": "Data",
+   "label": "Default Project"
+  },
+  {
+   "fieldname": "default_public_context",
+   "fieldtype": "Data",
+   "label": "Default Public Context"
+  },
+  {
+   "fieldname": "knowledge_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Knowledge Defaults"
+  },
+  {
+   "default": "1",
+   "fieldname": "require_approved_knowledge",
+   "fieldtype": "Check",
+   "label": "Require Approved Knowledge"
+  },
+  {
+   "default": "1",
+   "fieldname": "strict_tenant_mode",
+   "fieldtype": "Check",
+   "label": "Strict Tenant Mode"
+  },
+  {
+   "default": "5",
+   "fieldname": "default_top_k",
+   "fieldtype": "Int",
+   "label": "Default Top K"
+  },
+  {
+   "fieldname": "qa_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Q&A Defaults"
+  },
+  {
+   "default": "1",
+   "fieldname": "qa_enabled",
+   "fieldtype": "Check",
+   "label": "Q&A Enabled"
+  },
+  {
+   "fieldname": "default_qa_channel",
+   "fieldtype": "Link",
+   "label": "Default Q&A Channel",
+   "options": "Nexus Live Channel"
+  },
+  {
+   "default": "I do not have enough approved knowledge to answer this.",
+   "fieldname": "qa_fallback_message",
+   "fieldtype": "Small Text",
+   "label": "Q&A Fallback Message"
+  },
+  {
+   "default": "1",
+   "fieldname": "source_citation_required",
+   "fieldtype": "Check",
+   "label": "Source Citation Required"
+  },
+  {
+   "fieldname": "live_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Live Defaults"
+  },
+  {
+   "default": "1",
+   "fieldname": "live_chat_enabled",
+   "fieldtype": "Check",
+   "label": "Live Chat Enabled"
+  },
+  {
+   "fieldname": "default_chat_channel",
+   "fieldtype": "Link",
+   "label": "Default Chat Channel",
+   "options": "Nexus Live Channel"
+  },
+  {
+   "fieldname": "default_live_channel",
+   "fieldtype": "Link",
+   "label": "Default Live Channel",
+   "options": "Nexus Live Channel"
+  },
+  {
+   "fieldname": "default_public_agent",
+   "fieldtype": "Link",
+   "label": "Default Public Agent",
+   "options": "Nexus Live Agent"
+  },
+  {
+   "fieldname": "default_public_escalation_queue",
+   "fieldtype": "Link",
+   "label": "Default Public Escalation Queue",
+   "options": "Nexus Agent Queue"
+  },
+  {
+   "default": "1",
+   "fieldname": "default_escalation_enabled",
+   "fieldtype": "Check",
+   "label": "Default Escalation Enabled"
+  },
+  {
+   "fieldname": "widget_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Experience / Widget Defaults"
+  },
+  {
+   "default": "0",
+   "fieldname": "website_widget_enabled",
+   "fieldtype": "Check",
+   "label": "Website Widget Enabled"
+  },
+  {
+   "fieldname": "widget_title",
+   "fieldtype": "Data",
+   "label": "Default Widget Title"
+  },
+  {
+   "fieldname": "widget_welcome_message",
+   "fieldtype": "Small Text",
+   "label": "Default Widget Welcome Message"
+  },
+  {
+   "default": "#214dbb",
+   "fieldname": "widget_brand_color",
+   "fieldtype": "Data",
+   "label": "Default Widget Brand Color"
+  },
+  {
+   "fieldname": "governance_section",
+   "fieldtype": "Section Break",
+   "label": "Governance"
+  },
+  {
+   "default": "1",
+   "fieldname": "testing_required_before_activation",
+   "fieldtype": "Check",
+   "label": "Testing Required Before Activation"
+  },
+  {
+   "fieldname": "last_certified_on",
+   "fieldtype": "Datetime",
+   "label": "Last Certified On"
+  },
+  {
+   "default": "Not Certified",
+   "fieldname": "certification_status",
+   "fieldtype": "Select",
+   "label": "Certification Status",
+   "options": "\nNot Certified\nIn Progress\nPassed\nFailed"
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Operations",
+ "name": "Nexus Ecosystem",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

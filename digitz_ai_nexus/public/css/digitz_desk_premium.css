@@ -916,34 +916,36 @@ hr,
 .frappe-control[data-fieldtype="Autocomplete"] {
     overflow: visible !important;
 }
-
 /* DIGITZ AI Nexus - Frappe navbar logo sizing */
+
+/* Navbar brand area */
 header.navbar .navbar-brand.navbar-home {
-    height: 56px !important;
-    min-height: 56px !important;
-    padding: 6px 12px !important;
+    height: 68px !important;
+    min-height: 68px !important;
+    padding: 7px 14px !important;
     display: flex !important;
     align-items: center !important;
 }
 
+/* Logo image - 20% bigger than 42px */
 header.navbar .navbar-brand.navbar-home img.app-logo {
-    height: 42px !important;
-    max-height: 42px !important;
+    height: 50px !important;
+    max-height: 50px !important;
     width: auto !important;
-    max-width: 190px !important;
+    max-width: 230px !important;
     object-fit: contain !important;
 }
 
 /* Give navbar enough height so the logo is not squeezed */
 header.navbar.navbar-expand {
-    min-height: 60px !important;
-    height: 60px !important;
+    min-height: 72px !important;
+    height: 72px !important;
     align-items: center !important;
 }
 
 /* Keep navbar inner content vertically aligned */
 header.navbar.navbar-expand .container {
-    min-height: 60px !important;
+    min-height: 72px !important;
     display: flex !important;
     align-items: center !important;
 }

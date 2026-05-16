@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2026-05-16 14:05:31.823882",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-05-16 14:05:31.823882",
+ "modified_by": "Administrator",
+ "module": "Nexus Operations",
+ "name": "nexus-admin",
+ "owner": "Administrator",
+ "page_name": "nexus-admin",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Nexus Administration"
+}

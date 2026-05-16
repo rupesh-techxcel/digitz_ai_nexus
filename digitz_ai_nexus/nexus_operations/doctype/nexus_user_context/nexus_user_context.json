@@ -1,0 +1,137 @@
+{
+ "actions": [],
+ "allow_copy": 0,
+ "allow_rename": 1,
+ "autoname": "format:NUC-.{#####}",
+ "creation": "2026-05-15 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "user_context_section",
+  "user",
+  "enabled",
+  "is_default",
+  "tenant_context_section",
+  "active_tenant",
+  "active_ecosystem",
+  "active_business_unit",
+  "active_project",
+  "active_channel",
+  "usage_section",
+  "last_used_on",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "user_context_section",
+   "fieldtype": "Section Break",
+   "label": "User Context"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Default For User"
+  },
+  {
+   "fieldname": "tenant_context_section",
+   "fieldtype": "Section Break",
+   "label": "Tenant / Ecosystem Context"
+  },
+  {
+   "fieldname": "active_tenant",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "My Default Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1
+  },
+  {
+   "fieldname": "active_ecosystem",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "My Active Ecosystem",
+   "options": "Nexus Ecosystem"
+  },
+  {
+   "fieldname": "active_business_unit",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "My Default Business Unit"
+  },
+  {
+   "fieldname": "active_project",
+   "fieldtype": "Data",
+   "label": "My Default Project"
+  },
+  {
+   "fieldname": "active_channel",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "My Default Channel",
+   "options": "Nexus Live Channel"
+  },
+  {
+   "fieldname": "usage_section",
+   "fieldtype": "Section Break",
+   "label": "Usage"
+  },
+  {
+   "fieldname": "last_used_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Last Used On"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-05-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Operations",
+ "name": "Nexus User Context",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
