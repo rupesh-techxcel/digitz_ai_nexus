@@ -1147,3 +1147,300 @@ def has_field(doctype, fieldname):
         field.fieldname
         for field in frappe.get_meta(doctype).fields
     }
+
+@frappe.whitelist()
+def get_business_keyword_controls():
+    """
+    Returns keyword categories and business keywords for Nexus Administration.
+
+    This is an Administration control surface for retrieval relevance signals.
+    It does not manage knowledge content.
+    """
+
+    categories = []
+    keywords = []
+
+    if frappe.db.exists("DocType", "Nexus Keyword Category"):
+        categories = frappe.get_all(
+            "Nexus Keyword Category",
+            fields=[
+                "name",
+                "category_name",
+                "category_code",
+                "weight",
+                "priority_level",
+                "enabled",
+                "description",
+            ],
+            order_by="modified desc",
+            limit_page_length=500,
+        )
+
+    if frappe.db.exists("DocType", "Nexus Business Keyword"):
+        keywords = frappe.get_all(
+            "Nexus Business Keyword",
+            fields=[
+                "name",
+                "keyword",
+                "category",
+                "priority_level",
+                "boost_weight",
+                "enabled",
+                "synonyms",
+                "description",
+            ],
+            order_by="modified desc",
+            limit_page_length=500,
+        )
+
+    return {
+        "categories": categories,
+        "keywords": keywords,
+    }
+
+
+@frappe.whitelist()
+def save_business_keyword(values):
+    """
+    Creates or updates a Nexus Business Keyword.
+
+    Expected values:
+    {
+        "name": optional existing docname,
+        "keyword": required,
+        "category": optional Nexus Keyword Category,
+        "priority_level": High / Medium / Low,
+        "boost_weight": float,
+        "enabled": 0/1,
+        "synonyms": optional text,
+        "description": optional text
+    }
+    """
+
+    values = frappe.parse_json(values) if isinstance(values, str) else values
+    values = values or {}
+
+    keyword = (values.get("keyword") or "").strip()
+    if not keyword:
+        frappe.throw("Business Keyword is required.")
+
+    docname = values.get("name")
+
+    if docname and frappe.db.exists("Nexus Business Keyword", docname):
+        doc = frappe.get_doc("Nexus Business Keyword", docname)
+    else:
+        # Avoid duplicate keyword/category combinations where possible.
+        existing_name = frappe.db.get_value(
+            "Nexus Business Keyword",
+            {
+                "keyword": keyword,
+                "category": values.get("category"),
+            },
+            "name",
+        )
+
+        if existing_name:
+            doc = frappe.get_doc("Nexus Business Keyword", existing_name)
+        else:
+            doc = frappe.new_doc("Nexus Business Keyword")
+
+    doc.keyword = keyword
+    doc.category = values.get("category") or None
+    doc.priority_level = values.get("priority_level") or "Medium"
+    doc.boost_weight = float(values.get("boost_weight") or 0)
+    doc.enabled = 1 if int(values.get("enabled") or 0) else 0
+    doc.synonyms = values.get("synonyms") or None
+    doc.description = values.get("description") or None
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "name": doc.name,
+        "keyword": doc.keyword,
+        "category": doc.category,
+        "priority_level": doc.priority_level,
+        "boost_weight": doc.boost_weight,
+        "enabled": doc.enabled,
+    }
+
+
+@frappe.whitelist()
+def set_business_keyword_enabled(name, enabled):
+    """
+    Enables or disables a Nexus Business Keyword.
+    """
+
+    if not name:
+        frappe.throw("Business Keyword name is required.")
+
+    if not frappe.db.exists("Nexus Business Keyword", name):
+        frappe.throw(f"Nexus Business Keyword not found: {name}")
+
+    frappe.db.set_value(
+        "Nexus Business Keyword",
+        name,
+        "enabled",
+        1 if int(enabled or 0) else 0,
+    )
+    frappe.db.commit()
+
+    return {
+        "name": name,
+        "enabled": 1 if int(enabled or 0) else 0,
+    }
+
+@frappe.whitelist()
+def get_access_governance_overview():
+    """
+    Returns Access Governance overview for Nexus Administration.
+
+    Administration reviews governance coverage and policy masters.
+    Actual knowledge-level assignment belongs to Nexus Studio / knowledge metadata.
+    """
+
+    def doctype_exists(doctype):
+        return bool(frappe.db.exists("DocType", doctype))
+
+    def field_exists(doctype, fieldname):
+        if not doctype_exists(doctype):
+            return False
+
+        return bool(
+            frappe.db.exists(
+                "DocField",
+                {
+                    "parent": doctype,
+                    "fieldname": fieldname,
+                },
+            )
+        )
+
+    def count_all(doctype, filters=None):
+        if not doctype_exists(doctype):
+            return 0
+
+        return frappe.db.count(doctype, filters or {})
+
+    def count_non_empty(doctype, fieldname):
+        if not doctype_exists(doctype):
+            return 0
+
+        if not field_exists(doctype, fieldname):
+            return 0
+
+        return frappe.db.sql(
+            f"""
+            SELECT COUNT(*)
+            FROM `tab{doctype}`
+            WHERE IFNULL(`{fieldname}`, '') != ''
+            """,
+            as_list=True,
+        )[0][0] or 0
+
+    def sensitivity_distribution(doctype):
+        if not doctype_exists(doctype):
+            return []
+
+        if not field_exists(doctype, "sensitivity"):
+            return [
+                {
+                    "sensitivity": "Not Available",
+                    "count": count_all(doctype),
+                }
+            ]
+
+        rows = frappe.db.sql(
+            f"""
+            SELECT
+                CASE
+                    WHEN IFNULL(sensitivity, '') = '' THEN 'Not Set'
+                    ELSE sensitivity
+                END AS sensitivity,
+                COUNT(*) AS count
+            FROM `tab{doctype}`
+            GROUP BY
+                CASE
+                    WHEN IFNULL(sensitivity, '') = '' THEN 'Not Set'
+                    ELSE sensitivity
+                END
+            ORDER BY count DESC
+            """,
+            as_dict=True,
+        )
+
+        return rows or []
+
+    policies = []
+
+    if doctype_exists("Nexus Access Policy"):
+        policies = frappe.get_all(
+            "Nexus Access Policy",
+            fields=[
+                "name",
+                "policy_name",
+                "disabled",
+                "access_level",
+                "sensitivity",
+                "allowed_roles",
+                "excluded_roles",
+                "allowed_designations",
+                "excluded_designations",
+                "description",
+            ],
+            order_by="modified desc",
+            limit_page_length=500,
+        )
+
+    overview = {
+        "access_policy_count": len(policies),
+        "enabled_policy_count": len(
+            [p for p in policies if not int(p.get("disabled") or 0)]
+        ),
+        "disabled_policy_count": len(
+            [p for p in policies if int(p.get("disabled") or 0)]
+        ),
+
+        "knowledge_sources_total": count_all("Nexus Knowledge Source"),
+        "knowledge_sources_with_policy": count_non_empty(
+            "Nexus Knowledge Source",
+            "access_policy",
+        ),
+
+        "knowledge_units_total": count_all("Nexus Knowledge Unit"),
+        "knowledge_units_with_policy": count_non_empty(
+            "Nexus Knowledge Unit",
+            "default_access_policy",
+        ),
+
+        "knowledge_chunks_total": count_all("Nexus Knowledge Chunk"),
+        "knowledge_chunks_with_policy": count_non_empty(
+            "Nexus Knowledge Chunk",
+            "access_policy",
+        ),
+        "knowledge_chunks_with_allowed_roles": count_non_empty(
+            "Nexus Knowledge Chunk",
+            "allowed_roles",
+        ),
+        "knowledge_chunks_with_denied_roles": count_non_empty(
+            "Nexus Knowledge Chunk",
+            "denied_roles",
+        ),
+
+        # Source does not currently have sensitivity field.
+        # This now safely returns Not Available instead of failing.
+        "source_sensitivity_distribution": sensitivity_distribution(
+            "Nexus Knowledge Source"
+        ),
+        "unit_sensitivity_distribution": sensitivity_distribution(
+            "Nexus Knowledge Unit"
+        ),
+        "chunk_sensitivity_distribution": sensitivity_distribution(
+            "Nexus Knowledge Chunk"
+        ),
+    }
+
+    return {
+        "overview": overview,
+        "policies": policies,
+    }

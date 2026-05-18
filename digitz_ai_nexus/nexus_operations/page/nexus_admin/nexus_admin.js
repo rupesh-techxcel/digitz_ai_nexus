@@ -1,6 +1,16 @@
 let nexus_admin_snapshot = null;
 let nexus_selected_ecosystem = null;
 
+let nexus_business_keyword_snapshot = {
+    categories: [],
+    keywords: []
+};
+
+let nexus_access_governance_snapshot = {
+    overview: {},
+    policies: []
+};
+
 frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
@@ -41,7 +51,7 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
 
             <div class="nexus-admin-grid nexus-admin-grid-3">
                 <div class="nexus-admin-card">
-                    <div class="nexus-admin-card-title">My Default Context</div>
+                    <div class="nexus-admin-card-title">My Active Working Context</div>
                     <div id="nexus_active_context_card" class="nexus-admin-card-body">
                         Loading...
                     </div>
@@ -65,7 +75,7 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
             <div class="nexus-admin-card">
                 <div class="nexus-admin-section-head">
                     <div>
-                        <div class="nexus-admin-card-title">Set My Default Context</div>
+                        <div class="nexus-admin-card-title">Set My Active Working Context</div>
                         <p>
                             Select your working tenant, active ecosystem, business unit, project, and channel.
                             This is user-specific and does not change other users' defaults.
@@ -73,7 +83,7 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     </div>
 
                     <button class="btn btn-primary btn-sm" id="nexus_save_active_context">
-                        Save My Default Context
+                        Save My Active Context
                     </button>
                 </div>
 
@@ -130,7 +140,8 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     <div>
                         <div class="nexus-admin-card-title">Selected Ecosystem Defaults</div>
                         <p>
-                            Configure defaults for the selected ecosystem profile. Runtime payload values can still override these defaults.
+                            Configure defaults and runtime governance for the selected ecosystem profile.
+                            Runtime payload values can still override these defaults.
                         </p>
                     </div>
 
@@ -142,7 +153,7 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                 <div class="nexus-admin-form-grid nexus-admin-form-grid-4">
                     <div>
                         <label>Ecosystem Name</label>
-                        <input id="nexus_ecosystem_name" class="form-control" placeholder="Example: DIGITZ ERP Production">
+                        <input id="nexus_ecosystem_name" class="form-control" placeholder="Example: TEST-NEXUS Production Validation">
                     </div>
 
                     <div>
@@ -169,6 +180,28 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                         <select id="nexus_ecosystem_is_default" class="form-control">
                             <option value="0">No</option>
                             <option value="1">Yes</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Activation Status</label>
+                        <select id="nexus_activation_status" class="form-control">
+                            <option value="Draft">Draft</option>
+                            <option value="Configured">Configured</option>
+                            <option value="Testing">Testing</option>
+                            <option value="Certified">Certified</option>
+                            <option value="Active">Active</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Certification Status</label>
+                        <select id="nexus_certification_status" class="form-control">
+                            <option value="Not Certified">Not Certified</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Passed">Passed</option>
+                            <option value="Failed">Failed</option>
                         </select>
                     </div>
 
@@ -216,6 +249,22 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     <div>
                         <label>Require Approved Knowledge</label>
                         <select id="nexus_require_approved_knowledge" class="form-control">
+                            <option value="1">Required</option>
+                            <option value="0">Not Required</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Strict Tenant Mode</label>
+                        <select id="nexus_strict_tenant_mode" class="form-control">
+                            <option value="1">Required</option>
+                            <option value="0">Not Required</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Testing Required Before Activation</label>
+                        <select id="nexus_testing_required_before_activation" class="form-control">
                             <option value="1">Required</option>
                             <option value="0">Not Required</option>
                         </select>
@@ -274,12 +323,81 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                 </div>
             </div>
 
+            <div class="nexus-admin-card">
+                <div class="nexus-admin-section-head">
+                    <div>
+                        <div class="nexus-admin-card-title">Business Keyword Controls</div>
+                        <p>
+                            Maintain retrieval relevance signals such as business keywords, categories,
+                            synonyms, priority level, boost weight, and enabled status. This does not feed
+                            knowledge content; it only guides retrieval scoring.
+                        </p>
+                    </div>
+
+                    <div class="nexus-admin-action-row">
+                        <button class="btn btn-default btn-sm" id="nexus_refresh_business_keywords">
+                            Refresh Keywords
+                        </button>
+                        <button class="btn btn-primary btn-sm" id="nexus_add_business_keyword">
+                            Add / Update Keyword
+                        </button>
+                    </div>
+                </div>
+
+                <div id="nexus_business_keyword_summary" class="nexus-admin-card-body">
+                    Loading...
+                </div>
+
+                <div id="nexus_business_keyword_table" class="nexus-admin-table-wrap">
+                    Loading...
+                </div>
+            </div>
+
+            <div class="nexus-admin-card">
+                <div class="nexus-admin-section-head">
+                    <div>
+                        <div class="nexus-admin-card-title">Access Governance Overview</div>
+                        <p>
+                            Review access policy coverage across knowledge sources, units, and chunks.
+                            Administration reviews policy coverage; knowledge-level access assignment belongs
+                            to Nexus Studio and knowledge metadata.
+                        </p>
+                    </div>
+
+                    <div class="nexus-admin-action-row">
+                        <button class="btn btn-default btn-sm" id="nexus_open_access_policies">
+                            Open Access Policies
+                        </button>
+                        <button class="btn btn-default btn-sm" id="nexus_open_knowledge_units">
+                            Open Knowledge Units
+                        </button>
+                        <button class="btn btn-primary btn-sm" id="nexus_refresh_access_governance">
+                            Refresh Governance
+                        </button>
+                    </div>
+                </div>
+
+                <div id="nexus_access_governance_summary" class="nexus-admin-card-body">
+                    Loading...
+                </div>
+
+                <div id="nexus_access_governance_distribution" class="nexus-admin-table-wrap">
+                    Loading...
+                </div>
+
+                <div id="nexus_access_policy_table" class="nexus-admin-table-wrap">
+                    Loading...
+                </div>
+            </div>
+
         </div>
     `);
 
     inject_nexus_admin_css();
     bind_nexus_admin_events();
     load_nexus_admin_snapshot();
+    load_business_keyword_controls();
+    load_access_governance_overview();
 };
 
 
@@ -290,6 +408,8 @@ function bind_nexus_admin_events() {
 
     $('#nexus_admin_refresh').on('click', function() {
         load_nexus_admin_snapshot();
+        load_business_keyword_controls();
+        load_access_governance_overview();
     });
 
     $('#nexus_admin_open_onboarding').on('click', function() {
@@ -306,6 +426,26 @@ function bind_nexus_admin_events() {
 
     $('#nexus_add_ecosystem').on('click', function() {
         open_add_ecosystem_dialog();
+    });
+
+    $('#nexus_refresh_business_keywords').on('click', function() {
+        load_business_keyword_controls();
+    });
+
+    $('#nexus_add_business_keyword').on('click', function() {
+        open_business_keyword_dialog();
+    });
+
+    $('#nexus_refresh_access_governance').on('click', function() {
+        load_access_governance_overview();
+    });
+
+    $('#nexus_open_access_policies').on('click', function() {
+        frappe.set_route('List', 'Nexus Access Policy');
+    });
+
+    $('#nexus_open_knowledge_units').on('click', function() {
+        frappe.set_route('List', 'Nexus Knowledge Unit');
     });
 
     $('#nexus_active_tenant').on('change', function() {
@@ -584,7 +724,7 @@ function render_active_context(context) {
     if (!context) {
         $('#nexus_active_context_card').html(`
             <div class="nexus-empty-state">
-                No active user context found. Select tenant details and save your default context.
+                No active user context found. Select tenant details and save your active context.
             </div>
         `);
         return;
@@ -726,6 +866,9 @@ function populate_ecosystem_defaults(ecosystem) {
     $('#nexus_ecosystem_enabled').val(String(cint(ecosystem.enabled || 0)));
     $('#nexus_ecosystem_is_default').val(String(cint(ecosystem.is_default || 0)));
 
+    $('#nexus_activation_status').val(ecosystem.activation_status || 'Configured');
+    $('#nexus_certification_status').val(ecosystem.certification_status || 'Not Certified');
+
     $('#nexus_default_business_unit').val(ecosystem.default_business_unit || '');
     $('#nexus_default_project').val(ecosystem.default_project || '');
     $('#nexus_default_public_context').val(ecosystem.default_public_context || '');
@@ -734,6 +877,8 @@ function populate_ecosystem_defaults(ecosystem) {
     $('#nexus_qa_enabled').val(String(cint(ecosystem.qa_enabled || 0)));
     $('#nexus_source_citation_required').val(String(cint(ecosystem.source_citation_required || 0)));
     $('#nexus_require_approved_knowledge').val(String(cint(ecosystem.require_approved_knowledge || 0)));
+    $('#nexus_strict_tenant_mode').val(String(cint(ecosystem.strict_tenant_mode || 0)));
+    $('#nexus_testing_required_before_activation').val(String(cint(ecosystem.testing_required_before_activation || 0)));
 
     $('#nexus_live_chat_enabled').val(String(cint(ecosystem.live_chat_enabled || 0)));
     $('#nexus_default_public_agent').val(ecosystem.default_public_agent || '');
@@ -773,14 +918,14 @@ function save_active_user_context() {
         },
         callback: function() {
             frappe.show_alert({
-                message: 'My default context saved.',
+                message: 'My active context saved.',
                 indicator: 'green'
             });
 
             load_nexus_admin_snapshot();
         },
         error: function(err) {
-            frappe.msgprint(err.message || 'Failed to save default context.');
+            frappe.msgprint(err.message || 'Failed to save active context.');
         }
     });
 }
@@ -825,7 +970,8 @@ function save_ecosystem_defaults() {
         ecosystem_type: $('#nexus_ecosystem_type').val() || null,
         enabled: cint($('#nexus_ecosystem_enabled').val() || 0),
         is_default: cint($('#nexus_ecosystem_is_default').val() || 0),
-        activation_status: 'Configured',
+        activation_status: $('#nexus_activation_status').val() || 'Configured',
+        certification_status: $('#nexus_certification_status').val() || 'Not Certified',
 
         default_business_unit: $('#nexus_default_business_unit').val() || null,
         default_project: $('#nexus_default_project').val() || null,
@@ -837,6 +983,8 @@ function save_ecosystem_defaults() {
         qa_fallback_message: $('#nexus_qa_fallback_message').val() || null,
         source_citation_required: cint($('#nexus_source_citation_required').val() || 0),
         require_approved_knowledge: cint($('#nexus_require_approved_knowledge').val() || 0),
+        strict_tenant_mode: cint($('#nexus_strict_tenant_mode').val() || 0),
+        testing_required_before_activation: cint($('#nexus_testing_required_before_activation').val() || 0),
 
         live_chat_enabled: cint($('#nexus_live_chat_enabled').val() || 0),
         default_chat_channel: $('#nexus_default_chat_channel').val() || null,
@@ -860,7 +1008,7 @@ function save_ecosystem_defaults() {
                 indicator: 'green'
             });
 
-            nexus_selected_ecosystem = ecosystem_name;
+            nexus_selected_ecosystem = existing ? existing.name : ecosystem_name;
             load_nexus_admin_snapshot();
         },
         error: function(err) {
@@ -885,14 +1033,14 @@ function open_tenant_onboarding_dialog() {
                 fieldtype: 'Data',
                 fieldname: 'tenant_code',
                 label: 'Tenant Code',
-                description: 'Example: TEST-NEXUS or DIGITZ-ERP'
+                description: 'Example: TEST-NEXUS or CUSTOMER-A'
             },
             {
                 fieldtype: 'Data',
                 fieldname: 'ecosystem_name',
                 label: 'Initial Ecosystem Name',
                 reqd: 1,
-                description: 'Example: DIGITZ ERP Sandbox or DIGITZ ERP Production'
+                description: 'Example: TEST-NEXUS Sandbox Ecosystem or Customer-A Production Ecosystem'
             },
             {
                 fieldtype: 'Select',
@@ -958,19 +1106,36 @@ function save_ecosystem_after_onboarding(tenant, values, dialog) {
                 enabled: 1,
                 is_default: 1,
                 activation_status: 'Configured',
-                default_business_unit: values.business_unit_name
+                certification_status: 'Not Certified',
+                default_business_unit: values.business_unit_name,
+                require_approved_knowledge: 1,
+                strict_tenant_mode: 1,
+                source_citation_required: 1,
+                testing_required_before_activation: 1
             }
         },
-        callback: function() {
+        callback: function(r) {
             dialog.hide();
+
+            const created_ecosystem =
+                r.message && r.message.ecosystem
+                    ? r.message.ecosystem
+                    : values.ecosystem_name;
 
             frappe.show_alert({
                 message: 'Tenant onboarded and initial ecosystem created.',
                 indicator: 'green'
             });
 
-            nexus_selected_ecosystem = values.ecosystem_name;
-            load_nexus_admin_snapshot();
+            nexus_selected_ecosystem = created_ecosystem;
+
+            activate_created_ecosystem_for_current_user(
+                tenant,
+                created_ecosystem,
+                {
+                    default_business_unit: values.business_unit_name
+                }
+            );
         },
         error: function(err) {
             dialog.hide();
@@ -1048,8 +1213,13 @@ function open_add_ecosystem_dialog() {
                         enabled: 1,
                         is_default: cint(values.is_default || 0),
                         activation_status: 'Configured',
+                        certification_status: 'Not Certified',
                         default_business_unit: values.default_business_unit || null,
-                        default_public_context: values.default_public_context || null
+                        default_public_context: values.default_public_context || null,
+                        require_approved_knowledge: 1,
+                        strict_tenant_mode: 1,
+                        source_citation_required: 1,
+                        testing_required_before_activation: 1
                     }
                 },
                 callback: function(r) {
@@ -1116,6 +1286,412 @@ function activate_created_ecosystem_for_current_user(tenant, ecosystem, values) 
 }
 
 
+function load_business_keyword_controls() {
+    $('#nexus_business_keyword_summary').html('Loading...');
+    $('#nexus_business_keyword_table').html('Loading...');
+
+    frappe.call({
+        method: 'digitz_ai_nexus.api.nexus_administration.get_business_keyword_controls',
+        callback: function(r) {
+            nexus_business_keyword_snapshot = r.message || {
+                categories: [],
+                keywords: []
+            };
+
+            render_business_keyword_controls();
+        },
+        error: function(err) {
+            $('#nexus_business_keyword_summary').html(`
+                <div class="nexus-empty-state">
+                    Failed to load business keywords.
+                </div>
+            `);
+
+            $('#nexus_business_keyword_table').html(
+                frappe.utils.escape_html(err.message || '')
+            );
+        }
+    });
+}
+
+
+function render_business_keyword_controls() {
+    const categories = nexus_business_keyword_snapshot.categories || [];
+    const keywords = nexus_business_keyword_snapshot.keywords || [];
+
+    const enabled_count = keywords.filter(k => cint(k.enabled || 0)).length;
+    const disabled_count = keywords.length - enabled_count;
+
+    $('#nexus_business_keyword_summary').html(`
+        ${render_kv('Keyword Categories', categories.length)}
+        ${render_kv('Business Keywords', keywords.length)}
+        ${render_kv('Enabled Keywords', enabled_count)}
+        ${render_kv('Disabled Keywords', disabled_count)}
+    `);
+
+    if (!keywords.length) {
+        $('#nexus_business_keyword_table').html(`
+            <div class="nexus-empty-state">
+                No business keywords configured yet. Use Add / Update Keyword to create retrieval relevance signals.
+            </div>
+        `);
+        return;
+    }
+
+    const rows = keywords.map(k => {
+        const enabled = cint(k.enabled || 0);
+
+        return `
+            <tr>
+                <td>
+                    <b>${frappe.utils.escape_html(k.keyword || '-')}</b>
+                    <div class="nexus-admin-muted">${frappe.utils.escape_html(k.description || '')}</div>
+                </td>
+                <td>${frappe.utils.escape_html(k.category || '-')}</td>
+                <td>${frappe.utils.escape_html(k.priority_level || '-')}</td>
+                <td>${frappe.utils.escape_html(k.boost_weight === undefined || k.boost_weight === null ? '-' : String(k.boost_weight))}</td>
+                <td>${frappe.utils.escape_html(k.synonyms || '-')}</td>
+                <td>
+                    <span class="nexus-status-pill ${enabled ? 'enabled' : 'disabled'}">
+                        ${enabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-xs btn-default nexus-edit-business-keyword" data-keyword="${frappe.utils.escape_html(k.name)}">
+                        Edit
+                    </button>
+                    <button class="btn btn-xs ${enabled ? 'btn-default' : 'btn-primary'} nexus-toggle-business-keyword"
+                        data-keyword="${frappe.utils.escape_html(k.name)}"
+                        data-enabled="${enabled ? 0 : 1}">
+                        ${enabled ? 'Disable' : 'Enable'}
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    $('#nexus_business_keyword_table').html(`
+        <table class="table table-bordered nexus-admin-table">
+            <thead>
+                <tr>
+                    <th>Keyword</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Boost</th>
+                    <th>Synonyms</th>
+                    <th>Status</th>
+                    <th style="width: 150px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `);
+
+    $('.nexus-edit-business-keyword').on('click', function() {
+        const name = $(this).data('keyword');
+        const keyword = keywords.find(k => k.name === name);
+        open_business_keyword_dialog(keyword);
+    });
+
+    $('.nexus-toggle-business-keyword').on('click', function() {
+        const name = $(this).data('keyword');
+        const enabled = cint($(this).data('enabled') || 0);
+        toggle_business_keyword(name, enabled);
+    });
+}
+
+
+function open_business_keyword_dialog(existing_keyword=null) {
+    const dialog = new frappe.ui.Dialog({
+        title: existing_keyword ? 'Update Business Keyword' : 'Add Business Keyword',
+        size: 'large',
+        fields: [
+            {
+                fieldtype: 'Data',
+                fieldname: 'keyword',
+                label: 'Business Keyword',
+                reqd: 1,
+                default: existing_keyword ? existing_keyword.keyword : ''
+            },
+            {
+                fieldtype: 'Link',
+                fieldname: 'category',
+                label: 'Keyword Category',
+                options: 'Nexus Keyword Category',
+                default: existing_keyword ? existing_keyword.category : ''
+            },
+            {
+                fieldtype: 'Select',
+                fieldname: 'priority_level',
+                label: 'Priority Level',
+                options: [
+                    'High',
+                    'Medium',
+                    'Low'
+                ].join('\n'),
+                default: existing_keyword ? existing_keyword.priority_level : 'Medium'
+            },
+            {
+                fieldtype: 'Float',
+                fieldname: 'boost_weight',
+                label: 'Boost Weight',
+                default: existing_keyword && existing_keyword.boost_weight !== undefined
+                    ? existing_keyword.boost_weight
+                    : 1.0
+            },
+            {
+                fieldtype: 'Check',
+                fieldname: 'enabled',
+                label: 'Enabled',
+                default: existing_keyword ? cint(existing_keyword.enabled || 0) : 1
+            },
+            {
+                fieldtype: 'Small Text',
+                fieldname: 'synonyms',
+                label: 'Synonyms',
+                description: 'Comma-separated or line-separated terms.',
+                default: existing_keyword ? existing_keyword.synonyms : ''
+            },
+            {
+                fieldtype: 'Small Text',
+                fieldname: 'description',
+                label: 'Description',
+                default: existing_keyword ? existing_keyword.description : ''
+            }
+        ],
+        primary_action_label: existing_keyword ? 'Update Keyword' : 'Add Keyword',
+        primary_action: function(values) {
+            save_business_keyword(values, existing_keyword ? existing_keyword.name : null, dialog);
+        }
+    });
+
+    dialog.show();
+}
+
+
+function save_business_keyword(values, existing_name, dialog) {
+    values = values || {};
+    values.name = existing_name || null;
+
+    frappe.call({
+        method: 'digitz_ai_nexus.api.nexus_administration.save_business_keyword',
+        args: {
+            values: values
+        },
+        callback: function() {
+            dialog.hide();
+
+            frappe.show_alert({
+                message: 'Business keyword saved.',
+                indicator: 'green'
+            });
+
+            load_business_keyword_controls();
+        },
+        error: function(err) {
+            frappe.msgprint(err.message || 'Failed to save business keyword.');
+        }
+    });
+}
+
+
+function toggle_business_keyword(name, enabled) {
+    frappe.call({
+        method: 'digitz_ai_nexus.api.nexus_administration.set_business_keyword_enabled',
+        args: {
+            name: name,
+            enabled: enabled
+        },
+        callback: function() {
+            frappe.show_alert({
+                message: enabled ? 'Business keyword enabled.' : 'Business keyword disabled.',
+                indicator: enabled ? 'green' : 'orange'
+            });
+
+            load_business_keyword_controls();
+        },
+        error: function(err) {
+            frappe.msgprint(err.message || 'Failed to update business keyword.');
+        }
+    });
+}
+
+
+function load_access_governance_overview() {
+    $('#nexus_access_governance_summary').html('Loading...');
+    $('#nexus_access_governance_distribution').html('Loading...');
+    $('#nexus_access_policy_table').html('Loading...');
+
+    frappe.call({
+        method: 'digitz_ai_nexus.api.nexus_administration.get_access_governance_overview',
+        callback: function(r) {
+            nexus_access_governance_snapshot = r.message || {
+                overview: {},
+                policies: []
+            };
+
+            render_access_governance_overview();
+        },
+        error: function(err) {
+            $('#nexus_access_governance_summary').html(`
+                <div class="nexus-empty-state">
+                    Failed to load access governance overview.
+                </div>
+            `);
+
+            $('#nexus_access_governance_distribution').html(
+                frappe.utils.escape_html(err.message || '')
+            );
+
+            $('#nexus_access_policy_table').html('');
+        }
+    });
+}
+
+
+function render_access_governance_overview() {
+    const overview = nexus_access_governance_snapshot.overview || {};
+    const policies = nexus_access_governance_snapshot.policies || [];
+
+    $('#nexus_access_governance_summary').html(`
+        ${render_kv('Access Policies', overview.access_policy_count || 0)}
+        ${render_kv('Enabled Policies', overview.enabled_policy_count || 0)}
+        ${render_kv('Disabled Policies', overview.disabled_policy_count || 0)}
+
+        ${render_kv('Knowledge Sources', overview.knowledge_sources_total || 0)}
+        ${render_kv('Sources With Policy', overview.knowledge_sources_with_policy || 0)}
+
+        ${render_kv('Knowledge Units', overview.knowledge_units_total || 0)}
+        ${render_kv('Units With Policy', overview.knowledge_units_with_policy || 0)}
+
+        ${render_kv('Knowledge Chunks', overview.knowledge_chunks_total || 0)}
+        ${render_kv('Chunks With Policy', overview.knowledge_chunks_with_policy || 0)}
+        ${render_kv('Chunks With Allowed Roles', overview.knowledge_chunks_with_allowed_roles || 0)}
+        ${render_kv('Chunks With Denied Roles', overview.knowledge_chunks_with_denied_roles || 0)}
+    `);
+
+    render_access_governance_distribution(overview);
+    render_access_policy_table(policies);
+}
+
+
+function render_access_governance_distribution(overview) {
+    const source_rows = overview.source_sensitivity_distribution || [];
+    const unit_rows = overview.unit_sensitivity_distribution || [];
+    const chunk_rows = overview.chunk_sensitivity_distribution || [];
+
+    $('#nexus_access_governance_distribution').html(`
+        <div class="nexus-admin-subtitle">Sensitivity Distribution</div>
+
+        <div class="nexus-governance-distribution-grid">
+            ${render_sensitivity_distribution_table('Sources', source_rows)}
+            ${render_sensitivity_distribution_table('Knowledge Units', unit_rows)}
+            ${render_sensitivity_distribution_table('Chunks', chunk_rows)}
+        </div>
+    `);
+}
+
+
+function render_sensitivity_distribution_table(title, rows) {
+    if (!rows || !rows.length) {
+        return `
+            <div class="nexus-governance-mini-table">
+                <h4>${frappe.utils.escape_html(title)}</h4>
+                <div class="nexus-empty-state">No sensitivity data.</div>
+            </div>
+        `;
+    }
+
+    const html = rows.map(row => {
+        return `
+            <tr>
+                <td>${frappe.utils.escape_html(row.sensitivity || 'Not Set')}</td>
+                <td>${frappe.utils.escape_html(String(row.count || 0))}</td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="nexus-governance-mini-table">
+            <h4>${frappe.utils.escape_html(title)}</h4>
+            <table class="table table-bordered nexus-admin-table">
+                <thead>
+                    <tr>
+                        <th>Sensitivity</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>${html}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+
+function render_access_policy_table(policies) {
+    if (!policies || !policies.length) {
+        $('#nexus_access_policy_table').html(`
+            <div class="nexus-empty-state">
+                No access policies found. Create policies from the Nexus Access Policy list.
+            </div>
+        `);
+        return;
+    }
+
+    const rows = policies.map(policy => {
+        const disabled = cint(policy.disabled || 0);
+
+        return `
+            <tr>
+                <td>
+                    <b>${frappe.utils.escape_html(policy.policy_name || policy.name || '-')}</b>
+                    <div class="nexus-admin-muted">${frappe.utils.escape_html(policy.description || '')}</div>
+                </td>
+                <td>${frappe.utils.escape_html(policy.access_level || '-')}</td>
+                <td>${frappe.utils.escape_html(policy.sensitivity || '-')}</td>
+                <td>${frappe.utils.escape_html(policy.allowed_roles || '-')}</td>
+                <td>${frappe.utils.escape_html(policy.excluded_roles || '-')}</td>
+                <td>
+                    <span class="nexus-status-pill ${disabled ? 'disabled' : 'enabled'}">
+                        ${disabled ? 'Disabled' : 'Enabled'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-xs btn-default nexus-open-access-policy"
+                        data-policy="${frappe.utils.escape_html(policy.name)}">
+                        Open
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    $('#nexus_access_policy_table').html(`
+        <div class="nexus-admin-subtitle">Access Policy Master</div>
+
+        <table class="table table-bordered nexus-admin-table">
+            <thead>
+                <tr>
+                    <th>Policy</th>
+                    <th>Access Level</th>
+                    <th>Sensitivity</th>
+                    <th>Allowed Roles</th>
+                    <th>Excluded Roles</th>
+                    <th>Status</th>
+                    <th style="width: 90px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `);
+
+    $('.nexus-open-access-policy').on('click', function() {
+        const policy = $(this).data('policy');
+        frappe.set_route('Form', 'Nexus Access Policy', policy);
+    });
+}
+
+
 function open_nexus_administration_help() {
     const dialog = new frappe.ui.Dialog({
         title: 'Nexus Administration Field Guide',
@@ -1136,8 +1712,8 @@ function open_nexus_administration_help() {
                 <h3>Tenant → Ecosystem → Defaults</h3>
                 <p>
                     Nexus Administration follows a clear hierarchy. A tenant is the isolation boundary.
-                    An ecosystem is an operating profile under that tenant. Defaults belong to the selected ecosystem.
-                    A user can switch their active ecosystem without affecting other users.
+                    An ecosystem is an operating profile under that tenant. Defaults and runtime governance
+                    belong to the selected ecosystem. A user can switch their active ecosystem without affecting other users.
                 </p>
             </div>
 
@@ -1150,7 +1726,7 @@ function open_nexus_administration_help() {
                         product environment, or independent knowledge/runtime boundary.
                     </p>
                     <div class="nexus-admin-help-example">
-                        Example: <b>DIGITZ-ERP</b>, <b>TEST-NEXUS</b>, <b>Customer-A</b>
+                        Example: <b>TEST-NEXUS</b>, <b>Customer-A</b>, <b>Internal Platform Tenant</b>
                     </div>
                     <ul>
                         <li>A tenant can have multiple ecosystems.</li>
@@ -1166,7 +1742,7 @@ function open_nexus_administration_help() {
                         Sandbox, Synthetic Validation, and Internal Platform ecosystems.
                     </p>
                     <div class="nexus-admin-help-example">
-                        DIGITZ-ERP → Production, Internal Platform, Sandbox
+                        TEST-NEXUS → Synthetic Validation, Sandbox, Internal Platform
                     </div>
                     <ul>
                         <li>Defaults belong to the selected ecosystem.</li>
@@ -1187,15 +1763,15 @@ function open_nexus_administration_help() {
                         <li><b>Production</b> is for real customer or public runtime usage.</li>
                         <li><b>Sandbox</b> is for safe trial and configuration experiments.</li>
                         <li><b>Synthetic Validation</b> is for seeded automated validation tenants.</li>
-                        <li><b>Internal Platform</b> is for DIGITZ internal platform operations.</li>
+                        <li><b>Internal Platform</b> is for internal platform operations.</li>
                     </ul>
                 </div>
 
                 <div class="nexus-admin-help-card">
-                    <h4>My Default Context</h4>
+                    <h4>My Active Working Context</h4>
                     <p>
-                        My Default Context is user-specific. It stores which tenant and ecosystem this user wants
-                        to work with by default.
+                        My Active Working Context is user-specific. It stores which tenant, ecosystem,
+                        business unit, project, and channel this user is currently working with by default.
                     </p>
                     <ul>
                         <li>It does not globally change other users.</li>
@@ -1216,6 +1792,51 @@ function open_nexus_administration_help() {
                         <li>Default Chat Channel</li>
                         <li>Default Public Agent</li>
                         <li>Default Widget Settings</li>
+                    </ul>
+                </div>
+
+                <div class="nexus-admin-help-card">
+                    <h4>Governance & Runtime Controls</h4>
+                    <p>
+                        Governance controls define how safely the selected ecosystem should behave at runtime.
+                        These settings do not expose the underlying AI provider layer. They control answer safety,
+                        grounding, fallback behaviour, readiness, and activation.
+                    </p>
+                    <ul>
+                        <li><b>Require Approved Knowledge</b> ensures only approved knowledge is used.</li>
+                        <li><b>Strict Tenant Mode</b> keeps runtime behaviour scoped to the selected tenant.</li>
+                        <li><b>Source Citation Required</b> encourages grounded and explainable answers.</li>
+                        <li><b>Testing Required Before Activation</b> prevents premature production activation.</li>
+                        <li><b>Activation Status</b> and <b>Certification Status</b> summarize operational readiness.</li>
+                    </ul>
+                </div>
+
+                <div class="nexus-admin-help-card">
+                    <h4>Business Keyword Controls</h4>
+                    <p>
+                        Business keywords are retrieval relevance signals. They help Nexus prioritize important
+                        business terms without creating or approving knowledge content.
+                    </p>
+                    <ul>
+                        <li><b>Keyword</b> is the business term to boost during retrieval.</li>
+                        <li><b>Category</b> groups related keywords and can carry category-level weight.</li>
+                        <li><b>Synonyms</b> help map alternate terms to the same business meaning.</li>
+                        <li><b>Priority Level</b> and <b>Boost Weight</b> influence scoring strength.</li>
+                        <li><b>Enabled</b> controls whether the keyword is active in retrieval scoring.</li>
+                    </ul>
+                </div>
+
+                <div class="nexus-admin-help-card">
+                    <h4>Access Governance Overview</h4>
+                    <p>
+                        Access Governance shows how access policies are defined and applied across the knowledge layer.
+                        Administration reviews policy coverage, while Nexus Studio applies policies to sources, units, and chunks.
+                    </p>
+                    <ul>
+                        <li><b>Access Policy</b> is the reusable governance master.</li>
+                        <li><b>Sources, Units, and Chunks</b> can carry policy and sensitivity metadata.</li>
+                        <li><b>Allowed Roles</b> and <b>Denied Roles</b> are enforced by retrieval.</li>
+                        <li><b>Deny-over-allow</b> remains the safest runtime rule.</li>
                     </ul>
                 </div>
 
@@ -1261,8 +1882,9 @@ function open_nexus_administration_help() {
                     <h4>Recommended Administration Workflow</h4>
 
                     <p>
-                        Administration focuses on tenant setup, ecosystem profiles, user default context,
-                        ecosystem defaults, Q&A defaults, Live Chat defaults, widget defaults, and readiness.
+                        Administration focuses on tenant setup, ecosystem profiles, user active working context,
+                        ecosystem defaults, governance controls, business keywords, access governance overview,
+                        Q&A defaults, Live Chat defaults, widget defaults, and readiness.
                     </p>
 
                     <div class="nexus-admin-help-flow">
@@ -1270,9 +1892,9 @@ function open_nexus_administration_help() {
                         <div><b>2</b><span>Add Ecosystem Profiles</span></div>
                         <div><b>3</b><span>Switch My Active Ecosystem</span></div>
                         <div><b>4</b><span>Configure Selected Ecosystem Defaults</span></div>
-                        <div><b>5</b><span>Configure Q&A and Live Defaults</span></div>
-                        <div><b>6</b><span>Configure Widget Defaults</span></div>
-                        <div><b>7</b><span>Review Administration Readiness</span></div>
+                        <div><b>5</b><span>Configure Governance Controls</span></div>
+                        <div><b>6</b><span>Maintain Business Keywords</span></div>
+                        <div><b>7</b><span>Review Access Governance</span></div>
                         <div><b>8</b><span>Proceed to Studio / Validation</span></div>
                     </div>
                 </div>
@@ -1707,6 +2329,87 @@ function inject_nexus_admin_css() {
                 font-weight: 850;
             }
 
+            .nexus-admin-action-row {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+
+            .nexus-admin-table-wrap {
+                margin-top: 16px;
+                overflow-x: auto;
+            }
+
+            .nexus-admin-table {
+                margin-bottom: 0;
+                background: #ffffff;
+            }
+
+            .nexus-admin-table th {
+                color: #173b8c;
+                font-size: 12px;
+                font-weight: 900;
+                background: #eef6ff;
+                white-space: nowrap;
+            }
+
+            .nexus-admin-table td {
+                color: #27416f;
+                font-size: 12px;
+                font-weight: 650;
+                vertical-align: middle;
+            }
+
+            .nexus-admin-muted {
+                margin-top: 4px;
+                color: #6b7c9b;
+                font-size: 11px;
+                font-weight: 650;
+                line-height: 1.4;
+            }
+
+            .nexus-status-pill {
+                display: inline-flex;
+                padding: 5px 9px;
+                border-radius: 999px;
+                font-size: 10px;
+                font-weight: 900;
+                white-space: nowrap;
+            }
+
+            .nexus-status-pill.enabled {
+                background: #ecfdf3;
+                color: #16794c;
+                border: 1px solid #bdebd2;
+            }
+
+            .nexus-status-pill.disabled {
+                background: #fff0f0;
+                color: #b42318;
+                border: 1px solid #ffd1d1;
+            }
+
+            .nexus-admin-subtitle {
+                margin: 8px 0 12px;
+                color: #173b8c;
+                font-size: 14px;
+                font-weight: 950;
+            }
+
+            .nexus-governance-distribution-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 14px;
+            }
+
+            .nexus-governance-mini-table h4 {
+                margin: 0 0 8px;
+                color: #27416f;
+                font-size: 13px;
+                font-weight: 900;
+            }
+
             .nexus-admin-help-wrap {
                 padding: 4px;
             }
@@ -1878,6 +2581,10 @@ function inject_nexus_admin_css() {
                 }
 
                 .nexus-ecosystem-card-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .nexus-governance-distribution-grid {
                     grid-template-columns: 1fr;
                 }
             }

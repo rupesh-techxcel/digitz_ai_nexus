@@ -21,11 +21,16 @@ body {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 16px 0;
+	padding: 18px 0;
+	min-height: 86px;
 }
 
 .nx-logo {
-	height: 42px;
+	height: 64px;
+	max-height: 64px;
+	width: auto;
+	object-fit: contain;
+	display: block;
 }
 
 .nx-nav a {

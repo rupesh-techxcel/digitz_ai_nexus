@@ -12,7 +12,7 @@ def build_prompt(query_contract, retrieved_chunks):
 
     response_mode = get_response_mode(query_contract)
     response_mode_key = query_contract.get("response_mode") or query_contract.get("use_case")
-    
+
     is_chat_mode = str(response_mode_key or "").lower() in {"chat", "live chat"}
 
     context_blocks = []
@@ -66,8 +66,9 @@ CHAT RESPONSE RULES:
 Q&A RESPONSE RULES:
 1. Treat the user request as a direct knowledge search.
 2. Provide a clear and sufficiently detailed answer when approved knowledge is available.
-3. Do not behave like a conversational chat memory agent.
-4. Do not use conversation continuity.
+3. Preserve exact named facts from the approved knowledge.
+4. Do not behave like a conversational chat memory agent.
+5. Do not use conversation continuity.
 """.strip()
 
     return f"""
@@ -77,9 +78,12 @@ CORE RULES:
 1. Answer ONLY using the approved knowledge provided below.
 2. Do NOT guess, invent, or add outside knowledge.
 3. Do NOT expose restricted or hidden information.
-4. If the approved knowledge is insufficient, answer exactly:
+4. If approved knowledge contains an exact named rule, label, policy, code, protocol, index, project override, or identifier, preserve that exact phrase in the answer.
+5. Do NOT replace named labels with generic paraphrases.
+6. If the source contains a project-specific rule name, include that rule name exactly as written.
+7. If the approved knowledge is insufficient, answer exactly:
 "{SAFE_FALLBACK_ANSWER}"
-5. Keep the response aligned with the requested response behavior.
+8. Keep the response aligned with the requested response behavior.
 
 RESPONSE BEHAVIOR:
 Mode: {response_mode.get("label")}
