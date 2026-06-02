@@ -22,9 +22,9 @@ The platform is split across three apps with isolated responsibilities:
 
 `digitz_ai_nexus` is responsible for:
 
-- **Knowledge lifecycle** — ingest, chunk, embed, and manage knowledge sources
+- **Knowledge lifecycle** — ingest, chunk, embed, and manage knowledge sources (PDF, DOCX, TXT, manual)
 - **Access governance** — classify knowledge with policies and resolve who can access what
-- **Retrieval engine** — fetch access-safe knowledge chunks relevant to a query
+- **Retrieval engine** — hybrid vector + keyword search with re-ranking and scope balancing
 - **Answer service** — orchestrate retrieval, prompt building, LLM call, and response packaging
 - **Query logging** — trace every query for governance and debugging
 
@@ -40,7 +40,7 @@ Knowledge flows through three layers:
 Nexus Knowledge Source  →  Nexus Knowledge Unit  →  Nexus Knowledge Chunk
 ```
 
-Access policy is set at the source and propagates down to chunks. Retrieval filters at the chunk level.
+Access policy is set at the source and propagates down to chunks. Retrieval filters at the **chunk level**.
 
 ### Access Governance
 
@@ -61,29 +61,35 @@ Final allowed policies are always the intersection of profile scope, role scope,
 final_allowed_policies = profile ∩ role ∩ channel
 ```
 
-Public endpoints always force `Public`-only, regardless of other configuration.
+Public endpoints always force `["Public"]`, regardless of other configuration.
 
-### AI Agent Profile
+### Retrieval
 
-`Nexus AI Agent Profile` is the runtime AI responder configuration. It controls tone, response style, behaviour prompt, fallback message, confidence threshold, escalation settings, and knowledge scope intent.
+Queries are scored with a hybrid algorithm:
 
-Profiles are resolved dynamically per request via `Nexus Channel AI Profile Route` — a channel can serve many profiles.
+```
+hybrid_score = (vector × 0.75) + (keyword × 0.20) + (priority × 0.05)
+```
+
+Query expansion, re-ranking, and scope balancing are all configurable via `Nexus Settings`.
+
+### Security
+
+The system **fails closed**. An empty `allowed_access_policies` list immediately denies retrieval. Restricted knowledge (exists but access denied) returns a distinct response from "no context found".
 
 ---
 
-## Important DocTypes
+## Documentation
 
-| DocType | Purpose |
+| Document | Contents |
 |---|---|
-| Nexus Knowledge Source | Top-level knowledge entry point |
-| Nexus Knowledge Unit | Parsed unit within a source |
-| Nexus Knowledge Chunk | Smallest retrievable unit; carries access policy |
-| Nexus Access Policy | Knowledge classification label |
-| Nexus Access Category | Reusable group of access policies |
-| Nexus Access Category Policy | Maps category ↔ policy |
-| Nexus Role Access Category | Maps Frappe role → access category |
-| Nexus Channel Access Category | Maps channel → access category (guardrail) |
-| Nexus Query Log | Audit trail for every query |
+| [Architecture](docs/architecture.md) | App family, system data flow, security model, multi-tenancy, design principles |
+| [Knowledge Lifecycle](docs/knowledge-lifecycle.md) | Ingestion pipeline, chunking, deduplication, source/unit/chunk model |
+| [Access Governance](docs/access-governance.md) | Access policies, categories, role/channel mappings, resolver logic |
+| [Retrieval and Answer Engine](docs/retrieval-and-answer.md) | Hybrid scoring, re-ranking, prompt builder, LLM provider, response structure |
+| [DocType Reference](docs/doctypes.md) | All DocTypes with fields, autoname, and purpose |
+| [Configuration](docs/configuration.md) | Nexus Settings, default policies, provider setup, development commands |
+| [API Reference](docs/api-reference.md) | All whitelisted endpoints, query contract structure |
 
 ---
 
@@ -97,17 +103,20 @@ bench --site your-site.local migrate
 
 Requires Frappe Framework v15+.
 
+After install, seven default access policies are created automatically. Configure an OpenAI API key in `Nexus Settings` before processing knowledge sources.
+
 ---
 
 ## Development
 
 ```bash
-# After DocType changes
+# After DocType JSON changes
 bench --site digitz_ai_nexus.site migrate
 bench --site digitz_ai_nexus.site clear-cache
-```
 
-See [`digitz_ai_nexus/ai_nexus_architecture_context.md`](digitz_ai_nexus/ai_nexus_architecture_context.md) for full architecture and design rules.
+# Run tests (uses fake LLM and embedding providers; no API key needed)
+bench --site digitz_ai_nexus.site run-tests --app digitz_ai_nexus
+```
 
 ---
 

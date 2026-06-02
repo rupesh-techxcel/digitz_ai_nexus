@@ -1,0 +1,222 @@
+# Knowledge Lifecycle
+
+This document covers how knowledge enters the system, how it is processed into retrievable chunks, and what states it moves through.
+
+---
+
+## Three-Layer Model
+
+Knowledge is stored across three DocTypes in a parent-child hierarchy:
+
+```
+Nexus Knowledge Source
+    └── Nexus Knowledge Unit
+            └── Nexus Knowledge Chunk (retrievable)
+```
+
+| Layer | Purpose | Autoname |
+|---|---|---|
+| Knowledge Source | Top-level entry; holds source file or manual content | field:title |
+| Knowledge Unit | Parsed and versioned content unit; created from a source | NKU-.##### |
+| Knowledge Chunk | Smallest retrievable unit; carries embedding and access policy | NKC-.##### |
+
+**Access policy propagates downward:**
+
+```
+Source.access_policy → Unit.access_policy → Chunk.access_policy
+```
+
+Retrieval filters are applied at the **chunk level** — this is the runtime enforcement point.
+
+---
+
+## Knowledge Source
+
+`Nexus Knowledge Source` is the entry point for all knowledge. A source can be:
+
+| source_type | Content |
+|---|---|
+| PDF | Uploaded PDF file |
+| DOCX | Uploaded Word document |
+| TXT | Uploaded plain text file |
+| Manual | Content typed directly into `manual_content` |
+
+### Key Fields
+
+| Field | Type | Purpose |
+|---|---|---|
+| title | Data (unique) | Human name for the source |
+| source_type | Select | PDF / DOCX / TXT / Manual |
+| source_file | Attach | Uploaded file |
+| manual_content | Long Text | For Manual type |
+| access_policy | Link → Nexus Access Policy | **Required before publishing** |
+| status | Select | Draft / Ready to Publish / Published / Archived |
+| priority | Int | Boosts retrieval score for this source's chunks |
+| processing_status | Select | Tracks ingestion progress |
+| embedding_status | Select | Tracks embedding generation progress |
+| diagnostics_status | Select | Quality check status |
+| retrieval_ready | Check | Set to 1 only when fully processed and embeddable |
+| generated_knowledge_unit | Link | Points to the active unit |
+
+### Business Classification Fields
+
+These are metadata for filtering relevance (not access enforcement):
+
+- `tenant`, `business_unit`, `project`
+- `context`, `sub_context`
+- `entity_type`, `entity`, `topic`
+
+### Status Rules
+
+- A source without `access_policy` cannot be published.
+- `retrieval_ready` is set to `1` only after: status = Published, at least one active chunk with `embedding_status = Completed`, and validation passed (if required).
+- `retrieval_ready` resets to `0` if the source is unpublished, re-ingested, or its access policy changes.
+
+---
+
+## Ingestion Pipeline
+
+Triggered by `services/knowledge_source_processor.py` → `process_knowledge_source(source_name)`.
+
+### Step-by-Step
+
+```
+1. Load source document from Frappe
+2. Extract text:
+   - PDF  → services/ingestion/parser_pdf.py
+   - DOCX → services/ingestion/parser_docx.py
+   - TXT  → services/ingestion/parser_txt.py
+   - Manual → use manual_content field directly
+3. Create new Nexus Knowledge Unit
+   - Copy access_policy, tenant, business_unit, project, context etc. from source
+   - Set version (increment if re-processing)
+   - Status: Active
+4. Archive existing chunks for this source
+   - Mark old chunks as archived so they are no longer retrieved
+5. Disable previous knowledge units for this source
+6. Chunk the extracted text
+   - Default: 800 characters per chunk, 120 character overlap
+   - Smart paragraph-aware splitting
+7. For each chunk:
+   a. Normalize text (whitespace, encoding)
+   b. Compute SHA-256 hash for deduplication
+   c. Run diagnostics:
+      - too_short: chunk is below minimum viable size
+      - duplicate: hash matches a chunk already seen in this run
+      - no_embedding: embedding generation failed
+   d. Generate embedding via OpenAI text-embedding-3-small
+   e. Create Nexus Knowledge Chunk record
+      - Copy access_policy, tenant, context, etc. from source/unit
+      - Store embedding as JSON in embedding field
+      - Set embedding_status = Completed
+8. Update source status flags:
+   - processing_status, embedding_status, diagnostics_status
+   - Set retrieval_ready = 1 if conditions are met
+```
+
+### Chunking Algorithm
+
+`engine/chunking.py` and `services/ingestion/chunker.py`:
+
+- Text is first split on paragraph boundaries (double newlines)
+- Headings are detected and kept with the following block
+- If a block exceeds `chunk_size`, it is split on word boundaries
+- `overlap_chars` of the previous chunk is prepended to the next for context continuity
+- Defaults: `chunk_size = 800`, `chunk_overlap = 120` (configurable in Nexus Settings)
+
+### Deduplication
+
+Each chunk gets a SHA-256 hash of its normalized content. If a hash is seen twice within the same ingestion run, the second chunk is flagged as a duplicate and skipped. This prevents redundant embeddings from inflating retrieval results.
+
+### Context Path
+
+Each chunk inherits a `context_path` string built from its classification metadata:
+
+```
+{context}/{sub_context}/{entity_type}/{entity}/{topic}
+```
+
+Example: `Operations/Procurement/Vendor/ACME Corp/Payment Terms`
+
+This is used in keyword scoring during retrieval.
+
+---
+
+## Knowledge Unit
+
+`Nexus Knowledge Unit` is the intermediate layer between a source and its chunks.
+
+### Key Fields
+
+| Field | Type | Purpose |
+|---|---|---|
+| title | Data | Auto-generated from source |
+| tenant | Link → Nexus Tenant | Tenant scope |
+| access_policy | Link → Nexus Access Policy | Inherited from source |
+| status | Select | Draft / Review / Approved / Active / Archived |
+| version | Int | Incremented on re-ingestion |
+| content | Long Text | Full extracted text |
+| content_hash | Data | SHA-256 of full content |
+| chunk_count | Int | Number of chunks generated |
+| embedding_status | Select | Pending / Completed / Failed |
+
+---
+
+## Knowledge Chunk
+
+`Nexus Knowledge Chunk` is the atomic unit for retrieval. Every embedding query resolves against chunks.
+
+### Key Fields
+
+| Field | Type | Purpose |
+|---|---|---|
+| knowledge_unit | Link (reqd) | Parent unit |
+| knowledge_source | Link | Parent source |
+| tenant | Link (reqd) | Tenant scope |
+| **access_policy** | Link → Nexus Access Policy (reqd) | **Runtime enforcement key** |
+| chunk_index | Int | Position within the unit |
+| chunk_text | Long Text | The actual text content |
+| chunk_hash | Data | SHA-256 for deduplication |
+| disabled | Check | Set to 1 to exclude from retrieval |
+| priority | Int | Boosted in scoring (0 = normal) |
+| embedding | Long Text | JSON array of floats |
+| embedding_model | Data | e.g. `text-embedding-3-small` |
+| embedding_status | Select | Pending / Completed / Failed |
+| context, sub_context, entity_type, entity, topic | Data | Business classification |
+| context_path | Data | Pre-built `context/sub_context/…` string |
+
+### Retrieval Filter
+
+A chunk is included in retrieval candidates only when:
+
+```
+chunk.access_policy IN allowed_access_policies
+AND chunk.disabled = 0
+AND chunk.embedding_status = "Completed"
+```
+
+The source's `retrieval_ready` flag is also checked at a higher level before fetching candidates.
+
+---
+
+## Test Cases and Test Runs
+
+`Nexus Knowledge Test Case` and `Nexus Knowledge Test Run` support pre-publish validation.
+
+- A test case defines a query, expected result, and pass conditions (presence/absence of text in the answer)
+- A test run records the execution result for a test case against a source
+- Sources can require validation (`testing_required_before_activation` in Nexus Ecosystem) before being marked `retrieval_ready`
+
+---
+
+## Re-Ingesting a Source
+
+When a source is re-processed:
+
+1. The old knowledge unit is disabled
+2. Old chunks are archived (`disabled = 1`)
+3. A new unit is created with an incremented version number
+4. New chunks are generated and embedded
+5. `retrieval_ready` is reset and recalculated
+
+The old data is kept in the database for traceability. Only the new chunks participate in retrieval.
