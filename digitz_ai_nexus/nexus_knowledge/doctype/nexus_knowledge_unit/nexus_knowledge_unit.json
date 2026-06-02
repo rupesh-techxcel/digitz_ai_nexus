@@ -24,7 +24,7 @@
   "topic",
   "context_path",
   "section_access",
-  "default_access_policy",
+  "access_policy",
   "sensitivity",
   "section_processing",
   "content_hash",
@@ -152,18 +152,19 @@
    "label": "Access"
   },
   {
-   "fieldname": "default_access_policy",
+   "description": "Access policy inherited from the Knowledge Source. Required before the unit can be published.",
+   "fieldname": "access_policy",
    "fieldtype": "Link",
-   "label": "Default Access Policy",
-   "options": "Nexus Access Policy",
-   "reqd": 1
+   "in_list_view": 1,
+   "label": "Access Policy",
+   "options": "Nexus Access Policy"
   },
   {
+   "description": "Optional metadata only. Not used for access enforcement.",
    "fieldname": "sensitivity",
    "fieldtype": "Select",
    "label": "Sensitivity",
-   "options": "public\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential",
-   "reqd": 1
+   "options": "\npublic\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential"
   },
   {
    "fieldname": "section_processing",
@@ -207,7 +208,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-29 16:39:14.880632",
+ "modified": "2026-06-02 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nexus Knowledge",
  "name": "Nexus Knowledge Unit",

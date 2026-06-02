@@ -49,6 +49,35 @@ def _get_if_exists(doc, fieldname: str, default=None):
         return doc.get(fieldname)
     return default
 
+def _safe_set_select_value(doc, fieldname: str, value) -> bool:
+    """
+    Set a field safely.
+
+    If the target field is Select, set only if the option exists.
+    This prevents Frappe validation errors caused by invalid lifecycle labels.
+    """
+    if not _has_field(doc.doctype, fieldname):
+        return False
+
+    meta = frappe.get_meta(doc.doctype)
+    df = meta.get_field(fieldname)
+
+    if not df:
+        return False
+
+    if df.fieldtype != "Select":
+        doc.set(fieldname, value)
+        return True
+
+    options = []
+    if df.options:
+        options = [x.strip() for x in str(df.options).split("\n") if x.strip()]
+
+    if value in options:
+        doc.set(fieldname, value)
+        return True
+
+    return False
 
 def _get_chunk_count(knowledge_unit_name: str) -> int:
     """
@@ -303,7 +332,12 @@ def mark_knowledge_unit_needs_review(name: str, reason: str = None):
 
     This is useful when tests fail, source content becomes stale,
     or knowledge quality is not trusted for publishing.
+
+    Important:
+    - Knowledge Unit lifecycle uses "Review", not "Needs Review".
+    - The needs_review flag carries the business state.
     """
+
     if not name:
         return {
             "success": False,
@@ -318,19 +352,31 @@ def mark_knowledge_unit_needs_review(name: str, reason: str = None):
 
     doc = frappe.get_doc("Nexus Knowledge Unit", name)
 
+    if not frappe.has_permission("Nexus Knowledge Unit", "write", doc=doc):
+        frappe.throw("Not permitted to update this Knowledge Unit", frappe.PermissionError)
+
     _set_if_exists(doc, "needs_review", 1)
-    _set_if_exists(doc, "review_reason", reason or "Marked for review from Nexus Studio.")
-    _set_if_exists(doc, "status", "Needs Review")
+    _set_if_exists(
+        doc,
+        "review_reason",
+        reason or "Marked for review from Nexus Studio.",
+    )
+
+    # Knowledge Unit lifecycle uses "Review", not "Needs Review".
+    if not _safe_set_select_value(doc, "status", "Review"):
+        _safe_set_select_value(doc, "status", "Draft")
+
     _set_if_exists(doc, "published", 0)
+    _set_if_exists(doc, "ready_to_publish", 0)
+    _set_if_exists(doc, "retrieval_ready", 0)
 
     doc.save(ignore_permissions=False)
 
     return {
         "success": True,
-        "message": "Knowledge Unit marked as Needs Review.",
+        "message": "Knowledge Unit marked for review.",
         "readiness": _build_readiness_payload(doc),
     }
-
 
 @frappe.whitelist()
 def mark_knowledge_unit_ready_to_publish(name: str):
@@ -362,7 +408,11 @@ def mark_knowledge_unit_ready_to_publish(name: str):
             "readiness": readiness,
         }
 
-    _set_if_exists(doc, "status", "Ready to Publish")
+    # Keep Knowledge Unit in its valid approved state.
+    # The ready_to_publish flag carries the business readiness.
+    if not _safe_set_select_value(doc, "status", "Ready to Publish"):
+        _safe_set_select_value(doc, "status", "Approved")
+
     _set_if_exists(doc, "ready_to_publish", 1)
 
     doc.save(ignore_permissions=False)

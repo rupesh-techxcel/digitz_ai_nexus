@@ -205,6 +205,10 @@ def build_context_filters(query_contract):
         "embedding_status": "Completed",
     }
 
+    allowed_policies = query_contract.get("allowed_access_policies")
+    if allowed_policies:
+        filters["access_policy"] = ["in", allowed_policies]
+
     for field in [
         "tenant",
         "business_unit",
@@ -417,6 +421,12 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     if not query:
         frappe.throw("Query is required")
 
+    # Fail closed: an explicitly empty allowed_access_policies list means access
+    # resolution produced no permitted policies. Never treat this as "allow all".
+    allowed_policies = query_contract.get("allowed_access_policies")
+    if allowed_policies is not None and len(allowed_policies) == 0:
+        frappe.throw("Access policy resolution produced no permitted policies. Retrieval denied.")
+
     settings = frappe.get_single("Nexus Settings")
 
     top_k = int(query_contract.get("top_k") or settings.top_k or 5)
@@ -460,6 +470,14 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     candidate_chunks = get_candidate_chunks(query_contract)
     weights = get_retrieval_weights()
 
+    # When allowed_access_policies is present the DB filter already enforced
+    # access by classification. Running can_access_chunk() on top would apply
+    # the old audience/role model to classification-named policies, causing
+    # false denials. Skip it and treat every DB-returned chunk as allowed.
+    use_legacy_chunk_access_check = not bool(
+        query_contract.get("allowed_access_policies")
+    )
+
     merged_candidates = {}
     denied = []
     denied_relevance = {}
@@ -474,7 +492,10 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             )
 
         for row in candidate_chunks:
-            allowed, reason = can_access_chunk(user_context, row)
+            if use_legacy_chunk_access_check:
+                allowed, reason = can_access_chunk(user_context, row)
+            else:
+                allowed, reason = True, "Allowed"
 
             if not allowed:
                 denied_vector_score = 0

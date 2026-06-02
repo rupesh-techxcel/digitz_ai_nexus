@@ -24,11 +24,15 @@ class NexusStudioPage {
             mark_ready_to_publish: 'digitz_ai_nexus.api.nexus_knowledge_studio.mark_knowledge_unit_ready_to_publish',
             get_source_summary: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_source_summary',
             get_sources: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_sources',
+            process_source: 'digitz_ai_nexus.services.ingestion.processor.process_knowledge_source',
             validate_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.validate_knowledge_source',
             suggest_source_fields: 'digitz_ai_nexus.api.nexus_knowledge_source_assist.suggest_knowledge_source_fields',
             create_assisted_source: 'digitz_ai_nexus.api.nexus_knowledge_source_assist.create_knowledge_source_from_suggestion',
             publish_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.publish_knowledge_source',
             unpublish_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.unpublish_knowledge_source',
+            generate_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.generate_source_test_cases',
+            run_knowledge_test_case: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_knowledge_test_case',
+            run_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_source_test_cases',
         };
 
         this.active_tab = 'overview';
@@ -647,6 +651,89 @@ class NexusStudioPage {
                 font-weight: 700;
             }
 
+
+            .nks-source-dashboard-panel {
+                padding: 14px;
+                border-radius: 16px;
+                background:
+                    radial-gradient(circle at 100% 0%, rgba(77, 163, 255, 0.10), transparent 30%),
+                    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                border: 1.5px solid rgba(33, 119, 255, 0.20);
+                box-shadow: 0 10px 22px rgba(33, 77, 187, 0.05);
+                margin-bottom: 12px;
+            }
+
+            .nks-source-dashboard-testing {
+                border-color: rgba(33, 119, 255, 0.22);
+                background:
+                    radial-gradient(circle at 100% 0%, rgba(77, 163, 255, 0.10), transparent 30%),
+                    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            }
+
+            .nks-source-dashboard-panel h4 {
+                margin: 0 0 10px;
+                color: #0b3c91;
+                font-size: 16px;
+                font-weight: 950;
+            }
+
+            .nks-source-test-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 10px;
+                margin: 12px 0;
+            }
+
+            .nks-source-test-stat {
+                padding: 12px;
+                border-radius: 14px;
+                background: #ffffff;
+                border: 1px solid rgba(33, 119, 255, 0.18);
+                box-shadow: 0 8px 18px rgba(33, 77, 187, 0.04);
+            }
+
+            .nks-source-test-value {
+                font-size: 24px;
+                font-weight: 950;
+                color: #0b3c91;
+                line-height: 1;
+            }
+
+            .nks-source-test-label {
+                margin-top: 6px;
+                color: #526887;
+                font-size: 12px;
+                font-weight: 850;
+            }
+
+            .nks-source-dashboard-note {
+                padding: 12px;
+                border-radius: 14px;
+                font-size: 12px;
+                line-height: 1.45;
+                font-weight: 750;
+                margin-top: 10px;
+            }
+
+            .nks-source-dashboard-note-info {
+                background: #eef6ff;
+                border: 1px solid rgba(33, 119, 255, 0.20);
+                color: #0b3c91;
+            }
+
+            .nks-source-dashboard-note-muted {
+                background: #f8fafc;
+                border: 1px solid rgba(148, 163, 184, 0.24);
+                color: #526887;
+            }
+
+            .nks-source-dashboard-test-actions {
+                margin-top: 12px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
             @media (max-width: 1100px) {
                 .nks-summary-grid,
                 .nks-stage-grid,
@@ -669,6 +756,93 @@ class NexusStudioPage {
                 .nks-toolbar-right {
                     justify-content: flex-start;
                 }
+
+                .nks-source-dashboard-panel-head {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 12px;
+                    margin-bottom: 10px;
+                }
+
+                .nks-source-dashboard-panel-head h4 {
+                    margin: 0;
+                    color: #0b3c91;
+                    font-size: 16px;
+                    font-weight: 950;
+                }
+
+                .nks-source-dashboard-panel-head p {
+                    margin: 4px 0 0;
+                    color: #526887;
+                    font-size: 12px;
+                    line-height: 1.42;
+                    font-weight: 750;
+                }
+
+                .nks-source-test-status-pill {
+                    white-space: nowrap;
+                    padding: 6px 10px;
+                    border-radius: 999px;
+                    font-size: 12px;
+                    font-weight: 850;
+                    border: 1px solid rgba(33, 119, 255, 0.20);
+                }
+
+                .nks-source-test-status-pill.has-tests {
+                    color: #0b3c91;
+                    background: #eef6ff;
+                }
+
+                .nks-source-test-status-pill.no-tests {
+                    color: #64748b;
+                    background: #f8fafc;
+                }
+
+                .nks-test-run-result {
+                    color: #102b67;
+                }
+
+                .nks-test-run-result-grid {
+                    display: grid;
+                    grid-template-columns: repeat(5, minmax(0, 1fr));
+                    gap: 8px;
+                    margin-top: 12px;
+                }
+
+                .nks-test-run-result-grid > div {
+                    padding: 10px;
+                    border-radius: 12px;
+                    background: #f8fbff;
+                    border: 1px solid rgba(33, 119, 255, 0.16);
+                    text-align: center;
+                }
+
+                .nks-test-run-result-grid strong {
+                    display: block;
+                    font-size: 22px;
+                    color: #0b3c91;
+                    line-height: 1;
+                }
+
+                .nks-test-run-result-grid span {
+                    display: block;
+                    margin-top: 5px;
+                    color: #526887;
+                    font-size: 11px;
+                    font-weight: 850;
+                }
+
+                .nks-test-run-result-actions {
+                    display: flex;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    margin-top: 14px;
+                }
+                    
+                .nks-dashboard-full-row {
+                    grid-column: 1 / -1;
+                }
             }
 
             @media (max-width: 900px) {
@@ -680,6 +854,8 @@ class NexusStudioPage {
                     flex-direction: column;
                 }
             }
+
+            
 
             @media (max-width: 700px) {
                 .nks-hero {
@@ -707,6 +883,14 @@ class NexusStudioPage {
                 .nks-toolbar-left .nks-source-search {
                     width: 100%;
                     min-width: 0;
+                }
+
+                .nks-source-dashboard-panel-head {
+                    flex-direction: column;
+                }
+
+                .nks-test-run-result-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
                 }
             }
         `;
@@ -756,13 +940,9 @@ class NexusStudioPage {
     get_tabs_html() {
         const tabs = [
             ['overview', 'Overview'],
-            ['sources', 'Knowledge Sources'],
-            ['ingestion', 'Intake & Ingestion'],
-            ['units', 'Knowledge Units'],
-            ['indexing', 'AI Preparation'],
-            ['testing', 'Testing & Validation'],
-            ['gaps', 'Knowledge Gaps'],
-            ['publish', 'Publish Readiness']
+            ['sources', 'Source Library'],
+            ['quality', 'Answer Quality'],
+            ['improvements', 'Improvement Areas']
         ];
 
         return tabs.map(([key, label]) => {
@@ -970,6 +1150,7 @@ class NexusStudioPage {
         this.body.on('click', '.nks-technical-details-btn', () => {
             this.show_ai_preparation_technical_details();
         });
+      
     }
 
     load() {
@@ -1040,6 +1221,7 @@ class NexusStudioPage {
             }
         });
     }
+
 
     load_source_summary() {
         frappe.call({
@@ -1141,35 +1323,18 @@ class NexusStudioPage {
             return;
         }
 
-        if (this.active_tab === 'ingestion') {
-            $content.html(this.get_ingestion_html());
+        if (this.active_tab === 'quality') {
+            $content.html(this.get_answer_quality_html());
             return;
         }
 
-        if (this.active_tab === 'units') {
-            $content.html(this.get_units_html());
-            this.render_units_table();
+        if (this.active_tab === 'improvements') {
+            $content.html(this.get_improvement_areas_html());
             return;
         }
 
-        if (this.active_tab === 'indexing') {
-            $content.html(this.get_indexing_html());
-            return;
-        }
-
-        if (this.active_tab === 'testing') {
-            $content.html(this.get_testing_html());
-            return;
-        }
-
-        if (this.active_tab === 'gaps') {
-            $content.html(this.get_gaps_html());
-            return;
-        }
-
-        if (this.active_tab === 'publish') {
-            $content.html(this.get_publish_html());
-        }
+        this.active_tab = 'overview';
+        $content.html(this.get_overview_html());
     }
 
     get_overview_html() {
@@ -1182,19 +1347,15 @@ class NexusStudioPage {
                 <div class="nks-section-head">
                     <h3>Studio Lifecycle</h3>
                     <p>
-                        Nexus Studio manages the full knowledge lifecycle from original sources
-                        to AI-ready, tested, and publishable knowledge.
+                        Nexus Studio centers around the Source Library. Source processing creates prepared
+                        knowledge, chunks, embeddings, validation readiness, and answer availability.
                     </p>
                 </div>
 
                 <div class="nks-stage-grid">
-                    ${this.get_stage_card_html('📚', 'Knowledge Sources', 'Register and govern original source material.')}
-                    ${this.get_stage_card_html('📥', 'Intake & Ingestion', 'Extract, clean, and convert sources into Knowledge Units.', true)}
-                    ${this.get_stage_card_html('🧠', 'Knowledge Units', 'Classify, approve, and prepare governed business knowledge.')}
-                    ${this.get_stage_card_html('⚙️', 'AI Preparation', 'Prepare approved knowledge for reliable AI search and answers.', true)}
-                    ${this.get_stage_card_html('🧪', 'Testing & Validation', 'Validate retrieval, citations, confidence, and answers.')}
-                    ${this.get_stage_card_html('📊', 'Knowledge Gaps', 'Identify missing, weak, stale, or failed knowledge.', true)}
-                    ${this.get_stage_card_html('🚀', 'Publish Readiness', 'Control what knowledge can power AI channels.')}
+                    ${this.get_stage_card_html('📚', 'Source Library', 'Add, review, process, validate, publish, and unpublish source material.')}
+                    ${this.get_stage_card_html('🧪', 'Answer Quality', 'Validate whether Nexus gives correct, grounded, and trustworthy answers.', true)}
+                    ${this.get_stage_card_html('📊', 'Improvement Areas', 'Identify missing, weak, stale, or poorly retrievable knowledge.')}
                     ${this.get_stage_card_html('🛡️', 'Governance', 'Maintain tenant, access, and source traceability.', true)}
                 </div>
             </div>
@@ -1212,18 +1373,45 @@ class NexusStudioPage {
     }
 
     get_summary_cards_html() {
-        const s = this.summary || {};
+        const source = this.source_summary || {};
+        const unit = this.summary || {};
 
         return `
-            ${this.get_summary_card_html('Total Knowledge Units', s.total_units || 0)}
-            ${this.get_summary_card_html('Approved', s.approved_units || 0)}
-            ${this.get_summary_card_html('Ready for AI Preparation', s.ready_for_chunking_units || 0, 'good')}
-            ${this.get_summary_card_html('Ready to Publish', s.ready_to_publish_units || 0, 'good')}
-            ${this.get_summary_card_html('Missing Required', s.missing_required_units || 0, 'warn')}
-            ${this.get_summary_card_html('Needs Review', s.needs_review_units || 0, 'warn')}
-            ${this.get_summary_card_html('Prepared', s.chunked_units || 0)}
-            ${this.get_summary_card_html('Search Ready', s.embedded_units || 0)}
+            ${this.get_summary_card_html('Total Sources', source.total_sources || 0)}
+            ${this.get_summary_card_html('Processed Sources', source.ingested || source.processed || 0, 'good')}
+            ${this.get_summary_card_html('Published Sources', source.published || 0, 'good')}
+            ${this.get_summary_card_html('Needs Attention', (source.sync_failed || 0) + (source.disabled || 0), 'warn')}
+            ${this.get_summary_card_html('Prepared Units', unit.chunked_units || 0)}
+            ${this.get_summary_card_html('Search Ready Units', unit.embedded_units || 0, 'good')}
+            ${this.get_summary_card_html('Unit Review Queue', unit.needs_review_units || 0, 'warn')}
+            ${this.get_summary_card_html('Missing Required', unit.missing_required_units || 0, 'warn')}
         `;
+    }
+
+   
+
+    get_answer_quality_html() {
+        return this.get_placeholder_section(
+            'Answer Quality',
+            'Validate whether Nexus gives correct, grounded, and trustworthy answers from published knowledge.',
+            [
+                'Connect this view with Nexus Knowledge Test Case, Nexus Knowledge Test Run, and Nexus Query Log.',
+                'Review expected source matching, citations, confidence, access handling, and fallback behavior.',
+                'Use this area for answer-level quality checks, not source processing.'
+            ]
+        );
+    }
+
+    get_improvement_areas_html() {
+        return this.get_placeholder_section(
+            'Improvement Areas',
+            'Identify missing, weak, stale, or poorly retrievable knowledge from failed answers and user questions.',
+            [
+                'Track no-answer questions, fallback answers, low-confidence responses, and failed expected-source checks.',
+                'Suggest new sources or updates to existing sources based on repeated knowledge gaps.',
+                'Convert confirmed gaps into source improvement tasks or new source drafts.'
+            ]
+        );
     }
 
     get_summary_card_html(label, value, type = '') {
@@ -1257,7 +1445,7 @@ class NexusStudioPage {
 
             <div class="nks-section-panel">
                 <div class="nks-section-head">
-                    <h3>Knowledge Sources</h3>
+                    <h3>Source Library</h3>
                     <p>
                         Register, govern, and review original source material before it becomes usable by Nexus answers.
                     </p>
@@ -1284,7 +1472,7 @@ class NexusStudioPage {
 
                     <div class="nks-toolbar-right">
                         <button class="btn btn-primary btn-sm nks-new-source-btn">
-                            New Knowledge Source
+                            New Source
                         </button>
 
                         <button class="btn btn-default btn-sm nks-ai-assist-source-btn">
@@ -1351,6 +1539,92 @@ class NexusStudioPage {
             return `<option value="${frappe.utils.escape_html(value)}" ${this.source_filters.sync_status === value ? 'selected' : ''}>${frappe.utils.escape_html(label)}</option>`;
         }).join('');
     }
+
+    get_source_test_case_dashboard_html(row) {
+    const summary = row.test_case_summary || {};
+
+    const total = cint(summary.total || row.test_case_count || 0);
+    const generated = cint(summary.generated || row.generated_test_case_count || 0);
+    const active = cint(summary.active || row.active_test_case_count || 0);
+    const draft = cint(summary.draft || row.draft_test_case_count || 0);
+
+    const hasTests = total > 0;
+
+    return `
+        <div class="nks-source-dashboard-panel nks-source-dashboard-testing">
+            <div class="nks-source-dashboard-panel-head">
+                <div>
+                    <h4>Testing & Validation</h4>
+                    <p>
+                        Generated test cases, source-level validation runs, and quality verification.
+                    </p>
+                </div>
+
+                <div class="nks-source-test-status-pill ${hasTests ? 'has-tests' : 'no-tests'}">
+                    ${hasTests ? `${total} Test Case${total === 1 ? '' : 's'}` : 'No Tests'}
+                </div>
+            </div>
+
+            ${
+                hasTests
+                    ? `
+                        <div class="nks-source-test-grid">
+                            <div class="nks-source-test-stat">
+                                <div class="nks-source-test-value">${total}</div>
+                                <div class="nks-source-test-label">Total Test Cases</div>
+                            </div>
+                            <div class="nks-source-test-stat">
+                                <div class="nks-source-test-value">${generated}</div>
+                                <div class="nks-source-test-label">AI Generated</div>
+                            </div>
+                            <div class="nks-source-test-stat">
+                                <div class="nks-source-test-value">${draft}</div>
+                                <div class="nks-source-test-label">Draft</div>
+                            </div>
+                            <div class="nks-source-test-stat">
+                                <div class="nks-source-test-value">${active}</div>
+                                <div class="nks-source-test-label">Active</div>
+                            </div>
+                        </div>
+
+                        <div class="nks-source-dashboard-note nks-source-dashboard-note-info">
+                            Test cases are available for this source. Review generated cases, run the source validation suite,
+                            and inspect Test Run records for pass, warning, and failure details.
+                        </div>
+                    `
+                    : `
+                        <div class="nks-source-dashboard-note nks-source-dashboard-note-muted">
+                            No test cases have been generated yet for this source.
+                        </div>
+                    `
+            }
+
+            <div class="nks-source-dashboard-actions nks-source-dashboard-test-actions">
+                <button class="btn btn-sm btn-default nks-open-source-test-cases-btn">
+                    Open Test Cases
+                </button>
+
+                ${
+                    hasTests
+                        ? `
+                            <button class="btn btn-sm btn-default nks-review-source-test-cases-btn">
+                                Review Generated Tests
+                            </button>
+
+                            <button class="btn btn-sm btn-primary nks-run-source-test-cases-btn">
+                                Run Source Tests
+                            </button>
+
+                            <button class="btn btn-sm btn-default nks-open-source-test-runs-btn">
+                                Open Test Runs
+                            </button>
+                        `
+                        : ''
+                }
+            </div>
+        </div>
+    `;
+}
 
     new_knowledge_source() {
         const context = this.active_context || {};
@@ -2339,6 +2613,129 @@ class NexusStudioPage {
         return 'nks-badge-info';
     }
 
+   get_source_publish_state(row) {
+        row = row || {};
+
+        const status = String(row.status || '').toLowerCase();
+        const readiness_status = String(row.readiness_status || '').toLowerCase();
+        const validation_status = String(row.validation_status || '').toLowerCase();
+
+        if (
+            row.is_published ||
+            row.published ||
+            status === 'published' ||
+            readiness_status === 'published'
+        ) {
+            return 'Published';
+        }
+
+        if (
+            row.can_publish ||
+            row.ready_to_publish ||
+            status === 'ready to publish' ||
+            readiness_status === 'ready_to_publish'
+        ) {
+            return 'Ready to Publish';
+        }
+
+        if (
+            validation_status === 'passed' ||
+            status === 'validated' ||
+            readiness_status === 'ready_for_publish' ||
+            readiness_status === 'ready_for_validation'
+        ) {
+            return 'Validated';
+        }
+
+        if (this.is_source_prepared(row)) {
+            return 'Prepared';
+        }
+
+        return 'Not Ready';
+    }
+
+    get_source_technical_value(row, technical_status, fieldname, fallback = '-') {
+        row = row || {};
+        technical_status = technical_status || {};
+
+        const technical_value = technical_status[fieldname];
+
+        if (
+            technical_value !== undefined &&
+            technical_value !== null &&
+            technical_value !== ''
+        ) {
+            return technical_value;
+        }
+
+        const row_value = row[fieldname];
+
+        if (
+            row_value !== undefined &&
+            row_value !== null &&
+            row_value !== ''
+        ) {
+            return row_value;
+        }
+
+        return fallback;
+    }
+
+    format_source_yes_no(value) {
+        if (
+            value === true ||
+            value === 1 ||
+            value === '1' ||
+            String(value || '').toLowerCase() === 'yes' ||
+            String(value || '').toLowerCase() === 'true'
+        ) {
+            return 'Yes';
+        }
+
+        return 'No';
+    }
+
+    can_show_process_source_action(row) {
+        row = row || {};
+
+        const readiness_status = String(row.readiness_status || '').toLowerCase();
+        const status = String(row.status || '').toLowerCase();
+
+        const processing_status = String(
+            row.processing_status ||
+            (row.technical_status && row.technical_status.processing_status) ||
+            ''
+        ).toLowerCase();
+
+        const sync_status = String(
+            row.sync_status ||
+            (row.technical_status && row.technical_status.sync_status) ||
+            ''
+        ).toLowerCase();
+
+        if (
+            row.is_published ||
+            row.published ||
+            status === 'published' ||
+            readiness_status === 'published'
+        ) {
+            return false;
+        }
+
+        if (
+            ['processing', 'running', 'in progress'].includes(processing_status) ||
+            ['processing', 'running', 'in progress'].includes(sync_status)
+        ) {
+            return false;
+        }
+
+        if (row.disabled) {
+            return false;
+        }
+
+        return true;
+    }
+
     show_source_dashboard(name) {
         const row = (this.sources || []).find((item) => item.name === name);
 
@@ -2400,13 +2797,17 @@ class NexusStudioPage {
                         <p><b>Content:</b> ${row.has_content ? 'Complete' : 'Missing'}</p>
                         <p><b>Classification:</b> ${row.has_classification ? 'Complete' : 'Incomplete'}</p>
                         <p><b>Prepared:</b> ${this.is_source_prepared(row) ? 'Yes' : 'No'}</p>
-                        <p><b>Ready for Publish:</b> ${row.can_publish ? 'Yes' : 'No'}</p>
+                        <p><b>Publish State:</b> ${frappe.utils.escape_html(this.get_source_publish_state(row))}</p>
                     </div>
 
                     <div class="nks-dashboard-card">
                         <h5>Issues</h5>
                         ${missing_fields_html}
                     </div>
+                    <div class="nks-dashboard-full-row">
+                         ${this.get_source_test_case_dashboard_html(row)}
+                     </div>
+
                 </div>
 
                 <div class="nks-dashboard-actions">
@@ -2420,22 +2821,38 @@ class NexusStudioPage {
                     </div>
 
                     <div class="nks-dashboard-notice">
-                        <b>Validation note:</b>
-                        Studio validation tests this source directly before publishing.
-                        After publishing, public Q&A and Source Quality tests use active retrieval chunks.
-                        A published source should have active retrieval chunks before it is available for Nexus answers.
+                        ${
+                            row.is_published
+                                ? `
+                                    <b>Published note:</b>
+                                    This source is now available for AI answers through active retrieval chunks.
+                                    Public Q&A and Nexus answer flows will use the prepared chunks and embeddings from this source.
+                                `
+                                : `
+                                    <b>Validation note:</b>
+                                    Studio validation tests this source directly before publishing.
+                                    After publishing, public Q&A and Source Quality tests use active retrieval chunks.
+                                    A published source should have active retrieval chunks before it is available for Nexus answers.
+                                `
+                        }
                     </div>
                 </div>
 
                 <details>
                     <summary><b>Technical Status</b></summary>
                     <div class="nks-dashboard-technical">
-                        <p><b>Status:</b> ${frappe.utils.escape_html(technical_status.status || row.status || '-')}</p>
-                        <p><b>Sync Status:</b> ${frappe.utils.escape_html(technical_status.sync_status || row.sync_status || '-')}</p>
-                        <p><b>Processing Status:</b> ${frappe.utils.escape_html(technical_status.processing_status || row.processing_status || '-')}</p>
-                        <p><b>Quality Status:</b> ${frappe.utils.escape_html(technical_status.quality_status || row.quality_status || '-')}</p>
-                        <p><b>Validation Status:</b> ${frappe.utils.escape_html(technical_status.validation_status || row.validation_status || '-')}</p>
-                        <p><b>Last Error:</b> ${frappe.utils.escape_html(technical_status.last_error || row.last_error || '-')}</p>
+                        <p><b>Source Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'status'))}</p>
+                        <p><b>Processing Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'processing_status'))}</p>
+                        <p><b>Embedding Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'embedding_status'))}</p>
+                        <p><b>Diagnostics Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'diagnostics_status'))}</p>
+                        <p><b>Processing Version:</b> ${frappe.utils.escape_html(String(this.get_source_technical_value(row, technical_status, 'processing_version', 0)))}</p>
+                        <p><b>Chunk Count:</b> ${frappe.utils.escape_html(String(this.get_source_technical_value(row, technical_status, 'chunk_count', 0)))}</p>
+                        <p><b>Active Chunk Count:</b> ${frappe.utils.escape_html(String(this.get_source_technical_value(row, technical_status, 'active_chunk_count', 0)))}</p>
+                        <p><b>Retrieval Ready:</b> ${this.format_source_yes_no(this.get_source_technical_value(row, technical_status, 'retrieval_ready', 0))}</p>
+                        <p><b>Generated Knowledge Unit:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'generated_knowledge_unit'))}</p>
+                        <p><b>Last Processed On:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'last_processed_on'))}</p>
+                        <p><b>Validation Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'validation_status'))}</p>
+                        <p><b>Last Error:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'last_error'))}</p>
                     </div>
                 </details>
             </div>
@@ -2451,6 +2868,7 @@ class NexusStudioPage {
         dialog.$wrapper.find('.nks-dashboard-refresh-source-btn').on('click', () => {
             this.load_sources();
             this.load_source_summary();
+            this.load_units();
 
             frappe.show_alert({
                 message: 'Source status refreshed.',
@@ -2460,8 +2878,8 @@ class NexusStudioPage {
             dialog.hide();
         });
 
-        dialog.$wrapper.find('.nks-dashboard-prepare-source-btn').on('click', () => {
-            this.prepare_source_from_dashboard(row.name, dialog);
+        dialog.$wrapper.find('.nks-dashboard-process-source-btn').on('click', () => {
+            this.process_source_from_dashboard(row.name, dialog);
         });
 
         dialog.$wrapper.find('.nks-dashboard-validate-source-btn').on('click', () => {
@@ -2474,6 +2892,43 @@ class NexusStudioPage {
 
         dialog.$wrapper.find('.nks-dashboard-unpublish-source-btn').on('click', () => {
             this.unpublish_source_from_dashboard(row.name, dialog);
+        });
+        dialog.$wrapper.find('.nks-dashboard-generate-test-cases-btn').on('click', () => {
+            this.generate_test_cases_from_source_dashboard(row.name);
+        });
+        dialog.$wrapper.find('.nks-open-source-test-cases-btn').on('click', () => {
+            dialog.hide();
+
+            frappe.route_options = {
+                knowledge_source: row.name
+            };
+
+            frappe.set_route('List', 'Nexus Knowledge Test Case');
+        });
+
+        dialog.$wrapper.find('.nks-review-source-test-cases-btn').on('click', () => {
+            dialog.hide();
+
+            frappe.route_options = {
+                knowledge_source: row.name,
+                status: 'Draft'
+            };
+
+            frappe.set_route('List', 'Nexus Knowledge Test Case');
+        });
+
+        dialog.$wrapper.find('.nks-open-source-test-runs-btn').on('click', () => {
+            dialog.hide();
+
+            frappe.route_options = {
+                knowledge_source: row.name
+            };
+
+            frappe.set_route('List', 'Nexus Knowledge Test Run');
+        });
+
+        dialog.$wrapper.find('.nks-run-source-test-cases-btn').on('click', () => {
+            this.run_source_test_cases_from_dashboard(row.name, dialog);
         });
     }
 
@@ -2492,10 +2947,10 @@ class NexusStudioPage {
             </button>
         `);
 
-        if (row.can_prepare) {
+        if (this.can_show_process_source_action(row)) {
             buttons.push(`
-                <button class="btn btn-sm btn-primary nks-dashboard-prepare-source-btn">
-                    Prepare Source
+                <button class="btn btn-sm btn-primary nks-dashboard-process-source-btn">
+                    Process Source
                 </button>
             `);
         }
@@ -2516,6 +2971,14 @@ class NexusStudioPage {
             `);
         }
 
+        if (this.can_show_generate_test_cases_action(row)) {
+            buttons.push(`
+                <button class="btn btn-sm btn-default nks-dashboard-generate-test-cases-btn" data-name="${frappe.utils.escape_html(row.name)}">
+                    Generate Test Cases
+                </button>
+            `);
+        }
+
         if (row.can_unpublish) {
             buttons.push(`
                 <button class="btn btn-sm btn-default nks-dashboard-unpublish-source-btn">
@@ -2524,17 +2987,388 @@ class NexusStudioPage {
             `);
         }
 
-        if (!row.can_prepare && !row.can_validate && !row.can_publish && !row.can_unpublish) {
-            buttons.push(`
-                <span class="text-muted" style="align-self: center;">
-                    No workflow action available at this stage.
-                </span>
-            `);
-        }
-
         return buttons.join('');
     }
+    can_show_generate_test_cases_action(row) {
+    const status = String(row.status || '').toLowerCase();
+    const readiness_status = String(row.readiness_status || '').toLowerCase();
 
+    return Boolean(
+        row &&
+        row.name &&
+        (
+            row.is_published ||
+            row.published ||
+            status === 'published' ||
+            readiness_status === 'published'
+        )
+    );
+}
+
+generate_test_cases_from_source_dashboard(name) {
+    if (!name) {
+        frappe.msgprint('Knowledge Source name is missing.');
+        return;
+    }
+
+    const row = (this.sources || []).find((item) => item.name === name);
+
+    if (!row) {
+        frappe.msgprint('Source details are not available. Please refresh and try again.');
+        return;
+    }
+
+    if (!this.can_show_generate_test_cases_action(row)) {
+        frappe.msgprint({
+            title: 'Source Not Published',
+            indicator: 'orange',
+            message: 'Suggested test cases can be generated only after the Knowledge Source is published.'
+        });
+        return;
+    }
+
+    const dialog = new frappe.ui.Dialog({
+        title: 'Generate Suggested Test Cases',
+        size: 'large',
+        fields: [
+            {
+                fieldname: 'source_info_html',
+                fieldtype: 'HTML',
+                options: `
+                    <div style="
+                        padding: 14px;
+                        border-radius: 16px;
+                        background:
+                            radial-gradient(circle at 100% 0%, rgba(77, 163, 255, 0.10), transparent 30%),
+                            linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                        border: 1.5px solid rgba(33, 119, 255, 0.22);
+                        margin-bottom: 12px;
+                    ">
+                        <h5 style="margin: 0 0 8px; color: #0b3c91; font-weight: 950;">
+                            Published Source Validation
+                        </h5>
+
+                        <p style="margin: 6px 0; color: #314d78; font-size: 12px; font-weight: 700;">
+                            <b>Source:</b> ${frappe.utils.escape_html(row.source_title || row.name)}
+                        </p>
+
+                        <p style="margin: 6px 0; color: #314d78; font-size: 12px; font-weight: 700;">
+                            <b>Business Unit:</b> ${frappe.utils.escape_html(row.business_unit || '-')}
+                        </p>
+
+                        <p style="margin: 6px 0; color: #314d78; font-size: 12px; font-weight: 700;">
+                            <b>Context:</b> ${frappe.utils.escape_html(row.context || '-')}
+                            ${row.sub_context ? ' / ' + frappe.utils.escape_html(row.sub_context) : ''}
+                        </p>
+
+                        <p style="margin: 6px 0; color: #314d78; font-size: 12px; font-weight: 700;">
+                            <b>Topic:</b> ${frappe.utils.escape_html(row.topic || row.entity || '-')}
+                        </p>
+
+                        <p style="margin: 10px 0 0; color: #526887; font-size: 12px; line-height: 1.45; font-weight: 700;">
+                            Nexus will generate draft Knowledge Test Cases from this published source.
+                            The generated tests should be reviewed before being treated as final validation scenarios.
+                        </p>
+                    </div>
+                `
+            },
+            {
+                fieldname: 'test_count',
+                fieldtype: 'Int',
+                label: 'Number of Test Cases',
+                default: 5,
+                reqd: 1,
+                description: 'Recommended: 5 to 10 test cases per published source.'
+            },
+            {
+                fieldname: 'use_case',
+                fieldtype: 'Select',
+                label: 'Primary Use Case',
+                options: [
+                    'Q&A',
+                    'Chat',
+                    'Live',
+                    'Internal'
+                ].join('\n'),
+                default: 'Q&A',
+                reqd: 1
+            },
+            {
+                fieldname: 'include_boundary_tests',
+                fieldtype: 'Check',
+                label: 'Include fallback / boundary test cases',
+                default: 1
+            },
+            {
+                fieldname: 'include_followup_tests',
+                fieldtype: 'Check',
+                label: 'Include follow-up style questions',
+                default: 1
+            },
+            {
+                fieldname: 'auto_enable',
+                fieldtype: 'Check',
+                label: 'Enable generated test cases immediately',
+                default: 0,
+                description: 'Recommended to keep disabled until reviewed.'
+            }
+        ],
+        primary_action_label: 'Generate Test Cases',
+        primary_action: (values) => {
+            const test_count = cint(values.test_count || 0);
+
+            if (!test_count || test_count < 1) {
+                frappe.msgprint('Please enter a valid number of test cases.');
+                return;
+            }
+
+            this.generate_source_test_cases(name, values, dialog);
+        }
+    });
+
+    dialog.show();
+}
+
+generate_source_test_cases(name, values, dialog) {
+    frappe.call({
+        method: this.api.generate_source_test_cases,
+        args: {
+            name: name,
+            test_count: cint(values.test_count || 5),
+            use_case: values.use_case || 'Q&A',
+            include_boundary_tests: values.include_boundary_tests ? 1 : 0,
+            include_followup_tests: values.include_followup_tests ? 1 : 0,
+            auto_enable: values.auto_enable ? 1 : 0
+        },
+        freeze: true,
+        freeze_message: 'Generating suggested test cases...',
+        callback: (r) => {
+            const result = r.message || {};
+
+            if (!result.success) {
+                frappe.msgprint({
+                    title: 'Test Case Generation Failed',
+                    indicator: 'orange',
+                    message: frappe.utils.escape_html(
+                        result.message || 'Unable to generate suggested test cases.'
+                    )
+                });
+                return;
+            }
+
+            if (dialog) {
+                dialog.hide();
+            }
+
+            const created = result.created || [];
+            const skipped = result.skipped || [];
+
+            frappe.msgprint({
+                title: 'Suggested Test Cases Generated',
+                indicator: 'green',
+                message: `
+                    <div class="nks-readiness-dialog">
+                        <p>${frappe.utils.escape_html(result.message || 'Suggested Knowledge Test Cases generated successfully.')}</p>
+
+                        <p><b>Created:</b> ${frappe.utils.escape_html(String(created.length || result.created_count || 0))}</p>
+                        <p><b>Skipped:</b> ${frappe.utils.escape_html(String(skipped.length || result.skipped_count || 0))}</p>
+
+                        ${
+                            created.length
+                                ? `
+                                    <p><b>Generated Test Cases:</b></p>
+                                    <ul style="margin: 8px 0 0; padding-left: 18px;">
+                                        ${created.map((item) => {
+                                            const label = item.title || item.test_title || item.name || item;
+                                            return `<li>${frappe.utils.escape_html(label)}</li>`;
+                                        }).join('')}
+                                    </ul>
+                                `
+                                : ''
+                        }
+
+                        <div style="
+                            margin-top: 12px;
+                            padding: 10px 12px;
+                            border-radius: 12px;
+                            background: #eef6ff;
+                            border: 1px solid rgba(33, 119, 255, 0.22);
+                            color: #0b3c91;
+                            font-size: 12px;
+                            font-weight: 700;
+                        ">
+                            Review the generated draft test cases before using them as approved validation scenarios.
+                        </div>
+
+                        <div style="margin-top: 12px;">
+                            <a class="btn btn-sm btn-primary" href="/app/nexus-knowledge-test-case">
+                                Open Test Cases
+                            </a>
+                            <a class="btn btn-sm btn-default" href="/app/nexus-knowledge-test-run" style="margin-left: 6px;">
+                                Open Test Runs
+                            </a>
+                        </div>
+                    </div>
+                `
+            });
+
+            this.load_sources();
+            this.load_source_summary();
+        },
+        error: () => {
+            frappe.msgprint({
+                title: 'Test Case Generation Failed',
+                indicator: 'red',
+                message: 'Unable to generate suggested test cases. Please check the server error log.'
+            });
+        }
+    });
+}
+
+run_source_test_cases_from_dashboard(sourceName, dialog) {
+    if (!sourceName) {
+        frappe.msgprint({
+            title: 'Run Source Tests',
+            indicator: 'red',
+            message: 'Knowledge Source is required.'
+        });
+        return;
+    }
+
+    const row = (this.sources || []).find((item) => item.name === sourceName);
+
+    if (!row) {
+        frappe.msgprint({
+            title: 'Run Source Tests',
+            indicator: 'orange',
+            message: 'Source details are not available. Please refresh and try again.'
+        });
+        return;
+    }
+
+    frappe.confirm(
+        `Run all generated test cases for ${frappe.utils.escape_html(row.source_title || row.name)}?`,
+        () => {
+            frappe.call({
+                method: this.api.run_source_test_cases,
+                args: {
+                    source_name: sourceName,
+                    include_draft: 1,
+                    only_enabled: 0,
+                    limit: 50
+                },
+                freeze: true,
+                freeze_message: 'Running source test cases...',
+                callback: (r) => {
+                    const result = r.message || {};
+
+                    if (!result.success) {
+                        frappe.msgprint({
+                            title: 'Source Test Run Failed',
+                            indicator: 'red',
+                            message: frappe.utils.escape_html(
+                                result.message || 'Unable to run source test cases.'
+                            )
+                        });
+                        return;
+                    }
+
+                    const total = cint(result.total || 0);
+                    const passed = cint(result.passed || 0);
+                    const failed = cint(result.failed || 0);
+                    const warning = cint(result.warning || result.warnings || 0);
+                    const error = cint(result.error || result.errors || 0);
+
+                    const indicator = error || failed
+                        ? 'red'
+                        : warning
+                            ? 'orange'
+                            : 'green';
+
+                    if (dialog) {
+                        dialog.hide();
+                    }
+
+                    frappe.msgprint({
+                        title: 'Source Test Run Completed',
+                        indicator: indicator,
+                        message: `
+                            <div class="nks-test-run-result">
+                                <p style="margin-top: 0;">
+                                    ${frappe.utils.escape_html(result.message || 'Source test cases executed.')}
+                                </p>
+
+                                <div class="nks-test-run-result-grid">
+                                    <div>
+                                        <strong>${total}</strong>
+                                        <span>Total</span>
+                                    </div>
+                                    <div>
+                                        <strong>${passed}</strong>
+                                        <span>Passed</span>
+                                    </div>
+                                    <div>
+                                        <strong>${failed}</strong>
+                                        <span>Failed</span>
+                                    </div>
+                                    <div>
+                                        <strong>${warning}</strong>
+                                        <span>Warning</span>
+                                    </div>
+                                    <div>
+                                        <strong>${error}</strong>
+                                        <span>Error</span>
+                                    </div>
+                                </div>
+
+                                <div class="nks-test-run-result-actions">
+                                    <button class="btn btn-sm btn-primary nks-after-run-open-runs">
+                                        Open Test Runs
+                                    </button>
+
+                                    <button class="btn btn-sm btn-default nks-after-run-open-issues">
+                                        View Failed / Warning
+                                    </button>
+                                </div>
+                            </div>
+                        `
+                    });
+
+                    setTimeout(() => {
+                        $('.nks-after-run-open-runs').off('click').on('click', () => {
+                            frappe.route_options = {
+                                knowledge_source: sourceName
+                            };
+
+                            frappe.set_route('List', 'Nexus Knowledge Test Run');
+                        });
+
+                        $('.nks-after-run-open-issues').off('click').on('click', () => {
+                            frappe.route_options = {
+                                knowledge_source: sourceName,
+                                run_status: ['in', ['Failed', 'Warning', 'Error']]
+                            };
+
+                            frappe.set_route('List', 'Nexus Knowledge Test Run');
+                        });
+                    }, 300);
+
+                    this.load_sources();
+                    this.load_source_summary();
+                },
+                error: (err) => {
+                    console.error('Run Source Tests Error:', err);
+
+                    frappe.msgprint({
+                        title: 'Run Source Tests Error',
+                        indicator: 'red',
+                        message: 'Could not run source test cases. Please check the server logs.'
+                    });
+                }
+            });
+        }
+    );
+}
     is_source_prepared(row) {
         const status = String(row.status || '').toLowerCase();
 
@@ -2556,19 +3390,79 @@ class NexusStudioPage {
             ['processed', 'completed'].includes(sync_status)
         );
     }
+   
+    process_source_from_dashboard(name, dialog) {
+        if (!name) {
+            frappe.msgprint('Knowledge Source name is missing.');
+            return;
+        }
 
-    prepare_source_from_dashboard(name, dialog) {
-        frappe.msgprint({
-            title: 'Prepare Source',
-            indicator: 'blue',
-            message: `
-                <p>The Studio action is ready, but the backend Prepare Source API still needs to be wired.</p>
-                <p>For now, open the source and use the existing <b>Process Source</b> button.</p>
-                <p>Once the backend API is added, this button will prepare the source directly from Studio.</p>
-            `
-        });
+        frappe.confirm(
+            'This will extract text and create or refresh the generated Knowledge Unit / Chunks for this source. If this source was already validated, you may need to validate it again before publishing. Continue?',
+            () => {
+                frappe.call({
+                    method: this.api.process_source,
+                    args: {
+                        source_name: name
+                    },
+                    freeze: true,
+                    freeze_message: 'Processing knowledge source...',
+                    callback: (r) => {
+                        const result = r.message || {};
+
+                        if (!result || result.status !== 'success') {
+                            frappe.msgprint({
+                                title: 'Processing Failed',
+                                indicator: 'red',
+                                message: result.error
+                                    ? frappe.utils.escape_html(result.error)
+                                    : 'Knowledge source processing failed.'
+                            });
+
+                            this.load_sources();
+                            this.load_source_summary();
+                            this.load_units();
+
+                            return;
+                        }
+
+                        if (dialog) {
+                            dialog.hide();
+                        }
+
+                        frappe.msgprint({
+                            title: 'Processed',
+                            indicator: 'green',
+                            message: `
+                                <div style="line-height:1.8;">
+                                    <div><b>Knowledge Unit:</b> ${frappe.utils.escape_html(result.knowledge_unit || result.generated_knowledge_unit || '-')}</div>
+                                    <div><b>Chunks Created:</b> ${frappe.utils.escape_html(String(result.chunk_count || 0))}</div>
+                                    <div><b>Processing Version:</b> ${frappe.utils.escape_html(String(result.processing_version || 0))}</div>
+                                    <div><b>Diagnostics:</b> ${frappe.utils.escape_html(result.diagnostics_status || '-')}</div>
+                                    <div><b>Retrieval Ready:</b> ${result.retrieval_ready ? 'Yes' : 'No'}</div>
+                                </div>
+                            `
+                        });
+
+                        this.load_sources();
+                        this.load_source_summary();
+                        this.load_units();
+                    },
+                    error: () => {
+                        frappe.msgprint({
+                            title: 'Processing Failed',
+                            indicator: 'red',
+                            message: 'Knowledge source processing failed. Please check the Error Log in the Knowledge Source.'
+                        });
+
+                        this.load_sources();
+                        this.load_source_summary();
+                        this.load_units();
+                    }
+                });
+            }
+        );
     }
-
     validate_source_from_dashboard(name, dialog) {
         const row = (this.sources || []).find((item) => item.name === name);
 
@@ -2750,7 +3644,7 @@ class NexusStudioPage {
 
         validation_dialog.show();
     }
-
+    
     build_default_source_validation_query(row) {
         const topic = (row.topic || '').trim();
         const entity = (row.entity || '').trim();
@@ -2827,12 +3721,36 @@ class NexusStudioPage {
                                 <div class="nks-readiness-dialog">
                                     <p>${frappe.utils.escape_html(result.message || 'Knowledge Source published successfully.')}</p>
                                     <p>This source is now marked as <b>Published</b> and available for Nexus answers.</p>
+
+                                    <div style="
+                                        margin-top: 12px;
+                                        padding: 10px 12px;
+                                        border-radius: 12px;
+                                        background: #eef6ff;
+                                        border: 1px solid rgba(33, 119, 255, 0.22);
+                                        color: #0b3c91;
+                                        font-size: 12px;
+                                        font-weight: 700;
+                                    ">
+                                        Next recommended step: generate suggested Knowledge Test Cases from this published source.
+                                    </div>
                                 </div>
                             `
                         });
 
                         this.load_sources();
                         this.load_source_summary();
+
+                        frappe.confirm(
+                            'Source published successfully. Do you want to generate suggested Knowledge Test Cases now?',
+                            () => {
+                                this.load_sources();
+
+                                setTimeout(() => {
+                                    this.generate_test_cases_from_source_dashboard(name);
+                                }, 400);
+                            }
+                        );
                     }
                 });
             }

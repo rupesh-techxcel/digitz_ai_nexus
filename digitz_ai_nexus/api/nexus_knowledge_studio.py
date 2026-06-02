@@ -1,5 +1,10 @@
-import frappe
+import importlib
+import json
+import re
+import time
 
+import frappe
+from frappe.utils import cint, now_datetime
 
 # -------------------------------------------------------------------------
 # Active Studio Context helpers
@@ -466,6 +471,15 @@ def _get_knowledge_source_fields():
         "processing_status",
         "last_error",
         "owner_user",
+        "processing_version",
+        "chunk_count",
+        "active_chunk_count",
+        "embedding_status",
+        "diagnostics_status",
+        "retrieval_ready",
+        "last_processed_on",
+        "generated_knowledge_unit",
+        "error_log",
     ]
 
     for fieldname in optional_fields:
@@ -678,13 +692,20 @@ def _build_source_readiness_payload(row):
         "has_content": 1 if has_content else 0,
         "has_classification": 1 if has_classification else 0,
         "technical_status": {
-            "status": status,
-            "sync_status": sync_status,
-            "processing_status": processing_status,
-            "quality_status": quality_status,
-            "validation_status": validation_status,
-            "last_error": row.get("last_error"),
-        },
+        "status": status,
+        "processing_status": processing_status,
+        "embedding_status": row.get("embedding_status"),
+        "diagnostics_status": row.get("diagnostics_status"),
+        "processing_version": row.get("processing_version"),
+        "chunk_count": row.get("chunk_count"),
+        "active_chunk_count": row.get("active_chunk_count"),
+        "retrieval_ready": row.get("retrieval_ready"),
+        "generated_knowledge_unit": row.get("generated_knowledge_unit"),
+        "last_processed_on": row.get("last_processed_on"),
+        "validation_status": validation_status,
+        "last_error": row.get("last_error") or row.get("error_log"),
+    },
+        
     }
 
 
@@ -971,6 +992,7 @@ def get_knowledge_source_summary():
     approved_for_ingestion = 0
     ingested = 0
     partially_ingested = 0
+    published = 0
     sync_failed = 0
     stale = 0
     disabled = 0
@@ -995,6 +1017,9 @@ def get_knowledge_source_summary():
 
         if status == "Partially Ingested":
             partially_ingested += 1
+
+        if status == "Published" or row.get("published"):
+            published += 1
 
         if status == "Stale":
             stale += 1
@@ -1021,6 +1046,7 @@ def get_knowledge_source_summary():
             "approved_for_ingestion": approved_for_ingestion,
             "ingested": ingested,
             "partially_ingested": partially_ingested,
+            "published": published,
             "sync_failed": sync_failed,
             "stale": stale,
             "disabled": disabled,
@@ -1099,6 +1125,7 @@ def get_knowledge_sources(filters=None):
 
     for row in rows:
         readiness = _build_source_readiness_payload(row)
+        test_case_summary = _get_source_test_case_summary(row.get("name"))
 
         sources.append({
             "name": row.get("name"),
@@ -1129,6 +1156,22 @@ def get_knowledge_sources(filters=None):
             "processing_status": row.get("processing_status"),
             "last_error": row.get("last_error"),
             "owner_user": row.get("owner_user"),
+            "processing_version": row.get("processing_version"),
+            "chunk_count": row.get("chunk_count"),
+            "active_chunk_count": row.get("active_chunk_count"),
+            "embedding_status": row.get("embedding_status"),
+            "diagnostics_status": row.get("diagnostics_status"),
+            "retrieval_ready": row.get("retrieval_ready"),
+            "last_processed_on": row.get("last_processed_on"),
+            "generated_knowledge_unit": row.get("generated_knowledge_unit"),
+            "error_log": row.get("error_log"),
+
+            "test_case_summary": test_case_summary,
+            "test_case_count": test_case_summary.get("total"),
+            "generated_test_case_count": test_case_summary.get("generated"),
+            "active_test_case_count": test_case_summary.get("active"),
+            "draft_test_case_count": test_case_summary.get("draft"),
+
             **readiness,
         })
 
@@ -1139,7 +1182,6 @@ def get_knowledge_sources(filters=None):
         "applied_filters": db_filters,
         "sources": sources,
     }
-
 
 # -------------------------------------------------------------------------
 # Public API methods - Knowledge Unit / Studio Overview
@@ -1923,6 +1965,1505 @@ def validate_knowledge_source(name: str, test_query: str = None):
         "sources": validation.get("sources"),
         "readiness": _build_source_readiness_payload(doc),
     }
+
+# -------------------------------------------------------------------------
+# Public API methods - AI Suggested Knowledge Test Cases
+# -------------------------------------------------------------------------
+
+def _is_source_published_for_test_generation(source_doc) -> bool:
+    """
+    Return whether a Knowledge Source is in published/live state.
+    """
+
+    status = str(source_doc.get("status") or "").strip().lower()
+
+    return bool(
+        status == "published"
+        or cint(source_doc.get("published") or 0)
+        or cint(source_doc.get("is_published") or 0)
+    )
+
+
+def _get_source_chunk_text_for_test_generation(source_name: str, generated_unit: str = None) -> str:
+    """
+    Build representative chunk text from Nexus Knowledge Chunk.
+
+    This is defensive because the chunk schema can evolve. It supports either
+    knowledge_source/source fields or generated Knowledge Unit link fields.
+    """
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Chunk"):
+        return ""
+
+    meta = frappe.get_meta("Nexus Knowledge Chunk")
+    fields = {df.fieldname for df in meta.fields}
+
+    text_field = None
+    for candidate in ["chunk_text", "content", "text", "chunk_content"]:
+        if candidate in fields:
+            text_field = candidate
+            break
+
+    if not text_field:
+        return ""
+
+    filter_candidates = []
+
+    if source_name:
+        for candidate in ["knowledge_source", "source", "source_name", "nexus_knowledge_source"]:
+            if candidate in fields:
+                filter_candidates.append({candidate: source_name})
+
+    if generated_unit:
+        for candidate in ["knowledge_unit", "knowledge_unit_id", "nexus_knowledge_unit", "source_knowledge_unit"]:
+            if candidate in fields:
+                filter_candidates.append({candidate: generated_unit})
+
+    texts = []
+    seen_names = set()
+
+    for filters in filter_candidates:
+        safe_filters = dict(filters)
+
+        if "disabled" in fields:
+            safe_filters["disabled"] = 0
+
+        try:
+            rows = frappe.get_all(
+                "Nexus Knowledge Chunk",
+                filters=safe_filters,
+                fields=["name", text_field],
+                order_by="creation asc",
+                limit_page_length=20,
+            )
+        except Exception:
+            continue
+
+        for row in rows:
+            if row.name in seen_names:
+                continue
+
+            seen_names.add(row.name)
+
+            value = row.get(text_field)
+            if value:
+                texts.append(str(value))
+
+    return "\n\n".join(texts)
+
+
+def _build_source_test_generation_context(source_doc) -> dict:
+    """
+    Build source metadata and source text used for AI suggested test case generation.
+
+    Preferred content order:
+    1. Source text/content fields
+    2. Generated Knowledge Unit content
+    3. Active chunk text
+    """
+
+    content_parts = []
+
+    for fieldname in [
+        "manual_content",
+        "extracted_text",
+        "content",
+        "source_content",
+        "prepared_content",
+        "description",
+        "source_text",
+        "preview_text",
+    ]:
+        if _has_field(source_doc.doctype, fieldname):
+            value = source_doc.get(fieldname)
+            if value:
+                content_parts.append(str(value))
+
+    generated_unit = _normalize_context_value(
+        source_doc.get("generated_knowledge_unit")
+        if _has_field(source_doc.doctype, "generated_knowledge_unit")
+        else None
+    )
+
+    if generated_unit and frappe.db.exists("Nexus Knowledge Unit", generated_unit):
+        try:
+            unit_doc = frappe.get_doc("Nexus Knowledge Unit", generated_unit)
+            for fieldname in ["content", "knowledge_text", "body", "description", "summary", "answer"]:
+                if _has_field(unit_doc.doctype, fieldname):
+                    value = unit_doc.get(fieldname)
+                    if value:
+                        content_parts.append(str(value))
+        except Exception:
+            frappe.log_error(
+                title="Failed reading generated Knowledge Unit for test generation",
+                message=frappe.get_traceback(),
+            )
+
+    chunk_text = _get_source_chunk_text_for_test_generation(source_doc.name, generated_unit)
+    if chunk_text:
+        content_parts.append(chunk_text)
+
+    compact_content = _compact_test_generation_text(
+        "\n\n".join([str(part).strip() for part in content_parts if str(part).strip()])
+    )
+
+    return {
+        "source_name": source_doc.name,
+        "source_title": source_doc.get("source_title") or source_doc.name,
+        "source_type": source_doc.get("source_type") or "",
+        "tenant": source_doc.get("tenant") if _has_field(source_doc.doctype, "tenant") else "",
+        "ecosystem": source_doc.get("ecosystem") if _has_field(source_doc.doctype, "ecosystem") else "",
+        "business_unit": source_doc.get("business_unit") if _has_field(source_doc.doctype, "business_unit") else "",
+        "project": source_doc.get("project") if _has_field(source_doc.doctype, "project") else "",
+        "channel": source_doc.get("channel") if _has_field(source_doc.doctype, "channel") else "",
+        "context": source_doc.get("context") if _has_field(source_doc.doctype, "context") else "",
+        "sub_context": source_doc.get("sub_context") if _has_field(source_doc.doctype, "sub_context") else "",
+        "entity_type": source_doc.get("entity_type") if _has_field(source_doc.doctype, "entity_type") else "",
+        "entity": source_doc.get("entity") if _has_field(source_doc.doctype, "entity") else "",
+        "topic": source_doc.get("topic") if _has_field(source_doc.doctype, "topic") else "",
+        "access_policy": (
+            source_doc.get("access_policy")
+            if _has_field(source_doc.doctype, "access_policy")
+            else source_doc.get("access_level")
+            if _has_field(source_doc.doctype, "access_level")
+            else ""
+        ),
+        "generated_knowledge_unit": generated_unit,
+        "content": compact_content[:12000],
+    }
+
+
+def _build_test_case_generation_prompt(
+    source_context: dict,
+    test_count: int,
+    use_case: str,
+    include_boundary_tests: int,
+    include_followup_tests: int,
+) -> str:
+    return f"""
+Generate {test_count} validation test cases for this published Knowledge Source.
+
+Return JSON only in this exact shape:
+{{
+  "test_cases": [
+    {{
+      "title": "short validation title",
+      "question": "realistic user-facing question",
+      "test_type": "direct|follow_up|boundary|fallback|access",
+      "expected_behavior": "what the AI should do",
+      "expected_result_type": "grounded_answer|safe_fallback|escalation",
+      "expected_fallback": false,
+      "minimum_confidence": 0.7,
+      "required_keywords": ["keyword1", "keyword2"],
+      "forbidden_keywords": []
+    }}
+  ]
+}}
+
+Rules:
+- Generate realistic questions a real user may ask.
+- Validate retrieval and answer quality from this published source.
+- Prefer direct answer tests.
+- Include follow-up style questions only if requested.
+- Include fallback/boundary tests only if requested.
+- Do not invent source facts.
+- Do not expose or request confidential content for public sources.
+- Questions must be useful for {use_case}.
+
+Include boundary tests: {"yes" if include_boundary_tests else "no"}
+Include follow-up tests: {"yes" if include_followup_tests else "no"}
+
+Source Metadata:
+- Source Name: {source_context.get("source_name")}
+- Source Title: {source_context.get("source_title")}
+- Source Type: {source_context.get("source_type")}
+- Tenant: {source_context.get("tenant")}
+- Ecosystem: {source_context.get("ecosystem")}
+- Business Unit: {source_context.get("business_unit")}
+- Project: {source_context.get("project")}
+- Channel: {source_context.get("channel")}
+- Context: {source_context.get("context")}
+- Sub Context: {source_context.get("sub_context")}
+- Entity Type: {source_context.get("entity_type")}
+- Entity: {source_context.get("entity")}
+- Topic: {source_context.get("topic")}
+- Access Policy: {source_context.get("access_policy")}
+
+Source Content:
+{source_context.get("content")}
+"""
+
+
+def _generate_test_case_suggestions_with_llm(
+    source_context: dict,
+    test_count: int,
+    use_case: str,
+    include_boundary_tests: int,
+    include_followup_tests: int,
+) -> list:
+    """
+    LLM-based generation. Falls back safely when the LLM provider/settings
+    are unavailable.
+    """
+
+    try:
+        settings = frappe.get_single("Nexus Settings")
+    except Exception:
+        return []
+
+    try:
+        api_key = settings.get_password("api_key")
+    except Exception:
+        api_key = None
+
+    if not api_key:
+        return []
+
+    model = (
+        getattr(settings, "llm_model", None)
+        or getattr(settings, "default_llm_model", None)
+        or "gpt-4o-mini"
+    )
+
+    try:
+        from openai import OpenAI
+    except Exception:
+        return []
+
+    client_kwargs = {"api_key": api_key}
+
+    project_id = getattr(settings, "openai_project_id", None)
+    if project_id:
+        client_kwargs["project"] = project_id
+
+    prompt = _build_test_case_generation_prompt(
+        source_context=source_context,
+        test_count=test_count,
+        use_case=use_case,
+        include_boundary_tests=include_boundary_tests,
+        include_followup_tests=include_followup_tests,
+    )
+
+    try:
+        client = OpenAI(**client_kwargs)
+        response = client.chat.completions.create(
+            model=model,
+            temperature=0.2,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You generate validation test cases for an enterprise RAG knowledge system. "
+                        "Return only valid JSON. Do not include markdown."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+        )
+
+        content = response.choices[0].message.content or ""
+        return _parse_llm_test_case_json(content)
+
+    except Exception:
+        frappe.log_error(
+            title="LLM Test Case Generation Failed",
+            message=frappe.get_traceback(),
+        )
+        return []
+
+
+def _parse_llm_test_case_json(content: str) -> list:
+    if not content:
+        return []
+
+    cleaned = str(content or "").strip()
+
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?", "", cleaned, flags=re.IGNORECASE).strip()
+        cleaned = re.sub(r"```$", "", cleaned).strip()
+
+    try:
+        data = json.loads(cleaned)
+    except Exception:
+        match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
+        if not match:
+            return []
+
+        try:
+            data = json.loads(match.group(0))
+        except Exception:
+            return []
+
+    if isinstance(data, list):
+        return data
+
+    if isinstance(data, dict) and isinstance(data.get("test_cases"), list):
+        return data.get("test_cases")
+
+    return []
+
+
+def _generate_deterministic_source_test_cases(
+    source_context: dict,
+    test_count: int,
+    use_case: str,
+    include_boundary_tests: int,
+    include_followup_tests: int,
+) -> list:
+    """
+    Deterministic fallback. This ensures the Studio action still works
+    when the LLM provider is not configured.
+
+    Important:
+    - Direct/follow-up tests expect grounded answers with source evidence.
+    - Boundary/fallback tests expect safe fallback behavior and should not
+      require source evidence or high confidence.
+
+    MVP confidence calibration:
+    - Current answer service confidence for correct grounded answers is commonly around 0.35–0.45.
+    - Therefore grounded tests use 0.35 for now.
+    - Fallback tests use 0.30.
+    """
+
+    DIRECT_MIN_CONFIDENCE = 0.35
+    FOLLOWUP_MIN_CONFIDENCE = 0.35
+    FALLBACK_MIN_CONFIDENCE = 0.30
+
+    source_title = (
+        source_context.get("source_title")
+        or source_context.get("topic")
+        or source_context.get("entity")
+        or "this knowledge source"
+    )
+
+    topic = source_context.get("topic") or source_context.get("entity") or source_title
+    context = source_context.get("context") or source_context.get("business_unit") or ""
+    access_policy = _normalize_access_level(source_context.get("access_policy") or "Public")
+
+    suggestions = []
+
+    if topic and context:
+        suggestions.append({
+            "title": f"Explain {topic}",
+            "question": f"Explain {topic} in {context}.",
+            "test_type": "direct",
+            "expected_behavior": "Answer from the published source using grounded information.",
+            "expected_result_type": "grounded_answer",
+            "expected_fallback": False,
+            "expected_source_required": True,
+            "minimum_confidence": DIRECT_MIN_CONFIDENCE,
+            "required_keywords": _keywords_from_test_generation_text(f"{topic} {context}"),
+            "forbidden_keywords": [],
+        })
+
+    suggestions.append({
+        "title": f"Summarize {source_title}",
+        "question": f"What is {source_title}?",
+        "test_type": "direct",
+        "expected_behavior": "Provide a concise grounded answer from the published source.",
+        "expected_result_type": "grounded_answer",
+        "expected_fallback": False,
+        "expected_source_required": True,
+        "minimum_confidence": DIRECT_MIN_CONFIDENCE,
+        "required_keywords": _keywords_from_test_generation_text(str(source_title)),
+        "forbidden_keywords": [],
+    })
+
+    suggestions.append({
+        "title": f"Business use of {topic}",
+        "question": f"How is {topic} useful in business operations?",
+        "test_type": "direct",
+        "expected_behavior": "Explain the business relevance using only approved source knowledge.",
+        "expected_result_type": "grounded_answer",
+        "expected_fallback": False,
+        "expected_source_required": True,
+        "minimum_confidence": DIRECT_MIN_CONFIDENCE,
+        "required_keywords": _keywords_from_test_generation_text(str(topic)),
+        "forbidden_keywords": [],
+    })
+
+    if include_followup_tests:
+        suggestions.append({
+            "title": f"Follow-up on {topic}",
+            "question": f"Can you explain that with more details about {topic}?",
+            "test_type": "follow_up",
+            "expected_behavior": "Handle the follow-up while staying grounded in the same published source.",
+            "expected_result_type": "grounded_answer",
+            "expected_fallback": False,
+            "expected_source_required": True,
+            "minimum_confidence": FOLLOWUP_MIN_CONFIDENCE,
+            "required_keywords": _keywords_from_test_generation_text(str(topic)),
+            "forbidden_keywords": [],
+        })
+
+    if include_boundary_tests:
+        suggestions.append({
+            "title": f"Boundary test for {source_title}",
+            "question": f"What confidential internal pricing or private implementation details are available for {source_title}?",
+            "test_type": "boundary",
+            "expected_behavior": (
+                "Do not expose unavailable or restricted information. "
+                "Use safe fallback if the source does not contain the answer."
+            ),
+            "expected_result_type": "safe_fallback",
+            "expected_fallback": True,
+            "expected_source_required": False,
+            "minimum_confidence": FALLBACK_MIN_CONFIDENCE,
+            "required_keywords": [],
+            "forbidden_keywords": ["secret", "private key", "api key"],
+        })
+
+    return suggestions[:test_count]
+
+def _generate_test_case_suggestions(
+    source_context: dict,
+    test_count: int,
+    use_case: str,
+    include_boundary_tests: int,
+    include_followup_tests: int,
+) -> list:
+    llm_suggestions = _generate_test_case_suggestions_with_llm(
+        source_context=source_context,
+        test_count=test_count,
+        use_case=use_case,
+        include_boundary_tests=include_boundary_tests,
+        include_followup_tests=include_followup_tests,
+    )
+
+    if llm_suggestions:
+        return llm_suggestions[:test_count]
+
+    return _generate_deterministic_source_test_cases(
+        source_context=source_context,
+        test_count=test_count,
+        use_case=use_case,
+        include_boundary_tests=include_boundary_tests,
+        include_followup_tests=include_followup_tests,
+    )
+
+
+def _split_test_generation_keywords(value: str) -> list:
+    if not value:
+        return []
+
+    return [
+        item.strip()
+        for item in re.split(r"[,;\n]", str(value))
+        if item and item.strip()
+    ]
+
+
+def _keywords_from_test_generation_text(value: str) -> list:
+    words = re.findall(r"[A-Za-z0-9][A-Za-z0-9_-]+", str(value or "").lower())
+
+    stop_words = {
+        "the", "and", "for", "with", "from", "this", "that", "what",
+        "how", "why", "when", "where", "into", "about", "explain",
+        "use", "used", "using", "business", "operations",
+    }
+
+    keywords = []
+    for word in words:
+        if word in stop_words:
+            continue
+
+        if word not in keywords:
+            keywords.append(word)
+
+        if len(keywords) >= 5:
+            break
+
+    return keywords
+
+
+def _normalize_test_case_suggestion(
+    suggestion: dict,
+    use_case: str,
+    source_content: str = "",
+) -> dict:
+    """
+    Normalize AI/deterministic suggested test case into the Test Case schema.
+
+    Rules:
+    - Direct/follow_up tests expect grounded answers and source evidence.
+    - Fallback/boundary/access tests expect safe fallback and should not require source evidence.
+    - If the LLM wrongly marks an answerable source question as fallback/boundary/access,
+      correct it back to direct.
+    - Broad/general questions about the source itself are direct, not fallback.
+    - Questions asking policy/rule details not present in the source must remain fallback.
+
+    MVP confidence calibration:
+    - Current answer service confidence for correct grounded answers is commonly around 0.35–0.45.
+    - Therefore grounded tests use 0.35 for now.
+    - Fallback tests use 0.30.
+    """
+
+    DIRECT_MIN_CONFIDENCE = 0.35
+    FALLBACK_MIN_CONFIDENCE = 0.30
+
+    if not isinstance(suggestion, dict):
+        return {}
+
+    title = (
+        suggestion.get("title")
+        or suggestion.get("test_title")
+        or suggestion.get("case_title")
+        or suggestion.get("name")
+        or ""
+    )
+
+    question = (
+        suggestion.get("question")
+        or suggestion.get("query")
+        or suggestion.get("test_query")
+        or ""
+    )
+
+    test_type = str(suggestion.get("test_type") or "direct").strip().lower()
+    expected_result_type = str(
+        suggestion.get("expected_result_type") or "grounded_answer"
+    ).strip().lower()
+
+    source_text = str(source_content or "").lower()
+    question_text = f"{title} {question}".lower()
+
+    source_subject_signals = [
+        "purchase invoice",
+        "purchase invoices",
+    ]
+
+    broad_question_signals = [
+        "tell me about",
+        "what is",
+        "overview",
+        "general overview",
+        "explain",
+        "describe",
+        "summarize",
+        "how does",
+        "what happens",
+        "what are",
+        "purpose",
+        "functionality",
+    ]
+
+    mentions_source_subject = any(
+        signal in source_text and signal in question_text
+        for signal in source_subject_signals
+    )
+
+    is_broad_answerable_question = (
+        mentions_source_subject
+        and any(signal in question_text for signal in broad_question_signals)
+    )
+
+    answerable_signal_groups = [
+        {
+            "source_signals": [
+                "purchase invoice",
+                "record supplier bills",
+                "financial ledgers",
+                "expenses",
+                "taxes",
+                "payables",
+                "accounts payable",
+                "financial recognition",
+            ],
+            "question_signals": [
+                "purpose",
+                "purchase invoice",
+                "supplier bill",
+                "payable",
+                "expense",
+                "liability",
+                "financial recognition",
+            ],
+        },
+        {
+            "source_signals": [
+                "supplier",
+                "posting date",
+                "items / services",
+                "taxability",
+                "line item discount",
+                "rate includes tax",
+                "project / cost center",
+            ],
+            "question_signals": [
+                "key fields",
+                "fields",
+                "supplier",
+                "posting date",
+                "taxability",
+                "rate includes tax",
+                "project",
+                "cost center",
+            ],
+        },
+        {
+            "source_signals": [
+                "default company purchase price list",
+                "supplier does not have a specific price list assigned",
+                "specific price list assigned",
+                "price list assigned",
+                "use supplier last price",
+                "supplier price lists",
+            ],
+            "question_signals": [
+                "supplier",
+                "price list",
+                "assigned",
+                "default company purchase price list",
+                "last price",
+                "pricing",
+            ],
+        },
+        {
+            "source_signals": [
+                "service billing",
+                "service-type items",
+                "without affecting stock",
+                "expense entries",
+                "do not involve inventory",
+                "maintenance",
+                "consultancy",
+                "professional services",
+            ],
+            "question_signals": [
+                "service billing",
+                "service",
+                "stock",
+                "inventory",
+                "expense",
+                "maintenance",
+                "consultancy",
+            ],
+        },
+        {
+            "source_signals": [
+                "purchase receipt handles the physical movement of stock",
+                "purchase invoice handles the financial posting",
+                "financial posting",
+                "physical movement of stock",
+                "while the purchase receipt handles the physical movement of stock",
+            ],
+            "question_signals": [
+                "purchase receipt",
+                "purchase invoice",
+                "stock movement",
+                "financial posting",
+                "difference",
+                "physical movement",
+            ],
+        },
+        {
+            "source_signals": [
+                "on submission",
+                "accounting entries",
+                "accounts payable",
+                "payment mode",
+                "expense and tax accounts",
+                "rate includes tax",
+                "perpetual inventory",
+                "cash or bank",
+            ],
+            "question_signals": [
+                "submitted",
+                "submission",
+                "posting",
+                "accounting entries",
+                "accounts payable",
+                "payment mode",
+                "tax",
+                "cash",
+                "bank",
+            ],
+        },
+        {
+            "source_signals": [
+                "supplier ledger",
+                "purchase receipt",
+                "accounting reports",
+                "tax reports",
+                "project / cost center",
+                "price lists and supplier records",
+                "profit & loss",
+                "trial balance",
+                "general ledger",
+            ],
+            "question_signals": [
+                "integration",
+                "integrates",
+                "supplier ledger",
+                "reports",
+                "purchase receipt",
+                "tax reports",
+                "general ledger",
+                "trial balance",
+            ],
+        },
+    ]
+
+    looks_answerable_from_source = is_broad_answerable_question
+
+    if not looks_answerable_from_source:
+        for group in answerable_signal_groups:
+            source_has_signal = any(
+                signal in source_text
+                for signal in group.get("source_signals") or []
+            )
+
+            question_has_signal = any(
+                signal in question_text
+                for signal in group.get("question_signals") or []
+            )
+
+            if source_has_signal and question_has_signal:
+                looks_answerable_from_source = True
+                break
+
+    unanswered_policy_question_signals = [
+        "future date",
+        "future posting date",
+        "posted with a future date",
+        "posting with a future date",
+        "allowed or not",
+        "is allowed",
+        "not allowed",
+        "can a purchase invoice be posted",
+        "can it be posted",
+        "without a recognized supplier",
+        "without a valid supplier",
+        "non-existent supplier",
+        "unrecognized supplier",
+        "missing supplier",
+        "supplier master record is missing",
+        "internal approval matrix",
+        "approval matrix",
+        "confidential",
+        "internal pricing",
+        "private implementation",
+    ]
+
+    source_contains_policy_answer_signals = [
+        "future date is allowed",
+        "future posting date is allowed",
+        "future date is not allowed",
+        "cannot be posted with a future date",
+        "can be posted with a future date",
+        "recognized supplier",
+        "valid supplier",
+        "unrecognized supplier",
+        "supplier master record",
+        "approval matrix",
+        "internal approval",
+    ]
+
+    asks_unanswered_policy_question = any(
+        signal in question_text
+        for signal in unanswered_policy_question_signals
+    )
+
+    source_has_policy_answer = any(
+        signal in source_text
+        for signal in source_contains_policy_answer_signals
+    )
+
+    if asks_unanswered_policy_question and not source_has_policy_answer:
+        looks_answerable_from_source = False
+        test_type = "fallback"
+        expected_result_type = "safe_fallback"
+        suggestion["expected_fallback"] = True
+        suggestion["minimum_confidence"] = FALLBACK_MIN_CONFIDENCE
+        suggestion["required_keywords"] = []
+
+    if looks_answerable_from_source:
+        if test_type in ["fallback", "boundary", "access"]:
+            test_type = "direct"
+
+        expected_result_type = "grounded_answer"
+        suggestion["expected_fallback"] = False
+
+    if test_type == "boundary" and expected_result_type == "grounded_answer":
+        test_type = "direct"
+
+    is_fallback_style_test = (
+        test_type in ["fallback", "boundary", "access"]
+        or expected_result_type == "safe_fallback"
+    )
+
+    expected_fallback = suggestion.get("expected_fallback")
+
+    if expected_fallback is None:
+        expected_fallback = is_fallback_style_test
+
+    required_keywords = suggestion.get("required_keywords") or []
+    forbidden_keywords = suggestion.get("forbidden_keywords") or []
+
+    if isinstance(required_keywords, str):
+        required_keywords = _split_test_generation_keywords(required_keywords)
+
+    if isinstance(forbidden_keywords, str):
+        forbidden_keywords = _split_test_generation_keywords(forbidden_keywords)
+
+    if is_fallback_style_test:
+        required_keywords = []
+
+    # Important:
+    # Do not trust the LLM suggested threshold for MVP.
+    # We use calibrated platform thresholds instead.
+    minimum_confidence = (
+        FALLBACK_MIN_CONFIDENCE
+        if is_fallback_style_test
+        else DIRECT_MIN_CONFIDENCE
+    )
+
+    return {
+        "title": str(title or question or "Suggested Knowledge Test Case").strip(),
+        "question": str(question or "").strip(),
+        "test_type": test_type or "direct",
+        "expected_behavior": str(suggestion.get("expected_behavior") or "").strip(),
+        "expected_result_type": expected_result_type or "grounded_answer",
+        "expected_fallback": 1 if expected_fallback else 0,
+        "expected_source_required": 0 if is_fallback_style_test else 1,
+        "minimum_confidence": minimum_confidence,
+        "required_keywords": required_keywords,
+        "forbidden_keywords": forbidden_keywords,
+        "use_case": use_case or "Q&A",
+    }
+                   
+def _set_first_available_test_case_field(doc, fields, value):
+    for fieldname in fields:
+        if _has_field(doc.doctype, fieldname):
+            doc.set(fieldname, value)
+            return fieldname
+    return None
+
+def _normalize_access_level(value):
+	"""
+	Normalize source access policy into Nexus Knowledge Test Case Select options.
+
+	Test Case JSON options:
+	- Public
+	- Internal
+	- Restricted
+	"""
+
+	value = str(value or "").strip()
+
+	if not value:
+		return "Public"
+
+	normalized = value.lower().replace("_", " ").replace("-", " ").strip()
+
+	if normalized in ["public", "pub"]:
+		return "Public"
+
+	if normalized in ["internal", "private", "company internal"]:
+		return "Internal"
+
+	if normalized in ["restricted", "role based", "role based access", "protected"]:
+		return "Restricted"
+
+	return "Public"
+
+def _apply_test_case_values(doc, source_doc, normalized: dict, use_case: str, auto_enable: int):
+    """
+    Apply generated values to Nexus Knowledge Test Case using defensive field mapping.
+    """
+
+    def normalize_access_level(value):
+        value = str(value or "").strip()
+
+        if not value:
+            return "Public"
+
+        normalized_value = value.lower().replace("_", " ").replace("-", " ").strip()
+
+        if normalized_value in ["public", "pub"]:
+            return "Public"
+
+        if normalized_value in ["internal", "private", "company internal"]:
+            return "Internal"
+
+        if normalized_value in ["restricted", "role based", "role based access", "protected"]:
+            return "Restricted"
+
+        return "Public"
+
+    title = normalized.get("title") or "Suggested Knowledge Test Case"
+    question = normalized.get("question") or ""
+
+    _set_first_available_test_case_field(doc, ["test_title", "title", "case_title"], title)
+    _set_first_available_test_case_field(doc, ["question", "query", "test_query"], question)
+
+    for fieldname in [
+        "tenant",
+        "ecosystem",
+        "business_unit",
+        "project",
+        "channel",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+    ]:
+        if _has_field(source_doc.doctype, fieldname):
+            _set_if_exists(doc, fieldname, source_doc.get(fieldname))
+
+    _set_first_available_test_case_field(
+        doc,
+        ["knowledge_source", "source", "linked_knowledge_source", "expected_source"],
+        source_doc.name,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["source_title", "expected_source_title"],
+        source_doc.get("source_title") or source_doc.name,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["use_case", "response_mode", "expected_response_mode"],
+        use_case or "Q&A",
+    )
+
+    raw_access_policy = (
+        source_doc.get("access_policy")
+        if _has_field(source_doc.doctype, "access_policy")
+        else source_doc.get("access_level")
+        if _has_field(source_doc.doctype, "access_level")
+        else "Public"
+    )
+
+    access_policy = normalize_access_level(raw_access_policy)
+
+    _set_first_available_test_case_field(
+        doc,
+        ["expected_access_level", "access_policy", "access_level"],
+        access_policy,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["test_type", "case_type"],
+        normalized.get("test_type") or "direct",
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["expected_behavior", "expected_answer_behavior"],
+        normalized.get("expected_behavior"),
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["expected_result_type", "result_type"],
+        normalized.get("expected_result_type") or "grounded_answer",
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["minimum_confidence", "min_confidence", "expected_min_confidence"],
+        normalized.get("minimum_confidence") or 0.7,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["expected_fallback", "fallback_expected"],
+        1 if normalized.get("expected_fallback") else 0,
+    )
+    
+    _set_first_available_test_case_field(
+        doc,
+        ["expected_source_required"],
+        1 if normalized.get("expected_source_required", 1) else 0,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["generated_by_ai", "ai_generated"],
+        1,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["generated_from_source", "source_generated"],
+        1,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["enabled", "is_enabled"],
+        1 if auto_enable else 0,
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["status", "test_status"],
+        "Active" if auto_enable else "Draft",
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["review_status"],
+        "Approved" if auto_enable else "Pending Review",
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["required_keywords", "expected_keywords"],
+        json.dumps(normalized.get("required_keywords") or []),
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["forbidden_keywords"],
+        json.dumps(normalized.get("forbidden_keywords") or []),
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["generation_notes", "notes", "description"],
+        "AI-generated suggested test case from published Knowledge Source. Review before final validation use.",
+    )
+
+    _set_first_available_test_case_field(
+        doc,
+        ["generated_on"],
+        now_datetime(),
+    )
+
+def _fill_missing_mandatory_test_case_fields(doc, source_doc, normalized: dict):
+    """
+    Best-effort fill for required fields in the Test Case DocType.
+
+    This prevents avoidable validation failures when the DocType contains
+    mandatory generic fields.
+    """
+
+    title = normalized.get("title") or "Suggested Knowledge Test Case"
+    question = normalized.get("question") or title
+
+    meta = frappe.get_meta(doc.doctype)
+
+    link_defaults = {
+        "Nexus Knowledge Source": source_doc.name,
+        "Nexus Tenant": source_doc.get("tenant") if _has_field(source_doc.doctype, "tenant") else None,
+        "Nexus Business Unit": source_doc.get("business_unit") if _has_field(source_doc.doctype, "business_unit") else None,
+        "Nexus Project": source_doc.get("project") if _has_field(source_doc.doctype, "project") else None,
+    }
+
+    for df in meta.fields:
+        if not df.reqd:
+            continue
+
+        if doc.get(df.fieldname) not in (None, ""):
+            continue
+
+        if df.fieldtype in ["Data", "Small Text", "Text", "Long Text", "Code"]:
+            doc.set(df.fieldname, question if "question" in df.fieldname else title)
+            continue
+
+        if df.fieldtype == "Select":
+            options = [x.strip() for x in str(df.options or "").split("\n") if x.strip()]
+            if "Draft" in options:
+                doc.set(df.fieldname, "Draft")
+            elif "Active" in options:
+                doc.set(df.fieldname, "Active")
+            elif options:
+                doc.set(df.fieldname, options[0])
+            continue
+
+        if df.fieldtype in ["Check"]:
+            doc.set(df.fieldname, 0)
+            continue
+
+        if df.fieldtype in ["Int", "Float", "Currency", "Percent"]:
+            doc.set(df.fieldname, 0)
+            continue
+
+        if df.fieldtype == "Link":
+            value = link_defaults.get(df.options)
+            if value:
+                doc.set(df.fieldname, value)
+            continue
+
+
+def _find_existing_source_test_case(source_name: str, question: str):
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        return None
+
+    meta = frappe.get_meta("Nexus Knowledge Test Case")
+    fields = {df.fieldname for df in meta.fields}
+
+    source_field = None
+    for candidate in ["knowledge_source", "source", "linked_knowledge_source", "expected_source"]:
+        if candidate in fields:
+            source_field = candidate
+            break
+
+    question_field = None
+    for candidate in ["question", "query", "test_query"]:
+        if candidate in fields:
+            question_field = candidate
+            break
+
+    if not source_field or not question_field:
+        return None
+
+    existing = frappe.get_all(
+        "Nexus Knowledge Test Case",
+        filters={
+            source_field: source_name,
+            question_field: question,
+        },
+        pluck="name",
+        limit_page_length=1,
+    )
+
+    return existing[0] if existing else None
+
+
+def _compact_test_generation_text(value: str) -> str:
+    value = str(value or "")
+    value = re.sub(r"\r\n", "\n", value)
+    value = re.sub(r"\n{3,}", "\n\n", value)
+    value = re.sub(r"[ \t]{2,}", " ", value)
+    return value.strip()
+
+def _get_existing_generated_test_cases_for_source(source_name: str):
+    """
+    Return existing AI-generated test cases for a Knowledge Source.
+
+    This prevents repeated clicks on Generate Test Cases from creating
+    duplicate draft validation scenarios for the same published source.
+    """
+
+    if not source_name:
+        return []
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        return []
+
+    meta = frappe.get_meta("Nexus Knowledge Test Case")
+    fields = {df.fieldname for df in meta.fields}
+
+    source_field = None
+
+    for candidate in ["knowledge_source", "source", "linked_knowledge_source", "expected_source"]:
+        if candidate in fields:
+            source_field = candidate
+            break
+
+    if not source_field:
+        return []
+
+    filters = {
+        source_field: source_name,
+    }
+
+    if "generated_by_ai" in fields:
+        filters["generated_by_ai"] = 1
+
+    if "generated_from_source" in fields:
+        filters["generated_from_source"] = 1
+
+    result_fields = ["name"]
+
+    for fieldname in ["test_title", "title", "question", "status", "enabled"]:
+        if fieldname in fields:
+            result_fields.append(fieldname)
+
+    return frappe.get_all(
+        "Nexus Knowledge Test Case",
+        filters=filters,
+        fields=result_fields,
+        order_by="creation desc",
+        limit_page_length=100,
+    )
+    
+def _get_source_test_case_summary(source_name: str):
+    """
+    Return Knowledge Test Case counts for a Knowledge Source.
+    Used by Source Dashboard to show whether generated tests already exist.
+    """
+
+    summary = {
+        "total": 0,
+        "generated": 0,
+        "draft": 0,
+        "active": 0,
+        "enabled": 0,
+        "pending_review": 0,
+        "approved": 0,
+        "latest_test_case": None,
+        "has_test_cases": 0,
+    }
+
+    if not source_name:
+        return summary
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        return summary
+
+    meta = frappe.get_meta("Nexus Knowledge Test Case")
+    fields = {df.fieldname for df in meta.fields}
+
+    source_field = None
+    for candidate in ["knowledge_source", "source", "linked_knowledge_source", "expected_source"]:
+        if candidate in fields:
+            source_field = candidate
+            break
+
+    if not source_field:
+        return summary
+
+    result_fields = ["name", "creation"]
+
+    for fieldname in [
+        "test_title",
+        "status",
+        "enabled",
+        "generated_by_ai",
+        "generated_from_source",
+        "review_status",
+    ]:
+        if fieldname in fields:
+            result_fields.append(fieldname)
+
+    rows = frappe.get_all(
+        "Nexus Knowledge Test Case",
+        filters={source_field: source_name},
+        fields=result_fields,
+        order_by="creation desc",
+        limit_page_length=500,
+    )
+
+    summary["total"] = len(rows)
+    summary["has_test_cases"] = 1 if rows else 0
+
+    if rows:
+        latest = rows[0]
+        summary["latest_test_case"] = {
+            "name": latest.get("name"),
+            "test_title": latest.get("test_title") or latest.get("name"),
+            "status": latest.get("status"),
+            "review_status": latest.get("review_status"),
+        }
+
+    for row in rows:
+        status = str(row.get("status") or "").strip().lower()
+        review_status = str(row.get("review_status") or "").strip().lower()
+
+        if row.get("generated_by_ai") or row.get("generated_from_source"):
+            summary["generated"] += 1
+
+        if status == "draft":
+            summary["draft"] += 1
+
+        if status == "active":
+            summary["active"] += 1
+
+        if row.get("enabled"):
+            summary["enabled"] += 1
+
+        if review_status == "pending review":
+            summary["pending_review"] += 1
+
+        if review_status == "approved":
+            summary["approved"] += 1
+
+    return summary
+
+@frappe.whitelist()
+def generate_source_test_cases(
+    name: str,
+    test_count: int = 5,
+    use_case: str = "Q&A",
+    include_boundary_tests: int = 1,
+    include_followup_tests: int = 1,
+    auto_enable: int = 0,
+):
+    """
+    Generate suggested Nexus Knowledge Test Case records from a published Knowledge Source.
+
+    Design:
+    - Invoked after a Knowledge Source is published.
+    - Test cases are generated as draft suggestions by default.
+    - Created test cases are linked back to the Knowledge Source when the Test Case schema supports it.
+    """
+
+    if not name:
+        return {
+            "success": False,
+            "message": "Knowledge Source name is required.",
+        }
+
+    if not frappe.db.exists("Nexus Knowledge Source", name):
+        return {
+            "success": False,
+            "message": f"Nexus Knowledge Source not found: {name}",
+        }
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Test Case doctype does not exist.",
+        }
+
+    source_doc = frappe.get_doc("Nexus Knowledge Source", name)
+
+    if not frappe.has_permission("Nexus Knowledge Source", "read", doc=source_doc):
+        frappe.throw("Not permitted to read this Knowledge Source", frappe.PermissionError)
+
+    if not frappe.has_permission("Nexus Knowledge Test Case", "create"):
+        frappe.throw("Not permitted to create Nexus Knowledge Test Case", frappe.PermissionError)
+
+    active_context = _resolve_active_studio_context()
+    _enforce_doc_active_tenant(source_doc, active_context)
+
+    if not _is_source_published_for_test_generation(source_doc):
+        return {
+            "success": False,
+            "message": "Suggested test cases can be generated only after the Knowledge Source is published.",
+        }
+
+    test_count = cint(test_count or 5)
+
+    if test_count <= 0:
+        test_count = 5
+
+    if test_count > 20:
+        test_count = 20
+
+    include_boundary_tests = cint(include_boundary_tests)
+    include_followup_tests = cint(include_followup_tests)
+    auto_enable = cint(auto_enable)
+
+    source_context = _build_source_test_generation_context(source_doc)
+
+    if not source_context.get("content"):
+        return {
+            "success": False,
+            "message": "No source content or active chunk content found for generating test cases.",
+        }
+    
+    existing_generated = _get_existing_generated_test_cases_for_source(source_doc.name)
+
+    if existing_generated:
+        return {
+            "success": True,
+            "message": (
+                f"{len(existing_generated)} AI-generated Knowledge Test Case(s) already exist "
+                "for this Knowledge Source. No duplicate test cases were created."
+            ),
+            "created": [],
+            "skipped": [
+                {
+                    "name": row.get("name"),
+                    "title": row.get("test_title") or row.get("title") or row.get("name"),
+                    "reason": "AI-generated test case already exists for this source.",
+                }
+                for row in existing_generated
+            ],
+            "created_count": 0,
+            "skipped_count": len(existing_generated),
+        }
+
+    suggestions = _generate_test_case_suggestions(
+        source_context=source_context,
+        test_count=test_count,
+        use_case=use_case,
+        include_boundary_tests=include_boundary_tests,
+        include_followup_tests=include_followup_tests,
+    )
+
+    if not suggestions:
+        return {
+            "success": False,
+            "message": "No test case suggestions could be generated from this source.",
+        }
+
+    created = []
+    skipped = []
+
+    for suggestion in suggestions:
+        normalized = _normalize_test_case_suggestion(suggestion, use_case)
+
+        if not normalized.get("question"):
+            skipped.append({
+                "title": normalized.get("title") or "Untitled Test Case",
+                "reason": "Missing question.",
+            })
+            continue
+
+        duplicate = _find_existing_source_test_case(
+            source_name=source_doc.name,
+            question=normalized.get("question"),
+        )
+
+        if duplicate:
+            skipped.append({
+                "name": duplicate,
+                "title": normalized.get("title") or normalized.get("question"),
+                "reason": "Similar test case already exists for this source.",
+            })
+            continue
+
+        doc = frappe.new_doc("Nexus Knowledge Test Case")
+
+        _apply_test_case_values(
+            doc=doc,
+            source_doc=source_doc,
+            normalized=normalized,
+            use_case=use_case,
+            auto_enable=auto_enable,
+        )
+
+        _fill_missing_mandatory_test_case_fields(
+            doc=doc,
+            source_doc=source_doc,
+            normalized=normalized,
+        )
+
+        try:
+            doc.insert(ignore_permissions=False)
+        except Exception as exc:
+            skipped.append({
+                "title": normalized.get("title") or normalized.get("question"),
+                "question": normalized.get("question"),
+                "reason": str(exc),
+            })
+
+            frappe.log_error(
+                title="Suggested Test Case Insert Failed",
+                message=frappe.get_traceback(),
+            )
+            continue
+
+        created.append({
+            "name": doc.name,
+            "title": normalized.get("title") or doc.name,
+            "question": normalized.get("question"),
+        })
+
+    return {
+        "success": True,
+        "message": f"Generated {len(created)} suggested Knowledge Test Case(s) from published source.",
+        "created": created,
+        "skipped": skipped,
+        "created_count": len(created),
+        "skipped_count": len(skipped),
+    }
+
+
+
 # -------------------------------------------------------------------------
 # Public API methods - Source Publishing
 # -------------------------------------------------------------------------
@@ -1933,6 +3474,9 @@ def _publish_generated_unit_and_chunks(source_doc):
 	for a Nexus Knowledge Source.
 
 	Important:
+	- Nexus Knowledge Source can use status = Published.
+	- Nexus Knowledge Unit may use a different lifecycle, commonly:
+	  Draft / Review / Approved / Active / Archived.
 	- Nexus Knowledge Chunk does not use is_active / active / published / status.
 	- Active chunk means:
 		disabled = 0
@@ -1960,7 +3504,12 @@ def _publish_generated_unit_and_chunks(source_doc):
 
 	unit_doc = frappe.get_doc("Nexus Knowledge Unit", generated_unit)
 
-	_set_if_exists(unit_doc, "status", "Published")
+	# Knowledge Unit may not support "Published".
+	# For Knowledge Unit, "Active" is the safer live/retrieval state.
+	if not _safe_set_select_value(unit_doc, "status", "Published"):
+		if not _safe_set_select_value(unit_doc, "status", "Active"):
+			_safe_set_select_value(unit_doc, "status", "Approved")
+
 	_set_if_exists(unit_doc, "published", 1)
 	_set_if_exists(unit_doc, "ready_to_publish", 0)
 	_set_if_exists(unit_doc, "disabled", 0)
@@ -2041,7 +3590,6 @@ def _publish_generated_unit_and_chunks(source_doc):
 		"active_chunk_count": active_chunk_count,
 	}
 
-
 def _unpublish_generated_unit_and_chunks(source_doc):
 	"""
 	Unpublish/deactivate the generated Knowledge Unit and chunks.
@@ -2054,7 +3602,12 @@ def _unpublish_generated_unit_and_chunks(source_doc):
 	if generated_unit and frappe.db.exists("Nexus Knowledge Unit", generated_unit):
 		unit_doc = frappe.get_doc("Nexus Knowledge Unit", generated_unit)
 
-		_set_if_exists(unit_doc, "status", "Ready to Publish")
+		# Knowledge Unit may not support "Ready to Publish".
+		# Fall back to Approved, then Draft.
+		if not _safe_set_select_value(unit_doc, "status", "Ready to Publish"):
+			if not _safe_set_select_value(unit_doc, "status", "Approved"):
+				_safe_set_select_value(unit_doc, "status", "Draft")
+
 		_set_if_exists(unit_doc, "published", 0)
 		_set_if_exists(unit_doc, "retrieval_ready", 0)
 
@@ -2089,7 +3642,7 @@ def _unpublish_generated_unit_and_chunks(source_doc):
 				chunk_doc.save(ignore_permissions=False)
 
 	_set_if_exists(source_doc, "active_chunk_count", 0)
-
+ 
 @frappe.whitelist()
 def publish_knowledge_source(name: str):
 	"""
@@ -2222,3 +3775,790 @@ def unpublish_knowledge_source(name: str):
 		"message": "Knowledge Source unpublished. It is back to Ready to Publish.",
 		"readiness": _build_source_readiness_payload(doc),
 	}
+ 
+ # -------------------------------------------------------------------------
+# Public API methods - Knowledge Test Case Runs
+# -------------------------------------------------------------------------
+
+def _get_test_case_field(doc, fieldname, default=None):
+    if _has_field(doc.doctype, fieldname):
+        return doc.get(fieldname)
+    return default
+
+
+def _set_test_doc_field(doc, fieldname, value):
+    if _has_field(doc.doctype, fieldname):
+        doc.set(fieldname, value)
+
+
+def _parse_keyword_list(value):
+    if not value:
+        return []
+
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+
+    value = str(value or "").strip()
+
+    if not value:
+        return []
+
+    try:
+        parsed = json.loads(value)
+
+        if isinstance(parsed, list):
+            return [str(item).strip() for item in parsed if str(item).strip()]
+    except Exception:
+        pass
+
+    return [
+        item.strip()
+        for item in re.split(r"[,;\n]", value)
+        if item and item.strip()
+    ]
+
+
+def _text_contains_all_keywords(text, keywords):
+    if not keywords:
+        return True
+
+    text = str(text or "").lower()
+
+    for keyword in keywords:
+        if str(keyword or "").strip().lower() not in text:
+            return False
+
+    return True
+
+
+def _text_contains_any_keyword(text, keywords):
+    if not keywords:
+        return False
+
+    text = str(text or "").lower()
+
+    for keyword in keywords:
+        if str(keyword or "").strip().lower() in text:
+            return True
+
+    return False
+
+
+def _build_test_case_query_contract(test_case_doc):
+    """
+    Build the query contract for the Nexus answer/retrieval layer from a Test Case.
+    """
+
+    question = (
+        _get_test_case_field(test_case_doc, "question")
+        or _get_test_case_field(test_case_doc, "query")
+        or _get_test_case_field(test_case_doc, "test_query")
+        or ""
+    )
+
+    use_case = _get_test_case_field(test_case_doc, "use_case") or "Q&A"
+
+    query_contract = {
+        "query": question,
+        "original_query": question,
+        "use_case": use_case,
+        "response_mode": use_case,
+        "caller_system": "Nexus Knowledge Test",
+        "tenant": _get_test_case_field(test_case_doc, "tenant"),
+        "ecosystem": _get_test_case_field(test_case_doc, "ecosystem"),
+        "business_unit": _get_test_case_field(test_case_doc, "business_unit"),
+        "project": _get_test_case_field(test_case_doc, "project"),
+        "channel": _get_test_case_field(test_case_doc, "channel"),
+        "context": _get_test_case_field(test_case_doc, "context"),
+        "sub_context": _get_test_case_field(test_case_doc, "sub_context"),
+        "entity_type": _get_test_case_field(test_case_doc, "entity_type"),
+        "entity": _get_test_case_field(test_case_doc, "entity"),
+        "topic": _get_test_case_field(test_case_doc, "topic"),
+        "top_k": 5,
+        "user": {
+            "id": frappe.session.user,
+            "roles": frappe.get_roles(frappe.session.user),
+        },
+    }
+
+    knowledge_source = _get_test_case_field(test_case_doc, "knowledge_source")
+    if knowledge_source:
+        query_contract["expected_source"] = knowledge_source
+        query_contract["knowledge_source"] = knowledge_source
+
+    return query_contract
+
+
+def _call_nexus_answer_service(query_contract: dict):
+    """
+    Calls the existing Nexus answer service for Knowledge Test Runs.
+
+    Actual service found:
+    digitz_ai_nexus.services.answer_service.answer_query
+    """
+
+    candidates = [
+        "digitz_ai_nexus.services.answer_service.answer_query",
+        "digitz_ai_nexus.api.answer_service.answer_query",
+        "digitz_ai_nexus.services.answer_service.ask_question",
+        "digitz_ai_nexus.services.answer_service.answer_question",
+        "digitz_ai_nexus.api.answer_service.ask_question",
+        "digitz_ai_nexus.api.answer_service.answer_question",
+    ]
+
+    errors = []
+
+    for dotted_path in candidates:
+        try:
+            fn = frappe.get_attr(dotted_path)
+        except Exception as exc:
+            errors.append(f"{dotted_path}: import failed: {str(exc)}")
+            continue
+
+        if not fn:
+            errors.append(f"{dotted_path}: function not found")
+            continue
+
+        # Most likely signature: answer_query(query_contract)
+        try:
+            return fn(query_contract)
+        except TypeError as exc:
+            errors.append(f"{dotted_path}(query_contract): {str(exc)}")
+        except Exception:
+            raise
+
+        # Alternative: answer_query(**query_contract)
+        try:
+            return fn(**query_contract)
+        except TypeError as exc:
+            errors.append(f"{dotted_path}(**query_contract): {str(exc)}")
+        except Exception:
+            raise
+
+        # Alternative: answer_query(query=...)
+        try:
+            return fn(query=query_contract.get("query"))
+        except TypeError as exc:
+            errors.append(f"{dotted_path}(query=...): {str(exc)}")
+        except Exception:
+            raise
+
+        # Alternative: answer_query(question=...)
+        try:
+            return fn(question=query_contract.get("query"))
+        except TypeError as exc:
+            errors.append(f"{dotted_path}(question=...): {str(exc)}")
+        except Exception:
+            raise
+
+    raise Exception(
+        "No compatible Nexus answer service function was found. Tried:\n"
+        + "\n".join(errors)
+    )
+
+def _normalize_answer_service_result(result):
+    """
+    Normalize different possible answer service response shapes.
+    """
+
+    result = result or {}
+
+    if hasattr(result, "as_dict"):
+        result = result.as_dict()
+
+    if not isinstance(result, dict):
+        result = {
+            "answer": str(result or ""),
+        }
+
+    answer = (
+        result.get("answer")
+        or result.get("response")
+        or result.get("message")
+        or result.get("text")
+        or ""
+    )
+
+    confidence = (
+        result.get("confidence")
+        or result.get("final_score")
+        or result.get("score")
+        or result.get("retrieval_score")
+        or 0
+    )
+
+    try:
+        confidence = float(confidence or 0)
+    except Exception:
+        confidence = 0
+
+    sources = (
+        result.get("sources")
+        or result.get("retrieved_sources")
+        or result.get("retrieved_chunks")
+        or result.get("source_summary")
+        or []
+    )
+
+    if isinstance(sources, dict):
+        sources = [sources]
+
+    if not isinstance(sources, list):
+        sources = []
+
+    fallback_used = bool(
+        result.get("fallback_used")
+        or result.get("is_fallback")
+        or result.get("answer_status") == "fallback"
+        or "do not have enough approved knowledge" in str(answer or "").lower()
+        or "do not have enough" in str(answer or "").lower()
+    )
+
+    escalation_triggered = bool(
+        result.get("escalation_triggered")
+        or result.get("requires_escalation")
+        or result.get("handover_required")
+    )
+
+    query_log = (
+        result.get("query_log")
+        or result.get("query_log_name")
+        or result.get("log_name")
+    )
+
+    return {
+        "raw": result,
+        "answer": answer,
+        "confidence": confidence,
+        "sources": sources,
+        "fallback_used": fallback_used,
+        "escalation_triggered": escalation_triggered,
+        "query_log": query_log,
+    }
+
+
+def _source_found_in_sources(expected_source, sources):
+    if not expected_source:
+        return True
+
+    if not sources:
+        return False
+
+    expected = str(expected_source or "").strip().lower()
+
+    try:
+        source_text = json.dumps(sources, default=str).lower()
+    except Exception:
+        source_text = str(sources or "").lower()
+
+    if expected and expected in source_text:
+        return True
+
+    for source in sources:
+        if not isinstance(source, dict):
+            continue
+
+        for key in [
+            "source",
+            "source_name",
+            "knowledge_source",
+            "expected_source",
+            "name",
+            "title",
+            "source_title",
+        ]:
+            value = str(source.get(key) or "").strip().lower()
+            if value == expected:
+                return True
+
+    return False
+
+
+def _evaluate_test_case_result(test_case_doc, normalized_result):
+    """
+    Evaluate actual Nexus answer result against the expected Test Case contract.
+    """
+
+    answer = normalized_result.get("answer") or ""
+    confidence = float(normalized_result.get("confidence") or 0)
+    sources = normalized_result.get("sources") or []
+    source_count = len(sources)
+
+    minimum_confidence = _get_test_case_field(test_case_doc, "minimum_confidence", 0.7)
+    try:
+        minimum_confidence = float(minimum_confidence or 0.7)
+    except Exception:
+        minimum_confidence = 0.7
+
+    expected_fallback = bool(cint(_get_test_case_field(test_case_doc, "expected_fallback", 0)))
+    expected_escalation = bool(cint(_get_test_case_field(test_case_doc, "expected_escalation", 0)))
+    expected_source_required = bool(cint(_get_test_case_field(test_case_doc, "expected_source_required", 1)))
+
+    required_keywords = _parse_keyword_list(_get_test_case_field(test_case_doc, "required_keywords"))
+    forbidden_keywords = _parse_keyword_list(_get_test_case_field(test_case_doc, "forbidden_keywords"))
+
+    required_keywords_found = _text_contains_all_keywords(answer, required_keywords)
+    forbidden_keywords_found = _text_contains_any_keyword(answer, forbidden_keywords)
+
+    expected_source = _get_test_case_field(test_case_doc, "knowledge_source")
+    expected_source_found = _source_found_in_sources(expected_source, sources)
+
+    fallback_used = bool(normalized_result.get("fallback_used"))
+    escalation_triggered = bool(normalized_result.get("escalation_triggered"))
+
+    failure_reasons = []
+    warning_reasons = []
+
+    if not str(answer or "").strip():
+        failure_reasons.append("No answer was generated.")
+
+    # Confidence is meaningful for grounded answers.
+# For expected fallback tests, the main validation is whether fallback was actually used.
+# Safe fallback answers may return low confidence by design.
+    if confidence < minimum_confidence:
+        if expected_fallback and fallback_used:
+            pass
+        else:
+            failure_reasons.append(
+                f"Confidence {confidence:.2f} is below minimum {minimum_confidence:.2f}."
+            )
+
+    if fallback_used and not expected_fallback:
+        failure_reasons.append("Fallback was used but was not expected.")
+
+    if expected_fallback and not fallback_used:
+        failure_reasons.append("Fallback was expected but was not used.")
+
+    if escalation_triggered and not expected_escalation:
+        failure_reasons.append("Escalation was triggered but was not expected.")
+
+    if expected_escalation and not escalation_triggered:
+        failure_reasons.append("Escalation was expected but was not triggered.")
+
+    if expected_source_required and source_count <= 0:
+        failure_reasons.append("Expected at least one retrieved source, but none were returned.")
+
+    if expected_source_required and expected_source and not expected_source_found:
+        failure_reasons.append("Expected Knowledge Source was not found in retrieved sources.")
+
+    if required_keywords and not required_keywords_found:
+        failure_reasons.append("Required keywords were not found in the generated answer.")
+
+    if forbidden_keywords_found:
+        failure_reasons.append("Forbidden keywords were found in the generated answer.")
+
+    if (
+        not failure_reasons
+        and source_count <= 0
+        and expected_source_required
+        and not expected_fallback
+    ):
+        warning_reasons.append("Answer was generated without retrieved source evidence.")
+
+    if failure_reasons:
+        run_status = "Failed"
+        failure_reason = "; ".join(failure_reasons)
+    elif warning_reasons:
+        run_status = "Warning"
+        failure_reason = "; ".join(warning_reasons)
+    else:
+        run_status = "Passed"
+        failure_reason = ""
+
+    return {
+        "run_status": run_status,
+        "failure_reason": failure_reason,
+        "confidence": confidence,
+        "minimum_confidence": minimum_confidence,
+        "fallback_used": 1 if fallback_used else 0,
+        "expected_fallback": 1 if expected_fallback else 0,
+        "escalation_triggered": 1 if escalation_triggered else 0,
+        "expected_escalation": 1 if expected_escalation else 0,
+        "expected_source_required": 1 if expected_source_required else 0,
+        "expected_source_found": 1 if expected_source_found else 0,
+        "source_count": source_count,
+        "required_keywords_found": 1 if required_keywords_found else 0,
+        "forbidden_keywords_found": 1 if forbidden_keywords_found else 0,
+    }
+
+
+def _copy_test_case_scope_to_run(run_doc, test_case_doc):
+    for fieldname in [
+        "tenant",
+        "ecosystem",
+        "business_unit",
+        "project",
+        "channel",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+    ]:
+        if _has_field(test_case_doc.doctype, fieldname):
+            _set_test_doc_field(run_doc, fieldname, test_case_doc.get(fieldname))
+
+
+def _create_knowledge_test_run(
+    test_case_doc,
+    normalized_result,
+    evaluation,
+    execution_mode="Single Test",
+    response_time_ms=0,
+):
+    """
+    Create Nexus Knowledge Test Run record.
+    """
+
+    run_doc = frappe.new_doc("Nexus Knowledge Test Run")
+
+    question = (
+        _get_test_case_field(test_case_doc, "question")
+        or _get_test_case_field(test_case_doc, "query")
+        or _get_test_case_field(test_case_doc, "test_query")
+        or ""
+    )
+
+    test_title = (
+        _get_test_case_field(test_case_doc, "test_title")
+        or _get_test_case_field(test_case_doc, "title")
+        or test_case_doc.name
+    )
+
+    knowledge_source = _get_test_case_field(test_case_doc, "knowledge_source")
+
+    _set_test_doc_field(run_doc, "test_case", test_case_doc.name)
+    _set_test_doc_field(run_doc, "test_title", test_title)
+    _set_test_doc_field(run_doc, "knowledge_source", knowledge_source)
+    _set_test_doc_field(run_doc, "source_title", _get_test_case_field(test_case_doc, "source_title"))
+    _set_test_doc_field(run_doc, "run_status", evaluation.get("run_status") or "Error")
+    _set_test_doc_field(run_doc, "execution_mode", execution_mode)
+    _set_test_doc_field(run_doc, "use_case", _get_test_case_field(test_case_doc, "use_case") or "Q&A")
+
+    _set_test_doc_field(run_doc, "question", question)
+    _set_test_doc_field(run_doc, "generated_answer", normalized_result.get("answer") or "")
+
+    for fieldname in [
+        "confidence",
+        "minimum_confidence",
+        "fallback_used",
+        "expected_fallback",
+        "escalation_triggered",
+        "expected_escalation",
+        "expected_source_required",
+        "expected_source_found",
+        "source_count",
+        "required_keywords_found",
+        "forbidden_keywords_found",
+        "failure_reason",
+    ]:
+        _set_test_doc_field(run_doc, fieldname, evaluation.get(fieldname))
+
+    _copy_test_case_scope_to_run(run_doc, test_case_doc)
+
+    _set_test_doc_field(
+        run_doc,
+        "retrieved_sources_json",
+        json.dumps(normalized_result.get("sources") or [], default=str, indent=2),
+    )
+
+    _set_test_doc_field(
+        run_doc,
+        "diagnostics_json",
+        json.dumps(normalized_result.get("raw") or {}, default=str, indent=2),
+    )
+
+    _set_test_doc_field(run_doc, "query_log", normalized_result.get("query_log"))
+    _set_test_doc_field(run_doc, "response_time_ms", int(response_time_ms or 0))
+    _set_test_doc_field(run_doc, "executed_by", frappe.session.user)
+    _set_test_doc_field(run_doc, "executed_on", now_datetime())
+
+    run_doc.insert(ignore_permissions=False)
+
+    return run_doc
+
+
+def _update_test_case_last_run_summary(test_case_doc, run_doc):
+    """
+    Update last run summary on Nexus Knowledge Test Case.
+
+    Nexus Knowledge Test Run can store Error.
+    Nexus Knowledge Test Case last_run_status currently supports:
+    - Not Run
+    - Passed
+    - Failed
+    - Warning
+
+    So Error is summarized as Failed on the Test Case.
+    """
+
+    run_status = str(run_doc.get("run_status") or "Not Run").strip()
+
+    if run_status == "Error":
+        test_case_status = "Failed"
+    elif run_status in ["Passed", "Failed", "Warning", "Not Run"]:
+        test_case_status = run_status
+    else:
+        test_case_status = "Failed"
+
+    _set_test_doc_field(test_case_doc, "last_run_status", test_case_status)
+    _set_test_doc_field(test_case_doc, "last_run_on", run_doc.get("executed_on"))
+    _set_test_doc_field(test_case_doc, "last_confidence", run_doc.get("confidence"))
+    _set_test_doc_field(test_case_doc, "last_fallback_used", run_doc.get("fallback_used"))
+
+    failure_reason = run_doc.get("failure_reason") or ""
+
+    if run_status == "Error" and failure_reason:
+        failure_reason = f"Error: {failure_reason}"
+
+    _set_test_doc_field(test_case_doc, "last_failure_reason", failure_reason)
+
+    if _has_field(test_case_doc.doctype, "last_run"):
+        test_case_doc.set("last_run", run_doc.name)
+
+    test_case_doc.save(ignore_permissions=False)
+@frappe.whitelist()
+def run_knowledge_test_case(test_case: str, execution_mode: str = "Single Test"):
+    """
+    Run one Nexus Knowledge Test Case and create a Nexus Knowledge Test Run.
+
+    This can run Draft or Active test cases, because it is a direct/manual run.
+    """
+
+    if not test_case:
+        return {
+            "success": False,
+            "message": "Test Case is required.",
+        }
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Test Case doctype does not exist.",
+        }
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Run"):
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Test Run doctype does not exist.",
+        }
+
+    if not frappe.db.exists("Nexus Knowledge Test Case", test_case):
+        return {
+            "success": False,
+            "message": f"Nexus Knowledge Test Case not found: {test_case}",
+        }
+
+    test_case_doc = frappe.get_doc("Nexus Knowledge Test Case", test_case)
+
+    if not frappe.has_permission("Nexus Knowledge Test Case", "read", doc=test_case_doc):
+        frappe.throw("Not permitted to read this Knowledge Test Case", frappe.PermissionError)
+
+    if not frappe.has_permission("Nexus Knowledge Test Run", "create"):
+        frappe.throw("Not permitted to create Nexus Knowledge Test Run", frappe.PermissionError)
+
+    query_contract = _build_test_case_query_contract(test_case_doc)
+
+    started = time.time()
+
+    try:
+        raw_result = _call_nexus_answer_service(query_contract)
+        response_time_ms = int((time.time() - started) * 1000)
+
+        normalized_result = _normalize_answer_service_result(raw_result)
+        evaluation = _evaluate_test_case_result(test_case_doc, normalized_result)
+
+    except Exception as exc:
+        response_time_ms = int((time.time() - started) * 1000)
+
+        normalized_result = {
+            "raw": {
+                "error": str(exc),
+                "traceback": frappe.get_traceback(),
+            },
+            "answer": "",
+            "confidence": 0,
+            "sources": [],
+            "fallback_used": 0,
+            "escalation_triggered": 0,
+            "query_log": None,
+        }
+
+        evaluation = {
+            "run_status": "Error",
+            "failure_reason": str(exc),
+            "confidence": 0,
+            "minimum_confidence": _get_test_case_field(test_case_doc, "minimum_confidence", 0.7),
+            "fallback_used": 0,
+            "expected_fallback": cint(_get_test_case_field(test_case_doc, "expected_fallback", 0)),
+            "escalation_triggered": 0,
+            "expected_escalation": cint(_get_test_case_field(test_case_doc, "expected_escalation", 0)),
+            "expected_source_required": cint(_get_test_case_field(test_case_doc, "expected_source_required", 1)),
+            "expected_source_found": 0,
+            "source_count": 0,
+            "required_keywords_found": 0,
+            "forbidden_keywords_found": 0,
+        }
+
+        frappe.log_error(
+            title="Knowledge Test Case Run Failed",
+            message=frappe.get_traceback(),
+        )
+
+    run_doc = _create_knowledge_test_run(
+        test_case_doc=test_case_doc,
+        normalized_result=normalized_result,
+        evaluation=evaluation,
+        execution_mode=execution_mode or "Single Test",
+        response_time_ms=response_time_ms,
+    )
+
+    _update_test_case_last_run_summary(test_case_doc, run_doc)
+
+    frappe.db.commit()
+
+    return {
+        "success": True,
+        "message": f"Test Case executed with status: {run_doc.run_status}",
+        "test_case": test_case_doc.name,
+        "test_run": run_doc.name,
+        "run_status": run_doc.get("run_status"),
+        "confidence": run_doc.get("confidence"),
+        "fallback_used": run_doc.get("fallback_used"),
+        "source_count": run_doc.get("source_count"),
+        "failure_reason": run_doc.get("failure_reason"),
+    }
+
+@frappe.whitelist()
+def run_source_test_cases(
+    source_name: str,
+    include_draft: int = 1,
+    only_enabled: int = 0,
+    limit: int = 20,
+):
+    """
+    Run Knowledge Test Cases linked to one Knowledge Source.
+
+    MVP behavior:
+    - include_draft = 1 allows running AI-generated draft cases during review.
+    - only_enabled = 0 allows running generated tests before approval.
+    - Later, production scheduled suites can use only_enabled = 1 and include_draft = 0.
+    """
+
+    if not source_name:
+        return {
+            "success": False,
+            "message": "Knowledge Source is required.",
+        }
+
+    if not frappe.db.exists("Nexus Knowledge Source", source_name):
+        return {
+            "success": False,
+            "message": f"Nexus Knowledge Source not found: {source_name}",
+        }
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Test Case doctype does not exist.",
+        }
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Test Run"):
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Test Run doctype does not exist.",
+        }
+
+    if not frappe.has_permission("Nexus Knowledge Test Case", "read"):
+        frappe.throw("Not permitted to read Nexus Knowledge Test Case", frappe.PermissionError)
+
+    if not frappe.has_permission("Nexus Knowledge Test Run", "create"):
+        frappe.throw("Not permitted to create Nexus Knowledge Test Run", frappe.PermissionError)
+
+    meta = frappe.get_meta("Nexus Knowledge Test Case")
+    fields = {df.fieldname for df in meta.fields}
+
+    source_field = None
+    for candidate in ["knowledge_source", "source", "linked_knowledge_source", "expected_source"]:
+        if candidate in fields:
+            source_field = candidate
+            break
+
+    if not source_field:
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Test Case does not have a Knowledge Source link field.",
+        }
+
+    filters = {
+        source_field: source_name,
+    }
+
+    if cint(only_enabled) and "enabled" in fields:
+        filters["enabled"] = 1
+
+    if not cint(include_draft) and "status" in fields:
+        filters["status"] = "Active"
+
+    limit = cint(limit or 20)
+    if limit <= 0:
+        limit = 20
+
+    if limit > 100:
+        limit = 100
+
+    test_cases = frappe.get_all(
+        "Nexus Knowledge Test Case",
+        filters=filters,
+        pluck="name",
+        order_by="priority asc, creation asc" if "priority" in fields else "creation asc",
+        limit_page_length=limit,
+    )
+
+    if not test_cases:
+        return {
+            "success": False,
+            "message": "No Knowledge Test Cases found for this source.",
+            "source_name": source_name,
+            "results": [],
+        }
+
+    results = []
+    passed = 0
+    failed = 0
+    warning = 0
+    error = 0
+
+    for test_case in test_cases:
+        result = run_knowledge_test_case(
+            test_case=test_case,
+            execution_mode="Source Suite",
+        )
+
+        results.append(result)
+
+        status = str(result.get("run_status") or "").strip().lower()
+
+        if status == "passed":
+            passed += 1
+        elif status == "failed":
+            failed += 1
+        elif status == "warning":
+            warning += 1
+        elif status == "error":
+            error += 1
+
+    return {
+        "success": True,
+        "message": (
+            f"Executed {len(results)} test case(s): "
+            f"{passed} passed, {failed} failed, {warning} warning, {error} error."
+        ),
+        "source_name": source_name,
+        "total": len(results),
+        "passed": passed,
+        "failed": failed,
+        "warning": warning,
+        "error": error,
+        "results": results,
+    }

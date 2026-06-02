@@ -3,12 +3,48 @@ from digitz_ai_nexus.engine.response_mode import get_response_mode
 SAFE_FALLBACK_ANSWER = "I do not have enough approved knowledge to answer this."
 
 
+def _resolve_profile_fields(query_contract):
+    """
+    Extract AI Agent Profile behaviour fields from query_contract.
+
+    Priority:
+    1. query_contract["ai_profile"] dict (structured, from query contract)
+    2. query_contract["agent_*"] flat fields (legacy/direct pass-through)
+    """
+    ai_profile = query_contract.get("ai_profile") or {}
+
+    return {
+        "behavior_prompt": (
+            ai_profile.get("behavior_prompt")
+            or query_contract.get("agent_behavior_prompt")
+        ),
+        "tone": (
+            ai_profile.get("tone")
+            or query_contract.get("agent_tone")
+        ),
+        "response_style": (
+            ai_profile.get("response_style")
+            or query_contract.get("agent_response_style")
+        ),
+        "fallback_message": (
+            ai_profile.get("fallback_message")
+            or query_contract.get("agent_fallback_message")
+        ),
+        "do_not_answer_rules": (
+            ai_profile.get("do_not_answer_rules")
+            or query_contract.get("agent_do_not_answer_rules")
+        ),
+    }
+
+
 def build_prompt(query_contract, retrieved_chunks):
     query = query_contract.get("query")
     original_query = query_contract.get("original_query") or query
     conversation_context = query_contract.get("conversation_context")
     response_sentence_limit = query_contract.get("response_sentence_limit")
     is_follow_up = query_contract.get("is_follow_up")
+
+    profile = _resolve_profile_fields(query_contract)
 
     response_mode = get_response_mode(query_contract)
     response_mode_key = query_contract.get("response_mode") or query_contract.get("use_case")
@@ -71,6 +107,31 @@ Q&A RESPONSE RULES:
 5. Do not use conversation continuity.
 """.strip()
 
+    # Use profile tone/style if configured; fall back to generic response mode values.
+    final_tone = profile.get("tone") or response_mode.get("tone")
+    final_mode_label = response_mode.get("label")
+    final_instruction = response_mode.get("instruction")
+
+    behavior_block = ""
+    if profile.get("behavior_prompt"):
+        behavior_block = f"""
+AGENT BEHAVIOUR:
+{profile["behavior_prompt"]}
+""".strip()
+
+    style_block = ""
+    if profile.get("response_style"):
+        style_block = f"Response Style: {profile['response_style']}"
+
+    do_not_answer_block = ""
+    if profile.get("do_not_answer_rules"):
+        do_not_answer_block = f"""
+DO NOT ANSWER RULES:
+{profile["do_not_answer_rules"]}
+""".strip()
+
+    safe_fallback = profile.get("fallback_message") or SAFE_FALLBACK_ANSWER
+
     return f"""
 You are DIGITZ AI Nexus, a controlled enterprise knowledge assistant.
 
@@ -82,15 +143,20 @@ CORE RULES:
 5. Do NOT replace named labels with generic paraphrases.
 6. If the source contains a project-specific rule name, include that rule name exactly as written.
 7. If the approved knowledge is insufficient, answer exactly:
-"{SAFE_FALLBACK_ANSWER}"
+"{safe_fallback}"
 8. Keep the response aligned with the requested response behavior.
 
 RESPONSE BEHAVIOR:
-Mode: {response_mode.get("label")}
-Tone: {response_mode.get("tone")}
+Mode: {final_mode_label}
+Tone: {final_tone}
+{style_block}
 
 Instructions:
-{response_mode.get("instruction")}
+{final_instruction}
+
+{behavior_block}
+
+{do_not_answer_block}
 
 {chat_context_block}
 

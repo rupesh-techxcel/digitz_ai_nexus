@@ -236,7 +236,7 @@ def create_new_knowledge_unit(source, content, processing_version):
     doc = frappe.new_doc("Nexus Knowledge Unit")
     doc.title = f"{source.title} - v{processing_version}"
     doc.content = content
-    doc.default_access_policy = source.access_policy
+    doc.access_policy = source.access_policy
 
     doc.tenant = source.tenant
     doc.business_unit = source.business_unit

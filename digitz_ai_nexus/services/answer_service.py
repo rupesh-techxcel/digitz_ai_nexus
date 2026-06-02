@@ -22,6 +22,12 @@ def answer_query(
     if not query:
         frappe.throw("Query is required")
 
+    # Guard: if allowed_access_policies was resolved but came back empty,
+    # deny retrieval — fail closed, never treat empty as "allow all".
+    allowed_policies = payload.get("allowed_access_policies")
+    if allowed_policies is not None and len(allowed_policies) == 0:
+        frappe.throw("Access policy resolution failed. Retrieval cannot proceed.")
+
     retrieval_fn = retrieval_fn or retrieve_allowed_chunks
 
     retrieval_result = retrieval_fn(

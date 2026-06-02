@@ -8,14 +8,16 @@
   "field_order": [
     "policy_name",
     "disabled",
+    "is_primitive",
     "access_level",
     "sensitivity",
-    "section_roles",
+    "description",
+    "section_legacy_rules",
+    "legacy_rules_note",
     "allowed_roles",
     "excluded_roles",
     "allowed_designations",
-    "excluded_designations",
-    "description"
+    "excluded_designations"
   ],
   "fields": [
     {
@@ -34,62 +36,76 @@
       "label": "Disabled"
     },
     {
+      "default": "0",
+      "description": "Only Public should be marked as primitive. All other access policies are user-defined and governed through access categories.",
+      "fieldname": "is_primitive",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Primitive Policy",
+      "read_only": 1
+    },
+    {
+      "description": "Optional metadata only. Not used for access enforcement. Enforcement key is policy_name.",
       "fieldname": "access_level",
       "fieldtype": "Select",
-      "in_list_view": 1,
       "label": "Access Level",
-      "options": "Public\nCustomer Restricted\nInternal\nRole Restricted\nFinance Restricted\nHR Confidential\nAdmin Only",
-      "reqd": 1
+      "options": "\nPublic\nCustomer Restricted\nInternal\nRole Restricted\nFinance Restricted\nHR Confidential\nAdmin Only"
     },
     {
+      "description": "Optional metadata only. Not used for access enforcement. Enforcement key is policy_name.",
       "fieldname": "sensitivity",
       "fieldtype": "Select",
-      "in_list_view": 1,
       "label": "Sensitivity",
-      "options": "public\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential",
-      "reqd": 1
-    },
-    {
-      "fieldname": "section_roles",
-      "fieldtype": "Section Break",
-      "label": "Role Rules"
-    },
-    {
-      "description": "JSON array. Example: [\"Accounts User\", \"Accounts Manager\"]",
-      "fieldname": "allowed_roles",
-      "fieldtype": "Small Text",
-      "label": "Allowed Roles"
-    },
-    {
-      "description": "JSON array. Deny overrides allow.",
-      "fieldname": "excluded_roles",
-      "fieldtype": "Small Text",
-      "label": "Excluded Roles"
-    },
-    {
-      "description": "JSON array.",
-      "fieldname": "allowed_designations",
-      "fieldtype": "Small Text",
-      "label": "Allowed Designations"
-    },
-    {
-      "description": "JSON array. Deny overrides allow.",
-      "fieldname": "excluded_designations",
-      "fieldtype": "Small Text",
-      "label": "Excluded Designations"
+      "options": "\npublic\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential"
     },
     {
       "fieldname": "description",
       "fieldtype": "Small Text",
       "label": "Description"
+    },
+    {
+      "fieldname": "section_legacy_rules",
+      "fieldtype": "Section Break",
+      "label": "Legacy Direct Rules"
+    },
+    {
+      "fieldname": "legacy_rules_note",
+      "fieldtype": "HTML",
+      "label": "Legacy Rules Note",
+      "options": "<div class=\"alert alert-warning\" style=\"margin-bottom: 12px;\">These direct role/designation rules are retained for backward reference only. New Nexus access enforcement is resolved through Nexus Access Category, Nexus Role Access Category, and Nexus Channel Access Category.</div>"
+    },
+    {
+      "description": "Legacy JSON array. Example: [\"Accounts User\", \"Accounts Manager\"]. New access control should use Nexus Role Access Category.",
+      "fieldname": "allowed_roles",
+      "fieldtype": "Small Text",
+      "label": "Allowed Roles"
+    },
+    {
+      "description": "Legacy JSON array. Deny overrides allow in the older direct policy model. New access control should use Nexus Role Access Category.",
+      "fieldname": "excluded_roles",
+      "fieldtype": "Small Text",
+      "label": "Excluded Roles"
+    },
+    {
+      "description": "Legacy JSON array. New access control should use Nexus Role Access Category.",
+      "fieldname": "allowed_designations",
+      "fieldtype": "Small Text",
+      "label": "Allowed Designations"
+    },
+    {
+      "description": "Legacy JSON array. New access control should use Nexus Role Access Category.",
+      "fieldname": "excluded_designations",
+      "fieldtype": "Small Text",
+      "label": "Excluded Designations"
     }
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2026-04-29 00:00:00.000000",
+  "modified": "2026-06-02 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "Nexus Access",
   "name": "Nexus Access Policy",
+  "naming_rule": "By fieldname",
   "owner": "Administrator",
   "permissions": [
     {
@@ -108,5 +124,6 @@
   "sort_field": "modified",
   "sort_order": "DESC",
   "states": [],
-  "title_field": "policy_name"
+  "title_field": "policy_name",
+  "track_changes": 1
 }
