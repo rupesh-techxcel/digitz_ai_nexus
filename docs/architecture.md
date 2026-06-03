@@ -33,8 +33,8 @@ This app contains and maintains:
 - Knowledge source ingestion pipeline (PDF, DOCX, TXT, manual)
 - Knowledge chunking, embedding generation, and deduplication
 - Access policy and access category definitions
-- Role-to-category and channel-to-category access mappings
-- Access resolution engine (calculates final allowed policies per request)
+- Profile-to-category access mappings (sole runtime access authority)
+- Access resolution engine (profile scope only — calculates final allowed policies per request)
 - Retrieval engine (hybrid vector + keyword scoring, re-ranking)
 - Prompt builder (behavior-driven, mode-aware)
 - LLM and embedding provider abstraction (OpenAI today, extensible)
@@ -80,7 +80,7 @@ Resolve tenant context
 Resolve allowed access policies
 (engine/access_resolver.py)
 ─ public? → ["Public"] only
-─ authenticated? → profile ∩ role ∩ channel
+─ profiled? → profile scope only (no channel ceiling, no role intersection)
     │
     ▼
 Expand query variants
@@ -182,9 +182,10 @@ Tenant resolution priority in `services/tenant_context.py`:
 
 ## Design Principles
 
-1. **Category-based access** — roles map to access categories, not directly to policies. This keeps access rules reusable and composable.
-2. **Chunk-level enforcement** — access policy is stored on each chunk and checked at retrieval time, not at source level.
-3. **Profile-driven behavior** — tone, style, fallback, and do-not-answer rules come from `Nexus AI Agent Profile`, not hard-coded strings.
-4. **Hybrid retrieval** — combines vector similarity with keyword matching and priority boosting for better recall and precision.
-5. **Configurable, not hard-coded** — only `Public` is a primitive policy. All others are user-defined. Chunk size, scoring weights, and model choices are settings.
-6. **App isolation** — retrieval logic, access resolution, and prompt building live only in this app. The live and experience apps call these services; they do not reimplement them.
+1. **Profile is the sole access authority** — every query resolves to one `Nexus AI Agent Profile`. That profile's Access Categories determine what knowledge may be retrieved. Channel membership and Frappe roles are not runtime access inputs.
+2. **Category-based access** — profiles map to access categories, not directly to policies. Categories are reusable bundles that can be assigned to many profiles.
+3. **Chunk-level enforcement** — access policy is stored on each chunk and checked at retrieval time via `chunk.access_policy IN [allowed_policies]`.
+4. **Profile-driven behavior** — tone, style, fallback, and do-not-answer rules come from `Nexus AI Agent Profile` fields. `Nexus AI Behaviour` is a template only.
+5. **Hybrid retrieval** — combines vector similarity with keyword matching and priority boosting for better recall and precision.
+6. **Configurable, not hard-coded** — only `Public` is a primitive policy. All others are user-defined. Chunk size, scoring weights, and model choices are settings.
+7. **App isolation** — retrieval logic, access resolution, and prompt building live only in this app. The live and experience apps call these services; they do not reimplement them.

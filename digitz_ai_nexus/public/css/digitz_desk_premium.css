@@ -950,3 +950,29 @@ header.navbar.navbar-expand .container {
     align-items: center !important;
 }
 
+/* =========================================================
+   Fix Desk / Report page title clipping
+   ========================================================= */
+.page-head .page-head-content {
+	display: flex !important;
+	align-items: center !important;
+	gap: 14px !important;
+}
+
+.page-head .title-area,
+.page-head .page-title {
+	flex: 1 1 auto !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	width: auto !important;
+}
+
+.page-head .title-area .title-text,
+.page-head .page-title .title-text {
+	display: block !important;
+	max-width: none !important;
+	width: auto !important;
+	overflow: visible !important;
+	text-overflow: unset !important;
+	white-space: nowrap !important;
+}

@@ -1,40 +1,33 @@
 # Access Governance
 
-This document describes how the system decides which knowledge a user or channel may retrieve. Understanding this model is essential before modifying any DocType or service that touches access.
+This document describes how the system decides which knowledge a user or channel may retrieve.
 
 ---
 
 ## Core Principle
 
-Access is **classification-based**, not audience-based. An access policy is a label applied to knowledge, not a list of users who can see it.
+Access is **profile-driven**. Every query resolves to exactly one `Nexus AI Agent Profile`. That profile is the single access authority — it determines what knowledge the AI may retrieve and deliver, regardless of whether the requester is a website guest, a customer, a partner, or an internal employee.
 
-**Wrong mental model:**
-
-> "Finance policy means only the Finance department can see this."
-
-**Correct mental model:**
-
-> "Finance policy means this knowledge is classified as Finance. Any role or profile whose access categories include the Finance policy may retrieve it."
+```
+Any request  →  Agent Profile  →  Access Category  →  [Policies]  →  chunk filter
+```
 
 ---
 
-## The Four-Layer Model
+## The Invariant Chain
 
 ```
-Knowledge Chunk
-    └── access_policy (e.g. "Finance")
-
-Nexus Access Policy
-    = classification label ("Finance")
-
+Nexus AI Agent Profile
+    ↓  (via Nexus AI Agent Profile Access Category)
 Nexus Access Category
-    = reusable group of policies
-      (e.g. "Finance Access" includes: Public, Internal, Finance)
-
-Nexus Role Access Category       → maps Frappe Role → Access Category
-Nexus Channel Access Category    → maps Channel → Access Category
-Nexus AI Agent Profile Access Category → maps AI Profile → Access Category
+    = named bundle of permitted policies
+    ↓  (child table: Nexus Access Category Policy)
+[Nexus Access Policy, Nexus Access Policy, ...]
+    ↓
+chunk.access_policy IN [policy_names]  →  allowed chunks returned
 ```
+
+**Nothing else participates in runtime access resolution.** Channel membership and Frappe roles do not produce access policies at runtime. They are inputs to profile selection only.
 
 ---
 
@@ -42,38 +35,39 @@ Nexus AI Agent Profile Access Category → maps AI Profile → Access Category
 
 ### Nexus Access Policy
 
-The atomic classification label. Applied to knowledge sources, units, and chunks.
+The atomic classification label. Stamped on every knowledge chunk (`access_policy` field, Link, required). One policy per chunk.
 
 | Field | Notes |
 |---|---|
 | policy_name | Primary key and enforcement identifier |
-| is_primitive | Only `Public` is primitive (system-defined); all others are user-defined |
+| is_primitive | Only `Public` is primitive; all others are user-defined |
 | disabled | Excluded from all access calculations when disabled |
-| access_level, sensitivity | Optional metadata only — never used for enforcement |
-| description | Human notes |
+| access_level, sensitivity | Optional metadata — never used for enforcement |
 
-**Default policies created on install:**
+**Default policies:**
 
 | policy_name | Intended Use |
 |---|---|
-| PUBLIC | Website Q&A, public-facing content |
+| PUBLIC | Public-facing content, website Q&A |
 | CUSTOMER_RESTRICTED | Customer-only knowledge |
-| INTERNAL_EMPLOYEE | General internal/employee content |
-| ROLE_RESTRICTED | Knowledge requiring specific role grants |
+| INTERNAL_EMPLOYEE | General internal / employee content |
+| ROLE_RESTRICTED | Knowledge requiring specific access grants |
 | FINANCE_RESTRICTED | Finance and accounting knowledge |
 | HR_CONFIDENTIAL | HR and payroll knowledge |
 | ADMIN_ONLY | System administrator knowledge |
 
+---
+
 ### Nexus Access Category
 
-A named group of access policies. This is what roles and channels point to.
+A named bundle of access policies. This is what profiles point to.
 
 | Field | Notes |
 |---|---|
 | category_name | Primary key |
 | allowed_policies | Child table of `Nexus Access Category Policy` rows |
-| priority | Used for ordering when multiple categories match |
-| disabled | Excluded from access calculations when disabled |
+| priority | Ordering when multiple categories are displayed |
+| disabled | Excluded when disabled |
 
 Example:
 
@@ -81,9 +75,13 @@ Example:
 category_name: Finance Access
 allowed_policies:
     - Public
-    - Internal
+    - Internal Employee
     - Finance Restricted
 ```
+
+A profile assigned this category may retrieve chunks classified as any of these three policies.
+
+---
 
 ### Nexus Access Category Policy
 
@@ -93,57 +91,56 @@ Child table row inside `Nexus Access Category`. Maps one category to one policy.
 |---|---|
 | access_policy | Link to Nexus Access Policy |
 
-### Nexus Role Access Category
+---
 
-Maps a Frappe system role to an access category. This is how user roles gain knowledge access.
+### Nexus AI Agent Profile Access Category
+
+Maps a `Nexus AI Agent Profile` to a `Nexus Access Category`. This is the sole runtime access mapping.
 
 | Field | Notes |
 |---|---|
-| role | Link to Frappe Role |
+| ai_agent_profile | Link to Nexus AI Agent Profile |
 | access_category | Link to Nexus Access Category |
-| disabled | Excludes this mapping from resolution |
-| tenant, business_unit, project | Optional scope narrowing |
+| enabled | Excludes from resolution when disabled |
+| priority | Ordering |
 
-Example:
+One profile may be assigned multiple categories. The resolved policy set is the **union** of all enabled categories assigned to the profile.
 
-```
-role: Accounts User
-access_category: Finance Access
-```
+---
 
-→ Accounts Users can retrieve Finance-classified knowledge (because "Finance Access" includes the Finance policy).
+## Profile Resolution — How the Profile Is Selected
 
-### Nexus Channel Access Category
+The profile must be resolved before access can be checked. Two paths exist:
 
-Maps a channel (service lane) to an access category. This acts as a guardrail: even if a user's roles grant broad access, the channel limits what the AI can expose through that entry point.
+### External users — Chat Category selection
 
-| Field | Notes |
-|---|---|
-| channel | Link to Nexus Channel |
-| access_category | Link to Nexus Access Category |
-| disabled | Excludes from resolution |
-| tenant, business_unit, project | Optional scope narrowing |
-
-Example:
+The user selects a `Nexus Chat Category` in the chat window. The category directly references the `ai_agent_profile`. No auth detection or role inference required.
 
 ```
-channel: Website
-access_category: Public Website Category  (contains only "Public")
+User selects "Customer Support"
+    ↓
+Nexus Chat Category: "Customer Support"
+    ai_agent_profile = "Customer Support Bot"
+    ↓
+Profile loaded → access resolution proceeds
 ```
 
-→ No matter what roles a user has, queries through the Website channel can only retrieve Public chunks.
+### Internal / desk users — Direct assignment
 
-### Nexus Channel
+An admin assigns a profile via `Nexus User Profile Assignment`. The system loads the active assignment for the authenticated user.
 
-A service lane. Kept broad and minimal by design.
+```
+Desk user raises query
+    ↓
+Nexus User Profile Assignment: user = rupesh@company.com
+    ai_agent_profile = "Finance Internal Bot"
+    ↓
+Profile loaded → access resolution proceeds
+```
 
-| Field | Notes |
-|---|---|
-| channel_name | Primary key |
-| channel_type | Q&A / Chat / Internal / Simulation / API |
-| disabled | Excluded from routing |
+### API / non-chat channels — Channel profile route
 
-A channel must not hold a direct link to an access policy or a single AI profile. It participates in routing and guardrail resolution only.
+`Nexus Channel AI Profile Route` maps channel + identity_type to a profile. Used when no chat window exists.
 
 ---
 
@@ -151,59 +148,61 @@ A channel must not hold a direct link to an access policy or a single AI profile
 
 `engine/access_resolver.py` → `resolve_allowed_policies(query_contract)`
 
-### Public Endpoints
+### Public requests
 
-If `force_public_only = True` or `is_public = True` in the query contract:
-
-```python
-return {
-    "allowed_access_policies": ["Public"],
-    "force_public_only": True,
-    ...
-}
-```
-
-This overrides all other configuration. No channel, role, or profile setting can expand this beyond `Public`.
-
-### Authenticated Endpoints
-
-The resolver collects policy sets from each configured scope and intersects them:
+If `force_public_only = True` or `is_public = True`:
 
 ```python
-channel_policies = resolve_channel_policy_names(channel_name)
-role_policies    = resolve_role_policy_names(user_roles)
-profile_policies = resolve_profile_policy_names(ai_agent_profile_name)
-
-# Only intersect scopes that have explicit configuration.
-# An unconfigured scope is treated as "no restriction from this scope".
-non_empty_scopes = [s for s in [channel_policies, role_policies, profile_policies] if s]
-
-final = non_empty_scopes[0]
-for scope in non_empty_scopes[1:]:
-    final = final.intersection(scope)
+return {"allowed_access_policies": ["Public"], "force_public_only": True}
 ```
 
-**Important nuance:** An unconfigured scope (e.g. no channel access categories set up yet) does not deny everything — it is simply skipped in the intersection. This allows new deployments to work before all categories are configured.
+This overrides all profile, category, and policy configuration. Cannot be bypassed.
 
-### Resolution Functions
+### Authenticated / profiled requests
 
-| Function | Source DocType |
+```python
+ai_profile_name = query_contract["ai_profile"]["name"]
+profile_policies = resolve_profile_policy_names(ai_profile_name)
+return {"allowed_access_policies": list(profile_policies)}
+```
+
+Single scope. No intersection. No channel ceiling. No role ceiling.
+
+`resolve_profile_policy_names(profile_name)` traverses:
+
+```
+Nexus AI Agent Profile Access Category (all enabled records for this profile)
+    → collect access_category names
+    → Nexus Access Category Policy (child rows of those categories)
+    → collect access_policy names
+    → return as set
+```
+
+---
+
+## Retired from Runtime
+
+These DocTypes are retained but no longer called during runtime access resolution:
+
+| DocType | Previous Role | Current Status |
+|---|---|---|
+| `Nexus Channel Access Category` | Runtime channel policy ceiling | Kept, not called at runtime |
+| `Nexus Role Access Category` | Runtime role policy enforcement | Kept, not called at runtime |
+
+Frappe roles may inform which profile an admin assigns to a user. They do not directly produce access policies at query time.
+
+---
+
+## Fail-Closed Rule
+
+| Situation | Result |
 |---|---|
-| `resolve_channel_policy_names(channel)` | Nexus Channel Access Category → Nexus Access Category → Nexus Access Category Policy |
-| `resolve_role_policy_names(roles)` | Nexus Role Access Category → Nexus Access Category → Nexus Access Category Policy |
-| `resolve_profile_policy_names(profile)` | Nexus AI Agent Profile Access Category → Nexus Access Category → Nexus Access Category Policy |
-
-All three ultimately call `_policies_from_categories(category_names)` which fetches from `Nexus Access Category Policy`.
-
-### Fail-Closed Rule
-
-If all scopes are unconfigured and produce empty sets, the intersection returns an empty list. The caller (answer service or retrieval engine) must then deny retrieval:
+| Profile has no Access Category configured | `allowed_policies = []` → retrieval denied |
+| No profile resolved for the request | Request rejected before reaching retrieval |
+| Profile categories produce empty policy set | Retrieval denied |
+| `force_public_only = True` | Only Public chunks, no exceptions |
 
 ```python
-# answer_service.py
-if allowed_policies is not None and len(allowed_policies) == 0:
-    frappe.throw("Access policy resolution failed. Retrieval cannot proceed.")
-
 # retrieval.py
 if allowed_policies is not None and len(allowed_policies) == 0:
     frappe.throw("Access policy resolution produced no permitted policies. Retrieval denied.")
@@ -211,77 +210,50 @@ if allowed_policies is not None and len(allowed_policies) == 0:
 
 ---
 
-## Query Contract Access Fields
+## Restricted vs No Context
 
-The query contract passed to the answer service and retrieval engine must include:
-
-```python
-query_contract = {
-    "query": "...",
-    "channel": "Website",               # Used for channel policy resolution
-    "is_public": True,                  # Forces Public-only if True
-    "force_public_only": True,          # Explicit public override
-
-    "user": {
-        "user_id": "user@example.com",
-        "roles": ["Accounts User", "Employee"],
-    },
-
-    "ai_profile": {
-        "name": "Website Support Profile",
-        ...
-    },
-
-    # Pre-resolved (set by access_resolver.resolve_allowed_policies):
-    "allowed_access_policies": ["Public", "Internal", "Finance Restricted"],
-}
-```
-
-The retrieval engine applies this as a database filter:
-
-```python
-filters["access_policy"] = ["in", allowed_access_policies]
-```
-
----
-
-## Restricted Response vs No Context
-
-These two cases must never be merged:
+These two outcomes must never be merged:
 
 | Situation | `access_status` | Answer |
 |---|---|---|
-| Relevant chunks found but user cannot access them | `restricted` | "You do not have permission to access this information." |
-| No relevant chunks found (or confidence too low) | `no_context` | "I do not have enough approved knowledge to answer this." |
+| Chunks exist but profile cannot access them | `restricted` | "You do not have permission to access this information." |
+| No relevant chunks found | `no_context` | Profile fallback message |
 | Answer successfully generated | `allowed` | Grounded answer with sources |
-
-The retrieval engine determines "restricted" when the highest-scoring denied chunk scores higher than the best allowed chunk. This ensures that "I don't know" is not returned when the system actually has the answer but is protecting it.
 
 ---
 
 ## Access vs Business Context
 
-These are different things. Do not confuse them.
-
 | Purpose | Fields |
 |---|---|
-| **Access control** (who can see it) | `access_policy` on chunks and sources |
+| **Access control** (who can see it) | `access_policy` on chunks |
 | **Business relevance** (what is it about) | `business_unit`, `project`, `context`, `sub_context`, `entity_type`, `entity`, `topic` |
 
-Business context fields help with retrieval relevance (filtering and scoring) but never substitute for access policy. A chunk scoped to `project = "Alpha"` is still retrieved only if its `access_policy` is in the allowed set.
+Business context fields drive retrieval relevance (filtering and scoring). They never substitute for access policy. A chunk scoped to `project = "Alpha"` is retrieved only if its `access_policy` is in the allowed set.
 
 ---
 
-## Admin UI: Role Allocation Page
+## Admin Configuration Checklist
 
-`nexus_access/page/nexus_access_role_allocation/`
+For every profile that will be used at runtime:
 
-This page allows administrators to:
+```
+[ ] At least one Nexus AI Agent Profile Access Category record with enabled = 1
+[ ] The linked Access Category has at least one Access Policy in its child table
+[ ] Knowledge chunks exist with access_policy values matching those policies
+```
 
-- Select a Frappe role
-- View its currently assigned access categories
-- Assign or unassign access categories
-- Preview the effective access policies resulting from the assignment
-- View access category details
+For every channel accepting external users:
 
-This UI writes to `Nexus Role Access Category`. It does not modify `Nexus Access Policy` directly.
+```
+[ ] Nexus Chat Category records configured per identity type
+[ ] Each category has a valid ai_agent_profile assigned
+[ ] That profile has Access Category configured
+```
+
+For every internal desk user:
+
+```
+[ ] Active Nexus User Profile Assignment exists
+[ ] Assigned profile has Access Category configured
+```

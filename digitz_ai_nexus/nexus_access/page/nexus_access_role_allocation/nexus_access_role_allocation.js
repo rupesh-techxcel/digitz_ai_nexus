@@ -21,6 +21,7 @@ frappe.pages['nexus-access-role-allocation'].on_page_load = function (wrapper) {
     $(page.body).html(buildPageHTML());
     bindEvents();
     loadInitialData();
+    injectDeprecationBanner();
 
     // -----------------------------------------------------------------------
     // HTML
@@ -527,6 +528,44 @@ frappe.pages['nexus-access-role-allocation'].on_page_load = function (wrapper) {
                 `);
             },
         });
+    }
+
+    // -----------------------------------------------------------------------
+    // Deprecation banner
+    // -----------------------------------------------------------------------
+    function injectDeprecationBanner() {
+        const banner = $(`
+            <div style="
+                margin: 0 12px 18px;
+                padding: 14px 20px;
+                border-radius: 16px;
+                background: #fff7e6;
+                border: 1px solid #f2d49b;
+                display: flex;
+                align-items: flex-start;
+                gap: 14px;
+            ">
+                <span style="font-size:18px; flex-shrink:0;">⚠️</span>
+                <div>
+                    <div style="font-weight:900; color:#8a5d00; font-size:13px; margin-bottom:4px;">
+                        Role-based access is no longer the primary runtime access mechanism
+                    </div>
+                    <div style="font-size:12px; color:#a07000; line-height:1.6; font-weight:650;">
+                        Runtime knowledge access is now governed exclusively through
+                        <b>AI Agent Profile → Access Category → Policies</b>.
+                        Role assignments here are retained for reference and historical records
+                        but are not called during query resolution.
+                        <br>
+                        Use
+                        <a href="/nexus-profile-access-allocation" style="color:#214dbb; font-weight:850; text-decoration:none;">
+                            Nexus Profile Access Allocation
+                        </a>
+                        to manage runtime access.
+                    </div>
+                </div>
+            </div>
+        `);
+        $(page.body).prepend(banner);
     }
 
     // -----------------------------------------------------------------------
