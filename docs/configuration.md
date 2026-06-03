@@ -137,22 +137,23 @@ Set `is_default = 1` on the ecosystem that should be used when no explicit ecosy
 
 ## Access Category Setup
 
-Before users can retrieve knowledge, access categories must be configured. The minimum setup for a public Q&A:
+Before users can retrieve knowledge, access categories must be assigned to the AI Agent Profile that will handle the request. The minimum setup for a public Q&A or public chat profile:
 
 1. **Create an Access Category:**
    - `category_name`: Public Website Access
    - `allowed_policies`: PUBLIC
 
-2. **Create a Channel Access Category:**
-   - `channel`: Website (or your Q&A channel)
+2. **Assign the Access Category to the AI Agent Profile:**
+   - `ai_agent_profile`: Website Public Bot
    - `access_category`: Public Website Access
+   - `enabled`: 1
 
 For internal authenticated users:
 
 1. **Create an Access Category** that includes the relevant policies (e.g. PUBLIC + INTERNAL_EMPLOYEE)
-2. **Create a Role Access Category** mapping your Frappe role to the category
+2. **Assign that category to the internal user's resolved AI Agent Profile**
 
-The Admin UI at `nexus_access/page/nexus_access_role_allocation/` provides a guided interface for step 2.
+Runtime access resolution is profile-first. `Nexus Channel Access Category` and `Nexus Role Access Category` records are retained for admin/reporting compatibility but are not used by the current query resolver.
 
 ---
 

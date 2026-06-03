@@ -51,7 +51,7 @@ If no profile can be resolved for a given request, the system rejects the reques
 
 ### Decision 5 — Chat Category is the identity declaration point for external users
 
-The user does not declare who they are — they declare their **intent** (Customer Support, Product Enquiry, Connect to Sales). The category carries the identity type and the linked profile. This works equally for authenticated and unauthenticated external users.
+The user declares their **intent** by selecting a chat category (Customer Support, Product Enquiry, Connect to Sales). Runtime derives or accepts the user's `identity_type`, then resolves a `Nexus Category Identity Route` to find the linked profile. This works for both authenticated and unauthenticated external users.
 
 ### Decision 6 — Roles inform profile assignment, not access enforcement
 
@@ -63,7 +63,7 @@ For internal users, Frappe roles can be used by the admin as a guide when assign
 
 ### 3.1 `Nexus Chat Category`
 
-**Purpose:** Pre-defined options displayed in the chat window. Each category carries the identity context and resolves the Agent Profile for that conversation.
+**Purpose:** Pre-defined options displayed in the chat window. A category declares intent. The Agent Profile is resolved through `Nexus Category Identity Route`.
 
 **Module:** `nexus_live_channels`
 **App:** `digitz_ai_nexus_live`
@@ -73,8 +73,7 @@ For internal users, Frappe roles can be used by the admin as a guide when assign
 | category_code | Data (unique) | Primary key |
 | category_label | Data | What the user sees in the chat window (e.g. "Customer Support") |
 | channel | Link → Nexus Live Channel | Which channel this category appears on |
-| identity_type | Select | Public / Customer / Prospect / Partner / Internal / Admin |
-| ai_agent_profile | Link → Nexus AI Agent Profile | Profile resolved when this category is selected |
+| requires_authentication | Check | Whether guests may use this category |
 | display_order | Int | Sort order in the chat window |
 | enabled | Check | Controls visibility in chat window |
 | description | Small Text | Admin notes |
@@ -82,10 +81,12 @@ For internal users, Frappe roles can be used by the admin as a guide when assign
 **Runtime behaviour:**
 - Chat window loads all enabled `Nexus Chat Category` records for its channel, sorted by `display_order`
 - User selects a category
-- `ai_agent_profile` from that category is loaded and used for the entire conversation
+- Runtime resolves `identity_type`
+- `Nexus Category Identity Route` resolves `channel + chat_category + identity_type` to `ai_agent_profile`
+- The resolved profile is snapshotted and used for the conversation
 - Profile → Access Category → Policies → Knowledge
 
-**Admin requirement:** Every channel must have at least one enabled chat category. A channel with no categories cannot start a conversation.
+**Admin requirement:** Every selectable category must have at least one enabled route for every identity type it will serve. A category with no matching route cannot start a conversation for that identity.
 
 ---
 
@@ -388,8 +389,7 @@ def build_ai_profile_dict(profile, default_response_mode="chat"):
 
 ### Phase 2 — Nexus Chat Category DocType ✅
 - [x] Create `Nexus Chat Category` DocType JSON
-- [x] Create `nexus_chat_category.py` controller (validates profile has access category)
-- [x] Create `nexus_chat_category.js` client-side form (warns if profile missing access category)
+- [x] Create `nexus_chat_category.py` controller (warns when no enabled identity routes exist)
 - [x] Add to `Nexus Live Channels` module
 
 ### Phase 3 — Nexus User Profile Assignment DocType ✅
@@ -398,19 +398,21 @@ def build_ai_profile_dict(profile, default_response_mode="chat"):
 - [x] Validation: enforce one active assignment per user
 
 ### Phase 4 — Identity and Profile Resolver Services
-- [ ] Create `services/identity_resolver.py`
-- [ ] Create `services/profile_resolver.py`
-- [ ] Create `services/profile_builder.py`
+- [x] Create `services/identity_resolver.py`
+- [x] Create `services/profile_resolver.py`
+- [ ] Create shared `services/profile_builder.py` or consolidate current local builders
 
 ### Phase 5 — Update `Nexus Channel AI Profile Route` ✅
 - [x] Replace `auth_scope` field with `identity_type` (Public/Customer/Prospect/Partner/Internal/Admin)
 - [x] Update DocType JSON
 - [ ] Write migration patch for existing records (auth_scope → identity_type mapping)
 
-### Phase 6 — Wire live services to new resolution ✅
+### Phase 6 — Wire live services to new resolution ⚠️
 - [x] `live_chat_service.py` — chat_category + identity_type drives profile resolution
 - [x] `live_qa_service.py` — chat_category + identity_type drives profile resolution
 - [x] `live.py` — `get_channel_categories` filters by identity and route existence
+- [ ] Ensure Live builds `ai_profile` before calling `resolve_allowed_policies()`
+- [ ] Ensure `resolve_allowed_policies()` receives `query_contract.ai_profile.name`
 
 ### Phase 7 — Channel sync (deferred)
 - [ ] `Nexus Live Channel` controller: auto-create/sync `Nexus Channel` record on save
@@ -435,7 +437,8 @@ Before a channel goes live, admin must ensure:
 **For external (chat window) channels:**
 ```
 [ ] At least one Nexus Chat Category configured per channel
-[ ] Each category has an enabled Nexus AI Agent Profile assigned
+[ ] Each category has an enabled Nexus Category Identity Route for every served identity_type
+[ ] Each route points to a valid Nexus AI Agent Profile
 [ ] That profile has at least one Nexus AI Agent Profile Access Category record
 [ ] The Access Category contains at least one Access Policy
 [ ] Knowledge chunks exist with matching access_policy values
@@ -450,7 +453,6 @@ Before a channel goes live, admin must ensure:
 **For API / non-chat channels:**
 ```
 [ ] Nexus Channel AI Profile Route records exist for each identity_type that will call this channel
-[ ] A default route (is_default=True) exists as fallback
 ```
 
 ---
@@ -460,9 +462,10 @@ Before a channel goes live, admin must ensure:
 ```
 [ ] External guest selects chat category → correct profile resolved → correct policies applied
 [ ] External customer selects chat category → customer profile resolved → broader policies than guest
+[ ] Core payload contains ai_profile.name before allowed_access_policies is resolved
 [ ] Internal desk user raises query → profile resolved from direct assignment
 [ ] Internal desk user with no assignment → hard reject with clear error
-[ ] Chat category with no profile configured → hard reject
+[ ] Chat category with no identity route configured → hard reject
 [ ] Channel with no chat categories → chat window does not start
 [ ] access_resolver.py → only profile scope used → channel/role resolution not called
 [ ] Profile with no Access Category → allowed_policies = [] → retrieval denied

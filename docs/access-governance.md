@@ -110,20 +110,28 @@ One profile may be assigned multiple categories. The resolved policy set is the 
 
 ## Profile Resolution — How the Profile Is Selected
 
-The profile must be resolved before access can be checked. Two paths exist:
+The profile must be resolved before access can be checked. Three paths exist:
 
-### External users — Chat Category selection
+### External users — Chat Category + Identity Route
 
-The user selects a `Nexus Chat Category` in the chat window. The category directly references the `ai_agent_profile`. No auth detection or role inference required.
+The user selects a `Nexus Chat Category` in the chat window. Runtime derives an `identity_type` from the request/session, then resolves a `Nexus Category Identity Route`.
 
 ```
 User selects "Customer Support"
     ↓
-Nexus Chat Category: "Customer Support"
+Resolve identity_type:
+    Public | Customer | Prospect | Partner | Internal | Admin
+    ↓
+Nexus Category Identity Route:
+    channel = Website Chat
+    chat_category = Customer Support
+    identity_type = Customer
     ai_agent_profile = "Customer Support Bot"
     ↓
 Profile loaded → access resolution proceeds
 ```
+
+The category does not own access directly. The resolved profile owns access through `Nexus AI Agent Profile Access Category`.
 
 ### Internal / desk users — Direct assignment
 
@@ -141,6 +149,23 @@ Profile loaded → access resolution proceeds
 ### API / non-chat channels — Channel profile route
 
 `Nexus Channel AI Profile Route` maps channel + identity_type to a profile. Used when no chat window exists.
+
+---
+
+## Runtime Query Contract Requirement
+
+Any Live or external caller that expects profile-based knowledge access must build the core query contract in this order:
+
+```
+resolve chat category + identity_type
+    → resolve Nexus AI Agent Profile
+    → build query_contract.ai_profile.name
+    → call resolve_allowed_policies(query_contract)
+    → set query_contract.allowed_access_policies
+    → call retrieval / answer service
+```
+
+If `resolve_allowed_policies()` is called before `query_contract.ai_profile.name` exists, it returns an empty policy list for profiled requests. Retrieval then fails closed.
 
 ---
 

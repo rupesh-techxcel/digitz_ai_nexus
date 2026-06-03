@@ -47,18 +47,17 @@ Access policy is set at the source and propagates down to chunks. Retrieval filt
 Access is category-based, not direct role-to-policy:
 
 ```
-Role → Access Category → Access Policy → Knowledge Chunks
+AI Agent Profile → Access Category → Access Policy → Knowledge Chunks
 ```
 
 - **Nexus Access Policy** — classifies knowledge (e.g. `Finance`, `HR`, `Public`)
 - **Nexus Access Category** — groups policies into reusable bundles
-- **Nexus Role Access Category** — maps a Frappe role to an access category
-- **Nexus Channel Access Category** — applies a guardrail per channel
+- **Nexus AI Agent Profile Access Category** — maps the resolved AI profile to access categories
 
-Final allowed policies are always the intersection of profile scope, role scope, and channel guardrail:
+Final allowed policies are the union of all enabled access categories assigned to the resolved AI Agent Profile:
 
 ```
-final_allowed_policies = profile ∩ role ∩ channel
+final_allowed_policies = policies(profile.access_categories)
 ```
 
 Public endpoints always force `["Public"]`, regardless of other configuration.

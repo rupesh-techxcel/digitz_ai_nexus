@@ -243,7 +243,7 @@ Autoname: `field:policy_name`. Permissions: System Manager only.
 
 ### Nexus Access Category
 
-Named group of access policies. Roles and channels map to categories, not directly to policies.
+Named group of access policies. Runtime AI profiles map to categories, not directly to policies.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -289,7 +289,7 @@ Do not add `default_ai_agent_profile`, `access_policy`, or `default_access_polic
 
 ### Nexus Channel Access Category
 
-Maps a channel to an access category. Acts as the channel-level guardrail for knowledge retrieval.
+Maps a channel to an access category. Retained for admin reporting and backward compatibility. It is not called by the current runtime access resolver; runtime retrieval access is governed by the resolved `Nexus AI Agent Profile`.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -305,7 +305,7 @@ Autoname: `NCAC-.#####`. Permissions: System Manager only.
 
 ### Nexus Role Access Category
 
-Maps a Frappe system role to an access category. This is how user roles gain knowledge retrieval permission.
+Maps a Frappe system role to an access category. Retained for admin reporting and backward compatibility. Frappe roles do not directly produce runtime retrieval policies in the current profile-first model.
 
 | Field | Type | Notes |
 |---|---|---|
