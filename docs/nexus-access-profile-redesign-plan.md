@@ -380,11 +380,11 @@ def build_ai_profile_dict(profile, default_response_mode="chat"):
 
 ## 8. Implementation Phases
 
-### Phase 1 — Access resolver simplification ✅ (Partially done)
+### Phase 1 — Access resolver simplification ✅
 - [x] `agent_service.py` — profile-first priority in `get_agent_behavior()`
 - [x] `live_chat_service.py` — `ai_profile` dict from profile
-- [x] `live_qa_service.py` — `ai_profile` dict from profile
-- [ ] `access_resolver.py` — remove channel and role scope from runtime path
+- [x] `live_qa_service.py` — chat_category + identity resolution wired
+- [x] `access_resolver.py` — profile-only scope; channel and role functions retained but not called in runtime path
 
 ### Phase 2 — Nexus Chat Category DocType ✅
 - [x] Create `Nexus Chat Category` DocType JSON
@@ -402,15 +402,15 @@ def build_ai_profile_dict(profile, default_response_mode="chat"):
 - [ ] Create `services/profile_resolver.py`
 - [ ] Create `services/profile_builder.py`
 
-### Phase 5 — Update `Nexus Channel AI Profile Route`
-- [ ] Replace `auth_scope` field with `identity_type` (expanded options)
-- [ ] Update DocType JSON
+### Phase 5 — Update `Nexus Channel AI Profile Route` ✅
+- [x] Replace `auth_scope` field with `identity_type` (Public/Customer/Prospect/Partner/Internal/Admin)
+- [x] Update DocType JSON
 - [ ] Write migration patch for existing records (auth_scope → identity_type mapping)
 
-### Phase 6 — Wire live services to new resolution
-- [ ] Update `live_chat_service.py` — accept `chat_category` in payload
-- [ ] Update `live_qa_service.py` — same
-- [ ] Update `live.py` API endpoints — pass `chat_category`
+### Phase 6 — Wire live services to new resolution ✅
+- [x] `live_chat_service.py` — chat_category + identity_type drives profile resolution
+- [x] `live_qa_service.py` — chat_category + identity_type drives profile resolution
+- [x] `live.py` — `get_channel_categories` filters by identity and route existence
 
 ### Phase 7 — Channel sync (deferred)
 - [ ] `Nexus Live Channel` controller: auto-create/sync `Nexus Channel` record on save
