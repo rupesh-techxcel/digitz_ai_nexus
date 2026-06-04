@@ -98,7 +98,8 @@ Nexus Conversation Message
 Nexus Agent Queue
 Nexus Agent Activity Log
 Nexus Escalation Rule
-Nexus Channel AI Profile Route
+Nexus Chat Category
+Nexus Category Identity Route
 Nexus AI Agent Profile Access Category
 live_chat_service.py
 live_qa_service.py
@@ -226,40 +227,31 @@ Website Channel
     Product Recommendation Profile
 ```
 
-Therefore profile selection should happen through a routing/mapping DocType, not by hardcoding a single profile into the channel.
+Therefore chat profile selection happens through the chat category identity route, not by hardcoding a single profile into the channel.
 
-Recommended DocType:
-
-```text
-Nexus Channel AI Profile Route
-```
-
-Purpose:
+Active routing purpose:
 
 ```text
 Resolve the correct Nexus AI Agent Profile based on:
     channel
-    use_case
-    context
-    sub_context
-    intent
-    auth_scope
-    priority
+    chat_category
+    identity_type
+    route priority
 ```
 
 Example:
 
 ```text
-Website / Q&A / Public / default
+Website / Q&A / Public Visitor
     → Public Q&A Profile
 
-Website / Chat / Public / default
+Website / Support Chat / Customer
     → Website Support Chat Profile
 
-Website / Chat / Public / sales
+Website / Sales Chat / Prospect
     → Sales Enquiry Profile
 
-Internal Portal / Chat / Authenticated / finance
+Internal Portal / Finance Chat / Employee
     → Finance Assistant Profile
 ```
 
@@ -507,55 +499,15 @@ Only `Public` is primitive/system-defined. All other policies are user-defined.
 
 ---
 
-# 13. Role Access Allocation UI
+# 13. Retired Role Access Allocation UI
 
-If creating a role access allocation UI, it must assign:
-
-```text
-Role → Access Category
-```
-
-not:
+The custom role access allocation page has been removed from the active product. Runtime access enforcement is profile-first:
 
 ```text
-Role → Access Policy
+Nexus AI Agent Profile → Nexus Access Category → Nexus Access Policy
 ```
 
-The UI should use:
-
-```text
-Nexus Role Access Category
-```
-
-and preview effective policies through:
-
-```text
-Nexus Access Category Policy
-```
-
-A good page name is:
-
-```text
-Nexus Access Role Allocation
-```
-
-Purpose:
-
-```text
-Allow admins to assign Access Categories to Frappe Roles and preview effective Access Policies.
-```
-
-Required features:
-
-```text
-Role selector
-Assigned Access Categories
-Available Access Categories
-Assign/unassign category
-Effective Access Policy preview
-Access Category detail preview
-Quick links to Access Policy, Access Category, Role Access Category, Channel Access Category
-```
+`Nexus Role Access Category` can remain as a legacy/reporting DocType, but it must not be treated as the runtime source of retrieval access.
 
 Do not edit legacy fields like:
 
@@ -609,7 +561,8 @@ Nexus Live Agent
 Nexus AI Agent Profile
 Nexus Human Agent Profile
 Nexus Live Channel
-Nexus Channel AI Profile Route
+Nexus Chat Category
+Nexus Category Identity Route
 Nexus AI Agent Profile Access Category
 Nexus Conversation
 Nexus Conversation Message
@@ -692,17 +645,16 @@ Escalate if confidence/fallback rules require
 ```text
 Authenticated user asks question
     ↓
-Resolve channel
-    ↓
-Resolve AI profile through route
+Resolve AI Agent Profile
+    - internal user: Nexus User Profile Assignment
+    - chat user: Nexus Chat Category + Identity Route
+    - direct integration: explicit profile/agent context
     ↓
 Resolve profile access categories
     ↓
-Resolve user role access categories
+Resolve Access Policies from those categories
     ↓
-Resolve channel guardrail categories
-    ↓
-final_allowed_policies = profile ∩ role ∩ channel
+final_allowed_policies = profile policies
     ↓
 Retrieve chunks where access_policy is allowed
     ↓
@@ -819,7 +771,7 @@ grep -R "allowed_access_policies" apps/digitz_ai_nexus apps/digitz_ai_nexus_live
 grep -R "resolve_allowed_policies" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
 grep -R "Nexus Role Access Category" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
 grep -R "Nexus AI Agent Profile Access Category" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
-grep -R "Nexus Channel AI Profile Route" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
+grep -R "Nexus Category Identity Route" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
 grep -R "access_level" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
 grep -R "sensitivity" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience
 grep -R "default_agent" apps/digitz_ai_nexus apps/digitz_ai_nexus_live apps/digitz_ai_experience

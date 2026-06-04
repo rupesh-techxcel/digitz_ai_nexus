@@ -195,9 +195,10 @@
    "options": "Nexus Live Channel"
   },
   {
+   "description": "Fallback AI agent used only when a request is not resolved through chat category + identity + AI Agent Profile routing.",
    "fieldname": "default_public_agent",
    "fieldtype": "Link",
-   "label": "Default Public Agent",
+   "label": "Fallback Public Agent",
    "options": "Nexus Live Agent"
   },
   {

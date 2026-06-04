@@ -117,19 +117,9 @@ For internal users, Frappe roles can be used by the admin as a guide when assign
 
 ## 4. Modified DocTypes
 
-### 4.1 `Nexus Channel AI Profile Route`
+### 4.1 Obsolete Channel Profile Route Removed
 
-**Current field:** `auth_scope` — Select (Public / Authenticated / Any)
-**Change:** Replace with `identity_type` — Link to `Nexus Identity Type`
-
-**New role of this DocType:** Fallback routing for non-chat channels (API, direct integrations) where no chat window exists. For chat channels, `Nexus Chat Category` is the primary resolution mechanism.
-
-| Field | Change |
-|---|---|
-| `auth_scope` | Rename to `identity_type`, expand options |
-| `use_case` | Retained — can still narrow routing by use case |
-| `context`, `sub_context`, `intent` | Retained |
-| `priority`, `is_default` | Retained |
+The obsolete channel profile route DocType is no longer part of the active model. Chat routing is resolved through `Nexus Chat Category` + `Nexus Category Identity Route`. Non-chat integrations must pass explicit profile/agent context or use the channel/agent default path.
 
 ---
 
@@ -285,34 +275,19 @@ def resolve_profile_for_user(user):
     return frappe.get_doc("Nexus AI Agent Profile", assignment.ai_agent_profile)
 
 
-def resolve_profile_for_external(channel, identity_type):
+def resolve_profile_for_external(ai_agent_profile=None, live_agent=None):
     """
-    Fallback profile resolution for non-chat channels (API, direct integration).
-    Uses Nexus Channel AI Profile Route with identity_type.
+    Non-chat integrations must provide explicit profile/agent context.
     """
-    route = frappe.db.get_value(
-        "Nexus Channel AI Profile Route",
-        {
-            "channel": channel,
-            "identity_type": identity_type,
-            "enabled": 1,
-        },
-        "ai_agent_profile",
-        order_by="priority asc",
-    )
+    if ai_agent_profile:
+        return frappe.get_doc("Nexus AI Agent Profile", ai_agent_profile)
 
-    if not route:
-        route = frappe.db.get_value(
-            "Nexus Channel AI Profile Route",
-            {"channel": channel, "is_default": 1, "enabled": 1},
-            "ai_agent_profile",
-        )
+    if live_agent:
+        agent = frappe.get_doc("Nexus Live Agent", live_agent)
+        if agent.ai_agent_profile:
+            return frappe.get_doc("Nexus AI Agent Profile", agent.ai_agent_profile)
 
-    if not route:
-        frappe.throw(
-            f"No profile route configured for channel '{channel}' "
-            f"with identity type '{identity_type}'."
-        )
+    frappe.throw("No AI Agent Profile context was provided for this request.")
 
     return frappe.get_doc("Nexus AI Agent Profile", route)
 ```
@@ -402,17 +377,17 @@ def build_ai_profile_dict(profile, default_response_mode="chat"):
 - [x] Create `services/profile_resolver.py`
 - [ ] Create shared `services/profile_builder.py` or consolidate current local builders
 
-### Phase 5 — Update `Nexus Channel AI Profile Route` ✅
-- [x] Replace `auth_scope` field with `identity_type` (Public/Customer/Prospect/Partner/Internal/Admin)
-- [x] Update DocType JSON
-- [ ] Write migration patch for existing records (auth_scope → identity_type mapping)
+### Phase 5 — Remove Obsolete Channel Profile Route ✅
+- [x] Remove obsolete channel profile route DocType files
+- [x] Keep chat profile routing on `Nexus Category Identity Route`
+- [x] Keep non-chat/API profile selection explicit through profile or agent context
 
-### Phase 6 — Wire live services to new resolution ⚠️
+### Phase 6 — Wire live services to new resolution ✅
 - [x] `live_chat_service.py` — chat_category + identity_type drives profile resolution
 - [x] `live_qa_service.py` — chat_category + identity_type drives profile resolution
 - [x] `live.py` — `get_channel_categories` filters by identity and route existence
-- [ ] Ensure Live builds `ai_profile` before calling `resolve_allowed_policies()`
-- [ ] Ensure `resolve_allowed_policies()` receives `query_contract.ai_profile.name`
+- [x] Ensure Live builds `ai_profile` before calling `resolve_allowed_policies()`
+- [x] Ensure `resolve_allowed_policies()` receives `query_contract.ai_profile.name`
 
 ### Phase 7 — Channel sync (deferred)
 - [ ] `Nexus Live Channel` controller: auto-create/sync `Nexus Channel` record on save
@@ -452,7 +427,8 @@ Before a channel goes live, admin must ensure:
 
 **For API / non-chat channels:**
 ```
-[ ] Nexus Channel AI Profile Route records exist for each identity_type that will call this channel
+[ ] Integration passes explicit Nexus AI Agent Profile or Nexus Live Agent context
+[ ] Selected profile has Access Category configured
 ```
 
 ---

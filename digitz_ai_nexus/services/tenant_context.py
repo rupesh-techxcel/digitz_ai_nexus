@@ -51,7 +51,11 @@ def get_user_context(user=None):
 
 def get_ecosystem_for_tenant(tenant):
     """
-    Returns Nexus Ecosystem configuration for a tenant.
+    Returns the active Nexus Ecosystem configuration for a tenant.
+
+    Priority:
+    1. enabled + tenant default
+    2. latest enabled ecosystem
     """
     if not tenant:
         return None
@@ -61,9 +65,21 @@ def get_ecosystem_for_tenant(tenant):
         {
             "tenant": tenant,
             "enabled": 1,
+            "is_default": 1,
         },
         "name",
     )
+
+    if not ecosystem_name:
+        ecosystem_name = frappe.db.get_value(
+            "Nexus Ecosystem",
+            {
+                "tenant": tenant,
+                "enabled": 1,
+            },
+            "name",
+            order_by="modified desc",
+        )
 
     if not ecosystem_name:
         return None

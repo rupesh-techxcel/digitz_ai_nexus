@@ -26,9 +26,10 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     <div class="nexus-admin-badge">DIGITZ AI Nexus</div>
                     <h2>Nexus Administration</h2>
                     <p>
-                        Configure tenant operating profiles through the model:
-                        <b>Tenant → Ecosystem → Defaults</b>. A tenant can have multiple ecosystems such as
-                        Production, Sandbox, Synthetic Validation, and Internal Platform.
+                        Configure tenant operating profiles and fallback runtime defaults through the model:
+                        <b>Tenant → Ecosystem → Defaults</b>. Chat access itself is resolved through
+                        <b>Chat Category → Identity → AI Agent Profile</b>. A tenant can have multiple ecosystems
+                        such as Production, Sandbox, Synthetic Validation, and Internal Platform.
                     </p>
                 </div>
 
@@ -140,8 +141,8 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     <div>
                         <div class="nexus-admin-card-title">Selected Ecosystem Defaults</div>
                         <p>
-                            Configure defaults and runtime governance for the selected ecosystem profile.
-                            Runtime payload values can still override these defaults.
+                            Configure fallback defaults and runtime governance for the selected ecosystem profile.
+                            Runtime payload values and category/profile routes can still override these defaults.
                         </p>
                     </div>
 
@@ -289,8 +290,8 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     </div>
 
                     <div>
-                        <label>Default Public Agent</label>
-                        <input id="nexus_default_public_agent" class="form-control" placeholder="Agent code or name">
+                        <label>Fallback Public Agent</label>
+                        <input id="nexus_default_public_agent" class="form-control" placeholder="Used only when no category/profile route applies">
                     </div>
 
                     <div>
@@ -773,6 +774,8 @@ function render_readiness(readiness) {
             ${render_kv('Knowledge Chunks', readiness.chunk_count || 0)}
             ${render_kv('Channels', readiness.channel_count || 0)}
             ${render_kv('AI Agents', readiness.ai_agent_count || 0)}
+            ${render_kv('Category Routes', readiness.category_route_count || 0)}
+            ${render_kv('Profile Access Rows', readiness.profile_access_count || 0)}
             ${render_kv('Activation Status', readiness.activation_status || '-')}
             ${render_kv('Certification Status', readiness.certification_status || '-')}
         </div>
@@ -822,7 +825,7 @@ function render_ecosystem_cards() {
                     ${render_kv('Default Public Context', e.default_public_context || '-')}
                     ${render_kv('Default Q&A Channel', e.default_qa_channel || '-')}
                     ${render_kv('Default Chat Channel', e.default_chat_channel || '-')}
-                    ${render_kv('Default Public Agent', e.default_public_agent || '-')}
+                    ${render_kv('Fallback Public Agent', e.default_public_agent || '-')}
                     ${render_kv('Widget Enabled', yes_no(e.website_widget_enabled))}
                     ${render_kv('Activation Status', e.activation_status || '-')}
                 </div>
@@ -1790,7 +1793,7 @@ function open_nexus_administration_help() {
                         <li>Default Public Context</li>
                         <li>Default Q&A Channel</li>
                         <li>Default Chat Channel</li>
-                        <li>Default Public Agent</li>
+                        <li>Fallback Public Agent, used only when category/profile routing does not apply</li>
                         <li>Default Widget Settings</li>
                     </ul>
                 </div>

@@ -135,21 +135,6 @@ APIs used by the source assistant interface. Supports guided knowledge source cr
 
 ---
 
-## Access Role Allocation
-
-### `digitz_ai_nexus.api.nexus_access_role_allocation.*`
-
-APIs used by the Nexus Access Role Allocation page. Supports:
-
-- Fetching roles and their current access category assignments
-- Assigning or unassigning a category from a role
-- Previewing effective access policies resulting from an assignment
-- Quick links to related DocTypes
-
-These endpoints write to `Nexus Role Access Category`. They do not modify `Nexus Access Policy` directly.
-
----
-
 ## Query Contract Reference
 
 The `query_contract` dictionary is the primary input passed through the answer pipeline. All services consume it.

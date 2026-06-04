@@ -91,7 +91,7 @@ web_include_js = [
 # ------------
 
 # before_install = "digitz_ai_nexus.install.before_install"
-# after_install = "digitz_ai_nexus.setup.install.after_install"
+after_install = "digitz_ai_nexus.setup.install.after_install"
 
 # Uninstallation
 # ------------
@@ -254,4 +254,3 @@ web_include_js = [
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

@@ -364,15 +364,15 @@ Per-tenant operational configuration. Defines defaults, feature flags, and widge
 | default_top_k | Int | Override global top_k for this tenant |
 | **Q&A** | | |
 | qa_enabled | Check | |
-| default_qa_channel | Link → Nexus Channel | |
+| default_qa_channel | Link → Nexus Live Channel | |
 | qa_fallback_message | Small Text | |
 | source_citation_required | Check | |
 | **Live Chat** | | |
 | live_chat_enabled | Check | |
-| default_chat_channel | Link → Nexus Channel | |
-| default_live_channel | Data | |
-| default_public_agent | Data | |
-| default_public_escalation_queue | Data | |
+| default_chat_channel | Link → Nexus Live Channel | |
+| default_live_channel | Link → Nexus Live Channel | |
+| default_public_agent | Link → Nexus Live Agent | Fallback agent used only when category/profile routing does not apply |
+| default_public_escalation_queue | Link → Nexus Agent Queue | |
 | default_escalation_enabled | Check | |
 | **Widget** | | |
 | website_widget_enabled | Check | |

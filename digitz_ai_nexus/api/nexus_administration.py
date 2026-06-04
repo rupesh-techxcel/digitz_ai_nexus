@@ -838,6 +838,9 @@ def get_or_create_tenant(tenant_name, tenant_code=None):
     if has_field("Nexus Tenant", "enabled"):
         doc.enabled = 1
 
+    if has_field("Nexus Tenant", "disabled"):
+        doc.disabled = 0
+
     doc.insert(ignore_permissions=True)
     return doc
 
@@ -887,6 +890,20 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         },
     )
 
+    category_route_count = count_records_safely(
+        doctype="Nexus Category Identity Route",
+        extra_filters={
+            "enabled": 1,
+        },
+    )
+
+    profile_access_count = count_records_safely(
+        doctype="Nexus AI Agent Profile Access Category",
+        extra_filters={
+            "enabled": 1,
+        },
+    )
+
     qa_ready = bool(
         ecosystem
         and ecosystem.get("qa_enabled")
@@ -899,8 +916,9 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         ecosystem
         and ecosystem.get("live_chat_enabled")
         and ecosystem.get("default_chat_channel")
-        and ecosystem.get("default_public_agent")
         and ai_agent_count > 0
+        and category_route_count > 0
+        and profile_access_count > 0
     )
 
     testing_ready = bool(
@@ -925,6 +943,8 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         "chunk_count": chunk_count,
         "channel_count": channel_count,
         "ai_agent_count": ai_agent_count,
+        "category_route_count": category_route_count,
+        "profile_access_count": profile_access_count,
         "qa_ready": qa_ready,
         "live_ready": live_ready,
         "testing_ready": testing_ready,
@@ -943,6 +963,8 @@ def get_empty_readiness():
         "chunk_count": 0,
         "channel_count": 0,
         "ai_agent_count": 0,
+        "category_route_count": 0,
+        "profile_access_count": 0,
         "qa_ready": False,
         "live_ready": False,
         "testing_ready": False,

@@ -146,9 +146,9 @@ Nexus User Profile Assignment: user = rupesh@company.com
 Profile loaded → access resolution proceeds
 ```
 
-### API / non-chat channels — Channel profile route
+### API / non-chat channels
 
-`Nexus Channel AI Profile Route` maps channel + identity_type to a profile. Used when no chat window exists.
+Direct integrations should use an explicit agent/profile context or the channel's configured agent path. The active runtime model does not use a separate channel-level profile route.
 
 ---
 

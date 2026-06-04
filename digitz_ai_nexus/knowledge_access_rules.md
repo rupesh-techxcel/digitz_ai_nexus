@@ -404,68 +404,37 @@ The runtime should resolve profile based on:
 - configured defaults
 - possibly business unit/project later
 
-### 8.2 Recommended Routing DocType
+### 8.2 Active Profile Routing Model
 
-Add a mapping/routing DocType such as:
+Do not add a separate channel-to-profile routing DocType.
 
-```text
-Nexus Channel AI Profile Route
-```
-
-Alternative names:
-
-- `Nexus Channel Profile Route`
-- `Nexus Channel Service Profile`
-- `Nexus AI Profile Route`
-
-Recommended meaning:
+Active routing is:
 
 ```text
-For a given channel + use case/context/intent, resolve the suitable Nexus AI Agent Profile.
-```
+Chat window:
+    Nexus Chat Category + Channel + Identity
+        → Nexus Category Identity Route
+        → Nexus AI Agent Profile
 
-Suggested fields:
+Internal desk user:
+    User
+        → Nexus User Profile Assignment
+        → Nexus AI Agent Profile
 
-```text
-route_name
-channel
-use_case
-context
-sub_context
-intent
-auth_scope
-ai_agent_profile
-priority
-is_default
-enabled
-description
-```
-
-Possible `auth_scope` values:
-
-```text
-Public
-Authenticated
-Any
-```
-
-Example records:
-
-```text
-Website / Q&A / Public / default → Public Q&A Profile
-Website / Chat / Public / default → Website Support Chat Profile
-Website / Chat / Public / sales → Sales Enquiry Profile
-Internal Portal / Chat / Authenticated / finance → Finance Assistant Profile
+API / direct integration:
+    Explicit Nexus AI Agent Profile or Nexus Live Agent context
+        → Nexus AI Agent Profile
 ```
 
 ### 8.3 Profile Resolution Fallback
 
-When resolving a profile via `Nexus Channel AI Profile Route`:
+Profile resolution should fail closed if the expected route or explicit profile context is missing.
 
 ```text
-1. Match on channel + use_case + context + intent + auth_scope (most specific first, ordered by priority).
-2. If no specific match, fall back to the route with is_default = 1 for the channel.
-3. If still no match, reject the request with an explicit error.
+1. Chat: require a matching enabled category identity route.
+2. Internal user: require an active user profile assignment.
+3. API/direct integration: require explicit profile or live agent context.
+4. If no profile can be resolved, reject the request with an explicit error.
 ```
 
 Silent fallback to any profile must never happen. A missing route configuration should surface as an explicit error, not cause an unexpected profile to handle the query.
@@ -763,13 +732,11 @@ Runtime identifies use case/context/intent/user state
     ↓
 Runtime resolves AI Agent Profile
     ↓
-Runtime resolves profile intended access scope
+Runtime resolves profile Access Categories
     ↓
-Runtime resolves actual user/role access scope
+Runtime resolves Access Policies from those categories
     ↓
-Runtime resolves channel/public guardrail
-    ↓
-Final allowed policies are calculated
+Final allowed policies are calculated from the resolved profile
     ↓
 Retrieval filters chunks by final allowed policy names
 ```
@@ -895,7 +862,8 @@ Correct flow:
 ```text
 resolve site/widget
 resolve broad channel
-resolve AI profile through Channel AI Profile Route
+resolve chat category and identity
+resolve AI profile through Nexus Category Identity Route
 resolve public guardrail
 create conversation
 store assigned_ai_agent_profile
@@ -926,12 +894,10 @@ Correct flow:
 
 ```text
 resolve channel
-resolve profile through route
-resolve logged-in user roles
-resolve profile access scope
-resolve role access scope
-resolve channel guardrail
-final allowed policies = intersection
+resolve profile from user assignment or category identity route
+resolve profile access categories
+resolve access policies from those categories
+final allowed policies = profile policies
 retrieve and answer
 ```
 
@@ -1195,9 +1161,9 @@ Optional template only.
 
 Do not make it the primary routing object.
 
-### 18.5 New: `Nexus Channel AI Profile Route`
+### 18.5 Removed: Obsolete Channel Profile Route
 
-Needed to avoid direct channel-profile coupling.
+The separate channel profile route is not required in the current chat workflow. Chat routing is handled by category identity routes; non-chat calls must provide explicit profile or agent context.
 
 ### 18.6 Possible New: `Nexus AI Agent Profile Access Category`
 
@@ -1267,7 +1233,7 @@ final_allowed_policies = {"Public"}
 For authenticated:
 
 ```text
-final_allowed_policies = profile ∩ role ∩ channel
+final_allowed_policies = policies from resolved AI Agent Profile
 ```
 
 Retrieval must use:
@@ -1353,10 +1319,10 @@ Recommended order:
 
 1. Finalize `Nexus Access Policy` simplification.
 2. Keep `Nexus Channel` broad and minimal.
-3. Add `Nexus Channel AI Profile Route`.
+3. Use `Nexus Chat Category` + `Nexus Category Identity Route` for chat profile routing.
 4. Add `Nexus AI Agent Profile Access Category` DocType to map profiles to access categories (design decided in Section 19).
 5. Verify `Nexus AI Agent Profile` remains main behaviour holder.
-6. Update `start_chat()` to resolve profile through route.
+6. Update `start_chat()` to resolve profile through category identity route.
 7. Update `send_chat_message()` to use conversation assigned profile.
 8. Update public Q&A route to resolve profile and force Public-only.
 9. Update access resolver to calculate final allowed policy names.
@@ -1444,7 +1410,7 @@ Correction 1: Clean up Nexus Access Policy hard-coded Select usage.
 Then:
 
 ```text
-Correction 2: Add Channel AI Profile Route.
+Correction 2: Use Nexus Category Identity Route for chat profile routing.
 ```
 
 Then:
