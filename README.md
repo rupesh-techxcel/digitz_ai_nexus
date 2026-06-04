@@ -52,9 +52,9 @@ AI Agent Profile → Access Category → Access Policy → Knowledge Chunks
 
 - **Nexus Access Policy** — classifies knowledge (e.g. `Finance`, `HR`, `Public`)
 - **Nexus Access Category** — groups policies into reusable bundles
-- **Nexus AI Agent Profile Access Category** — maps the resolved AI profile to access categories
+- **Nexus AI Agent Profile Access Category** — maps the resolved AI profile to one or more access categories
 
-Final allowed policies are the union of all enabled access categories assigned to the resolved AI Agent Profile:
+Final allowed policies are the union of all enabled access categories assigned to the resolved AI Agent Profile. One profile can therefore combine multiple reusable access bundles:
 
 ```
 final_allowed_policies = policies(profile.access_categories)
