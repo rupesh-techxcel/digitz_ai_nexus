@@ -120,7 +120,7 @@ For internal users, Frappe roles can be used by the admin as a guide when assign
 ### 4.1 `Nexus Channel AI Profile Route`
 
 **Current field:** `auth_scope` — Select (Public / Authenticated / Any)
-**Change:** Replace with `identity_type` — Select (Public / Customer / Prospect / Partner / Internal / Admin)
+**Change:** Replace with `identity_type` — Link to `Nexus Identity Type`
 
 **New role of this DocType:** Fallback routing for non-chat channels (API, direct integrations) where no chat window exists. For chat channels, `Nexus Chat Category` is the primary resolution mechanism.
 
