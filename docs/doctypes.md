@@ -21,6 +21,36 @@ Autoname: `field:tenant_code`
 
 ---
 
+### Nexus Business Unit
+
+Master list for business-unit scope values used by tenant defaults, knowledge classification, Live agents, query logs, and validation records.
+
+| Field | Type | Notes |
+|---|---|---|
+| business_unit_name | Data (unique, reqd) | Primary identifier and display value |
+| tenant | Link → Nexus Tenant | Optional tenant ownership |
+| enabled | Check (default 1) | Excluded from admin selectors when disabled |
+| description | Small Text | |
+
+Autoname: `field:business_unit_name`
+
+---
+
+### Nexus Public Context
+
+Master list for public knowledge-context values used by tenant defaults, knowledge classification, query logs, and validation records.
+
+| Field | Type | Notes |
+|---|---|---|
+| public_context_name | Data (unique, reqd) | Primary identifier and display value |
+| tenant | Link → Nexus Tenant | Optional tenant ownership |
+| enabled | Check (default 1) | Excluded from admin selectors when disabled |
+| description | Small Text | |
+
+Autoname: `field:public_context_name`
+
+---
+
 ### Nexus Settings *(Single)*
 
 Global system configuration. One record for the entire installation.
@@ -98,9 +128,9 @@ Top-level knowledge entry. A source is a document or piece of content to be inge
 | access_policy | Link → Nexus Access Policy | Required before publishing; propagates to chunks |
 | **Classification** | | |
 | tenant | Link → Nexus Tenant | |
-| business_unit | Data | |
+| business_unit | Link → Nexus Business Unit | |
 | project | Data | |
-| context | Data | |
+| context | Link → Nexus Public Context | |
 | sub_context | Data | |
 | entity_type | Data | |
 | entity | Data | |
@@ -136,14 +166,16 @@ Parsed content unit created from a source. One source has one active unit at a t
 |---|---|---|
 | title | Data (reqd) | |
 | tenant | Link → Nexus Tenant (reqd) | |
-| business_unit, project | Data | |
+| business_unit | Link → Nexus Business Unit | |
+| project | Data | |
 | status | Select | Draft / Review / Approved / Active / Archived |
 | version | Int (default 1) | Incremented on re-ingestion |
 | source_type | Select | Manual / Document / ERP / Website / Support / Training |
 | source_reference | Data | |
 | content | Long Text | Full extracted text |
 | **Classification** | | |
-| context, sub_context, entity_type, entity, topic | Data | |
+| context | Link → Nexus Public Context | |
+| sub_context, entity_type, entity, topic | Data | |
 | context_path | Data | Pre-built path string |
 | **Governance** | | |
 | access_policy | Link → Nexus Access Policy | Inherited from source |
@@ -167,7 +199,8 @@ Smallest retrievable unit. Holds the chunk text, embedding, and access policy.
 | knowledge_unit | Link → Nexus Knowledge Unit (reqd) | Parent |
 | knowledge_source | Link → Nexus Knowledge Source | Grandparent (for direct joins) |
 | tenant | Link → Nexus Tenant (reqd) | |
-| business_unit, project | Data | |
+| business_unit | Link → Nexus Business Unit | |
+| project | Data | |
 | **Access** | | |
 | **access_policy** | Link → Nexus Access Policy (reqd) | **Runtime retrieval enforcement key** |
 | sensitivity | Select | Optional metadata only |
@@ -178,7 +211,8 @@ Smallest retrievable unit. Holds the chunk text, embedding, and access policy.
 | chunk_hash | Data | SHA-256 for deduplication |
 | priority | Int (default 0) | Boost in scoring |
 | **Classification** | | |
-| context, sub_context, entity_type, entity, topic | Data | |
+| context | Link → Nexus Public Context | |
+| sub_context, entity_type, entity, topic | Data | |
 | context_path | Data | Pre-built path string |
 | **Embedding** | | |
 | embedding | Long Text | JSON array of floats |
@@ -270,39 +304,6 @@ One row inside `Nexus Access Category.allowed_policies`. Maps a category to one 
 
 ---
 
-### Nexus Channel
-
-Service entry lane. Kept broad and minimal.
-
-| Field | Type | Notes |
-|---|---|---|
-| channel_name | Data (unique, reqd) | |
-| channel_type | Select | Q&A / Chat / Internal / Simulation / API |
-| disabled | Check | |
-| description | Small Text | |
-
-Autoname: `field:channel_name`. Permissions: System Manager only.
-
-Do not add `default_ai_agent_profile`, `access_policy`, or `default_access_policy` to this DocType. A channel serves many profiles and must not be hard-wired to one.
-
----
-
-### Nexus Channel Access Category
-
-Maps a channel to an access category. Retained for admin reporting and backward compatibility. It is not called by the current runtime access resolver; runtime retrieval access is governed by the resolved `Nexus AI Agent Profile`.
-
-| Field | Type | Notes |
-|---|---|---|
-| channel | Link → Nexus Channel (reqd) | |
-| access_category | Link → Nexus Access Category (reqd) | |
-| disabled | Check | |
-| tenant, business_unit, project | Data | Optional scope narrowing |
-| description | Small Text | |
-
-Autoname: `NCAC-.#####`. Permissions: System Manager only.
-
----
-
 ### Nexus Role Access Category
 
 Maps a Frappe system role to an access category. Retained for admin reporting and backward compatibility. Frappe roles do not directly produce runtime retrieval policies in the current profile-first model.
@@ -312,7 +313,9 @@ Maps a Frappe system role to an access category. Retained for admin reporting an
 | role | Link → Role (reqd) | Frappe system role |
 | access_category | Link → Nexus Access Category (reqd) | |
 | disabled | Check | |
-| tenant, business_unit, project | Data | Optional scope narrowing |
+| tenant | Link → Nexus Tenant | Optional scope narrowing |
+| business_unit | Link → Nexus Business Unit | Optional scope narrowing |
+| project | Data | Optional scope narrowing |
 | description | Small Text | |
 
 Autoname: `NRAC-.#####`. Permissions: System Manager only.
@@ -344,7 +347,7 @@ Autoname: `field:provider_name`. Permissions: System Manager only.
 
 ### Nexus Ecosystem
 
-Per-tenant operational configuration. Defines defaults, feature flags, and widget settings for a tenant.
+Compatibility storage for tenant configuration. In the product model, treat these fields as tenant configuration rather than a separate ecosystem concept.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -352,28 +355,24 @@ Per-tenant operational configuration. Defines defaults, feature flags, and widge
 | ecosystem_name | Data (reqd) | |
 | ecosystem_type | Select | Production / Sandbox / Synthetic Validation / Internal Platform |
 | enabled | Check (default 1) | |
-| is_default | Check | Default ecosystem for this tenant |
+| is_default | Check | Compatibility flag; tenant configuration is unique per tenant |
 | activation_status | Select | Draft / Configured / Testing / Certified / Active / Suspended |
 | **Defaults** | | |
-| default_business_unit | Data | |
+| default_business_unit | Link → Nexus Business Unit | |
 | default_project | Data | |
-| default_public_context | Data | |
+| default_public_context | Link → Nexus Public Context | |
 | **Knowledge Rules** | | |
 | require_approved_knowledge | Check | Only allow knowledge in Approved status |
 | strict_tenant_mode | Check | Strict tenant isolation |
 | default_top_k | Int | Override global top_k for this tenant |
 | **Q&A** | | |
 | qa_enabled | Check | |
-| default_qa_channel | Link → Nexus Live Channel | |
+| default_qa_channel | Link → Nexus Live Channel | Q&A runtime default when no channel is passed |
 | qa_fallback_message | Small Text | |
 | source_citation_required | Check | |
 | **Live Chat** | | |
 | live_chat_enabled | Check | |
-| default_chat_channel | Link → Nexus Live Channel | |
-| default_live_channel | Link → Nexus Live Channel | |
-| default_public_agent | Link → Nexus Live Agent | Fallback agent used only when category/profile routing does not apply |
-| default_public_escalation_queue | Link → Nexus Agent Queue | |
-| default_escalation_enabled | Check | |
+| default_chat_channel | Link → Nexus Live Channel | Chat runtime default when no channel is passed |
 | **Widget** | | |
 | website_widget_enabled | Check | |
 | widget_title | Data | |
@@ -396,13 +395,15 @@ Audit trail for every query processed by the system.
 | Field | Type | Notes |
 |---|---|---|
 | tenant | Link → Nexus Tenant | |
-| business_unit, project | Data | |
+| business_unit | Link → Nexus Business Unit | |
+| project | Data | |
 | caller_system | Data | Which app/system made the call |
 | use_case | Data | qa / chat / internal / etc. |
 | status | Select | Success / Failed |
 | **Query** | | |
 | query | Long Text | The user's query |
-| context, sub_context, entity_type, entity, topic | Data | |
+| context | Link → Nexus Public Context | |
+| sub_context, entity_type, entity, topic | Data | |
 | **User** | | |
 | user_id | Data | |
 | user_roles | Long Text | JSON array of roles |
@@ -420,16 +421,16 @@ Autoname: `NQL-.#####`. Permissions: System Manager only.
 
 ### Nexus User Context
 
-Stores a user's active tenant and ecosystem selection. Resolved during query context setup.
+Legacy user-specific context. Nexus Admin no longer uses this as a product concept.
 
 | Field | Type | Notes |
 |---|---|---|
 | user | Link → User (reqd) | |
 | enabled | Check (default 1) | |
-| is_default | Check (default 1) | Used as fallback if no explicit context in request |
+| is_default | Check (default 1) | Legacy preference flag |
 | active_tenant | Link → Nexus Tenant (reqd) | |
-| active_ecosystem | Link → Nexus Ecosystem | |
-| active_business_unit | Data | |
+| active_ecosystem | Link → Nexus Ecosystem | Legacy metadata only |
+| active_business_unit | Link → Nexus Business Unit | |
 | active_project | Data | |
 | active_channel | Link → Nexus Live Channel | |
 | last_used_on | Datetime | Updated on each request |

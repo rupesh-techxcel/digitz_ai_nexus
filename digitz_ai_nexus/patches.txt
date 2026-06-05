@@ -5,3 +5,5 @@ digitz_ai_nexus.patches.remove_obsolete_access_role_allocation_page
 
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
+digitz_ai_nexus.patches.v0_0_3.seed_business_unit_and_public_context_masters
+digitz_ai_nexus.patches.v0_0_3.enforce_single_enabled_ecosystem_per_tenant

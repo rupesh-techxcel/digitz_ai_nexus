@@ -83,6 +83,7 @@ The system **fails closed**. An empty `allowed_access_policies` list immediately
 | Document | Contents |
 |---|---|
 | [Architecture](docs/architecture.md) | App family, system data flow, security model, multi-tenancy, design principles |
+| [Tenant and Ecosystem Model](docs/tenant-ecosystem.md) | Tenant isolation, ecosystem defaults, user context, resolver priority |
 | [Knowledge Lifecycle](docs/knowledge-lifecycle.md) | Ingestion pipeline, chunking, deduplication, source/unit/chunk model |
 | [Access Governance](docs/access-governance.md) | Access policies, categories, role/channel mappings, resolver logic |
 | [Retrieval and Answer Engine](docs/retrieval-and-answer.md) | Hybrid scoring, re-ranking, prompt builder, LLM provider, response structure |

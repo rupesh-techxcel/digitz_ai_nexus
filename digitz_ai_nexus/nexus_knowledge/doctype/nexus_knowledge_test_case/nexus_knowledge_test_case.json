@@ -215,10 +215,11 @@
     },
     {
       "fieldname": "business_unit",
-      "fieldtype": "Data",
+      "fieldtype": "Link",
       "in_list_view": 1,
       "in_standard_filter": 1,
-      "label": "Business Unit"
+      "label": "Business Unit",
+      "options": "Nexus Business Unit"
     },
     {
       "fieldname": "project",
@@ -234,9 +235,10 @@
     },
     {
       "fieldname": "context",
-      "fieldtype": "Data",
+      "fieldtype": "Link",
       "in_standard_filter": 1,
-      "label": "Context"
+      "label": "Context",
+      "options": "Nexus Public Context"
     },
     {
       "fieldname": "sub_context",

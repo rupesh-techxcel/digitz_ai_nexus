@@ -50,7 +50,7 @@ Chunks are split on paragraph boundaries where possible. Overlap maintains conte
 | rerank_candidate_limit | `20` | Candidates passed into the re-ranker |
 | minimum_confidence | `0.20` | Score below which a fallback answer is returned |
 
-`top_k` can be overridden per-request via `query_contract["top_k"]` or per-tenant via `Nexus Ecosystem.default_top_k`.
+`top_k` can be overridden per-request via `query_contract["top_k"]` or per-tenant via tenant configuration.
 
 ### Hybrid Scoring Weights
 
@@ -111,6 +111,8 @@ Currently `engine/llm.py` and `engine/embedding.py` read directly from `Nexus Se
 
 ## Tenant and Ecosystem Configuration
 
+See [Tenant and Tenant Configuration](tenant-ecosystem.md) for the admin model.
+
 ### Nexus Tenant
 
 Create one tenant record per customer, division, or isolated deployment:
@@ -121,23 +123,28 @@ bench frappe make --doctype "Nexus Tenant" --values '{"tenant_name": "Acme Corp"
 
 Or create from the desk. `tenant_code` is the primary identifier referenced across all DocTypes.
 
-### Nexus Ecosystem
+### Business Unit and Public Context Masters
 
-Each tenant should have at least one ecosystem record (typically one `Production` and optionally one `Sandbox`). The ecosystem stores:
+Create `Nexus Business Unit` and `Nexus Public Context` records before assigning tenant defaults or knowledge classification values. These values are Link fields across the platform, so selectors and validation use master records rather than ad hoc text.
+
+### Tenant Configuration
+
+Tenant configuration stores the bare minimum defaults needed for runtime:
 
 - Which channels are used for Q&A and chat
-- Default business unit, project, and context for queries
-- Whether knowledge validation is required before activation
+- Default business unit and public context for queries
 - Widget display settings (title, welcome message, brand color)
 - Feature flags (`qa_enabled`, `live_chat_enabled`, `website_widget_enabled`)
 
-Set `is_default = 1` on the ecosystem that should be used when no explicit ecosystem is specified in a request.
+Channel defaults are purpose-aware and do not cross-fallback. Chat runtime uses `default_chat_channel`, and Q&A runtime uses `default_qa_channel` when no explicit channel is passed. Routing still belongs to category, identity, agent profile, access category, and access policy.
+
+Implementation note: older code still stores these values in `Nexus Ecosystem` for compatibility. Treat it as internal tenant-configuration storage until the schema is fully migrated.
 
 ---
 
 ## Access Category Setup
 
-Before users can retrieve knowledge, access categories must be assigned to the AI Agent Profile that will handle the request. The minimum setup for a public Q&A or public chat profile:
+Before users can retrieve knowledge, access categories must be assigned to the AI Agent Profile that will handle the request. For registered identities, the person-level `Nexus Identity Registry` Safe Guard is also intersected with the routed profile access. The minimum setup for a public Q&A or public chat profile:
 
 1. **Create an Access Category:**
    - `category_name`: Public Website Access
@@ -152,8 +159,9 @@ For internal authenticated users:
 
 1. **Create an Access Category** that includes the relevant policies (e.g. PUBLIC + INTERNAL_EMPLOYEE)
 2. **Assign that category to the internal user's resolved AI Agent Profile**
+3. **For registered chat identities**, add matching Safe Guard Access Categories on the person's `Nexus Identity Registry`
 
-Runtime access resolution is profile-first. `Nexus Channel Access Category` and `Nexus Role Access Category` records are retained for admin/reporting compatibility but are not used by the current query resolver.
+Runtime access resolution is profile-first. `Nexus Role Access Category` records are retained for admin/reporting compatibility but are not used by the current query resolver.
 
 ---
 

@@ -44,17 +44,15 @@ The atomic classification label. Stamped on every knowledge chunk (`access_polic
 | disabled | Excluded from all access calculations when disabled |
 | access_level, sensitivity | Optional metadata — never used for enforcement |
 
-**Default policies:**
+**Seeded starter policies:**
 
 | policy_name | Intended Use |
 |---|---|
-| PUBLIC | Public-facing content, website Q&A |
-| CUSTOMER_RESTRICTED | Customer-only knowledge |
-| INTERNAL_EMPLOYEE | General internal / employee content |
-| ROLE_RESTRICTED | Knowledge requiring specific access grants |
-| FINANCE_RESTRICTED | Finance and accounting knowledge |
-| HR_CONFIDENTIAL | HR and payroll knowledge |
-| ADMIN_ONLY | System administrator knowledge |
+| `Public` | Public-facing content (primitive system policy) |
+| `Internal` | General internal / employee content |
+| `Restricted` | Restricted knowledge requiring explicit access grants |
+
+`Public` is the only primitive policy. `Internal` and `Restricted` are starter examples; rename, add, or replace them to match a real tenant model.
 
 ---
 
@@ -131,7 +129,15 @@ Nexus Category Identity Route:
 Profile loaded → access resolution proceeds
 ```
 
-The category does not own access directly. The resolved profile owns access through `Nexus AI Agent Profile Access Category`.
+The category does not own access directly. The route only selects the profile. The resolved profile owns profile access through `Nexus AI Agent Profile Access Category`; the verified person owns their maximum boundary through the parent `Nexus Identity Registry` Safe Guard.
+
+For category-routed chat, runtime retrieval uses:
+
+```
+Profile Policies ∩ Identity Safe Guard Policies ∩ Identity Cap
+```
+
+The profile policies come from `Nexus AI Agent Profile Access Category`. Registered identities can be narrowed further by the parent `Nexus Identity Registry` Safe Guard. `Public` identity is always hard-capped to `{Public}`.
 
 ### Internal / desk users — Direct assignment
 
@@ -145,6 +151,8 @@ Nexus User Profile Assignment: user = rupesh@company.com
     ↓
 Profile loaded → access resolution proceeds
 ```
+
+System Managers are a special authenticated admin case. If the current session user has the Frappe role `System Manager`, Core returns all enabled `Nexus Access Policy` names for retrieval unless `force_public_only = True` is set. The session role is checked from `frappe.session.user`; payload-supplied role text is not trusted for this bypass.
 
 ### API / non-chat channels
 
@@ -186,12 +194,12 @@ This overrides all profile, category, and policy configuration. Cannot be bypass
 ### Authenticated / profiled requests
 
 ```python
-ai_profile_name = query_contract["ai_profile"]["name"]
 profile_policies = resolve_profile_policy_names(ai_profile_name)
-return {"allowed_access_policies": list(profile_policies)}
+safe_guard       = resolve_access_categories_policy_names(identity_safeguard_access_categories)
+identity_cap     = resolve_identity_policy_cap(identity_type)                   # {"Public"} or None
+effective_cap    = _intersect_caps(safe_guard, identity_cap)
+allowed_policies = profile_policies.intersection(effective_cap) if effective_cap else profile_policies
 ```
-
-Single scope. No intersection. No channel ceiling. No role ceiling.
 
 `resolve_profile_policy_names(profile_name)` traverses:
 
@@ -203,18 +211,24 @@ Nexus AI Agent Profile Access Category (all enabled records for this profile)
     → return as set
 ```
 
+The identity safeguard and identity cap are intersected together before being applied to profile policies. Either cap may be `None` (no restriction from that layer). `Public` identity always carries an identity cap of `{Public}`.
+
+### System Manager requests
+
+For authenticated desk/admin use, `System Manager` bypasses profile/category policy narrowing:
+
+```python
+if is_system_manager_session_user():
+    allowed_policies = resolve_all_policy_names()
+```
+
+This is intentionally evaluated after `force_public_only`, so public routes cannot be widened by an admin role.
+
 ---
 
-## Retired from Runtime
+## Retained for Reporting Only
 
-These DocTypes are retained but no longer called during runtime access resolution:
-
-| DocType | Previous Role | Current Status |
-|---|---|---|
-| `Nexus Channel Access Category` | Runtime channel policy ceiling | Kept, not called at runtime |
-| `Nexus Role Access Category` | Runtime role policy enforcement | Kept, not called at runtime |
-
-Frappe roles may inform which profile an admin assigns to a user. They do not directly produce access policies at query time.
+`Nexus Role Access Category` maps Frappe roles to access categories. It is retained for admin reporting and backward compatibility but is not called by the runtime access resolver. Frappe roles may inform which profile an admin assigns to a user; they do not directly produce access policies at query time.
 
 ---
 
@@ -223,7 +237,8 @@ Frappe roles may inform which profile an admin assigns to a user. They do not di
 | Situation | Result |
 |---|---|
 | Profile has no Access Category configured | `allowed_policies = []` → retrieval denied |
-| No profile resolved for the request | Request rejected before reaching retrieval |
+| No profile resolved for a normal internal user | Request rejected before reaching retrieval |
+| No profile resolved for a System Manager session | All enabled access policies are allowed |
 | Profile categories produce empty policy set | Retrieval denied |
 | `force_public_only = True` | Only Public chunks, no exceptions |
 

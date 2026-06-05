@@ -54,37 +54,71 @@ def get_ecosystem_for_tenant(tenant):
     Returns the active Nexus Ecosystem configuration for a tenant.
 
     Priority:
-    1. enabled + tenant default
-    2. latest enabled ecosystem
+    1. exactly one enabled ecosystem
+    2. no fallback if more than one enabled ecosystem exists
     """
     if not tenant:
         return None
 
-    ecosystem_name = frappe.db.get_value(
+    ecosystems = frappe.get_all(
         "Nexus Ecosystem",
-        {
+        filters={
             "tenant": tenant,
             "enabled": 1,
-            "is_default": 1,
         },
-        "name",
+        fields=["name"],
+        order_by="is_default desc, modified desc",
+        limit_page_length=2,
     )
 
-    if not ecosystem_name:
-        ecosystem_name = frappe.db.get_value(
-            "Nexus Ecosystem",
-            {
-                "tenant": tenant,
-                "enabled": 1,
-            },
-            "name",
-            order_by="modified desc",
+    if len(ecosystems) > 1:
+        frappe.throw(
+            (
+                "Multiple enabled Nexus Ecosystems exist for this tenant. "
+                "Keep one enabled ecosystem and disable the rest."
+            )
         )
 
-    if not ecosystem_name:
+    if not ecosystems:
         return None
 
-    return frappe.get_doc("Nexus Ecosystem", ecosystem_name)
+    return frappe.get_doc("Nexus Ecosystem", ecosystems[0].name)
+
+
+def get_default_channel_for_payload(payload=None, user_context=None, ecosystem=None):
+    """
+    Resolve the best default channel for the current runtime purpose.
+
+    Chat and Q&A flows have separate ecosystem defaults. Non-specific runtime
+    calls do not receive a channel default.
+    """
+    payload = payload or {}
+
+    explicit_channel = payload.get("channel") or payload.get("active_channel")
+    if explicit_channel:
+        return explicit_channel
+
+    if user_context and user_context.active_channel:
+        return user_context.active_channel
+
+    if not ecosystem:
+        return None
+
+    purpose = (
+        payload.get("channel_purpose")
+        or payload.get("conversation_type")
+        or payload.get("response_mode")
+        or ""
+    )
+    purpose = str(purpose).strip().lower()
+
+    if purpose in {"q&a", "qa", "question", "question_answering"}:
+        return ecosystem.default_qa_channel
+
+    if purpose in {"chat", "live chat", "live_chat"}:
+        return ecosystem.default_chat_channel
+
+    return None
 
 
 def resolve_tenant_context(payload=None, user=None, require_tenant=True):
@@ -129,13 +163,10 @@ def resolve_tenant_context(payload=None, user=None, require_tenant=True):
         or (ecosystem.default_project if ecosystem else None)
     )
 
-    channel = (
-        payload.get("channel")
-        or payload.get("active_channel")
-        or (user_context.active_channel if user_context else None)
-        or (ecosystem.default_live_channel if ecosystem else None)
-        or (ecosystem.default_chat_channel if ecosystem else None)
-        or (ecosystem.default_qa_channel if ecosystem else None)
+    channel = get_default_channel_for_payload(
+        payload=payload,
+        user_context=user_context,
+        ecosystem=ecosystem,
     )
 
     context = (
@@ -157,8 +188,6 @@ def resolve_tenant_context(payload=None, user=None, require_tenant=True):
         "live_chat_enabled": ecosystem.live_chat_enabled if ecosystem else None,
         "default_qa_channel": ecosystem.default_qa_channel if ecosystem else None,
         "default_chat_channel": ecosystem.default_chat_channel if ecosystem else None,
-        "default_public_agent": ecosystem.default_public_agent if ecosystem else None,
-        "default_public_escalation_queue": ecosystem.default_public_escalation_queue if ecosystem else None,
         "default_top_k": ecosystem.default_top_k if ecosystem else None,
         "require_approved_knowledge": ecosystem.require_approved_knowledge if ecosystem else None,
         "strict_tenant_mode": ecosystem.strict_tenant_mode if ecosystem else None,
@@ -222,6 +251,8 @@ def set_user_context(
     if not tenant:
         frappe.throw("Tenant is required.")
 
+    ensure_business_unit_master(business_unit, tenant=tenant)
+
     existing = frappe.db.get_value(
         "Nexus User Context",
         {
@@ -253,6 +284,27 @@ def set_user_context(
     frappe.db.commit()
 
     return doc
+
+
+def ensure_business_unit_master(business_unit, tenant=None):
+    business_unit = (business_unit or "").strip() if isinstance(business_unit, str) else business_unit
+
+    if not business_unit or not frappe.db.exists("DocType", "Nexus Business Unit"):
+        return
+
+    if frappe.db.exists("Nexus Business Unit", business_unit):
+        return
+
+    doc = frappe.new_doc("Nexus Business Unit")
+    doc.business_unit_name = business_unit
+
+    if frappe.get_meta("Nexus Business Unit").has_field("tenant"):
+        doc.tenant = tenant
+
+    if frappe.get_meta("Nexus Business Unit").has_field("enabled"):
+        doc.enabled = 1
+
+    doc.insert(ignore_permissions=True)
 
 
 def clear_other_default_contexts(user, keep):

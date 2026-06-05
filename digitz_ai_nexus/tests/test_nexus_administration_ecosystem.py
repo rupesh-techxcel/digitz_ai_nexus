@@ -2,19 +2,16 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from digitz_ai_nexus.api.nexus_administration import (
-    save_ecosystem_configuration,
-    set_active_user_context,
     get_administration_snapshot,
+    save_ecosystem_configuration,
 )
+from digitz_ai_nexus.services.tenant_context import get_ecosystem_for_tenant
 
 
-TEST_TENANT = "TEST-ADMIN-MULTI-ECO"
-TEST_TENANT_NAME = "Test Administration Multi Ecosystem"
-TEST_BU = "Administration Multi Ecosystem BU"
-
-ECO_PROD_NAME = "TEST-ADMIN Production Ecosystem"
-ECO_INTERNAL_NAME = "TEST-ADMIN Internal Platform Ecosystem"
-ECO_SANDBOX_NAME = "TEST-ADMIN Sandbox Ecosystem"
+TEST_TENANT = "TEST-ADMIN-SINGLE-ECO"
+TEST_TENANT_NAME = "Test Administration Single Ecosystem"
+TEST_BU = "Administration Single Ecosystem BU"
+ECO_NAME = "TEST-ADMIN Tenant Ecosystem"
 
 
 class TestNexusAdministrationEcosystem(FrappeTestCase):
@@ -25,225 +22,108 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
     def tearDown(self):
         cleanup_test_records()
 
-    def test_same_tenant_can_have_multiple_ecosystems(self):
-        prod = create_ecosystem(
-            ecosystem_name=ECO_PROD_NAME,
-            ecosystem_type="Production",
-            is_default=1,
-            default_public_context="Public Website",
-            default_business_unit=TEST_BU,
-        )
+    def test_tenant_uses_one_enabled_ecosystem(self):
+        first = save_ecosystem_configuration({
+            "tenant": TEST_TENANT,
+            "ecosystem_name": ECO_NAME,
+            "ecosystem_type": "Production",
+            "enabled": 1,
+            "is_default": 1,
+            "default_public_context": "Public Website",
+            "default_business_unit": TEST_BU,
+        })
 
-        internal = create_ecosystem(
-            ecosystem_name=ECO_INTERNAL_NAME,
-            ecosystem_type="Internal Platform",
-            is_default=0,
-            default_public_context="Internal Knowledge",
-            default_business_unit=TEST_BU,
-        )
+        second = save_ecosystem_configuration({
+            "tenant": TEST_TENANT,
+            "ecosystem_name": "Ignored Second Ecosystem Name",
+            "ecosystem_type": "Internal Platform",
+            "enabled": 1,
+            "default_public_context": "Internal Knowledge",
+            "default_business_unit": TEST_BU,
+        })
+
+        self.assertEqual(first.get("ecosystem"), second.get("ecosystem"))
 
         ecosystems = frappe.get_all(
             "Nexus Ecosystem",
-            filters={"tenant": TEST_TENANT},
-            fields=["name", "tenant", "ecosystem_name", "ecosystem_type", "is_default"],
-            order_by="creation asc",
+            filters={"tenant": TEST_TENANT, "enabled": 1},
+            fields=["name", "ecosystem_type", "default_public_context", "is_default"],
         )
 
-        self.assertEqual(len(ecosystems), 2)
+        self.assertEqual(len(ecosystems), 1)
+        self.assertEqual(ecosystems[0].ecosystem_type, "Internal Platform")
+        self.assertEqual(ecosystems[0].default_public_context, "Internal Knowledge")
+        self.assertEqual(int(ecosystems[0].is_default or 0), 1)
 
-        ecosystem_names = {row.ecosystem_name for row in ecosystems}
-        self.assertIn(ECO_PROD_NAME, ecosystem_names)
-        self.assertIn(ECO_INTERNAL_NAME, ecosystem_names)
+    def test_direct_second_enabled_ecosystem_is_rejected(self):
+        first = save_ecosystem_configuration({
+            "tenant": TEST_TENANT,
+            "ecosystem_name": ECO_NAME,
+            "enabled": 1,
+            "is_default": 1,
+            "default_business_unit": TEST_BU,
+        })
 
-        self.assertEqual(frappe.db.get_value("Nexus Ecosystem", prod, "tenant"), TEST_TENANT)
-        self.assertEqual(frappe.db.get_value("Nexus Ecosystem", internal, "tenant"), TEST_TENANT)
+        self.assertTrue(first.get("ecosystem"))
 
-    def test_setting_new_tenant_default_unsets_previous_default(self):
-        prod = create_ecosystem(
-            ecosystem_name=ECO_PROD_NAME,
-            ecosystem_type="Production",
-            is_default=1,
-            default_public_context="Public Website",
-            default_business_unit=TEST_BU,
+        doc = frappe.new_doc("Nexus Ecosystem")
+        doc.tenant = TEST_TENANT
+        doc.ecosystem_name = "Second Enabled Ecosystem"
+        doc.ecosystem_type = "Sandbox"
+        doc.enabled = 1
+
+        with self.assertRaises(frappe.ValidationError):
+            doc.insert(ignore_permissions=True)
+
+    def test_snapshot_uses_single_tenant_configuration(self):
+        result = save_ecosystem_configuration({
+            "tenant": TEST_TENANT,
+            "ecosystem_name": ECO_NAME,
+            "ecosystem_type": "Production",
+            "enabled": 1,
+            "is_default": 1,
+            "default_public_context": "Public Website",
+            "default_business_unit": TEST_BU,
+        })
+
+        snapshot = get_administration_snapshot(tenant=TEST_TENANT)
+
+        self.assertIsNone(snapshot["user_context"])
+        self.assertEqual(snapshot["tenant"]["name"], TEST_TENANT)
+        self.assertEqual(snapshot["tenant_configuration"]["name"], result.get("ecosystem"))
+        self.assertEqual(snapshot["ecosystem"]["name"], result.get("ecosystem"))
+        self.assertEqual(snapshot["resolved_context"]["ecosystem"], result.get("ecosystem"))
+        self.assertEqual(len(snapshot.get("tenant_configurations") or []), 1)
+
+    def test_runtime_resolver_rejects_legacy_multiple_enabled_ecosystems(self):
+        save_ecosystem_configuration({
+            "tenant": TEST_TENANT,
+            "ecosystem_name": ECO_NAME,
+            "enabled": 1,
+            "is_default": 1,
+            "default_business_unit": TEST_BU,
+        })
+
+        frappe.db.sql(
+            """
+            insert into `tabNexus Ecosystem`
+                (name, owner, creation, modified, modified_by, docstatus, idx,
+                 tenant, ecosystem_name, ecosystem_type, enabled, is_default)
+            values
+                (%s, %s, now(), now(), %s, 0, 0, %s, %s, %s, 1, 0)
+            """,
+            (
+                "Second Legacy Enabled Ecosystem",
+                frappe.session.user,
+                frappe.session.user,
+                TEST_TENANT,
+                "Second Legacy Enabled Ecosystem",
+                "Sandbox",
+            ),
         )
 
-        internal = create_ecosystem(
-            ecosystem_name=ECO_INTERNAL_NAME,
-            ecosystem_type="Internal Platform",
-            is_default=1,
-            default_public_context="Internal Knowledge",
-            default_business_unit=TEST_BU,
-        )
-
-        prod_default = frappe.db.get_value("Nexus Ecosystem", prod, "is_default")
-        internal_default = frappe.db.get_value("Nexus Ecosystem", internal, "is_default")
-
-        self.assertEqual(int(prod_default or 0), 0)
-        self.assertEqual(int(internal_default or 0), 1)
-
-    def test_user_context_can_store_active_ecosystem(self):
-        internal = create_ecosystem(
-            ecosystem_name=ECO_INTERNAL_NAME,
-            ecosystem_type="Internal Platform",
-            is_default=1,
-            default_public_context="Internal Knowledge",
-            default_business_unit=TEST_BU,
-        )
-
-        result = set_active_user_context(
-            tenant=TEST_TENANT,
-            active_ecosystem=internal,
-            business_unit=TEST_BU,
-            project="Internal Admin Project",
-            channel=None,
-        )
-
-        self.assertEqual(result.get("status"), "success")
-        self.assertEqual(result.get("tenant"), TEST_TENANT)
-        self.assertEqual(result.get("ecosystem"), internal)
-
-        context_name = result.get("context")
-        self.assertTrue(context_name)
-
-        context = frappe.get_doc("Nexus User Context", context_name)
-        self.assertEqual(context.active_tenant, TEST_TENANT)
-        self.assertEqual(context.active_ecosystem, internal)
-        self.assertEqual(context.active_business_unit, TEST_BU)
-
-    def test_snapshot_returns_ecosystems_list_and_selected_ecosystem(self):
-        prod = create_ecosystem(
-            ecosystem_name=ECO_PROD_NAME,
-            ecosystem_type="Production",
-            is_default=1,
-            default_public_context="Public Website",
-            default_business_unit=TEST_BU,
-        )
-
-        internal = create_ecosystem(
-            ecosystem_name=ECO_INTERNAL_NAME,
-            ecosystem_type="Internal Platform",
-            is_default=0,
-            default_public_context="Internal Knowledge",
-            default_business_unit=TEST_BU,
-        )
-
-        set_active_user_context(
-            tenant=TEST_TENANT,
-            active_ecosystem=internal,
-            business_unit=TEST_BU,
-            project=None,
-            channel=None,
-        )
-
-        snapshot = get_administration_snapshot()
-
-        self.assertTrue(snapshot)
-        self.assertIn("ecosystems", snapshot)
-        self.assertIn("ecosystem", snapshot)
-        self.assertIn("user_context", snapshot)
-        self.assertIn("resolved_context", snapshot)
-
-        ecosystems = snapshot.get("ecosystems") or []
-        self.assertEqual(len(ecosystems), 2)
-
-        ecosystem_docnames = {row.get("name") for row in ecosystems}
-        self.assertIn(prod, ecosystem_docnames)
-        self.assertIn(internal, ecosystem_docnames)
-
-        self.assertEqual(snapshot["user_context"]["active_tenant"], TEST_TENANT)
-        self.assertEqual(snapshot["user_context"]["active_ecosystem"], internal)
-        self.assertEqual(snapshot["ecosystem"]["name"], internal)
-        self.assertEqual(snapshot["ecosystem"]["ecosystem_type"], "Internal Platform")
-        self.assertEqual(snapshot["resolved_context"]["ecosystem"], internal)
-
-    def test_save_updates_selected_ecosystem_not_random_same_tenant_ecosystem(self):
-        prod = create_ecosystem(
-            ecosystem_name=ECO_PROD_NAME,
-            ecosystem_type="Production",
-            is_default=1,
-            default_public_context="Public Website",
-            default_business_unit=TEST_BU,
-        )
-
-        internal = create_ecosystem(
-            ecosystem_name=ECO_INTERNAL_NAME,
-            ecosystem_type="Internal Platform",
-            is_default=0,
-            default_public_context="Internal Knowledge",
-            default_business_unit=TEST_BU,
-        )
-
-        save_ecosystem_configuration(
-            {
-                "name": internal,
-                "tenant": TEST_TENANT,
-                "ecosystem_name": ECO_INTERNAL_NAME,
-                "ecosystem_type": "Internal Platform",
-                "enabled": 1,
-                "is_default": 0,
-                "default_public_context": "Updated Internal Knowledge",
-                "default_business_unit": TEST_BU,
-                "default_top_k": 9,
-            }
-        )
-
-        prod_context = frappe.db.get_value("Nexus Ecosystem", prod, "default_public_context")
-        internal_context = frappe.db.get_value("Nexus Ecosystem", internal, "default_public_context")
-        internal_top_k = frappe.db.get_value("Nexus Ecosystem", internal, "default_top_k")
-
-        self.assertEqual(prod_context, "Public Website")
-        self.assertEqual(internal_context, "Updated Internal Knowledge")
-        self.assertEqual(int(internal_top_k or 0), 9)
-
-    def test_switching_active_ecosystem_changes_only_user_context(self):
-        prod = create_ecosystem(
-            ecosystem_name=ECO_PROD_NAME,
-            ecosystem_type="Production",
-            is_default=1,
-            default_public_context="Public Website",
-            default_business_unit=TEST_BU,
-        )
-
-        internal = create_ecosystem(
-            ecosystem_name=ECO_INTERNAL_NAME,
-            ecosystem_type="Internal Platform",
-            is_default=0,
-            default_public_context="Internal Knowledge",
-            default_business_unit=TEST_BU,
-        )
-
-        set_active_user_context(
-            tenant=TEST_TENANT,
-            active_ecosystem=internal,
-            business_unit=TEST_BU,
-            project=None,
-            channel=None,
-        )
-
-        prod_default = frappe.db.get_value("Nexus Ecosystem", prod, "is_default")
-        internal_default = frappe.db.get_value("Nexus Ecosystem", internal, "is_default")
-
-        self.assertEqual(int(prod_default or 0), 1)
-        self.assertEqual(int(internal_default or 0), 0)
-
-        context_name = frappe.db.get_value(
-            "Nexus User Context",
-            {
-                "user": frappe.session.user,
-                "active_tenant": TEST_TENANT,
-            },
-            "name",
-        )
-
-        self.assertTrue(context_name)
-
-        active_ecosystem = frappe.db.get_value(
-            "Nexus User Context",
-            context_name,
-            "active_ecosystem",
-        )
-
-        self.assertEqual(active_ecosystem, internal)
+        with self.assertRaises(frappe.ValidationError):
+            get_ecosystem_for_tenant(TEST_TENANT)
 
 
 def ensure_test_tenant():
@@ -268,58 +148,15 @@ def ensure_test_tenant():
     return doc
 
 
-def create_ecosystem(
-    ecosystem_name,
-    ecosystem_type,
-    is_default,
-    default_public_context,
-    default_business_unit,
-):
-    result = save_ecosystem_configuration(
-        {
-            "tenant": TEST_TENANT,
-            "ecosystem_name": ecosystem_name,
-            "ecosystem_type": ecosystem_type,
-            "enabled": 1,
-            "is_default": is_default,
-            "activation_status": "Configured",
-            "default_business_unit": default_business_unit,
-            "default_public_context": default_public_context,
-            "default_top_k": 5,
-            "qa_enabled": 1,
-            "source_citation_required": 1,
-            "require_approved_knowledge": 1,
-            "live_chat_enabled": 1,
-            "website_widget_enabled": 0,
-        }
-    )
-
-    ecosystem = result.get("ecosystem")
-    frappe.db.commit()
-
-    self_check_ecosystem_created(ecosystem)
-
-    return ecosystem
-
-
-def self_check_ecosystem_created(ecosystem):
-    if not ecosystem or not frappe.db.exists("Nexus Ecosystem", ecosystem):
-        frappe.throw("Test setup failed: Nexus Ecosystem was not created.")
-
-
 def cleanup_test_records():
     delete_records(
         "Nexus User Context",
-        [
-            ["active_tenant", "=", TEST_TENANT],
-        ],
+        [["active_tenant", "=", TEST_TENANT]],
     )
 
     delete_records(
         "Nexus Ecosystem",
-        [
-            ["tenant", "=", TEST_TENANT],
-        ],
+        [["tenant", "=", TEST_TENANT]],
     )
 
     if frappe.db.exists("Nexus Tenant", TEST_TENANT):
@@ -337,17 +174,10 @@ def delete_records(doctype, filters):
     if not frappe.db.exists("DocType", doctype):
         return
 
-    names = frappe.get_all(
-        doctype,
-        filters=filters,
-        pluck="name",
-        limit_page_length=500,
-    )
-
-    for name in names:
+    for row in frappe.get_all(doctype, filters=filters, pluck="name"):
         frappe.delete_doc(
             doctype,
-            name,
+            row,
             force=1,
             ignore_permissions=True,
         )

@@ -117,13 +117,31 @@ Creates the seven default `Nexus Access Policy` records. Called automatically du
 
 A set of admin APIs used by the Nexus Admin page. Covers system health checks, tenant configuration, and operational utilities.
 
+Key endpoints:
+
+| Function | Purpose |
+|---|---|
+| `get_administration_snapshot` | Returns selected tenant, tenant configuration, selectors, and readiness summary |
+| `save_tenant_configuration` | Creates or updates tenant configuration and ensures linked master values exist |
+| `get_selector_options` | Returns tenants, business units, public contexts, projects, and channels for the admin UI |
+
 ---
 
 ## Knowledge Studio
 
 ### `digitz_ai_nexus.api.nexus_knowledge_studio.*`
 
-APIs used by the Knowledge Studio UI (`nexus_operations/page/nexus_studio_page/`). Supports browsing, searching, and interacting with knowledge sources and chunks from the desk interface.
+APIs used by the Knowledge Studio UI (`nexus_knowledge/page/nexus_studio_page/`). Supports browsing, searching, and interacting with knowledge sources and chunks from the desk interface.
+
+Knowledge Studio uses the active tenant from the Nexus Admin page. Tenant configuration is resolved automatically from that tenant through `get_administration_snapshot()`.
+
+Key context behavior:
+
+| Function | Purpose |
+|---|---|
+| `get_active_studio_context` | Diagnostic endpoint showing the resolved Admin-derived Studio context plus the exact source/unit filters |
+| `get_knowledge_source_summary` / `get_knowledge_sources` | Tenant-scoped Source Library data for the active Admin tenant |
+| `get_studio_summary` / `get_knowledge_units` | Knowledge Unit data filtered by active tenant and any active business unit/project/context/ecosystem/channel fields available on the DocType |
 
 ---
 

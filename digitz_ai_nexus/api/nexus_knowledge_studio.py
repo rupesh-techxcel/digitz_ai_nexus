@@ -1090,6 +1090,9 @@ def get_knowledge_sources(filters=None):
     if filters.get("sync_status") and meta.has_field("sync_status"):
         db_filters["sync_status"] = filters.get("sync_status")
 
+    if filters.get("access_policy") and meta.has_field("access_policy"):
+        db_filters["access_policy"] = filters.get("access_policy")
+
     if filters.get("disabled") in ["0", "1"] and meta.has_field("disabled"):
         db_filters["disabled"] = int(filters.get("disabled"))
 
@@ -1181,6 +1184,57 @@ def get_knowledge_sources(filters=None):
         "active_context": active_context,
         "applied_filters": db_filters,
         "sources": sources,
+    }
+
+
+@frappe.whitelist()
+def get_access_policy_options():
+    """
+    Return active Nexus Access Policy names for Studio source filtering.
+    """
+
+    if not frappe.db.exists("DocType", "Nexus Access Policy"):
+        return {
+            "success": True,
+            "access_policies": [],
+        }
+
+    if not frappe.has_permission("Nexus Access Policy", "read"):
+        return {
+            "success": True,
+            "access_policies": [],
+        }
+
+    meta = frappe.get_meta("Nexus Access Policy")
+    filters = {}
+
+    if meta.has_field("disabled"):
+        filters["disabled"] = 0
+
+    fields = ["name"]
+
+    if meta.has_field("policy_name"):
+        fields.append("policy_name")
+
+    rows = frappe.get_all(
+        "Nexus Access Policy",
+        fields=fields,
+        filters=filters,
+        order_by="policy_name asc" if meta.has_field("policy_name") else "name asc",
+        limit_page_length=500,
+    )
+
+    policies = []
+
+    for row in rows:
+        policy = _normalize_context_value(row.get("policy_name") or row.get("name"))
+
+        if policy and policy not in policies:
+            policies.append(policy)
+
+    return {
+        "success": True,
+        "access_policies": policies,
     }
 
 # -------------------------------------------------------------------------

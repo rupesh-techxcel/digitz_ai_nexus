@@ -72,9 +72,10 @@
   },
   {
    "fieldname": "active_business_unit",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "My Default Business Unit"
+   "label": "My Default Business Unit",
+   "options": "Nexus Business Unit"
   },
   {
    "fieldname": "active_project",

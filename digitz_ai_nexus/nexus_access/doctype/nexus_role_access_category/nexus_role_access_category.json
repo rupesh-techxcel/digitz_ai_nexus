@@ -52,8 +52,9 @@
     },
     {
       "fieldname": "business_unit",
-      "fieldtype": "Data",
-      "label": "Business Unit"
+      "fieldtype": "Link",
+      "label": "Business Unit",
+      "options": "Nexus Business Unit"
     },
     {
       "fieldname": "project",

@@ -2,8 +2,8 @@
  "actions": [],
  "allow_copy": 1,
  "allow_rename": 1,
- "autoname": "format:NECO-.{#####}",
- "creation": "2026-05-15 00:00:00.000000",
+ "autoname": "field:ecosystem_name",
+ "creation": "2026-05-15 00:00:00",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -31,10 +31,6 @@
   "live_defaults_section",
   "live_chat_enabled",
   "default_chat_channel",
-  "default_live_channel",
-  "default_public_agent",
-  "default_public_escalation_queue",
-  "default_escalation_enabled",
   "widget_defaults_section",
   "website_widget_enabled",
   "widget_title",
@@ -66,7 +62,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Ecosystem Name",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "default": "Sandbox",
@@ -105,9 +102,10 @@
   },
   {
    "fieldname": "default_business_unit",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Default Business Unit"
+   "label": "Default Business Unit",
+   "options": "Nexus Business Unit"
   },
   {
    "fieldname": "default_project",
@@ -116,8 +114,9 @@
   },
   {
    "fieldname": "default_public_context",
-   "fieldtype": "Data",
-   "label": "Default Public Context"
+   "fieldtype": "Link",
+   "label": "Default Public Context",
+   "options": "Nexus Public Context"
   },
   {
    "fieldname": "knowledge_defaults_section",
@@ -189,31 +188,6 @@
    "options": "Nexus Live Channel"
   },
   {
-   "fieldname": "default_live_channel",
-   "fieldtype": "Link",
-   "label": "Default Live Channel",
-   "options": "Nexus Live Channel"
-  },
-  {
-   "description": "Fallback AI agent used only when a request is not resolved through chat category + identity + AI Agent Profile routing.",
-   "fieldname": "default_public_agent",
-   "fieldtype": "Link",
-   "label": "Fallback Public Agent",
-   "options": "Nexus Live Agent"
-  },
-  {
-   "fieldname": "default_public_escalation_queue",
-   "fieldtype": "Link",
-   "label": "Default Public Escalation Queue",
-   "options": "Nexus Agent Queue"
-  },
-  {
-   "default": "1",
-   "fieldname": "default_escalation_enabled",
-   "fieldtype": "Check",
-   "label": "Default Escalation Enabled"
-  },
-  {
    "fieldname": "widget_defaults_section",
    "fieldtype": "Section Break",
    "label": "Experience / Widget Defaults"
@@ -276,13 +250,12 @@
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "issingle": 0,
  "links": [],
- "modified": "2026-05-16 00:00:00.000000",
+ "modified": "2026-06-05 05:57:32.469285",
  "modified_by": "Administrator",
  "module": "Nexus Operations",
  "name": "Nexus Ecosystem",
- "naming_rule": "Expression",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -298,7 +271,7 @@
    "write": 1
   }
  ],
- "quick_entry": 0,
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

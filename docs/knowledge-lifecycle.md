@@ -205,7 +205,7 @@ The source's `retrieval_ready` flag is also checked at a higher level before fet
 
 - A test case defines a query, expected result, and pass conditions (presence/absence of text in the answer)
 - A test run records the execution result for a test case against a source
-- Sources can require validation (`testing_required_before_activation` in Nexus Ecosystem) before being marked `retrieval_ready`
+- Sources can require validation before being marked `retrieval_ready`
 
 ---
 

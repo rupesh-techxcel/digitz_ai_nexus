@@ -141,68 +141,6 @@ def ensure_role_access_category(role, access_category, description=""):
     return doc.name
 
 
-def ensure_channel(channel_name, channel_type, description=""):
-    """
-    Create or update Nexus Channel.
-    """
-
-    channel_name = (channel_name or "").strip()
-
-    if not channel_name:
-        frappe.throw("Channel name is required.")
-
-    if _exists("Nexus Channel", channel_name):
-        doc = frappe.get_doc("Nexus Channel", channel_name)
-    else:
-        doc = frappe.new_doc("Nexus Channel")
-        doc.channel_name = channel_name
-
-    doc.channel_type = channel_type
-    doc.disabled = 0
-    doc.description = description or ""
-    doc.save(ignore_permissions=True)
-
-    return doc.name
-
-
-def ensure_channel_access_category(channel, access_category, description=""):
-    """
-    Create a global Channel → Access Category mapping.
-    """
-
-    if not channel or not access_category:
-        return None
-
-    if not frappe.db.exists("Nexus Channel", channel):
-        return None
-
-    existing = frappe.get_all(
-        "Nexus Channel Access Category",
-        filters={
-            "channel": channel,
-            "access_category": access_category,
-            "tenant": ["in", ["", None]],
-            "business_unit": ["in", ["", None]],
-            "project": ["in", ["", None]],
-        },
-        fields=["name"],
-        limit_page_length=1,
-    )
-
-    if existing:
-        doc = frappe.get_doc("Nexus Channel Access Category", existing[0].name)
-    else:
-        doc = frappe.new_doc("Nexus Channel Access Category")
-        doc.channel = channel
-        doc.access_category = access_category
-
-    doc.disabled = 0
-    doc.description = description or ""
-    doc.save(ignore_permissions=True)
-
-    return doc.name
-
-
 def seed_default_access_governance():
     """
     Seed minimum Nexus access governance records.
@@ -286,80 +224,6 @@ def seed_default_access_governance():
         description="System Managers can access Public, Internal, and Restricted knowledge.",
     )
 
-    # Channels.
-    website_qa = ensure_channel(
-        channel_name="Website Q&A",
-        channel_type="Q&A",
-        description="Public website Q&A channel.",
-    )
-
-    website_chat = ensure_channel(
-        channel_name="Website Chat",
-        channel_type="Chat",
-        description="Public website chat channel.",
-    )
-
-    internal_desk = ensure_channel(
-        channel_name="Internal Desk",
-        channel_type="Internal",
-        description="Internal desk/agent-assist channel.",
-    )
-
-    studio_simulation = ensure_channel(
-        channel_name="Studio Simulation",
-        channel_type="Simulation",
-        description="Nexus Studio internal simulation channel.",
-    )
-
-    public_api = ensure_channel(
-        channel_name="Public API",
-        channel_type="API",
-        description="Public API channel.",
-    )
-
-    internal_api = ensure_channel(
-        channel_name="Internal API",
-        channel_type="API",
-        description="Internal API channel.",
-    )
-
-    # Channel mappings.
-    ensure_channel_access_category(
-        channel=website_qa,
-        access_category=public_access,
-        description="Website Q&A can consume Public knowledge only.",
-    )
-
-    ensure_channel_access_category(
-        channel=website_chat,
-        access_category=public_access,
-        description="Website Chat can consume Public knowledge only.",
-    )
-
-    ensure_channel_access_category(
-        channel=public_api,
-        access_category=public_access,
-        description="Public API can consume Public knowledge only.",
-    )
-
-    ensure_channel_access_category(
-        channel=internal_desk,
-        access_category=internal_access,
-        description="Internal Desk can consume Public and Internal knowledge.",
-    )
-
-    ensure_channel_access_category(
-        channel=studio_simulation,
-        access_category=restricted_access,
-        description="Studio Simulation can consume Public, Internal, and Restricted knowledge.",
-    )
-
-    ensure_channel_access_category(
-        channel=internal_api,
-        access_category=restricted_access,
-        description="Internal API can consume Public, Internal, and Restricted knowledge.",
-    )
-
     frappe.db.commit()
 
     return {
@@ -367,12 +231,4 @@ def seed_default_access_governance():
         "message": "Nexus access governance seed completed.",
         "policies": [public_policy, internal_policy, restricted_policy],
         "categories": [public_access, internal_access, restricted_access],
-        "channels": [
-            website_qa,
-            website_chat,
-            internal_desk,
-            studio_simulation,
-            public_api,
-            internal_api,
-        ],
     }

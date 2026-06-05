@@ -22,6 +22,7 @@ class NexusStudioPage {
             mark_review: 'digitz_ai_nexus.api.nexus_knowledge_studio.mark_knowledge_unit_needs_review',
             clear_review: 'digitz_ai_nexus.api.nexus_knowledge_studio.clear_knowledge_unit_review',
             mark_ready_to_publish: 'digitz_ai_nexus.api.nexus_knowledge_studio.mark_knowledge_unit_ready_to_publish',
+            get_access_policies: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_access_policy_options',
             get_source_summary: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_source_summary',
             get_sources: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_sources',
             process_source: 'digitz_ai_nexus.services.ingestion.processor.process_knowledge_source',
@@ -50,6 +51,7 @@ class NexusStudioPage {
             search: '',
             status: '',
             sync_status: '',
+            access_policy: '',
             disabled: ''
         };
 
@@ -57,6 +59,7 @@ class NexusStudioPage {
         this.units = [];
         this.source_summary = {};
         this.sources = [];
+        this.source_access_policies = [];
         this.active_tenant = '';
         this.active_context = {};
 
@@ -1110,6 +1113,11 @@ class NexusStudioPage {
             this.load_sources();
         });
 
+        this.body.on('change', '.nks-source-access-policy-filter', (e) => {
+            this.source_filters.access_policy = e.target.value || '';
+            this.load_sources();
+        });
+
         this.body.on('change', '.nks-source-disabled-filter', (e) => {
             this.source_filters.disabled = e.target.value;
             this.load_sources();
@@ -1156,6 +1164,7 @@ class NexusStudioPage {
     load() {
         this.load_summary();
         this.load_units();
+        this.load_access_policy_options();
         this.load_source_summary();
         this.load_sources();
     }
@@ -1252,6 +1261,25 @@ class NexusStudioPage {
 
                 this.render_active_tenant();
                 this.render_active_context_panel();
+
+                if (this.active_tab === 'sources') {
+                    this.render_active_tab();
+                }
+            }
+        });
+    }
+
+    load_access_policy_options() {
+        frappe.call({
+            method: this.api.get_access_policies,
+            freeze: false,
+            callback: (r) => {
+                if (!r.message || !r.message.success) {
+                    this.source_access_policies = [];
+                    return;
+                }
+
+                this.source_access_policies = r.message.access_policies || [];
 
                 if (this.active_tab === 'sources') {
                     this.render_active_tab();
@@ -1463,6 +1491,10 @@ class NexusStudioPage {
                             ${this.get_source_sync_options_html()}
                         </select>
 
+                        <select class="form-control nks-source-access-policy-filter">
+                            ${this.get_source_access_policy_options_html()}
+                        </select>
+
                         <select class="form-control nks-source-disabled-filter">
                             <option value="" ${this.source_filters.disabled === '' ? 'selected' : ''}>Enabled/Disabled: All</option>
                             <option value="0" ${this.source_filters.disabled === '0' ? 'selected' : ''}>Enabled Only</option>
@@ -1489,17 +1521,18 @@ class NexusStudioPage {
                     <table class="table table-bordered nks-table">
                         <thead>
                             <tr>
-                                <th style="width: 23%;">Source</th>
-                                <th style="width: 22%;">Business Scope</th>
-                                <th style="width: 12%;">Status</th>
-                                <th style="width: 17%;">Readiness</th>
-                                <th style="width: 14%;">Next Step</th>
-                                <th style="width: 12%;">Actions</th>
+                                <th style="width: 22%;">Source</th>
+                                <th style="width: 13%;">Access Policy</th>
+                                <th style="width: 20%;">Business Scope</th>
+                                <th style="width: 11%;">Status</th>
+                                <th style="width: 16%;">Readiness</th>
+                                <th style="width: 10%;">Next Step</th>
+                                <th style="width: 8%;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="nks-knowledge-source-rows">
                             <tr>
-                                <td colspan="6" class="text-muted text-center">Loading knowledge sources...</td>
+                                <td colspan="7" class="text-muted text-center">Loading knowledge sources...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1538,6 +1571,31 @@ class NexusStudioPage {
         return sync_statuses.map(([value, label]) => {
             return `<option value="${frappe.utils.escape_html(value)}" ${this.source_filters.sync_status === value ? 'selected' : ''}>${frappe.utils.escape_html(label)}</option>`;
         }).join('');
+    }
+
+    get_source_access_policy_options_html() {
+        const fallback_policies = ['Public', 'Internal', 'Restricted'];
+        const policies = (this.source_access_policies && this.source_access_policies.length)
+            ? this.source_access_policies
+            : fallback_policies;
+
+        const options = [
+            `<option value="" ${this.source_filters.access_policy === '' ? 'selected' : ''}>Access Policy: All</option>`
+        ];
+
+        policies.forEach((policy) => {
+            if (!policy) {
+                return;
+            }
+
+            options.push(`
+                <option value="${frappe.utils.escape_html(policy)}" ${this.source_filters.access_policy === policy ? 'selected' : ''}>
+                    ${frappe.utils.escape_html(policy)}
+                </option>
+            `);
+        });
+
+        return options.join('');
     }
 
     get_source_test_case_dashboard_html(row) {
@@ -2470,7 +2528,7 @@ class NexusStudioPage {
         if (!this.sources.length) {
             $rows.html(`
                 <tr>
-                    <td colspan="6" class="text-muted text-center">
+                    <td colspan="7" class="text-muted text-center">
                         No knowledge sources found.
                     </td>
                 </tr>
@@ -2481,6 +2539,7 @@ class NexusStudioPage {
         const html = this.sources.map((row) => {
             const status = row.status || 'Draft';
             const source_type = row.source_type || 'Manual';
+            const access_policy = row.access_policy || '-';
             const readiness_badge = this.get_source_readiness_badge(row);
             const next_step = row.next_action_label || 'Review source';
 
@@ -2497,6 +2556,12 @@ class NexusStudioPage {
                         <div class="nks-row-sub">
                             ${frappe.utils.escape_html(source_type)}
                         </div>
+                    </td>
+
+                    <td>
+                        <span class="nks-badge nks-badge-info">
+                            ${frappe.utils.escape_html(access_policy)}
+                        </span>
                     </td>
 
                     <td>
@@ -2564,7 +2629,7 @@ class NexusStudioPage {
 
         $rows.html(`
             <tr>
-                <td colspan="6" class="text-danger text-center">
+                <td colspan="7" class="text-danger text-center">
                     Failed to load knowledge sources.
                 </td>
             </tr>

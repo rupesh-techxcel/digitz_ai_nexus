@@ -23,6 +23,8 @@ TENANT_B_CODE = "NEXUS-UNIT-TENANT-B"
 BUSINESS_UNIT_A = "Nexus Unit Test BU A"
 BUSINESS_UNIT_B = "Nexus Unit Test BU B"
 BUSINESS_UNIT_ECOSYSTEM = "Nexus Unit Test BU Ecosystem"
+CHAT_CHANNEL = "NEXUS-UNIT-CHAT"
+QA_CHANNEL = "NEXUS-UNIT-QA"
 
 
 class TestNexusAdministrationContext(unittest.TestCase):
@@ -103,6 +105,10 @@ class TestNexusAdministrationContext(unittest.TestCase):
 
     def cleanup_test_records(self):
         tenant_names = self.get_test_tenant_names()
+
+        if frappe.db.exists("DocType", "Nexus Live Channel"):
+            for channel in [CHAT_CHANNEL, QA_CHANNEL]:
+                self.delete_doc_safely("Nexus Live Channel", channel)
 
         if frappe.db.exists("DocType", "Nexus User Context"):
             filters = {
@@ -208,6 +214,20 @@ class TestNexusAdministrationContext(unittest.TestCase):
             for field in frappe.get_meta(doctype).fields
         }
 
+    def ensure_live_channel(self, channel_code, channel_type):
+        if not frappe.db.exists("DocType", "Nexus Live Channel"):
+            self.skipTest("Nexus Live Channel DocType is not installed.")
+
+        if frappe.db.exists("Nexus Live Channel", channel_code):
+            return
+
+        channel = frappe.new_doc("Nexus Live Channel")
+        channel.channel_code = channel_code
+        channel.channel_name = channel_code
+        channel.channel_type = channel_type
+        channel.enabled = 1
+        channel.insert(ignore_permissions=True)
+
     # -------------------------------------------------------------------------
     # Tests
     # -------------------------------------------------------------------------
@@ -312,6 +332,49 @@ class TestNexusAdministrationContext(unittest.TestCase):
         self.assertEqual(resolved.context, "Nexus Live")
         self.assertEqual(int(resolved.default_top_k), 7)
 
+    def test_resolve_channel_defaults_by_runtime_purpose(self):
+        self.ensure_live_channel(CHAT_CHANNEL, "Website Chat")
+        self.ensure_live_channel(QA_CHANNEL, "Website Q&A")
+
+        admin_api.save_ecosystem_configuration({
+            "tenant": self.tenant_a,
+            "default_chat_channel": CHAT_CHANNEL,
+            "default_qa_channel": QA_CHANNEL,
+        })
+
+        set_user_context(
+            user=TEST_USER,
+            tenant=self.tenant_a,
+            business_unit=None,
+            project=None,
+            channel=None,
+            is_default=1,
+        )
+
+        chat_context = resolve_tenant_context(
+            payload={
+                "conversation_type": "Chat",
+            },
+            user=TEST_USER,
+            require_tenant=True,
+        )
+        qa_context = resolve_tenant_context(
+            payload={
+                "conversation_type": "Q&A",
+            },
+            user=TEST_USER,
+            require_tenant=True,
+        )
+        generic_context = resolve_tenant_context(
+            payload={},
+            user=TEST_USER,
+            require_tenant=True,
+        )
+
+        self.assertEqual(chat_context.channel, CHAT_CHANNEL)
+        self.assertEqual(qa_context.channel, QA_CHANNEL)
+        self.assertIsNone(generic_context.channel)
+
     def test_save_ecosystem_configuration_updates_values(self):
         result = admin_api.save_ecosystem_configuration({
             "tenant": self.tenant_a,
@@ -334,18 +397,21 @@ class TestNexusAdministrationContext(unittest.TestCase):
         self.assertEqual(ecosystem.website_widget_enabled, 1)
         self.assertEqual(ecosystem.activation_status, "Configured")
 
-    def test_administration_snapshot_with_user_context(self):
-        snapshot = admin_api.get_administration_snapshot()
+    def test_administration_snapshot_with_tenant_configuration(self):
+        snapshot = admin_api.get_administration_snapshot(tenant=self.tenant_a)
 
+        self.assertIn("tenant", snapshot)
+        self.assertIn("tenant_configuration", snapshot)
         self.assertIn("user_context", snapshot)
         self.assertIn("resolved_context", snapshot)
         self.assertIn("ecosystem", snapshot)
         self.assertIn("selectors", snapshot)
         self.assertIn("readiness", snapshot)
 
-        self.assertIsNotNone(snapshot.get("user_context"))
+        self.assertIsNone(snapshot.get("user_context"))
+        self.assertEqual(snapshot["tenant"]["name"], self.tenant_a)
+        self.assertIsNotNone(snapshot.get("tenant_configuration"))
         self.assertEqual(snapshot["resolved_context"]["tenant"], self.tenant_a)
-        self.assertEqual(snapshot["resolved_context"]["business_unit"], BUSINESS_UNIT_A)
 
     def test_selector_options_do_not_require_business_unit_doctype(self):
         options = admin_api.get_selector_options()

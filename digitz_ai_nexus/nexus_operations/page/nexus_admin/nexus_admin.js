@@ -1,5 +1,5 @@
 let nexus_admin_snapshot = null;
-let nexus_selected_ecosystem = null;
+let nexus_selected_tenant_configuration = null;
 
 let nexus_business_keyword_snapshot = {
     categories: [],
@@ -24,12 +24,11 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
             <div class="nexus-admin-hero">
                 <div>
                     <div class="nexus-admin-badge">DIGITZ AI Nexus</div>
-                    <h2>Nexus Administration</h2>
+                    <h2>Tenant Administration</h2>
                     <p>
-                        Configure tenant operating profiles and fallback runtime defaults through the model:
-                        <b>Tenant → Ecosystem → Defaults</b>. Chat access itself is resolved through
-                        <b>Chat Category → Identity → AI Agent Profile</b>. A tenant can have multiple ecosystems
-                        such as Production, Sandbox, Synthetic Validation, and Internal Platform.
+                        Configure tenants and the minimum tenant defaults required by Nexus.
+                        Chat, Q&A, API, and future access routing is resolved through
+                        <b>Category → Identity → AI Agent Profile → Access Category → Access Policy</b>.
                     </p>
                 </div>
 
@@ -39,7 +38,7 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     </button>
 
                     <button class="btn btn-default" id="nexus_admin_refresh">
-                        Refresh Snapshot
+                        Refresh
                     </button>
 
                     <button class="btn btn-primary" id="nexus_admin_open_onboarding">
@@ -50,68 +49,24 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
 
             <div id="nexus_admin_alert_holder"></div>
 
-            <div class="nexus-admin-grid nexus-admin-grid-3">
-                <div class="nexus-admin-card">
-                    <div class="nexus-admin-card-title">My Active Working Context</div>
-                    <div id="nexus_active_context_card" class="nexus-admin-card-body">
-                        Loading...
-                    </div>
-                </div>
-
-                <div class="nexus-admin-card">
-                    <div class="nexus-admin-card-title">Resolved Runtime Context</div>
-                    <div id="nexus_resolved_context_card" class="nexus-admin-card-body">
-                        Loading...
-                    </div>
-                </div>
-
-                <div class="nexus-admin-card">
-                    <div class="nexus-admin-card-title">Administration Readiness</div>
-                    <div id="nexus_readiness_card" class="nexus-admin-card-body">
-                        Loading...
-                    </div>
-                </div>
-            </div>
-
             <div class="nexus-admin-card">
                 <div class="nexus-admin-section-head">
                     <div>
-                        <div class="nexus-admin-card-title">Set My Active Working Context</div>
+                        <div class="nexus-admin-card-title">Tenant</div>
                         <p>
-                            Select your working tenant, active ecosystem, business unit, project, and channel.
-                            This is user-specific and does not change other users' defaults.
+                            Select the tenant you want to configure. Tenant configuration is global for that tenant.
                         </p>
                     </div>
-
-                    <button class="btn btn-primary btn-sm" id="nexus_save_active_context">
-                        Save My Active Context
-                    </button>
                 </div>
 
-                <div class="nexus-admin-form-grid nexus-admin-form-grid-5">
+                <div class="nexus-admin-form-grid nexus-admin-form-grid-2">
                     <div>
-                        <label>My Default Tenant</label>
+                        <label>Tenant</label>
                         <select id="nexus_active_tenant" class="form-control"></select>
                     </div>
 
-                    <div>
-                        <label>My Active Ecosystem</label>
-                        <select id="nexus_active_ecosystem" class="form-control"></select>
-                    </div>
-
-                    <div>
-                        <label>My Default Business Unit</label>
-                        <select id="nexus_active_business_unit" class="form-control"></select>
-                    </div>
-
-                    <div>
-                        <label>My Default Project</label>
-                        <select id="nexus_active_project" class="form-control"></select>
-                    </div>
-
-                    <div>
-                        <label>My Default Channel</label>
-                        <select id="nexus_active_channel" class="form-control"></select>
+                    <div id="nexus_tenant_summary" class="nexus-admin-card-body">
+                        Loading...
                     </div>
                 </div>
             </div>
@@ -119,106 +74,27 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
             <div class="nexus-admin-card">
                 <div class="nexus-admin-section-head">
                     <div>
-                        <div class="nexus-admin-card-title">Configured Ecosystems</div>
+                        <div class="nexus-admin-card-title">Tenant Configuration</div>
                         <p>
-                            Ecosystems are operating profiles under the selected tenant. Defaults belong to the selected ecosystem,
-                            not directly to the tenant.
+                            Keep this section to tenant-wide defaults only. Routing and access policy assignment belong
+                            to category, identity, agent profile, access category, and access policy setup.
                         </p>
                     </div>
 
-                    <button class="btn btn-primary btn-sm" id="nexus_add_ecosystem">
-                        Add Ecosystem
-                    </button>
-                </div>
-
-                <div id="nexus_ecosystem_cards" class="nexus-ecosystem-card-grid">
-                    Loading...
-                </div>
-            </div>
-
-            <div class="nexus-admin-card">
-                <div class="nexus-admin-section-head">
-                    <div>
-                        <div class="nexus-admin-card-title">Selected Ecosystem Defaults</div>
-                        <p>
-                            Configure fallback defaults and runtime governance for the selected ecosystem profile.
-                            Runtime payload values and category/profile routes can still override these defaults.
-                        </p>
-                    </div>
-
-                    <button class="btn btn-primary btn-sm" id="nexus_save_ecosystem_defaults">
-                        Save Selected Ecosystem Defaults
+                    <button class="btn btn-primary btn-sm" id="nexus_save_tenant_configuration">
+                        Save Tenant Configuration
                     </button>
                 </div>
 
                 <div class="nexus-admin-form-grid nexus-admin-form-grid-4">
                     <div>
-                        <label>Ecosystem Name</label>
-                        <input id="nexus_ecosystem_name" class="form-control" placeholder="Example: TEST-NEXUS Production Validation">
-                    </div>
-
-                    <div>
-                        <label>Ecosystem Type</label>
-                        <select id="nexus_ecosystem_type" class="form-control">
-                            <option value="">Not Set</option>
-                            <option value="Production">Production</option>
-                            <option value="Sandbox">Sandbox</option>
-                            <option value="Synthetic Validation">Synthetic Validation</option>
-                            <option value="Internal Platform">Internal Platform</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Enabled</label>
-                        <select id="nexus_ecosystem_enabled" class="form-control">
-                            <option value="1">Enabled</option>
-                            <option value="0">Disabled</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Tenant Default Ecosystem</label>
-                        <select id="nexus_ecosystem_is_default" class="form-control">
-                            <option value="0">No</option>
-                            <option value="1">Yes</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Activation Status</label>
-                        <select id="nexus_activation_status" class="form-control">
-                            <option value="Draft">Draft</option>
-                            <option value="Configured">Configured</option>
-                            <option value="Testing">Testing</option>
-                            <option value="Certified">Certified</option>
-                            <option value="Active">Active</option>
-                            <option value="Suspended">Suspended</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label>Certification Status</label>
-                        <select id="nexus_certification_status" class="form-control">
-                            <option value="Not Certified">Not Certified</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Passed">Passed</option>
-                            <option value="Failed">Failed</option>
-                        </select>
-                    </div>
-
-                    <div>
                         <label>Default Business Unit</label>
-                        <input id="nexus_default_business_unit" class="form-control">
-                    </div>
-
-                    <div>
-                        <label>Default Project</label>
-                        <input id="nexus_default_project" class="form-control">
+                        <select id="nexus_default_business_unit" class="form-control"></select>
                     </div>
 
                     <div>
                         <label>Default Public Context</label>
-                        <input id="nexus_default_public_context" class="form-control">
+                        <select id="nexus_default_public_context" class="form-control"></select>
                     </div>
 
                     <div>
@@ -264,14 +140,6 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     </div>
 
                     <div>
-                        <label>Testing Required Before Activation</label>
-                        <select id="nexus_testing_required_before_activation" class="form-control">
-                            <option value="1">Required</option>
-                            <option value="0">Not Required</option>
-                        </select>
-                    </div>
-
-                    <div>
                         <label>Live Chat Enabled</label>
                         <select id="nexus_live_chat_enabled" class="form-control">
                             <option value="1">Enabled</option>
@@ -282,16 +150,6 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     <div>
                         <label>Default Chat Channel</label>
                         <select id="nexus_default_chat_channel" class="form-control"></select>
-                    </div>
-
-                    <div>
-                        <label>Default Live Channel</label>
-                        <select id="nexus_default_live_channel" class="form-control"></select>
-                    </div>
-
-                    <div>
-                        <label>Fallback Public Agent</label>
-                        <input id="nexus_default_public_agent" class="form-control" placeholder="Used only when no category/profile route applies">
                     </div>
 
                     <div>
@@ -327,66 +185,13 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
             <div class="nexus-admin-card">
                 <div class="nexus-admin-section-head">
                     <div>
-                        <div class="nexus-admin-card-title">Business Keyword Controls</div>
+                        <div class="nexus-admin-card-title">Tenant Readiness</div>
                         <p>
-                            Maintain retrieval relevance signals such as business keywords, categories,
-                            synonyms, priority level, boost weight, and enabled status. This does not feed
-                            knowledge content; it only guides retrieval scoring.
+                            A compact status view for the selected tenant.
                         </p>
                     </div>
-
-                    <div class="nexus-admin-action-row">
-                        <button class="btn btn-default btn-sm" id="nexus_refresh_business_keywords">
-                            Refresh Keywords
-                        </button>
-                        <button class="btn btn-primary btn-sm" id="nexus_add_business_keyword">
-                            Add / Update Keyword
-                        </button>
-                    </div>
                 </div>
-
-                <div id="nexus_business_keyword_summary" class="nexus-admin-card-body">
-                    Loading...
-                </div>
-
-                <div id="nexus_business_keyword_table" class="nexus-admin-table-wrap">
-                    Loading...
-                </div>
-            </div>
-
-            <div class="nexus-admin-card">
-                <div class="nexus-admin-section-head">
-                    <div>
-                        <div class="nexus-admin-card-title">Access Governance Overview</div>
-                        <p>
-                            Review access policy coverage across knowledge sources, units, and chunks.
-                            Administration reviews policy coverage; knowledge-level access assignment belongs
-                            to Nexus Studio and knowledge metadata.
-                        </p>
-                    </div>
-
-                    <div class="nexus-admin-action-row">
-                        <button class="btn btn-default btn-sm" id="nexus_open_access_policies">
-                            Open Access Policies
-                        </button>
-                        <button class="btn btn-default btn-sm" id="nexus_open_knowledge_units">
-                            Open Knowledge Units
-                        </button>
-                        <button class="btn btn-primary btn-sm" id="nexus_refresh_access_governance">
-                            Refresh Governance
-                        </button>
-                    </div>
-                </div>
-
-                <div id="nexus_access_governance_summary" class="nexus-admin-card-body">
-                    Loading...
-                </div>
-
-                <div id="nexus_access_governance_distribution" class="nexus-admin-table-wrap">
-                    Loading...
-                </div>
-
-                <div id="nexus_access_policy_table" class="nexus-admin-table-wrap">
+                <div id="nexus_readiness_card" class="nexus-admin-card-body">
                     Loading...
                 </div>
             </div>
@@ -397,8 +202,6 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
     inject_nexus_admin_css();
     bind_nexus_admin_events();
     load_nexus_admin_snapshot();
-    load_business_keyword_controls();
-    load_access_governance_overview();
 };
 
 
@@ -409,56 +212,19 @@ function bind_nexus_admin_events() {
 
     $('#nexus_admin_refresh').on('click', function() {
         load_nexus_admin_snapshot();
-        load_business_keyword_controls();
-        load_access_governance_overview();
     });
 
     $('#nexus_admin_open_onboarding').on('click', function() {
         open_tenant_onboarding_dialog();
     });
 
-    $('#nexus_save_active_context').on('click', function() {
-        save_active_user_context();
-    });
-
-    $('#nexus_save_ecosystem_defaults').on('click', function() {
-        save_ecosystem_defaults();
-    });
-
-    $('#nexus_add_ecosystem').on('click', function() {
-        open_add_ecosystem_dialog();
-    });
-
-    $('#nexus_refresh_business_keywords').on('click', function() {
-        load_business_keyword_controls();
-    });
-
-    $('#nexus_add_business_keyword').on('click', function() {
-        open_business_keyword_dialog();
-    });
-
-    $('#nexus_refresh_access_governance').on('click', function() {
-        load_access_governance_overview();
-    });
-
-    $('#nexus_open_access_policies').on('click', function() {
-        frappe.set_route('List', 'Nexus Access Policy');
-    });
-
-    $('#nexus_open_knowledge_units').on('click', function() {
-        frappe.set_route('List', 'Nexus Knowledge Unit');
+    $('#nexus_save_tenant_configuration').on('click', function() {
+        save_tenant_configuration();
     });
 
     $('#nexus_active_tenant').on('change', function() {
-        render_ecosystem_cards();
-        populate_active_ecosystem_selector();
-    });
-
-    $('#nexus_active_ecosystem').on('change', function() {
-        const selected = $('#nexus_active_ecosystem').val();
-        if (selected) {
-            select_ecosystem(selected, false);
-        }
+        nexus_selected_tenant_configuration = null;
+        load_nexus_admin_snapshot();
     });
 }
 
@@ -468,9 +234,12 @@ function load_nexus_admin_snapshot() {
 
     frappe.call({
         method: 'digitz_ai_nexus.api.nexus_administration.get_administration_snapshot',
+        args: {
+            tenant: $('#nexus_active_tenant').val() || null
+        },
         callback: function(r) {
             nexus_admin_snapshot = r.message || {};
-            normalize_snapshot_for_multiple_ecosystems();
+            normalize_snapshot_for_tenant_configuration();
             render_nexus_admin_snapshot(nexus_admin_snapshot);
         },
         error: function(err) {
@@ -483,41 +252,28 @@ function load_nexus_admin_snapshot() {
 }
 
 
-function normalize_snapshot_for_multiple_ecosystems() {
+function normalize_snapshot_for_tenant_configuration() {
     nexus_admin_snapshot = nexus_admin_snapshot || {};
 
-    if (!Array.isArray(nexus_admin_snapshot.ecosystems)) {
-        nexus_admin_snapshot.ecosystems = [];
+    if (!Array.isArray(nexus_admin_snapshot.tenant_configurations)) {
+        nexus_admin_snapshot.tenant_configurations = nexus_admin_snapshot.ecosystems || [];
     }
 
-    if (nexus_admin_snapshot.ecosystem && !nexus_admin_snapshot.ecosystems.length) {
-        nexus_admin_snapshot.ecosystems.push(nexus_admin_snapshot.ecosystem);
+    if (nexus_admin_snapshot.tenant_configuration && !nexus_admin_snapshot.tenant_configurations.length) {
+        nexus_admin_snapshot.tenant_configurations.push(nexus_admin_snapshot.tenant_configuration);
     }
 
-    const active_ecosystem =
-        get_snapshot_value('user_context.active_ecosystem')
-        || get_snapshot_value('resolved_context.ecosystem')
-        || get_snapshot_value('ecosystem.name')
-        || get_snapshot_value('ecosystem.ecosystem_name');
-
-    if (!nexus_selected_ecosystem && active_ecosystem) {
-        nexus_selected_ecosystem = active_ecosystem;
-    }
-
-    if (!nexus_selected_ecosystem && nexus_admin_snapshot.ecosystems.length) {
-        nexus_selected_ecosystem =
-            nexus_admin_snapshot.ecosystems.find(e => cint(e.is_default || 0))?.name
-            || nexus_admin_snapshot.ecosystems[0].name
-            || nexus_admin_snapshot.ecosystems[0].ecosystem_name;
+    if (!nexus_selected_tenant_configuration && nexus_admin_snapshot.tenant_configurations.length) {
+        nexus_selected_tenant_configuration =
+            nexus_admin_snapshot.tenant_configurations[0].name
+            || nexus_admin_snapshot.tenant_configurations[0].ecosystem_name;
     }
 }
 
 
 function set_loading_state() {
-    $('#nexus_active_context_card').html('Loading...');
-    $('#nexus_resolved_context_card').html('Loading...');
+    $('#nexus_tenant_summary').html('Loading...');
     $('#nexus_readiness_card').html('Loading...');
-    $('#nexus_ecosystem_cards').html('Loading...');
 }
 
 
@@ -526,12 +282,9 @@ function render_nexus_admin_snapshot(snapshot) {
 
     render_admin_alert('', '');
     populate_selector_options(snapshot.selectors || {});
-    render_active_context(snapshot.user_context);
-    render_resolved_context(snapshot.resolved_context);
+    render_tenant_summary(snapshot.tenant);
     render_readiness(snapshot.readiness);
-    populate_active_ecosystem_selector();
-    render_ecosystem_cards();
-    populate_ecosystem_defaults(get_selected_ecosystem_doc());
+    populate_tenant_configuration(get_selected_tenant_configuration_doc());
 }
 
 
@@ -545,39 +298,28 @@ function populate_selector_options(selectors) {
         function(row) {
             return row.tenant_name || row.tenant_code || row.name;
         },
-        get_snapshot_value('user_context.active_tenant') || get_snapshot_value('resolved_context.tenant')
+        get_snapshot_value('tenant.name') || get_snapshot_value('resolved_context.tenant')
     );
 
     populate_select(
-        '#nexus_active_business_unit',
+        '#nexus_default_business_unit',
         selectors.business_units || [],
         'name',
         function(row) {
             return row.business_unit_name || row.name;
         },
-        get_snapshot_value('user_context.active_business_unit') || get_snapshot_value('resolved_context.business_unit'),
+        null,
         true
     );
 
     populate_select(
-        '#nexus_active_project',
-        selectors.projects || [],
+        '#nexus_default_public_context',
+        selectors.public_contexts || [],
         'name',
         function(row) {
-            return row.project_name || row.project || row.name;
+            return row.public_context_name || row.name;
         },
-        get_snapshot_value('user_context.active_project') || get_snapshot_value('resolved_context.project'),
-        true
-    );
-
-    populate_select(
-        '#nexus_active_channel',
-        selectors.channels || [],
-        'name',
-        function(row) {
-            return row.channel_name || row.channel_code || row.name;
-        },
-        get_snapshot_value('user_context.active_channel') || get_snapshot_value('resolved_context.channel'),
+        null,
         true
     );
 
@@ -603,43 +345,7 @@ function populate_selector_options(selectors) {
         true
     );
 
-    populate_select(
-        '#nexus_default_live_channel',
-        selectors.channels || [],
-        'name',
-        function(row) {
-            return row.channel_name || row.channel_code || row.name;
-        },
-        null,
-        true
-    );
 }
-
-
-function populate_active_ecosystem_selector() {
-    const ecosystems = get_ecosystems_for_active_tenant();
-
-    const rows = ecosystems.map(e => {
-        return {
-            name: e.name || e.ecosystem_name,
-            label: e.ecosystem_name || e.name
-        };
-    });
-
-    populate_select(
-        '#nexus_active_ecosystem',
-        rows,
-        'name',
-        function(row) {
-            return row.label || row.name;
-        },
-        nexus_selected_ecosystem
-            || get_snapshot_value('user_context.active_ecosystem')
-            || get_snapshot_value('resolved_context.ecosystem'),
-        true
-    );
-}
-
 
 function populate_select(selector, rows, value_key, label_fn, selected_value, allow_blank=false) {
     const options = [];
@@ -669,91 +375,55 @@ function populate_select(selector, rows, value_key, label_fn, selected_value, al
 
 function get_active_tenant() {
     return $('#nexus_active_tenant').val()
-        || get_snapshot_value('user_context.active_tenant')
+        || get_snapshot_value('tenant.name')
         || get_snapshot_value('resolved_context.tenant');
 }
 
 
-function get_ecosystems_for_active_tenant() {
+function get_tenant_configurations_for_active_tenant() {
     const tenant = get_active_tenant();
 
-    return (nexus_admin_snapshot?.ecosystems || []).filter(e => {
+    return (nexus_admin_snapshot?.tenant_configurations || []).filter(e => {
         if (!tenant) return true;
         return !e.tenant || e.tenant === tenant;
     });
 }
 
 
-function get_selected_ecosystem_doc() {
-    const ecosystems = get_ecosystems_for_active_tenant();
+function get_selected_tenant_configuration_doc() {
+    const tenant_configurations = get_tenant_configurations_for_active_tenant();
 
-    if (!ecosystems.length) {
+    if (!tenant_configurations.length) {
         return null;
     }
 
-    if (nexus_selected_ecosystem) {
-        const found = ecosystems.find(e => {
-            return e.name === nexus_selected_ecosystem
-                || e.ecosystem_name === nexus_selected_ecosystem;
+    if (nexus_selected_tenant_configuration) {
+        const found = tenant_configurations.find(e => {
+            return e.name === nexus_selected_tenant_configuration
+                || e.ecosystem_name === nexus_selected_tenant_configuration;
         });
 
         if (found) return found;
     }
 
-    return ecosystems.find(e => cint(e.is_default || 0)) || ecosystems[0];
+    return tenant_configurations.find(e => cint(e.is_default || 0)) || tenant_configurations[0];
 }
 
 
-function select_ecosystem(ecosystem_name, refresh=true) {
-    nexus_selected_ecosystem = ecosystem_name;
-    $('#nexus_active_ecosystem').val(ecosystem_name);
-
-    const doc = get_selected_ecosystem_doc();
-    populate_ecosystem_defaults(doc);
-    render_ecosystem_cards();
-
-    if (refresh) {
-        frappe.show_alert({
-            message: 'Selected ecosystem changed for this page.',
-            indicator: 'blue'
-        });
-    }
-}
-
-
-function render_active_context(context) {
-    if (!context) {
-        $('#nexus_active_context_card').html(`
+function render_tenant_summary(tenant) {
+    if (!tenant) {
+        $('#nexus_tenant_summary').html(`
             <div class="nexus-empty-state">
-                No active user context found. Select tenant details and save your active context.
+                Select or onboard a tenant.
             </div>
         `);
         return;
     }
 
-    $('#nexus_active_context_card').html(`
-        ${render_kv('User', context.user)}
-        ${render_kv('My Default Tenant', context.active_tenant)}
-        ${render_kv('My Active Ecosystem', context.active_ecosystem || '-')}
-        ${render_kv('My Default Business Unit', context.active_business_unit)}
-        ${render_kv('My Default Project', context.active_project || '-')}
-        ${render_kv('My Default Channel', context.active_channel || '-')}
-        ${render_kv('Last Used On', context.last_used_on || '-')}
-    `);
-}
-
-
-function render_resolved_context(context) {
-    context = context || {};
-
-    $('#nexus_resolved_context_card').html(`
-        ${render_kv('Tenant', context.tenant || '-')}
-        ${render_kv('Ecosystem', context.ecosystem || '-')}
-        ${render_kv('Business Unit', context.business_unit || '-')}
-        ${render_kv('Project', context.project || '-')}
-        ${render_kv('Channel', context.channel || '-')}
-        ${render_kv('Context', context.context || '-')}
-        ${render_kv('Default Top K', context.default_top_k || '-')}
+    $('#nexus_tenant_summary').html(`
+        ${render_kv('Tenant Code', tenant.name || '-')}
+        ${render_kv('Tenant Name', tenant.tenant_name || '-')}
+        ${render_kv('Status', cint(tenant.disabled || 0) ? 'Disabled' : 'Enabled')}
     `);
 }
 
@@ -765,8 +435,8 @@ function render_readiness(readiness) {
         <div class="nexus-readiness-grid">
             ${render_readiness_pill('Q&A Ready', readiness.qa_ready)}
             ${render_readiness_pill('Live Ready', readiness.live_ready)}
-            ${render_readiness_pill('Testing Ready', readiness.testing_ready)}
-            ${render_readiness_pill('Production Candidate', readiness.production_ready)}
+            ${render_readiness_pill('Identity Safe Guard', readiness.identity_safeguard_ready)}
+            ${render_readiness_pill('Knowledge Ready', readiness.knowledge_count > 0 && readiness.chunk_count > 0)}
         </div>
 
         <div class="nexus-readiness-counts">
@@ -776,179 +446,41 @@ function render_readiness(readiness) {
             ${render_kv('AI Agents', readiness.ai_agent_count || 0)}
             ${render_kv('Category Routes', readiness.category_route_count || 0)}
             ${render_kv('Profile Access Rows', readiness.profile_access_count || 0)}
-            ${render_kv('Activation Status', readiness.activation_status || '-')}
-            ${render_kv('Certification Status', readiness.certification_status || '-')}
+            ${render_kv('Identity Routes', readiness.registered_identity_route_count || 0)}
         </div>
     `);
 }
 
 
-function render_ecosystem_cards() {
-    const ecosystems = get_ecosystems_for_active_tenant();
+function populate_tenant_configuration(config) {
+    config = config || {};
 
-    if (!ecosystems.length) {
-        $('#nexus_ecosystem_cards').html(`
-            <div class="nexus-empty-state">
-                No ecosystem profiles found for the selected tenant. Use Add Ecosystem to create one.
-            </div>
-        `);
-        populate_ecosystem_defaults(null);
-        return;
-    }
+    $('#nexus_default_business_unit').val(config.default_business_unit || '');
+    $('#nexus_default_public_context').val(config.default_public_context || '');
+    $('#nexus_default_top_k').val(config.default_top_k || 5);
 
-    const active_ecosystem =
-        get_snapshot_value('user_context.active_ecosystem')
-        || get_snapshot_value('resolved_context.ecosystem');
+    $('#nexus_qa_enabled').val(String(cint(config.qa_enabled || 0)));
+    $('#nexus_source_citation_required').val(String(cint(config.source_citation_required || 0)));
+    $('#nexus_require_approved_knowledge').val(String(cint(config.require_approved_knowledge || 0)));
+    $('#nexus_strict_tenant_mode').val(String(cint(config.strict_tenant_mode || 0)));
 
-    const html = ecosystems.map(e => {
-        const name = e.name || e.ecosystem_name || '-';
-        const title = e.ecosystem_name || e.name || '-';
-        const selected = name === nexus_selected_ecosystem || title === nexus_selected_ecosystem;
-        const is_user_active = active_ecosystem && (active_ecosystem === name || active_ecosystem === title);
-        const is_default = cint(e.is_default || 0);
+    $('#nexus_live_chat_enabled').val(String(cint(config.live_chat_enabled || 0)));
 
-        return `
-            <div class="nexus-ecosystem-card ${selected ? 'selected' : ''}">
-                <div class="nexus-ecosystem-card-top">
-                    <div>
-                        <h4>${frappe.utils.escape_html(title)}</h4>
-                        <p>${frappe.utils.escape_html(e.ecosystem_type || 'Not Set')}</p>
-                    </div>
-                    <div class="nexus-ecosystem-badges">
-                        ${is_user_active ? `<span class="active">My Active Ecosystem</span>` : ''}
-                        ${is_default ? `<span class="default">Tenant Default</span>` : ''}
-                        ${cint(e.enabled || 0) ? `<span class="enabled">Enabled</span>` : `<span class="disabled">Disabled</span>`}
-                    </div>
-                </div>
-
-                <div class="nexus-ecosystem-card-body">
-                    ${render_kv('Default Public Context', e.default_public_context || '-')}
-                    ${render_kv('Default Q&A Channel', e.default_qa_channel || '-')}
-                    ${render_kv('Default Chat Channel', e.default_chat_channel || '-')}
-                    ${render_kv('Fallback Public Agent', e.default_public_agent || '-')}
-                    ${render_kv('Widget Enabled', yes_no(e.website_widget_enabled))}
-                    ${render_kv('Activation Status', e.activation_status || '-')}
-                </div>
-
-                <div class="nexus-ecosystem-actions">
-                    <button class="btn btn-xs btn-default nexus-select-ecosystem" data-ecosystem="${frappe.utils.escape_html(name)}">
-                        Edit Defaults
-                    </button>
-                    <button class="btn btn-xs btn-primary nexus-switch-ecosystem" data-ecosystem="${frappe.utils.escape_html(name)}">
-                        Switch to this Ecosystem
-                    </button>
-                    <button class="btn btn-xs btn-default nexus-default-ecosystem" data-ecosystem="${frappe.utils.escape_html(name)}">
-                        Set as Tenant Default
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    $('#nexus_ecosystem_cards').html(html);
-
-    $('.nexus-select-ecosystem').on('click', function() {
-        select_ecosystem($(this).data('ecosystem'));
-    });
-
-    $('.nexus-switch-ecosystem').on('click', function() {
-        switch_to_ecosystem($(this).data('ecosystem'));
-    });
-
-    $('.nexus-default-ecosystem').on('click', function() {
-        set_tenant_default_ecosystem($(this).data('ecosystem'));
-    });
-}
-
-
-function populate_ecosystem_defaults(ecosystem) {
-    ecosystem = ecosystem || {};
-
-    $('#nexus_ecosystem_name').val(ecosystem.ecosystem_name || ecosystem.name || '');
-    $('#nexus_ecosystem_type').val(ecosystem.ecosystem_type || '');
-    $('#nexus_ecosystem_enabled').val(String(cint(ecosystem.enabled || 0)));
-    $('#nexus_ecosystem_is_default').val(String(cint(ecosystem.is_default || 0)));
-
-    $('#nexus_activation_status').val(ecosystem.activation_status || 'Configured');
-    $('#nexus_certification_status').val(ecosystem.certification_status || 'Not Certified');
-
-    $('#nexus_default_business_unit').val(ecosystem.default_business_unit || '');
-    $('#nexus_default_project').val(ecosystem.default_project || '');
-    $('#nexus_default_public_context').val(ecosystem.default_public_context || '');
-    $('#nexus_default_top_k').val(ecosystem.default_top_k || 5);
-
-    $('#nexus_qa_enabled').val(String(cint(ecosystem.qa_enabled || 0)));
-    $('#nexus_source_citation_required').val(String(cint(ecosystem.source_citation_required || 0)));
-    $('#nexus_require_approved_knowledge').val(String(cint(ecosystem.require_approved_knowledge || 0)));
-    $('#nexus_strict_tenant_mode').val(String(cint(ecosystem.strict_tenant_mode || 0)));
-    $('#nexus_testing_required_before_activation').val(String(cint(ecosystem.testing_required_before_activation || 0)));
-
-    $('#nexus_live_chat_enabled').val(String(cint(ecosystem.live_chat_enabled || 0)));
-    $('#nexus_default_public_agent').val(ecosystem.default_public_agent || '');
-
-    $('#nexus_widget_enabled').val(String(cint(ecosystem.website_widget_enabled || 0)));
-    $('#nexus_widget_title').val(ecosystem.widget_title || '');
-    $('#nexus_widget_welcome_message').val(ecosystem.widget_welcome_message || '');
-    $('#nexus_widget_brand_color').val(ecosystem.widget_brand_color || '#214dbb');
+    $('#nexus_widget_enabled').val(String(cint(config.website_widget_enabled || 0)));
+    $('#nexus_widget_title').val(config.widget_title || '');
+    $('#nexus_widget_welcome_message').val(config.widget_welcome_message || '');
+    $('#nexus_widget_brand_color').val(config.widget_brand_color || '#214dbb');
 
     $('#nexus_qa_fallback_message').val(
-        ecosystem.qa_fallback_message || 'I do not have enough approved knowledge to answer this.'
+        config.qa_fallback_message || 'I do not have enough approved knowledge to answer this.'
     );
 
-    $('#nexus_default_qa_channel').val(ecosystem.default_qa_channel || '');
-    $('#nexus_default_chat_channel').val(ecosystem.default_chat_channel || '');
-    $('#nexus_default_live_channel').val(ecosystem.default_live_channel || '');
+    $('#nexus_default_qa_channel').val(config.default_qa_channel || '');
+    $('#nexus_default_chat_channel').val(config.default_chat_channel || '');
 }
 
 
-function save_active_user_context() {
-    const tenant = $('#nexus_active_tenant').val();
-
-    if (!tenant) {
-        frappe.msgprint('Please select a tenant.');
-        return;
-    }
-
-    frappe.call({
-        method: 'digitz_ai_nexus.api.nexus_administration.set_active_user_context',
-        args: {
-            tenant: tenant,
-            ecosystem: $('#nexus_active_ecosystem').val() || null,
-            active_ecosystem: $('#nexus_active_ecosystem').val() || null,
-            business_unit: $('#nexus_active_business_unit').val() || null,
-            project: $('#nexus_active_project').val() || null,
-            channel: $('#nexus_active_channel').val() || null
-        },
-        callback: function() {
-            frappe.show_alert({
-                message: 'My active context saved.',
-                indicator: 'green'
-            });
-
-            load_nexus_admin_snapshot();
-        },
-        error: function(err) {
-            frappe.msgprint(err.message || 'Failed to save active context.');
-        }
-    });
-}
-
-
-function switch_to_ecosystem(ecosystem_name) {
-    $('#nexus_active_ecosystem').val(ecosystem_name);
-    select_ecosystem(ecosystem_name, false);
-    save_active_user_context();
-}
-
-
-function set_tenant_default_ecosystem(ecosystem_name) {
-    select_ecosystem(ecosystem_name, false);
-    $('#nexus_ecosystem_is_default').val('1');
-    save_ecosystem_defaults();
-}
-
-
-function save_ecosystem_defaults() {
+function save_tenant_configuration() {
     const tenant = get_active_tenant();
 
     if (!tenant) {
@@ -956,28 +488,23 @@ function save_ecosystem_defaults() {
         return;
     }
 
-    const existing = get_selected_ecosystem_doc();
-    const ecosystem_name = $('#nexus_ecosystem_name').val() || nexus_selected_ecosystem;
-
-    if (!ecosystem_name) {
-        frappe.msgprint('Please enter Ecosystem Name.');
-        return;
-    }
+    const existing = get_selected_tenant_configuration_doc();
+    const configuration_name = (existing ? existing.ecosystem_name || existing.name : null)
+        || `${tenant} Configuration`;
 
     const values = {
         name: existing ? existing.name : null,
         ecosystem: existing ? existing.name : null,
-        ecosystem_name: ecosystem_name,
+        ecosystem_name: configuration_name,
         tenant: tenant,
 
-        ecosystem_type: $('#nexus_ecosystem_type').val() || null,
-        enabled: cint($('#nexus_ecosystem_enabled').val() || 0),
-        is_default: cint($('#nexus_ecosystem_is_default').val() || 0),
-        activation_status: $('#nexus_activation_status').val() || 'Configured',
-        certification_status: $('#nexus_certification_status').val() || 'Not Certified',
+        ecosystem_type: 'Production',
+        enabled: 1,
+        is_default: 1,
+        activation_status: 'Configured',
+        certification_status: 'Not Certified',
 
         default_business_unit: $('#nexus_default_business_unit').val() || null,
-        default_project: $('#nexus_default_project').val() || null,
         default_public_context: $('#nexus_default_public_context').val() || null,
         default_top_k: cint($('#nexus_default_top_k').val() || 5),
 
@@ -987,12 +514,10 @@ function save_ecosystem_defaults() {
         source_citation_required: cint($('#nexus_source_citation_required').val() || 0),
         require_approved_knowledge: cint($('#nexus_require_approved_knowledge').val() || 0),
         strict_tenant_mode: cint($('#nexus_strict_tenant_mode').val() || 0),
-        testing_required_before_activation: cint($('#nexus_testing_required_before_activation').val() || 0),
+        testing_required_before_activation: 0,
 
         live_chat_enabled: cint($('#nexus_live_chat_enabled').val() || 0),
         default_chat_channel: $('#nexus_default_chat_channel').val() || null,
-        default_live_channel: $('#nexus_default_live_channel').val() || null,
-        default_public_agent: $('#nexus_default_public_agent').val() || null,
 
         website_widget_enabled: cint($('#nexus_widget_enabled').val() || 0),
         widget_title: $('#nexus_widget_title').val() || null,
@@ -1001,21 +526,21 @@ function save_ecosystem_defaults() {
     };
 
     frappe.call({
-        method: 'digitz_ai_nexus.api.nexus_administration.save_ecosystem_configuration',
+        method: 'digitz_ai_nexus.api.nexus_administration.save_tenant_configuration',
         args: {
             values: values
         },
         callback: function() {
             frappe.show_alert({
-                message: 'Selected ecosystem defaults saved.',
+                message: 'Tenant runtime configuration saved.',
                 indicator: 'green'
             });
 
-            nexus_selected_ecosystem = existing ? existing.name : ecosystem_name;
+            nexus_selected_tenant_configuration = existing ? existing.name : configuration_name;
             load_nexus_admin_snapshot();
         },
         error: function(err) {
-            frappe.msgprint(err.message || 'Failed to save ecosystem defaults.');
+            frappe.msgprint(err.message || 'Failed to save tenant configuration.');
         }
     });
 }
@@ -1040,26 +565,6 @@ function open_tenant_onboarding_dialog() {
             },
             {
                 fieldtype: 'Data',
-                fieldname: 'ecosystem_name',
-                label: 'Initial Ecosystem Name',
-                reqd: 1,
-                description: 'Example: TEST-NEXUS Sandbox Ecosystem or Customer-A Production Ecosystem'
-            },
-            {
-                fieldtype: 'Select',
-                fieldname: 'ecosystem_type',
-                label: 'Initial Ecosystem Type',
-                options: [
-                    '',
-                    'Production',
-                    'Sandbox',
-                    'Synthetic Validation',
-                    'Internal Platform'
-                ].join('\n'),
-                default: 'Sandbox'
-            },
-            {
-                fieldtype: 'Data',
                 fieldname: 'business_unit_name',
                 label: 'Default Business Unit',
                 reqd: 1
@@ -1072,20 +577,27 @@ function open_tenant_onboarding_dialog() {
                 args: {
                     tenant_name: values.tenant_name,
                     tenant_code: values.tenant_code,
-                    business_unit_name: values.business_unit_name,
-                    ecosystem_name: values.ecosystem_name,
-                    ecosystem_type: values.ecosystem_type
+                    business_unit_name: values.business_unit_name
                 },
                 callback: function(r) {
                     const tenant = r.message && r.message.tenant
                         ? r.message.tenant
                         : values.tenant_code;
 
-                    save_ecosystem_after_onboarding(
-                        tenant,
-                        values,
-                        dialog
-                    );
+                    dialog.hide();
+
+                    frappe.show_alert({
+                        message: 'Tenant onboarded.',
+                        indicator: 'green'
+                    });
+
+                    nexus_selected_tenant_configuration = null;
+
+                    if (tenant) {
+                        $('#nexus_active_tenant').val(tenant);
+                    }
+
+                    load_nexus_admin_snapshot();
                 },
                 error: function(err) {
                     frappe.msgprint(err.message || 'Tenant onboarding failed.');
@@ -1096,198 +608,6 @@ function open_tenant_onboarding_dialog() {
 
     dialog.show();
 }
-
-
-function save_ecosystem_after_onboarding(tenant, values, dialog) {
-    frappe.call({
-        method: 'digitz_ai_nexus.api.nexus_administration.save_ecosystem_configuration',
-        args: {
-            values: {
-                tenant: tenant,
-                ecosystem_name: values.ecosystem_name,
-                ecosystem_type: values.ecosystem_type || 'Sandbox',
-                enabled: 1,
-                is_default: 1,
-                activation_status: 'Configured',
-                certification_status: 'Not Certified',
-                default_business_unit: values.business_unit_name,
-                require_approved_knowledge: 1,
-                strict_tenant_mode: 1,
-                source_citation_required: 1,
-                testing_required_before_activation: 1
-            }
-        },
-        callback: function(r) {
-            dialog.hide();
-
-            const created_ecosystem =
-                r.message && r.message.ecosystem
-                    ? r.message.ecosystem
-                    : values.ecosystem_name;
-
-            frappe.show_alert({
-                message: 'Tenant onboarded and initial ecosystem created.',
-                indicator: 'green'
-            });
-
-            nexus_selected_ecosystem = created_ecosystem;
-
-            activate_created_ecosystem_for_current_user(
-                tenant,
-                created_ecosystem,
-                {
-                    default_business_unit: values.business_unit_name
-                }
-            );
-        },
-        error: function(err) {
-            dialog.hide();
-
-            frappe.msgprint(
-                (err.message || 'Tenant onboarded, but initial ecosystem could not be saved.')
-            );
-
-            load_nexus_admin_snapshot();
-        }
-    });
-}
-
-
-function open_add_ecosystem_dialog() {
-    const tenant = get_active_tenant();
-
-    if (!tenant) {
-        frappe.msgprint('Please select a tenant first.');
-        return;
-    }
-
-    const dialog = new frappe.ui.Dialog({
-        title: 'Add Ecosystem',
-        size: 'large',
-        fields: [
-            {
-                fieldtype: 'Data',
-                fieldname: 'ecosystem_name',
-                label: 'Ecosystem Name',
-                reqd: 1,
-                description: 'Example: TEST-NEXUS Production Validation Ecosystem'
-            },
-            {
-                fieldtype: 'Select',
-                fieldname: 'ecosystem_type',
-                label: 'Ecosystem Type',
-                options: [
-                    '',
-                    'Production',
-                    'Sandbox',
-                    'Synthetic Validation',
-                    'Internal Platform'
-                ].join('\n'),
-                default: 'Sandbox',
-                reqd: 1
-            },
-            {
-                fieldtype: 'Check',
-                fieldname: 'is_default',
-                label: 'Set as Tenant Default Ecosystem'
-            },
-            {
-                fieldtype: 'Data',
-                fieldname: 'default_business_unit',
-                label: 'Default Business Unit',
-                default: $('#nexus_active_business_unit').val() || 'Nexus Synthetic BU'
-            },
-            {
-                fieldtype: 'Data',
-                fieldname: 'default_public_context',
-                label: 'Default Public Context',
-                default: 'Nexus Live'
-            }
-        ],
-        primary_action_label: 'Add Ecosystem',
-        primary_action: function(values) {
-            frappe.call({
-                method: 'digitz_ai_nexus.api.nexus_administration.save_ecosystem_configuration',
-                args: {
-                    values: {
-                        tenant: tenant,
-                        ecosystem_name: values.ecosystem_name,
-                        ecosystem_type: values.ecosystem_type,
-                        enabled: 1,
-                        is_default: cint(values.is_default || 0),
-                        activation_status: 'Configured',
-                        certification_status: 'Not Certified',
-                        default_business_unit: values.default_business_unit || null,
-                        default_public_context: values.default_public_context || null,
-                        require_approved_knowledge: 1,
-                        strict_tenant_mode: 1,
-                        source_citation_required: 1,
-                        testing_required_before_activation: 1
-                    }
-                },
-                callback: function(r) {
-                    const created_ecosystem =
-                        r.message && r.message.ecosystem
-                            ? r.message.ecosystem
-                            : null;
-
-                    if (!created_ecosystem) {
-                        frappe.msgprint('Ecosystem was saved, but the created ecosystem id was not returned.');
-                        load_nexus_admin_snapshot();
-                        return;
-                    }
-
-                    dialog.hide();
-
-                    nexus_selected_ecosystem = created_ecosystem;
-
-                    activate_created_ecosystem_for_current_user(
-                        tenant,
-                        created_ecosystem,
-                        values
-                    );
-                },
-                error: function(err) {
-                    frappe.msgprint(err.message || 'Failed to add ecosystem.');
-                }
-            });
-        }
-    });
-
-    dialog.show();
-}
-
-
-function activate_created_ecosystem_for_current_user(tenant, ecosystem, values) {
-    frappe.call({
-        method: 'digitz_ai_nexus.api.nexus_administration.set_active_user_context',
-        args: {
-            tenant: tenant,
-            active_ecosystem: ecosystem,
-            ecosystem: ecosystem,
-            business_unit: values.default_business_unit || $('#nexus_active_business_unit').val() || null,
-            project: $('#nexus_active_project').val() || null,
-            channel: $('#nexus_active_channel').val() || null
-        },
-        callback: function() {
-            frappe.show_alert({
-                message: 'Ecosystem added and selected as your active ecosystem.',
-                indicator: 'green'
-            });
-
-            nexus_selected_ecosystem = ecosystem;
-            load_nexus_admin_snapshot();
-        },
-        error: function(err) {
-            frappe.msgprint(
-                (err.message || 'Ecosystem was added, but it could not be selected as your active ecosystem.')
-            );
-
-            load_nexus_admin_snapshot();
-        }
-    });
-}
-
 
 function load_business_keyword_controls() {
     $('#nexus_business_keyword_summary').html('Loading...');
@@ -1712,11 +1032,10 @@ function open_nexus_administration_help() {
 
             <div class="nexus-admin-help-hero">
                 <div class="nexus-admin-help-badge">Administration Know-how</div>
-                <h3>Tenant → Ecosystem → Defaults</h3>
+                <h3>Tenant → Configuration</h3>
                 <p>
-                    Nexus Administration follows a clear hierarchy. A tenant is the isolation boundary.
-                    An ecosystem is an operating profile under that tenant. Defaults and runtime governance
-                    belong to the selected ecosystem. A user can switch their active ecosystem without affecting other users.
+                    Nexus Administration is now only for tenant setup and tenant-wide defaults.
+                    Routing is handled separately by category, identity, profile, access category, and access policy.
                 </p>
             </div>
 
@@ -1732,128 +1051,48 @@ function open_nexus_administration_help() {
                         Example: <b>TEST-NEXUS</b>, <b>Customer-A</b>, <b>Internal Platform Tenant</b>
                     </div>
                     <ul>
-                        <li>A tenant can have multiple ecosystems.</li>
+                        <li>A tenant is the only isolation boundary configured here.</li>
                         <li>Knowledge and runtime must not mix between tenants.</li>
-                        <li>Tenant is not where Q&A/chat/widget defaults primarily belong.</li>
+                        <li>Routing belongs to category, identity, profile, access category, and access policy.</li>
                     </ul>
                 </div>
 
                 <div class="nexus-admin-help-card">
-                    <h4>Ecosystem</h4>
+                    <h4>Tenant Configuration</h4>
                     <p>
-                        Ecosystem is an operating profile under a tenant. The same tenant may have Production,
-                        Sandbox, Synthetic Validation, and Internal Platform ecosystems.
-                    </p>
-                    <div class="nexus-admin-help-example">
-                        TEST-NEXUS → Synthetic Validation, Sandbox, Internal Platform
-                    </div>
-                    <ul>
-                        <li>Defaults belong to the selected ecosystem.</li>
-                        <li>Switching ecosystem changes the current user's active ecosystem selection. The defaults themselves belong to the selected ecosystem and are shared wherever that ecosystem is used.</li>
-                        <li>It does not delete or disable other ecosystems.</li>
-                    </ul>
-                </div>
-
-                <div class="nexus-admin-help-card">
-                    <h4>Ecosystem Type</h4>
-                    <p>
-                        Ecosystem Type identifies the operating nature of the ecosystem.
-                    </p>
-                    <div class="nexus-admin-help-example">
-                        <b>Production</b>, <b>Sandbox</b>, <b>Synthetic Validation</b>, <b>Internal Platform</b>
-                    </div>
-                    <ul>
-                        <li><b>Production</b> is for real customer or public runtime usage.</li>
-                        <li><b>Sandbox</b> is for safe trial and configuration experiments.</li>
-                        <li><b>Synthetic Validation</b> is for seeded automated validation tenants.</li>
-                        <li><b>Internal Platform</b> is for internal platform operations.</li>
-                    </ul>
-                </div>
-
-                <div class="nexus-admin-help-card">
-                    <h4>My Active Working Context</h4>
-                    <p>
-                        My Active Working Context is user-specific. It stores which tenant, ecosystem,
-                        business unit, project, and channel this user is currently working with by default.
-                    </p>
-                    <ul>
-                        <li>It does not globally change other users.</li>
-                        <li>It can select tenant, active ecosystem, business unit, project, and channel.</li>
-                        <li>Runtime payload values can still override it.</li>
-                    </ul>
-                </div>
-
-                <div class="nexus-admin-help-card">
-                    <h4>Selected Ecosystem Defaults</h4>
-                    <p>
-                        These are fallback values used when a runtime request does not explicitly pass a more specific value.
+                        Tenant configuration stores only the defaults needed when a request does not explicitly
+                        provide tenant-scoped values.
                     </p>
                     <ul>
                         <li>Default Business Unit</li>
                         <li>Default Public Context</li>
                         <li>Default Q&A Channel</li>
                         <li>Default Chat Channel</li>
-                        <li>Fallback Public Agent, used only when category/profile routing does not apply</li>
-                        <li>Default Widget Settings</li>
+                        <li>Widget defaults</li>
                     </ul>
                 </div>
 
                 <div class="nexus-admin-help-card">
-                    <h4>Governance & Runtime Controls</h4>
+                    <h4>Safety Defaults</h4>
                     <p>
-                        Governance controls define how safely the selected ecosystem should behave at runtime.
-                        These settings do not expose the underlying AI provider layer. They control answer safety,
-                        grounding, fallback behaviour, readiness, and activation.
+                        These defaults keep runtime behaviour tenant-scoped and grounded.
                     </p>
                     <ul>
                         <li><b>Require Approved Knowledge</b> ensures only approved knowledge is used.</li>
-                        <li><b>Strict Tenant Mode</b> keeps runtime behaviour scoped to the selected tenant.</li>
+                        <li><b>Strict Tenant Mode</b> keeps runtime behaviour scoped to the tenant.</li>
                         <li><b>Source Citation Required</b> encourages grounded and explainable answers.</li>
-                        <li><b>Testing Required Before Activation</b> prevents premature production activation.</li>
-                        <li><b>Activation Status</b> and <b>Certification Status</b> summarize operational readiness.</li>
                     </ul>
                 </div>
 
                 <div class="nexus-admin-help-card">
-                    <h4>Business Keyword Controls</h4>
+                    <h4>Runtime Boundary</h4>
                     <p>
-                        Business keywords are retrieval relevance signals. They help Nexus prioritize important
-                        business terms without creating or approving knowledge content.
+                        Runtime must not choose profiles or policies from tenant configuration.
                     </p>
                     <ul>
-                        <li><b>Keyword</b> is the business term to boost during retrieval.</li>
-                        <li><b>Category</b> groups related keywords and can carry category-level weight.</li>
-                        <li><b>Synonyms</b> help map alternate terms to the same business meaning.</li>
-                        <li><b>Priority Level</b> and <b>Boost Weight</b> influence scoring strength.</li>
-                        <li><b>Enabled</b> controls whether the keyword is active in retrieval scoring.</li>
-                    </ul>
-                </div>
-
-                <div class="nexus-admin-help-card">
-                    <h4>Access Governance Overview</h4>
-                    <p>
-                        Access Governance shows how access policies are defined and applied across the knowledge layer.
-                        Administration reviews policy coverage, while Nexus Studio applies policies to sources, units, and chunks.
-                    </p>
-                    <ul>
-                        <li><b>Access Policy</b> is the reusable governance master.</li>
-                        <li><b>Sources, Units, and Chunks</b> can carry policy and sensitivity metadata.</li>
-                        <li><b>Allowed Roles</b> and <b>Denied Roles</b> are enforced by retrieval.</li>
-                        <li><b>Deny-over-allow</b> remains the safest runtime rule.</li>
-                    </ul>
-                </div>
-
-                <div class="nexus-admin-help-card">
-                    <h4>Runtime Priority</h4>
-                    <p>
-                        Nexus resolves runtime configuration in a controlled order.
-                    </p>
-                    <ul>
-                        <li>1. Explicit runtime payload values are used first.</li>
-                        <li>2. If no ecosystem is passed, the current user's active ecosystem is used.</li>
-                        <li>3. If the user has no active ecosystem, the tenant default ecosystem is used.</li>
-                        <li>4. Defaults from the resolved ecosystem are applied only for missing values.</li>
-                        <li>5. If no tenant or ecosystem can be resolved, Nexus should safely return no context.</li>
+                        <li>Tenant configuration supplies missing non-routing defaults.</li>
+                        <li>Profile and access selection comes from category and identity routing.</li>
+                        <li>Missing required tenant information should fail as a configuration issue.</li>
                     </ul>
                 </div>
 
@@ -1863,7 +1102,7 @@ function open_nexus_administration_help() {
                         Knowledge feeding, chunking, metadata tagging, and approval belong to Nexus Studio.
                     </p>
                     <ul>
-                        <li>Administration prepares tenant and ecosystem defaults.</li>
+                        <li>Administration prepares tenant runtime defaults.</li>
                         <li>Studio prepares the actual approved knowledge.</li>
                         <li>Do not treat Administration as the knowledge authoring area.</li>
                     </ul>
@@ -1885,20 +1124,13 @@ function open_nexus_administration_help() {
                     <h4>Recommended Administration Workflow</h4>
 
                     <p>
-                        Administration focuses on tenant setup, ecosystem profiles, user active working context,
-                        ecosystem defaults, governance controls, business keywords, access governance overview,
-                        Q&A defaults, Live Chat defaults, widget defaults, and readiness.
+                        Administration now has one job: keep the tenant and tenant defaults correct.
                     </p>
 
                     <div class="nexus-admin-help-flow">
                         <div><b>1</b><span>Onboard Tenant</span></div>
-                        <div><b>2</b><span>Add Ecosystem Profiles</span></div>
-                        <div><b>3</b><span>Switch My Active Ecosystem</span></div>
-                        <div><b>4</b><span>Configure Selected Ecosystem Defaults</span></div>
-                        <div><b>5</b><span>Configure Governance Controls</span></div>
-                        <div><b>6</b><span>Maintain Business Keywords</span></div>
-                        <div><b>7</b><span>Review Access Governance</span></div>
-                        <div><b>8</b><span>Proceed to Studio / Validation</span></div>
+                        <div><b>2</b><span>Set Tenant Defaults</span></div>
+                        <div><b>3</b><span>Proceed to Studio / Validation</span></div>
                     </div>
                 </div>
 
@@ -2235,103 +1467,6 @@ function inject_nexus_admin_css() {
                 border: 1px solid rgba(33,77,187,.16);
             }
 
-            .nexus-ecosystem-card-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 16px;
-            }
-
-            .nexus-ecosystem-card {
-                border-radius: 20px;
-                padding: 18px;
-                background: #ffffff;
-                border: 1px solid rgba(77, 163, 255, 0.25);
-                box-shadow: 0 10px 24px rgba(33, 77, 187, 0.06);
-            }
-
-            .nexus-ecosystem-card.selected {
-                border-color: rgba(33, 77, 187, 0.75);
-                box-shadow: 0 14px 34px rgba(33, 77, 187, 0.14);
-            }
-
-            .nexus-ecosystem-card-top {
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-                align-items: flex-start;
-                margin-bottom: 14px;
-            }
-
-            .nexus-ecosystem-card h4 {
-                margin: 0;
-                color: #102b67;
-                font-size: 16px;
-                font-weight: 950;
-            }
-
-            .nexus-ecosystem-card p {
-                margin: 5px 0 0;
-                color: #53688f;
-                font-size: 12px;
-                font-weight: 800;
-            }
-
-            .nexus-ecosystem-badges {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: flex-end;
-                gap: 6px;
-            }
-
-            .nexus-ecosystem-badges span {
-                padding: 5px 8px;
-                border-radius: 999px;
-                font-size: 10px;
-                font-weight: 900;
-                white-space: nowrap;
-            }
-
-            .nexus-ecosystem-badges .active {
-                background: #eef6ff;
-                color: #214dbb;
-                border: 1px solid rgba(33,77,187,.18);
-            }
-
-            .nexus-ecosystem-badges .default {
-                background: #fff7e6;
-                color: #8a5d00;
-                border: 1px solid #f2d49b;
-            }
-
-            .nexus-ecosystem-badges .enabled {
-                background: #ecfdf3;
-                color: #16794c;
-                border: 1px solid #bdebd2;
-            }
-
-            .nexus-ecosystem-badges .disabled {
-                background: #fff0f0;
-                color: #b42318;
-                border: 1px solid #ffd1d1;
-            }
-
-            .nexus-ecosystem-card-body {
-                display: grid;
-                gap: 8px;
-                margin-bottom: 14px;
-            }
-
-            .nexus-ecosystem-actions {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-
-            .nexus-ecosystem-actions .btn {
-                border-radius: 999px;
-                font-weight: 850;
-            }
-
             .nexus-admin-action-row {
                 display: flex;
                 gap: 10px;
@@ -2561,9 +1696,6 @@ function inject_nexus_admin_css() {
                     grid-template-columns: repeat(3, minmax(0, 1fr));
                 }
 
-                .nexus-ecosystem-card-grid {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
             }
 
             @media (max-width: 1200px) {
@@ -2581,10 +1713,6 @@ function inject_nexus_admin_css() {
 
                 .nexus-admin-help-flow {
                     grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-
-                .nexus-ecosystem-card-grid {
-                    grid-template-columns: 1fr;
                 }
 
                 .nexus-governance-distribution-grid {

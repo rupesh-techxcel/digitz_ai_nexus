@@ -38,10 +38,11 @@
       "label": "Tenant",
       "options": "Nexus Tenant"
     },
-    {
+  {
   "fieldname": "business_unit",
   "label": "Business Unit",
-  "fieldtype": "Data",
+  "fieldtype": "Link",
+  "options": "Nexus Business Unit",
   "in_list_view": 1
   },
   {
@@ -82,8 +83,9 @@
     },
     {
       "fieldname": "context",
-      "fieldtype": "Data",
-      "label": "Context"
+      "fieldtype": "Link",
+      "label": "Context",
+      "options": "Nexus Public Context"
     },
     {
       "fieldname": "sub_context",

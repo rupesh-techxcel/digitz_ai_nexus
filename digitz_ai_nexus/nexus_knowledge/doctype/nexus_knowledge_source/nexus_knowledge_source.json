@@ -91,9 +91,10 @@
   },
   {
    "fieldname": "business_unit",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Business Unit",
+   "options": "Nexus Business Unit",
    "reqd": 1
   },
   {
@@ -103,8 +104,9 @@
   },
   {
    "fieldname": "context",
-   "fieldtype": "Data",
-   "label": "Context"
+   "fieldtype": "Link",
+   "label": "Context",
+   "options": "Nexus Public Context"
   },
   {
    "fieldname": "sub_context",

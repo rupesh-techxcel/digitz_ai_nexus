@@ -11,58 +11,63 @@ from digitz_ai_nexus.services.tenant_context import (
 # ---------------------------------------------------------------------
 
 @frappe.whitelist()
-def get_administration_snapshot():
+def get_administration_snapshot(tenant=None):
     """
     Main snapshot for Nexus Administration page.
 
     Final model:
-        Tenant → Ecosystem → Defaults
+        Tenant → Tenant Configuration
 
     Returns:
-    - current user's default context
-    - active/selected ecosystem
-    - all configured ecosystems for the active tenant
-    - resolved runtime context
+    - selected tenant
+    - tenant configuration
     - selector options
     - readiness summary
     """
-    user_context = get_user_context_snapshot()
-
-    resolved = resolve_tenant_context(require_tenant=False)
-    resolved_dict = safe_dict(resolved)
-
-    tenant = (
-        resolved_dict.get("tenant")
-        or (user_context or {}).get("active_tenant")
-    )
-
-    active_ecosystem = (user_context or {}).get("active_ecosystem")
+    selectors = get_selector_options()
+    tenant = tenant or get_first_tenant_name(selectors.get("tenants"))
+    tenant_doc = get_tenant_summary(tenant)
 
     ecosystems = get_ecosystem_snapshots_for_tenant(tenant) if tenant else []
-    selected_ecosystem = resolve_selected_ecosystem(
+    tenant_configuration = resolve_selected_ecosystem(
         tenant=tenant,
-        active_ecosystem=active_ecosystem,
         ecosystems=ecosystems,
     )
 
-    resolved_context = build_administration_resolved_context(
-        tenant=tenant,
-        user_context=user_context,
-        selected_ecosystem=selected_ecosystem,
-        base_resolved=resolved_dict,
-    )
-
     return {
-        "user_context": user_context,
-        "resolved_context": resolved_context,
-        "ecosystem": selected_ecosystem,
+        "tenant": tenant_doc,
+        "tenant_configuration": tenant_configuration,
+        "tenant_configurations": ecosystems,
+        "user_context": None,
+        "resolved_context": {
+            "tenant": tenant,
+            "ecosystem": tenant_configuration.get("name") if tenant_configuration else None,
+        },
+        "ecosystem": tenant_configuration,
         "ecosystems": ecosystems,
-        "selectors": get_selector_options(),
+        "selectors": selectors,
         "readiness": get_readiness_summary(
             tenant=tenant,
-            ecosystem=selected_ecosystem,
+            ecosystem=tenant_configuration,
         ) if tenant else get_empty_readiness(),
     }
+
+
+def get_first_tenant_name(tenants):
+    tenants = tenants or []
+    return tenants[0].get("name") if tenants else None
+
+
+def get_tenant_summary(tenant):
+    if not tenant or not frappe.db.exists("Nexus Tenant", tenant):
+        return None
+
+    fields = get_existing_fields(
+        "Nexus Tenant",
+        ["name", "tenant_name", "tenant_code", "disabled", "description"],
+    )
+    values = frappe.db.get_value("Nexus Tenant", tenant, fields, as_dict=True)
+    return dict(values) if values else None
 
 
 def build_administration_resolved_context(
@@ -90,8 +95,7 @@ def build_administration_resolved_context(
             or tenant
         ),
         "ecosystem": (
-            user_context.get("active_ecosystem")
-            or selected_ecosystem.get("name")
+            selected_ecosystem.get("name")
         ),
         "ecosystem_name": selected_ecosystem.get("ecosystem_name"),
         "ecosystem_type": selected_ecosystem.get("ecosystem_type"),
@@ -108,8 +112,6 @@ def build_administration_resolved_context(
         "channel": (
             base_resolved.get("channel")
             or user_context.get("active_channel")
-            or selected_ecosystem.get("default_chat_channel")
-            or selected_ecosystem.get("default_qa_channel")
         ),
         "context": (
             base_resolved.get("context")
@@ -142,7 +144,7 @@ def get_user_context_snapshot():
         "enabled": context.enabled,
         "is_default": context.is_default,
         "active_tenant": context.active_tenant,
-        "active_ecosystem": get_doc_value(context, "active_ecosystem"),
+        "active_ecosystem": get_single_ecosystem_name_for_tenant(context.active_tenant),
         "active_business_unit": context.active_business_unit,
         "active_project": context.active_project,
         "active_channel": context.active_channel,
@@ -161,24 +163,16 @@ def set_active_user_context(
     channel=None,
 ):
     """
-    Sets the current user's default tenant/ecosystem context.
+    Sets the current user's default tenant working context.
 
     Final model:
-        User Context = My Default Tenant + My Active Ecosystem + working defaults
+        User Context = My Default Tenant + working defaults
     """
     if not tenant:
         frappe.throw("Tenant is required.")
 
-    selected_ecosystem = active_ecosystem or ecosystem
-
-    if selected_ecosystem:
-        validate_ecosystem_belongs_to_tenant(
-            ecosystem=selected_ecosystem,
-            tenant=tenant,
-        )
-    else:
-        selected_ecosystem_doc = get_default_or_first_ecosystem_for_tenant(tenant)
-        selected_ecosystem = selected_ecosystem_doc.name if selected_ecosystem_doc else None
+    selected_ecosystem_doc = get_default_or_first_ecosystem_for_tenant(tenant)
+    selected_ecosystem = selected_ecosystem_doc.name if selected_ecosystem_doc else None
 
     doc = get_or_create_user_context_doc()
 
@@ -186,6 +180,8 @@ def set_active_user_context(
     doc.enabled = 1
     doc.is_default = 1
     doc.active_tenant = tenant
+
+    ensure_master_value("Nexus Business Unit", business_unit, tenant=tenant)
 
     if has_field("Nexus User Context", "active_ecosystem"):
         doc.active_ecosystem = selected_ecosystem
@@ -250,8 +246,8 @@ def get_selector_options():
     """
     Returns options needed by the administration page selectors.
 
-    Business Unit is not a Link DocType in the current implementation.
-    It is collected from existing values across Nexus records.
+    Business Unit and Public Context are master DocTypes. Legacy fallback
+    scanners are kept so the first migration can still surface existing values.
     """
     tenants = []
     projects = []
@@ -272,6 +268,7 @@ def get_selector_options():
     if frappe.db.exists("DocType", "Nexus Ecosystem"):
         ecosystems = frappe.get_all(
             "Nexus Ecosystem",
+            filters={"enabled": 1},
             fields=get_existing_fields(
                 "Nexus Ecosystem",
                 [
@@ -288,6 +285,7 @@ def get_selector_options():
         )
 
     business_units = get_business_unit_options()
+    public_contexts = get_public_context_options()
 
     if frappe.db.exists("DocType", "Nexus Project"):
         projects = frappe.get_all(
@@ -322,6 +320,7 @@ def get_selector_options():
         "tenants": tenants,
         "ecosystems": ecosystems,
         "business_units": business_units,
+        "public_contexts": public_contexts,
         "projects": projects,
         "channels": channels,
     }
@@ -329,9 +328,45 @@ def get_selector_options():
 
 def get_business_unit_options():
     """
-    Business Unit is currently not a separate DocType.
-    Collect distinct values from existing Nexus data.
+    Returns Business Unit master options. Falls back to legacy text values when
+    the master DocType has not been synced yet.
     """
+    if frappe.db.exists("DocType", "Nexus Business Unit"):
+        return frappe.get_all(
+            "Nexus Business Unit",
+            fields=get_existing_fields(
+                "Nexus Business Unit",
+                ["name", "business_unit_name", "tenant", "enabled"],
+            ),
+            filters={"enabled": 1} if has_field("Nexus Business Unit", "enabled") else {},
+            order_by="business_unit_name asc",
+            limit_page_length=500,
+        )
+
+    return get_legacy_business_unit_options()
+
+
+def get_public_context_options():
+    """
+    Returns Public Context master options. Falls back to legacy text values when
+    the master DocType has not been synced yet.
+    """
+    if frappe.db.exists("DocType", "Nexus Public Context"):
+        return frappe.get_all(
+            "Nexus Public Context",
+            fields=get_existing_fields(
+                "Nexus Public Context",
+                ["name", "public_context_name", "tenant", "enabled"],
+            ),
+            filters={"enabled": 1} if has_field("Nexus Public Context", "enabled") else {},
+            order_by="public_context_name asc",
+            limit_page_length=500,
+        )
+
+    return get_legacy_public_context_options()
+
+
+def get_legacy_business_unit_options():
     values = set()
 
     source_doctypes = [
@@ -377,6 +412,84 @@ def get_business_unit_options():
     ]
 
 
+def get_legacy_public_context_options():
+    values = set()
+
+    source_doctypes = [
+        "Nexus Knowledge Unit",
+        "Nexus Knowledge Chunk",
+        "Nexus Knowledge Source",
+        "Nexus Ecosystem",
+        "Nexus Test Case",
+        "Nexus Knowledge Test Case",
+        "Nexus Knowledge Test Run",
+        "Nexus Query Log",
+    ]
+
+    candidate_fields = [
+        "context",
+        "default_public_context",
+    ]
+
+    for doctype in source_doctypes:
+        if not frappe.db.exists("DocType", doctype):
+            continue
+
+        for fieldname in candidate_fields:
+            if not has_field(doctype, fieldname):
+                continue
+
+            rows = frappe.get_all(
+                doctype,
+                fields=[fieldname],
+                limit_page_length=500,
+            )
+
+            for row in rows:
+                value = row.get(fieldname)
+
+                if value:
+                    values.add(value)
+
+    return [
+        {
+            "name": value,
+            "public_context_name": value,
+        }
+        for value in sorted(values)
+    ]
+
+
+def ensure_master_value(doctype, value, tenant=None):
+    """
+    Ensures legacy string values become valid Link targets during transition.
+    """
+    value = (value or "").strip() if isinstance(value, str) else value
+
+    if not value or not frappe.db.exists("DocType", doctype):
+        return
+
+    if frappe.db.exists(doctype, value):
+        return
+
+    doc = frappe.new_doc(doctype)
+
+    if doctype == "Nexus Business Unit":
+        doc.business_unit_name = value
+    elif doctype == "Nexus Public Context":
+        doc.public_context_name = value
+    else:
+        return
+
+    if tenant and has_field(doctype, "tenant"):
+        doc.tenant = tenant
+
+    if has_field(doctype, "enabled"):
+        doc.enabled = 1
+
+    doc.insert(ignore_permissions=True)
+
+
 # ---------------------------------------------------------------------
 # Ecosystem Read / Save
 # ---------------------------------------------------------------------
@@ -415,7 +528,7 @@ def get_ecosystem_snapshot(tenant=None, ecosystem=None):
 
 def get_ecosystem_snapshots_for_tenant(tenant):
     """
-    Returns all ecosystem profiles for a tenant.
+    Returns enabled ecosystem profiles for a tenant.
     """
     if not tenant or not frappe.db.exists("DocType", "Nexus Ecosystem"):
         return []
@@ -427,7 +540,10 @@ def get_ecosystem_snapshots_for_tenant(tenant):
 
     rows = frappe.get_all(
         "Nexus Ecosystem",
-        filters={"tenant": tenant},
+        filters={
+            "tenant": tenant,
+            "enabled": 1,
+        },
         fields=fields,
         order_by="is_default desc, modified desc",
         limit_page_length=500,
@@ -438,62 +554,49 @@ def get_ecosystem_snapshots_for_tenant(tenant):
 
 def get_default_or_first_ecosystem_for_tenant(tenant):
     """
-    Returns tenant default ecosystem first, else first enabled ecosystem, else first ecosystem.
+    Returns the single enabled ecosystem for a tenant.
     """
     if not tenant:
         return None
 
-    existing = frappe.db.get_value(
+    rows = frappe.get_all(
         "Nexus Ecosystem",
-        {
+        filters={
             "tenant": tenant,
-            "is_default": 1,
             "enabled": 1,
         },
-        "name",
+        fields=["name"],
+        order_by="is_default desc, modified desc",
+        limit_page_length=2,
     )
 
-    if not existing:
-        existing = frappe.db.get_value(
-            "Nexus Ecosystem",
-            {
-                "tenant": tenant,
-                "enabled": 1,
-            },
-            "name",
-            order_by="modified desc",
+    if len(rows) > 1:
+        frappe.throw(
+            (
+                "Multiple enabled Nexus Ecosystems exist for this tenant. "
+                "Keep one enabled ecosystem and disable the rest."
+            )
         )
 
-    if not existing:
-        existing = frappe.db.get_value(
-            "Nexus Ecosystem",
-            {
-                "tenant": tenant,
-            },
-            "name",
-            order_by="modified desc",
-        )
-
-    return frappe.get_doc("Nexus Ecosystem", existing) if existing else None
+    return frappe.get_doc("Nexus Ecosystem", rows[0].name) if rows else None
 
 
-def resolve_selected_ecosystem(tenant=None, active_ecosystem=None, ecosystems=None):
+def resolve_selected_ecosystem(tenant=None, ecosystems=None):
     """
-    Resolves selected ecosystem for UI snapshot.
+    Resolves the tenant runtime profile for the UI snapshot.
     """
     ecosystems = ecosystems or []
+    enabled_ecosystems = [
+        row for row in ecosystems
+        if int(row.get("enabled") if row.get("enabled") is not None else 1)
+    ]
 
-    if active_ecosystem:
-        for row in ecosystems:
-            if row.get("name") == active_ecosystem:
-                return row
-
-    for row in ecosystems:
+    for row in enabled_ecosystems:
         if row.get("is_default"):
             return row
 
-    if ecosystems:
-        return ecosystems[0]
+    if enabled_ecosystems:
+        return enabled_ecosystems[0]
 
     doc = get_default_or_first_ecosystem_for_tenant(tenant)
     return ecosystem_doc_to_dict(doc) if doc else None
@@ -519,6 +622,9 @@ def save_ecosystem_configuration(values):
 
     doc = get_or_create_ecosystem_from_values(values)
 
+    ensure_master_value("Nexus Business Unit", values.get("default_business_unit"), tenant=tenant)
+    ensure_master_value("Nexus Public Context", values.get("default_public_context"), tenant=tenant)
+
     allowed_fields = {
         "tenant",
         "ecosystem_name",
@@ -538,10 +644,6 @@ def save_ecosystem_configuration(values):
         "source_citation_required",
         "live_chat_enabled",
         "default_chat_channel",
-        "default_live_channel",
-        "default_public_agent",
-        "default_public_escalation_queue",
-        "default_escalation_enabled",
         "website_widget_enabled",
         "widget_title",
         "widget_welcome_message",
@@ -600,6 +702,17 @@ def save_ecosystem_configuration(values):
     }
 
 
+@frappe.whitelist()
+def save_tenant_configuration(values):
+    """
+    Public admin API for tenant configuration.
+
+    The current storage DocType remains Nexus Ecosystem for compatibility,
+    but callers should treat this as the tenant's configuration record.
+    """
+    return save_ecosystem_configuration(values)
+
+
 def get_or_create_ecosystem_from_values(values):
     """
     Finds an ecosystem by docname first, then by tenant + ecosystem_name.
@@ -626,14 +739,27 @@ def get_or_create_ecosystem_from_values(values):
         if existing:
             return frappe.get_doc("Nexus Ecosystem", existing)
 
+    if tenant:
+        existing_doc = get_default_or_first_ecosystem_for_tenant(tenant)
+        if existing_doc:
+            return existing_doc
+
     doc = frappe.new_doc("Nexus Ecosystem")
     doc.tenant = tenant
     return doc
 
 
+def get_single_ecosystem_name_for_tenant(tenant):
+    """
+    Returns the tenant-owned runtime profile name for legacy UI fields.
+    """
+    doc = get_default_or_first_ecosystem_for_tenant(tenant)
+    return doc.name if doc else None
+
+
 def unset_other_default_ecosystems(tenant, current_name=None):
     """
-    Ensures only one Tenant Default Ecosystem per tenant.
+    Ensures only one tenant runtime profile is marked as default.
     """
     if not tenant or not has_field("Nexus Ecosystem", "is_default"):
         return
@@ -674,7 +800,6 @@ def apply_ecosystem_defaults_if_missing(doc):
         "qa_enabled": 1,
         "source_citation_required": 1,
         "live_chat_enabled": 1,
-        "default_escalation_enabled": 1,
         "website_widget_enabled": 0,
         "testing_required_before_activation": 1,
         "certification_status": "Not Certified",
@@ -698,8 +823,8 @@ def ensure_ecosystem_for_tenant(
     """
     Ensures an ecosystem exists for a tenant.
 
-    This no longer enforces one ecosystem per tenant.
-    It creates or updates a specific ecosystem profile.
+    The simplified model allows one enabled ecosystem per tenant.
+    This creates it when missing, otherwise updates the existing one.
     """
     if not tenant:
         frappe.throw("Tenant is required.")
@@ -719,6 +844,8 @@ def ensure_ecosystem_for_tenant(
         "default_business_unit": business_unit,
         "default_project": project,
     }
+
+    ensure_master_value("Nexus Business Unit", business_unit, tenant=tenant)
 
     doc = get_or_create_ecosystem_from_values(values)
 
@@ -904,6 +1031,25 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         },
     )
 
+    registered_identity_route_count = count_registered_identity_routes()
+    identity_registry_count = count_records_safely(
+        doctype="Nexus Identity Registry",
+        extra_filters={
+            "enabled": 1,
+            "verification_status": "Verified",
+        },
+    )
+    identity_safeguard_count = count_records_safely(
+        doctype="Nexus Identity Safe Guard Access Category",
+        extra_filters={
+            "parenttype": "Nexus Identity Registry",
+        },
+    )
+    identity_safeguard_ready = bool(
+        registered_identity_route_count == 0
+        or identity_safeguard_count > 0
+    )
+
     qa_ready = bool(
         ecosystem
         and ecosystem.get("qa_enabled")
@@ -919,6 +1065,7 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         and ai_agent_count > 0
         and category_route_count > 0
         and profile_access_count > 0
+        and identity_safeguard_ready
     )
 
     testing_ready = bool(
@@ -945,6 +1092,10 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         "ai_agent_count": ai_agent_count,
         "category_route_count": category_route_count,
         "profile_access_count": profile_access_count,
+        "registered_identity_route_count": registered_identity_route_count,
+        "identity_registry_count": identity_registry_count,
+        "identity_safeguard_count": identity_safeguard_count,
+        "identity_safeguard_ready": identity_safeguard_ready,
         "qa_ready": qa_ready,
         "live_ready": live_ready,
         "testing_ready": testing_ready,
@@ -965,6 +1116,10 @@ def get_empty_readiness():
         "ai_agent_count": 0,
         "category_route_count": 0,
         "profile_access_count": 0,
+        "registered_identity_route_count": 0,
+        "identity_registry_count": 0,
+        "identity_safeguard_count": 0,
+        "identity_safeguard_ready": False,
         "qa_ready": False,
         "live_ready": False,
         "testing_ready": False,
@@ -999,6 +1154,35 @@ def count_records_safely(doctype, tenant=None, extra_filters=None):
         doctype,
         filters,
     )
+
+
+def count_registered_identity_routes():
+    """
+    Count enabled category routes that depend on a registered/non-public identity.
+    Public routes do not require an Identity Registry Safe Guard.
+    """
+    doctype = "Nexus Category Identity Route"
+
+    if not frappe.db.exists("DocType", doctype):
+        return 0
+
+    filters = {}
+
+    if has_field(doctype, "enabled"):
+        filters["enabled"] = 1
+
+    routes = frappe.get_all(
+        doctype,
+        filters=filters,
+        fields=["identity_type"],
+        limit_page_length=500,
+    )
+
+    return len([
+        route
+        for route in routes
+        if route.get("identity_type") and route.get("identity_type") != "Public"
+    ])
 
 
 # ---------------------------------------------------------------------
@@ -1074,10 +1258,6 @@ def get_ecosystem_field_list():
         "source_citation_required",
         "live_chat_enabled",
         "default_chat_channel",
-        "default_live_channel",
-        "default_public_agent",
-        "default_public_escalation_queue",
-        "default_escalation_enabled",
         "website_widget_enabled",
         "widget_title",
         "widget_welcome_message",

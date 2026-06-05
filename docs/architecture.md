@@ -167,22 +167,27 @@ If the retrieval engine finds relevant chunks that the user cannot access, it re
 Every significant operation can be scoped to a tenant:
 
 - `Nexus Tenant` — defines a tenant by code
-- `Nexus Ecosystem` — per-tenant configuration (defaults, channels, features)
-- `Nexus User Context` — stores a user's active tenant/ecosystem selection
+- Tenant configuration — per-tenant defaults, channels, safety flags, and widget defaults
+- `Nexus Business Unit` and `Nexus Public Context` — master-backed scope values used by defaults and knowledge classification
 - Knowledge sources, units, and chunks carry a `tenant` field
 - Query logs capture `tenant`
 
 Tenant resolution priority in `services/tenant_context.py`:
 
-1. Explicit `tenant` in the request payload
-2. User's active `Nexus User Context`
-3. Default ecosystem for the tenant
+1. Explicit `tenant` or `active_tenant` in the request payload
+2. Error when the caller requires a tenant
+
+Once the tenant is known, business unit, channel, public context, and top_k are resolved from explicit payload values and then tenant configuration defaults. Tenant configuration must not choose the AI Agent Profile or access policies.
+
+Channel defaults are selected by runtime purpose without cross-fallback. Chat uses the tenant default chat channel, and Q&A uses the tenant default Q&A channel when no explicit channel is passed. Routing remains category/identity/profile/access-policy driven.
+
+See [Tenant and Tenant Configuration](tenant-ecosystem.md) for the admin page mapping.
 
 ---
 
 ## Design Principles
 
-1. **Profile is the sole access authority** — every query resolves to one `Nexus AI Agent Profile`. That profile's Access Categories determine what knowledge may be retrieved. Channel membership and Frappe roles are not runtime access inputs.
+1. **Profile plus identity guard access** — every query resolves to one `Nexus AI Agent Profile`. The profile's Access Categories define the profile capability, and registered chat identities are further capped by the `Nexus Identity Registry` Safe Guard categories. Channel membership and Frappe roles are not runtime access inputs.
 2. **Category-based access** — profiles map to access categories, not directly to policies. Categories are reusable bundles that can be assigned to many profiles.
 3. **Chunk-level enforcement** — access policy is stored on each chunk and checked at retrieval time via `chunk.access_policy IN [allowed_policies]`.
 4. **Profile-driven behavior** — tone, style, fallback, and do-not-answer rules come from `Nexus AI Agent Profile` fields. `Nexus AI Behaviour` is a template only.

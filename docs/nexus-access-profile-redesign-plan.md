@@ -30,7 +30,7 @@ Any person  →  predefined record  →  Agent Profile  →  Access Category  �
 
 `Nexus AI Agent Profile` → `Nexus AI Agent Profile Access Category` → `Nexus Access Category` → `[Nexus Access Policy]`
 
-`Nexus Channel Access Category` and `Nexus Role Access Category` are **retired from the runtime enforcement path**. Their DocTypes are kept but `access_resolver.py` no longer calls them during a query.
+`Nexus Channel Access Category` and `Nexus Role Access Category` were **retired from the runtime enforcement path**. `Nexus Channel Access Category` has since been deleted entirely. `Nexus Role Access Category` is retained for admin reporting only.
 
 ### Decision 2 — Channel is transport only
 
@@ -92,7 +92,7 @@ For internal users, Frappe roles can be used by the admin as a guide when assign
 
 ### 3.2 `Nexus User Profile Assignment`
 
-**Purpose:** Direct assignment of an Agent Profile to a specific internal/desk user. The sole profile resolution mechanism for internal users.
+**Purpose:** Direct assignment of an Agent Profile to a specific internal/desk user. This is the normal profile resolution mechanism for internal users; authenticated `System Manager` sessions may bypass the assignment requirement for admin/test use.
 
 **Module:** `nexus_live_agents`
 **App:** `digitz_ai_nexus_live`
@@ -153,14 +153,10 @@ Snapshot is written at conversation creation time and preserves the resolved pro
 
 ## 5. Retired from Runtime Enforcement
 
-These DocTypes are **kept** (no deletion) but are no longer called during runtime access resolution.
-
-| DocType | Previous Role | New Status |
+| DocType | Previous Role | Current Status |
 |---|---|---|
-| `Nexus Channel Access Category` | Runtime channel policy ceiling | Retained as DocType, removed from `access_resolver.py` runtime path |
-| `Nexus Role Access Category` | Runtime role policy enforcement | Retained as DocType, removed from `access_resolver.py` runtime path |
-
-**Migration note:** Existing records in these DocTypes are preserved. If a future use case requires them (e.g. admin UI policy reporting), they can be re-read without modifying the runtime path.
+| `Nexus Channel Access Category` | Runtime channel policy ceiling | **Deleted** — DocType and all seed data removed |
+| `Nexus Role Access Category` | Runtime role policy enforcement | Retained for admin reporting; not called at runtime |
 
 ---
 
@@ -389,9 +385,8 @@ def build_ai_profile_dict(profile, default_response_mode="chat"):
 - [x] Ensure Live builds `ai_profile` before calling `resolve_allowed_policies()`
 - [x] Ensure `resolve_allowed_policies()` receives `query_contract.ai_profile.name`
 
-### Phase 7 — Channel sync (deferred)
-- [ ] `Nexus Live Channel` controller: auto-create/sync `Nexus Channel` record on save
-- [ ] Ensures access governance identity is always consistent with operational channel
+### Phase 7 — Channel sync (dropped)
+- [x] `Nexus Channel` and `Nexus Channel Access Category` deleted — sync is no longer needed
 
 ### Phase 8 — Documentation and cleanup ✅ (partially)
 - [x] `agent-management.md` — updated
