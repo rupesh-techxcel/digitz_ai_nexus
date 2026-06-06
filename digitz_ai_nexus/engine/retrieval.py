@@ -81,6 +81,7 @@ INDEX_ENTRY_FIELDS = [
     "access_policy",
     "sensitivity",
     "priority",
+    "answer_review_status",
     "embedding",
     "embedding_status",
 ]
@@ -365,6 +366,12 @@ def build_semantic_index_filters(query_contract, entry_types=None):
         "status": "Active",
         "embedding_status": "Completed",
     }
+
+    try:
+        if frappe.get_meta("Nexus Knowledge Index Entry").has_field("answer_review_status"):
+            filters["answer_review_status"] = "Approved"
+    except Exception:
+        pass
 
     allowed_policies = query_contract.get("allowed_access_policies")
     if allowed_policies:

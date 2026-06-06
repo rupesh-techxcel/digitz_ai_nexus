@@ -413,12 +413,9 @@ def process_knowledge_source(source_name):
         else:
             diagnostics_status = "Critical"
 
-        retrieval_ready = (
-            source_doc.get("status") == "Published"
-            and embedding_status == "Completed"
-            and diagnostics_status == "Healthy"
-            and len(created_chunks) > 0
-        )
+        # Strict governance: newly generated possible-question answers must be
+        # manually approved before a processed source becomes retrieval-ready.
+        retrieval_ready = False
 
         set_if_field(unit_doc, "embedding_status", embedding_status)
         set_if_field(unit_doc, "chunk_count", len(created_chunks))

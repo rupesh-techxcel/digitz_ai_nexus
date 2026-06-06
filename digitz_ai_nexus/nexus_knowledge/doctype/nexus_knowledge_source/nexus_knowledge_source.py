@@ -40,6 +40,94 @@ class NexusKnowledgeSource(Document):
         if meta.has_field("retrieval_ready") and getattr(self, "retrieval_ready", None) is None:
             self.retrieval_ready = 0
 
+        self.reset_readiness_if_source_changed(meta)
+
+    def reset_readiness_if_source_changed(self, meta):
+        if self.is_new():
+            return
+
+        before = self.get_doc_before_save()
+
+        if not before:
+            return
+
+        watched_fields = [
+            "source_type",
+            "source_file",
+            "manual_content",
+            "tenant",
+            "business_unit",
+            "project",
+            "context",
+            "sub_context",
+            "entity_type",
+            "entity",
+            "topic",
+            "chat_category",
+            "access_policy",
+        ]
+
+        changed = any(
+            meta.has_field(fieldname)
+            and (before.get(fieldname) or "") != (self.get(fieldname) or "")
+            for fieldname in watched_fields
+        )
+
+        if not changed:
+            return
+
+        if meta.has_field("status"):
+            self.status = "Draft"
+
+        if meta.has_field("processing_status"):
+            self.processing_status = "Pending"
+
+        if meta.has_field("embedding_status"):
+            self.embedding_status = "Pending"
+
+        if meta.has_field("diagnostics_status"):
+            self.diagnostics_status = "Pending"
+
+        if meta.has_field("validation_status"):
+            self.validation_status = "Pending"
+
+        if meta.has_field("ready_to_publish"):
+            self.ready_to_publish = 0
+
+        if meta.has_field("retrieval_ready"):
+            self.retrieval_ready = 0
+
+        if meta.has_field("needs_review"):
+            self.needs_review = 0
+
+        if meta.has_field("review_reason"):
+            self.review_reason = "Source changed after preparation. Process and validate again."
+
+        if meta.has_field("active_chunk_count"):
+            self.active_chunk_count = 0
+
+        self.disable_existing_chunks_after_source_change()
+
+    def disable_existing_chunks_after_source_change(self):
+        if not frappe.db.exists("DocType", "Nexus Knowledge Chunk"):
+            return
+
+        chunk_meta = frappe.get_meta("Nexus Knowledge Chunk")
+        chunk_fields = {df.fieldname for df in chunk_meta.fields}
+
+        if "knowledge_source" not in chunk_fields or "disabled" not in chunk_fields:
+            return
+
+        chunks = frappe.get_all(
+            "Nexus Knowledge Chunk",
+            filters={"knowledge_source": self.name},
+            pluck="name",
+            limit_page_length=5000,
+        )
+
+        for chunk_name in chunks:
+            frappe.db.set_value("Nexus Knowledge Chunk", chunk_name, "disabled", 1, update_modified=True)
+
 
 @frappe.whitelist()
 def get_source_quality_panel(source_name):

@@ -32,6 +32,7 @@ class NexusStudioPage {
             publish_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.publish_knowledge_source',
             unpublish_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.unpublish_knowledge_source',
             generate_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.generate_source_test_cases',
+            review_index_answer: 'digitz_ai_nexus.api.nexus_knowledge_studio.review_knowledge_index_answer',
             run_knowledge_test_case: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_knowledge_test_case',
             run_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_source_test_cases',
         };
@@ -52,7 +53,15 @@ class NexusStudioPage {
             status: '',
             sync_status: '',
             access_policy: '',
-            disabled: ''
+            disabled: '',
+            tenant: '',
+            business_unit: '',
+            context: '',
+            sub_context: '',
+            entity_type: '',
+            entity: '',
+            topic: '',
+            chat_category: ''
         };
 
         this.summary = {};
@@ -60,6 +69,7 @@ class NexusStudioPage {
         this.source_summary = {};
         this.sources = [];
         this.source_access_policies = [];
+        this.source_classification_options = {};
         this.active_tenant = '';
         this.active_context = {};
 
@@ -527,6 +537,24 @@ class NexusStudioPage {
                 border-color: rgba(11, 108, 255, 0.18);
             }
 
+            .nks-badge-processed {
+                background: #fff4e6;
+                color: #b85c00;
+                border-color: rgba(200, 100, 0, 0.24);
+            }
+
+            .nks-badge-validated {
+                background: #eef3ff;
+                color: #2a54c9;
+                border-color: rgba(42, 84, 201, 0.24);
+            }
+
+            .nks-badge-published {
+                background: #ecfffb;
+                color: #007a64;
+                border-color: rgba(0, 164, 130, 0.26);
+            }
+
             .nks-action-row,
             .nks-inline-actions {
                 display: flex;
@@ -770,6 +798,345 @@ class NexusStudioPage {
                 color: #526887;
             }
 
+            .nks-source-tenant-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(220px, 1fr));
+                gap: 12px;
+                margin: 0 20px 16px;
+            }
+
+            .nks-source-tenant-card {
+                padding: 14px;
+                border-radius: 18px;
+                background:
+                    radial-gradient(circle at 100% 0%, rgba(0, 184, 148, 0.08), transparent 30%),
+                    linear-gradient(180deg, #ffffff 0%, #f4fffc 100%);
+                border: 1.5px solid rgba(0, 184, 148, 0.22);
+                box-shadow: 0 10px 24px rgba(33, 77, 187, 0.05);
+            }
+
+            .nks-source-tenant-title {
+                color: #0b3c91;
+                font-size: 14px;
+                font-weight: 950;
+            }
+
+            .nks-source-tenant-stats {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 12px;
+            }
+
+            .nks-source-tenant-stats div {
+                padding: 9px;
+                border-radius: 12px;
+                background: #ffffff;
+                border: 1px solid rgba(33, 119, 255, 0.14);
+            }
+
+            .nks-source-tenant-stats strong {
+                display: block;
+                color: #102b67;
+                font-size: 18px;
+                line-height: 1;
+                font-weight: 950;
+            }
+
+            .nks-source-tenant-stats span {
+                display: block;
+                margin-top: 5px;
+                color: #526887;
+                font-size: 11px;
+                font-weight: 850;
+            }
+
+            .nks-source-classification-panel {
+                margin: 0 20px 14px;
+                padding: 14px;
+                border-radius: 18px;
+                background: #f8fbff;
+                border: 1.5px solid rgba(33, 119, 255, 0.18);
+            }
+
+            .nks-source-classification-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(160px, 1fr));
+                gap: 10px;
+            }
+
+            .nks-source-classification-grid .form-control {
+                border-radius: 14px;
+                border-color: rgba(33, 119, 255, 0.22);
+            }
+
+            .nks-source-group-wrap {
+                padding: 0 20px 20px;
+            }
+
+            .nks-source-tenant-section {
+                margin-bottom: 14px;
+                border-radius: 18px;
+                overflow: hidden;
+                border: 1.5px solid rgba(33, 119, 255, 0.18);
+                background: #ffffff;
+                box-shadow: 0 10px 24px rgba(33, 77, 187, 0.05);
+            }
+
+            .nks-source-tenant-section[open] {
+                border-color: rgba(0, 184, 148, 0.24);
+            }
+
+            .nks-source-tenant-head {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                align-items: center;
+                padding: 14px 16px;
+                background:
+                    radial-gradient(circle at 100% 0%, rgba(77, 163, 255, 0.10), transparent 30%),
+                    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                border-bottom: 1px solid rgba(33, 119, 255, 0.14);
+            }
+
+            .nks-source-tenant-head h4 {
+                margin: 0;
+                color: #102b67;
+                font-size: 15px;
+                font-weight: 950;
+            }
+
+            .nks-source-tenant-head::-webkit-details-marker,
+            .nks-source-context-head::-webkit-details-marker,
+            .nks-source-item-head::-webkit-details-marker {
+                display: none;
+            }
+
+            .nks-source-tenant-head,
+            .nks-source-context-head,
+            .nks-source-item-head {
+                cursor: pointer;
+                list-style: none;
+            }
+
+            .nks-source-tenant-head::after,
+            .nks-source-context-head::after,
+            .nks-source-item-head::after {
+                content: '+';
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+                flex: 0 0 auto;
+                border-radius: 999px;
+                color: #0b3c91;
+                background: rgba(33, 119, 255, 0.08);
+                font-size: 16px;
+                font-weight: 950;
+            }
+
+            .nks-source-tenant-section[open] > .nks-source-tenant-head::after,
+            .nks-source-context-group[open] > .nks-source-context-head::after,
+            .nks-source-item[open] > .nks-source-item-head::after {
+                content: '-';
+                color: #008c74;
+                background: rgba(0, 184, 148, 0.10);
+            }
+
+            .nks-source-tenant-body {
+                padding: 14px 16px 16px;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            }
+
+            .nks-source-context-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(260px, 1fr));
+                gap: 12px;
+            }
+
+            .nks-source-context-group {
+                border-radius: 16px;
+                overflow: hidden;
+                background: #ffffff;
+                border: 1.5px solid rgba(33, 119, 255, 0.14);
+            }
+
+            .nks-source-context-group[open] {
+                border-color: rgba(0, 184, 148, 0.22);
+                box-shadow: 0 12px 26px rgba(33, 77, 187, 0.06);
+            }
+
+            .nks-source-context-head {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                align-items: center;
+                padding: 14px;
+                background:
+                    radial-gradient(circle at 100% 0%, rgba(0, 184, 148, 0.08), transparent 34%),
+                    linear-gradient(180deg, #ffffff 0%, #f6fffc 100%);
+            }
+
+            .nks-source-context-main {
+                min-width: 0;
+            }
+
+            .nks-source-context-title {
+                color: #102b67;
+                font-size: 14px;
+                font-weight: 950;
+            }
+
+            .nks-source-context-meta {
+                margin-top: 5px;
+                color: #526887;
+                font-size: 12px;
+                font-weight: 750;
+            }
+
+            .nks-source-context-stats {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                justify-content: flex-end;
+                margin-left: auto;
+            }
+
+            .nks-source-context-body {
+                padding: 10px 12px 12px;
+                background: #f8fbff;
+            }
+
+            .nks-source-item {
+                margin-top: 8px;
+                border-radius: 14px;
+                background: #ffffff;
+                border: 1px solid rgba(33, 119, 255, 0.14);
+                overflow: hidden;
+            }
+
+            .nks-source-item[open] {
+                border-color: rgba(0, 184, 148, 0.20);
+                box-shadow: 0 10px 22px rgba(33, 77, 187, 0.05);
+            }
+
+            .nks-source-item-head {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .nks-source-item-head-title {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .nks-source-item-head-meta {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                flex-shrink: 0;
+            }
+
+            .nks-source-item-body {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(160px, 1fr));
+                gap: 10px;
+                padding: 0 12px 12px;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            }
+
+            .nks-source-detail-box {
+                padding: 10px;
+                border-radius: 12px;
+                background: #ffffff;
+                border: 1px solid rgba(33, 119, 255, 0.12);
+            }
+
+            .nks-source-detail-label {
+                margin-bottom: 6px;
+                color: #526887;
+                font-size: 11px;
+                font-weight: 950;
+                text-transform: uppercase;
+            }
+
+            .nks-source-detail-value {
+                color: #102b67;
+                font-size: 12px;
+                line-height: 1.45;
+                font-weight: 750;
+            }
+
+            .nks-source-detail-box-wide {
+                grid-column: 1 / -1;
+            }
+
+            .nks-source-index-review-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(220px, 1fr));
+                gap: 10px;
+            }
+
+            .nks-source-index-review-list {
+                margin: 8px 0 0;
+                padding-left: 17px;
+                color: #102b67;
+                font-size: 12px;
+                line-height: 1.45;
+            }
+
+            .nks-source-index-review-list li {
+                margin-bottom: 7px;
+            }
+
+            .nks-source-index-answer {
+                margin-top: 6px;
+                padding: 8px;
+                border-radius: 10px;
+                background: #f8fbff;
+                border: 1px solid rgba(33, 119, 255, 0.12);
+                color: #314d78;
+                font-size: 12px;
+                line-height: 1.45;
+            }
+
+            .nks-source-index-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-top: 7px;
+            }
+
+            .nks-source-compact-tags {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+                margin-top: 7px;
+            }
+
+            .nks-source-compact-tags .nks-badge {
+                font-size: 10px;
+                padding: 4px 7px;
+            }
+
+            .nks-source-item-actions {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .nks-source-inline-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
             .nks-source-dashboard-test-actions {
                 margin-top: 12px;
                 display: flex;
@@ -780,7 +1147,10 @@ class NexusStudioPage {
             @media (max-width: 1100px) {
                 .nks-summary-grid,
                 .nks-stage-grid,
-                .nks-dashboard-grid {
+                .nks-dashboard-grid,
+                .nks-source-tenant-grid,
+                .nks-source-classification-grid,
+                .nks-source-context-grid {
                     grid-template-columns: repeat(2, minmax(160px, 1fr));
                 }
 
@@ -798,6 +1168,19 @@ class NexusStudioPage {
 
                 .nks-toolbar-right {
                     justify-content: flex-start;
+                }
+
+                .nks-source-item-body,
+                .nks-source-index-review-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .nks-source-item-head {
+                    flex-wrap: wrap;
+                }
+
+                .nks-source-item-head-title {
+                    flex-basis: 100%;
                 }
 
                 .nks-source-dashboard-panel-head {
@@ -913,7 +1296,12 @@ class NexusStudioPage {
                 .nks-summary-grid,
                 .nks-stage-grid,
                 .nks-context-grid,
-                .nks-dashboard-grid {
+                .nks-dashboard-grid,
+                .nks-source-tenant-grid,
+                .nks-source-classification-grid,
+                .nks-source-context-grid,
+                .nks-source-item-body,
+                .nks-source-index-review-grid {
                     grid-template-columns: 1fr;
                 }
 
@@ -1163,6 +1551,35 @@ class NexusStudioPage {
             this.load_sources();
         });
 
+        this.body.on('change', '.nks-source-classification-filter', (e) => {
+            const fieldname = $(e.currentTarget).data('fieldname');
+
+            if (!fieldname) {
+                return;
+            }
+
+            this.source_filters[fieldname] = e.target.value || '';
+            this.load_sources();
+        });
+
+        this.body.on('click', '.nks-source-clear-classification-btn', () => {
+            [
+                'tenant',
+                'business_unit',
+                'context',
+                'sub_context',
+                'entity_type',
+                'entity',
+                'topic',
+                'chat_category'
+            ].forEach((fieldname) => {
+                this.source_filters[fieldname] = '';
+            });
+
+            this.load_sources();
+            this.load_source_summary();
+        });
+
         this.body.on('click', '.nks-new-source-btn', () => {
             this.new_knowledge_source();
         });
@@ -1172,7 +1589,71 @@ class NexusStudioPage {
         });
 
         this.body.on('click', '.nks-source-dashboard-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             this.show_source_dashboard($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-inline-process-source-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.process_source_from_dashboard($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-inline-validate-source-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.validate_source_from_dashboard($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-inline-publish-source-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.publish_source_from_dashboard($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-inline-unpublish-source-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.unpublish_source_from_dashboard($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-inline-generate-tests-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.generate_test_cases_from_source_dashboard($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-source-context-head', (e) => {
+            const $group = $(e.currentTarget).closest('.nks-source-context-group');
+
+            if (!$group.prop('open')) {
+                $group
+                    .siblings('.nks-source-context-group')
+                    .removeAttr('open')
+                    .find('.nks-source-item')
+                    .removeAttr('open');
+            }
+        });
+
+        this.body.on('click', '.nks-source-item-head', (e) => {
+            const $item = $(e.currentTarget).closest('.nks-source-item');
+
+            if (!$item.prop('open')) {
+                $item
+                    .siblings('.nks-source-item')
+                    .removeAttr('open');
+            }
+        });
+
+        this.body.on('click', '.nks-index-answer-review-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.review_index_answer(
+                $(e.currentTarget).data('name'),
+                $(e.currentTarget).data('action'),
+                $(e.currentTarget)
+            );
         });
 
         this.body.on('click', '.nks-check-btn', (e) => {
@@ -1272,23 +1753,28 @@ class NexusStudioPage {
     }
 
 
-    load_source_summary() {
+    load_source_summary(options = {}) {
+        const shouldRender = options.render !== false;
+
         frappe.call({
             method: this.api.get_source_summary,
             freeze: false,
             callback: (r) => {
                 if (!r.message || !r.message.success) {
                     this.source_summary = {};
-                    this.refresh_current_tab_if_needed();
+                    if (shouldRender) {
+                        this.refresh_current_tab_if_needed();
 
-                    if (this.active_tab === 'sources') {
-                        this.render_active_tab();
+                        if (this.active_tab === 'sources') {
+                            this.render_active_tab();
+                        }
                     }
 
                     return;
                 }
 
                 this.source_summary = r.message.summary || {};
+                this.source_classification_options = this.source_summary.classification_options || {};
 
                 this.merge_active_context(
                     r.message.active_context || {},
@@ -1302,7 +1788,7 @@ class NexusStudioPage {
                 this.render_active_tenant();
                 this.render_active_context_panel();
 
-                if (this.active_tab === 'sources') {
+                if (shouldRender && this.active_tab === 'sources') {
                     this.render_active_tab();
                 }
             }
@@ -1464,7 +1950,7 @@ class NexusStudioPage {
             'Answer Quality',
             'Validate whether Nexus gives correct, grounded, and trustworthy answers from published knowledge.',
             [
-                'Connect this view with Nexus Knowledge Test Case, Nexus Knowledge Test Run, and Nexus Query Log.',
+                'Connect this view with validation tests, validation runs, and Nexus Query Log.',
                 'Review expected source matching, citations, confidence, access handling, and fallback behavior.',
                 'Use this area for answer-level quality checks, not source processing.'
             ]
@@ -1518,9 +2004,11 @@ class NexusStudioPage {
                 <div class="nks-section-head">
                     <h3>Source Library</h3>
                     <p>
-                        Register, govern, and review original source material before it becomes usable by Nexus answers.
+                        Register, govern, and review source material by tenant and business classification before it becomes usable by Nexus answers.
                     </p>
                 </div>
+
+                ${this.get_source_tenant_stats_html()}
 
                 <div class="nks-toolbar">
                     <div class="nks-toolbar-left">
@@ -1560,27 +2048,80 @@ class NexusStudioPage {
                     </div>
                 </div>
 
-                <div class="nks-table-wrap">
-                    <table class="table table-bordered nks-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 22%;">Source</th>
-                                <th style="width: 13%;">Access Policy</th>
-                                <th style="width: 20%;">Business Scope</th>
-                                <th style="width: 11%;">Status</th>
-                                <th style="width: 16%;">Readiness</th>
-                                <th style="width: 10%;">Next Step</th>
-                                <th style="width: 8%;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="nks-knowledge-source-rows">
-                            <tr>
-                                <td colspan="7" class="text-muted text-center">Loading knowledge sources...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="nks-source-classification-panel">
+                    <div class="nks-source-classification-grid">
+                        ${this.get_source_classification_filter_html('tenant', 'Tenant')}
+                        ${this.get_source_classification_filter_html('business_unit', 'Business Unit')}
+                        ${this.get_source_classification_filter_html('context', 'Context')}
+                        ${this.get_source_classification_filter_html('sub_context', 'Sub Context')}
+                        ${this.get_source_classification_filter_html('entity_type', 'Entity Type')}
+                        ${this.get_source_classification_filter_html('entity', 'Entity')}
+                        ${this.get_source_classification_filter_html('topic', 'Topic')}
+                        ${this.get_source_classification_filter_html('chat_category', 'Chat Category')}
+                    </div>
+                    <div class="nks-inline-actions" style="margin-top: 10px;">
+                        <button class="btn btn-default btn-xs nks-source-clear-classification-btn">
+                            Clear Classification Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div id="nks-knowledge-source-rows" class="nks-source-group-wrap">
+                    <div class="text-muted text-center">Loading knowledge sources...</div>
                 </div>
             </div>
+        `;
+    }
+
+    get_source_tenant_stats_html() {
+        const tenant_stats = (this.source_summary && this.source_summary.tenant_stats) || [];
+
+        if (!tenant_stats.length) {
+            return '';
+        }
+
+        return `
+            <div class="nks-source-tenant-grid">
+                ${tenant_stats.map((row) => {
+                    return `
+                        <div class="nks-source-tenant-card">
+                            <div class="nks-source-tenant-title">${frappe.utils.escape_html(row.tenant || 'No Tenant')}</div>
+                            <div class="nks-source-tenant-stats">
+                                <div>
+                                    <strong>${frappe.utils.escape_html(String(row.total || 0))}</strong>
+                                    <span>Sources</span>
+                                </div>
+                                <div>
+                                    <strong>${frappe.utils.escape_html(String(row.published || 0))}</strong>
+                                    <span>Published</span>
+                                </div>
+                                <div>
+                                    <strong>${frappe.utils.escape_html(String(row.retrieval_ready || 0))}</strong>
+                                    <span>Retrieval Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    get_source_classification_filter_html(fieldname, label) {
+        const options = (this.source_classification_options && this.source_classification_options[fieldname]) || [];
+        const current = this.source_filters[fieldname] || '';
+
+        return `
+            <select class="form-control nks-source-classification-filter" data-fieldname="${frappe.utils.escape_html(fieldname)}">
+                <option value="" ${current === '' ? 'selected' : ''}>${frappe.utils.escape_html(label)}: All</option>
+                ${options.map((value) => {
+                    return `
+                        <option value="${frappe.utils.escape_html(value)}" ${current === value ? 'selected' : ''}>
+                            ${frappe.utils.escape_html(value)}
+                        </option>
+                    `;
+                }).join('')}
+            </select>
         `;
     }
 
@@ -1740,6 +2281,7 @@ class NexusStudioPage {
     const generated = cint(summary.generated || row.generated_test_case_count || 0);
     const active = cint(summary.active || row.active_test_case_count || 0);
     const draft = cint(summary.draft || row.draft_test_case_count || 0);
+    const archived = cint(summary.archived || 0);
 
     const hasTests = total > 0;
 
@@ -1747,14 +2289,14 @@ class NexusStudioPage {
         <div class="nks-source-dashboard-panel nks-source-dashboard-testing">
             <div class="nks-source-dashboard-panel-head">
                 <div>
-                    <h4>Testing & Validation</h4>
+                    <h4>Validation Tests</h4>
                     <p>
-                        Generated test cases, source-level validation runs, and quality verification.
+                        Generated validation scenarios, execution runs, and quality verification.
                     </p>
                 </div>
 
                 <div class="nks-source-test-status-pill ${hasTests ? 'has-tests' : 'no-tests'}">
-                    ${hasTests ? `${total} Test Case${total === 1 ? '' : 's'}` : 'No Tests'}
+                    ${hasTests ? `${total} Validation Test${total === 1 ? '' : 's'}` : 'No Validation Tests'}
                 </div>
             </div>
 
@@ -1764,11 +2306,11 @@ class NexusStudioPage {
                         <div class="nks-source-test-grid">
                             <div class="nks-source-test-stat">
                                 <div class="nks-source-test-value">${total}</div>
-                                <div class="nks-source-test-label">Total Test Cases</div>
+                                <div class="nks-source-test-label">Total Validation Tests</div>
                             </div>
                             <div class="nks-source-test-stat">
                                 <div class="nks-source-test-value">${generated}</div>
-                                <div class="nks-source-test-label">AI Generated</div>
+                                <div class="nks-source-test-label">Generated</div>
                             </div>
                             <div class="nks-source-test-stat">
                                 <div class="nks-source-test-value">${draft}</div>
@@ -1781,35 +2323,37 @@ class NexusStudioPage {
                         </div>
 
                         <div class="nks-source-dashboard-note nks-source-dashboard-note-info">
-                            Test cases are available for this source. Review generated cases, run the source validation suite,
-                            and inspect Test Run records for pass, warning, and failure details.
+                            Validation tests are available for this source. Review generated scenarios, run the validation suite,
+                            and inspect validation run records for pass, warning, and failure details.
+                            ${archived ? `<br>${frappe.utils.escape_html(String(archived))} older generated validation test${archived === 1 ? '' : 's'} archived from previous generations.` : ''}
                         </div>
                     `
                     : `
                         <div class="nks-source-dashboard-note nks-source-dashboard-note-muted">
-                            No test cases have been generated yet for this source.
+                            No validation tests have been generated yet for this source.
+                            ${archived ? `<br>${frappe.utils.escape_html(String(archived))} older generated validation test${archived === 1 ? '' : 's'} archived from previous generations.` : ''}
                         </div>
                     `
             }
 
             <div class="nks-source-dashboard-actions nks-source-dashboard-test-actions">
                 <button class="btn btn-sm btn-default nks-open-source-test-cases-btn">
-                    Open Test Cases
+                    Open Validation Tests
                 </button>
 
                 ${
                     hasTests
                         ? `
                             <button class="btn btn-sm btn-default nks-review-source-test-cases-btn">
-                                Review Generated Tests
+                                Review Generated Validation Tests
                             </button>
 
                             <button class="btn btn-sm btn-primary nks-run-source-test-cases-btn">
-                                Run Source Tests
+                                Run Validation Tests
                             </button>
 
                             <button class="btn btn-sm btn-default nks-open-source-test-runs-btn">
-                                Open Test Runs
+                                Open Validation Runs
                             </button>
                         `
                         : ''
@@ -2597,12 +3141,12 @@ class NexusStudioPage {
 
     get_testing_html() {
         return this.get_placeholder_section(
-            'Testing & Validation',
+            'Validation Tests',
             'Validate source retrieval, grounded answers, citations, confidence, access status, and fallback behaviour.',
             [
-                'This tab should connect with Nexus Knowledge Test Case, Nexus Knowledge Test Run, and Nexus Query Log.',
-                'It will support run single test, run tenant suite, view failed diagnostics, and copy combined diagnostics.',
-                'This will align with the Knowledge Testing Lab work already completed.'
+                'This tab should connect with validation tests, validation runs, and Nexus Query Log.',
+                'It will support run single validation, run tenant suite, view failed diagnostics, and copy combined diagnostics.',
+                'This will align with the Knowledge Validation Lab work already completed.'
             ]
         );
     }
@@ -2613,7 +3157,7 @@ class NexusStudioPage {
             'Identify missing, weak, stale, or poorly retrievable knowledge from failed tests and query logs.',
             [
                 'Inputs should include no-context answers, fallback answers, low-confidence responses, and failed expected-source checks.',
-                'Actions should include create Knowledge Source, create Knowledge Unit, mark Needs Review, and create test case from gap.',
+                'Actions should include create Knowledge Source, create Knowledge Unit, mark Needs Review, and create validation test from gap.',
                 'This can later use a Nexus Knowledge Gap doctype.'
             ]
         );
@@ -2654,108 +3198,633 @@ class NexusStudioPage {
     }
 
     render_sources_table() {
-        const $rows = this.body.find('#nks-knowledge-source-rows');
+        const $container = this.body.find('#nks-knowledge-source-rows');
 
-        if (!$rows.length) {
+        if (!$container.length) {
             return;
         }
 
         if (!this.sources.length) {
-            $rows.html(`
-                <tr>
-                    <td colspan="7" class="text-muted text-center">
-                        No knowledge sources found.
-                    </td>
-                </tr>
+            $container.html(`
+                <div class="text-muted text-center">
+                    No knowledge sources found.
+                </div>
             `);
             return;
         }
 
-        const html = this.sources.map((row) => {
-            const status = row.status || 'Draft';
-            const source_type = row.source_type || 'Manual';
-            const access_policy = row.access_policy || '-';
-            const readiness_badge = this.get_source_readiness_badge(row);
-            const next_step = row.next_action_label || 'Review source';
+        const grouped = this.group_sources_by_classification(this.sources);
 
-            const disabled_badge = row.disabled
-                ? `<span class="nks-badge nks-badge-warn">Disabled</span>`
-                : '';
+        const html = Object.keys(grouped).sort().map((tenant) => {
+            const tenantGroup = grouped[tenant];
+            const tenantSources = tenantGroup.sources || [];
+            const tenantStats = this.get_source_group_stats(tenantSources);
 
             return `
-                <tr>
-                    <td>
-                        <a href="/app/nexus-knowledge-source/${encodeURIComponent(row.name)}" class="nks-unit-link">
-                            ${frappe.utils.escape_html(row.source_title || row.name)}
-                        </a>
-                        <div class="nks-row-sub">
-                            ${frappe.utils.escape_html(source_type)}
+                <details class="nks-source-tenant-section" open>
+                    <summary class="nks-source-tenant-head">
+                        <div>
+                            <h4>${frappe.utils.escape_html(tenant)}</h4>
+                            <div class="nks-row-sub">
+                                ${frappe.utils.escape_html(String(tenantStats.contexts.length))} Context${tenantStats.contexts.length === 1 ? '' : 's'}
+                                · ${frappe.utils.escape_html(String(tenantStats.topics.length))} Topic${tenantStats.topics.length === 1 ? '' : 's'}
+                            </div>
                         </div>
-                        <div class="nks-row-sub">
-                            Chat: ${frappe.utils.escape_html(row.chat_category || '-')}
+                        <div class="nks-source-context-stats">
+                            <span class="nks-badge nks-badge-info">${tenantStats.total} Source${tenantStats.total === 1 ? '' : 's'}</span>
+                            <span class="nks-badge nks-badge-good">${tenantStats.retrieval_ready} Ready</span>
+                            <span class="nks-badge">${tenantStats.semantic_index_count} Index</span>
                         </div>
-                    </td>
+                    </summary>
 
-                    <td>
-                        <span class="nks-badge nks-badge-info">
-                            ${frappe.utils.escape_html(access_policy)}
-                        </span>
-                    </td>
+                    <div class="nks-source-tenant-body">
+                        <div class="nks-source-context-grid">
+                            ${Object.keys(tenantGroup.contexts).sort().map((contextName) => {
+                                const contextGroup = tenantGroup.contexts[contextName];
+                                const contextStats = this.get_source_group_stats(contextGroup.sources);
+                                const contextKey = this.get_source_context_dom_key(tenant, contextName);
 
-                    <td>
-                        <div><strong>${frappe.utils.escape_html(row.business_unit || '-')}</strong></div>
-                        <div class="nks-row-sub">
-                            ${frappe.utils.escape_html(row.context || '-')}
-                            ${row.sub_context ? ' / ' + frappe.utils.escape_html(row.sub_context) : ''}
+                                return `
+                                    <details class="nks-source-context-group">
+                                        <summary class="nks-source-context-head">
+                                            <div class="nks-source-context-main">
+                                                <div class="nks-source-context-title">${frappe.utils.escape_html(contextName)}</div>
+                                                <div class="nks-source-context-meta">
+                                                    ${frappe.utils.escape_html(contextStats.business_units.join(', ') || 'No business unit')}
+                                                    ${contextStats.sub_contexts.length ? ' · ' + frappe.utils.escape_html(contextStats.sub_contexts.join(', ')) : ''}
+                                                </div>
+                                            </div>
+                                            <div class="nks-source-context-stats">
+                                                <span class="nks-badge nks-badge-info">${contextStats.total} Source${contextStats.total === 1 ? '' : 's'}</span>
+                                                <span class="nks-badge nks-badge-good">${contextStats.retrieval_ready} Ready</span>
+                                                <span class="nks-badge">${contextStats.context_summary_count} Summar${contextStats.context_summary_count === 1 ? 'y' : 'ies'}</span>
+                                                <span class="nks-badge nks-badge-info nks-context-approved-answer-count" data-context-key="${frappe.utils.escape_html(contextKey)}">
+                                                    Answers ${contextStats.answer_approved}/${contextStats.answer_total}
+                                                </span>
+                                                <span class="nks-context-pending-answer-count" data-context-key="${frappe.utils.escape_html(contextKey)}">
+                                                    ${this.get_context_answer_review_gap_badge_html(contextStats)}
+                                                </span>
+                                            </div>
+                                        </summary>
+                                        <div class="nks-source-context-body">
+                                            ${contextGroup.sources.map((row) => this.get_source_group_item_html(row)).join('')}
+                                        </div>
+                                    </details>
+                                `;
+                            }).join('')}
                         </div>
-                        <div class="nks-row-sub">
-                            ${frappe.utils.escape_html(row.topic || row.entity || '')}
-                        </div>
-                    </td>
-
-                    <td>
-                        <span class="nks-badge">${frappe.utils.escape_html(status)}</span>
-                        ${disabled_badge}
-                    </td>
-
-                    <td>
-                        ${readiness_badge}
-                        <div class="nks-row-sub">
-                            ${frappe.utils.escape_html(row.readiness_message || '')}
-                        </div>
-                        <div class="nks-row-sub">
-                            Summary: ${frappe.utils.escape_html(row.context_summary_status || 'Missing')}
-                            · Index: ${frappe.utils.escape_html(String(row.semantic_index_count || 0))}
-                        </div>
-                        ${
-                            row.missing_fields && row.missing_fields.length
-                                ? `<div class="nks-row-sub">Missing: ${frappe.utils.escape_html(row.missing_fields.join(', '))}</div>`
-                                : ''
-                        }
-                    </td>
-
-                    <td>
-                        <span class="nks-badge ${this.get_source_next_step_badge_class(row)}">
-                            ${frappe.utils.escape_html(next_step)}
-                        </span>
-                    </td>
-
-                    <td>
-                        <div class="nks-action-row">
-                            <button class="btn btn-xs btn-primary nks-source-dashboard-btn" data-name="${frappe.utils.escape_html(row.name)}">
-                                Dashboard
-                            </button>
-
-                            <a class="btn btn-xs btn-default" href="/app/nexus-knowledge-source/${encodeURIComponent(row.name)}">
-                                Review
-                            </a>
-                        </div>
-                    </td>
-                </tr>
+                    </div>
+                </details>
             `;
         }).join('');
 
-        $rows.html(html);
+        $container.html(html);
+    }
+
+    group_sources_by_classification(sources) {
+        const grouped = {};
+
+        (sources || []).forEach((row) => {
+            const tenant = this.get_source_group_value(row, 'tenant', 'No Tenant');
+            const contextName = this.get_source_group_value(row, 'context', 'Unclassified Context');
+
+            grouped[tenant] = grouped[tenant] || {
+                sources: [],
+                contexts: {}
+            };
+            grouped[tenant].contexts[contextName] = grouped[tenant].contexts[contextName] || {
+                sources: []
+            };
+            grouped[tenant].sources.push(row);
+            grouped[tenant].contexts[contextName].sources.push(row);
+        });
+
+        return grouped;
+    }
+
+    get_source_group_value(row, fieldname, fallback) {
+        const value = String((row && row[fieldname]) || '').trim();
+        return value || fallback;
+    }
+
+    get_source_group_stats(sources) {
+        const rows = sources || [];
+        const unique = (fieldname) => {
+            const values = rows
+                .map((row) => this.get_source_group_value(row, fieldname, ''))
+                .filter((value) => value);
+            return [...new Set(values)].sort();
+        };
+
+        return {
+            total: rows.length,
+            published: rows.filter((row) => row.status === 'Published' || row.published).length,
+            retrieval_ready: rows.filter((row) => row.retrieval_ready).length,
+            context_summary_count: rows.filter((row) => row.context_summary_exists).length,
+            semantic_index_count: rows.reduce((total, row) => total + Number(row.semantic_index_count || 0), 0),
+            answer_total: rows.reduce((total, row) => total + Number((row.answer_approval_summary || {}).total || 0), 0),
+            answer_approved: rows.reduce((total, row) => total + Number((row.answer_approval_summary || {}).approved || 0), 0),
+            answer_pending: rows.reduce((total, row) => total + Number((row.answer_approval_summary || {}).pending || 0), 0),
+            answer_rejected: rows.reduce((total, row) => total + Number((row.answer_approval_summary || {}).rejected || 0), 0),
+            contexts: unique('context'),
+            business_units: unique('business_unit'),
+            sub_contexts: unique('sub_context'),
+            entity_types: unique('entity_type'),
+            entities: unique('entity'),
+            topics: unique('topic'),
+            access_policies: unique('access_policy')
+        };
+    }
+
+    get_context_answer_review_gap_badge_html(stats) {
+        const pending = Number((stats && stats.answer_pending) || 0);
+        const rejected = Number((stats && stats.answer_rejected) || 0);
+
+        if (rejected > 0) {
+            return `<span class="nks-badge nks-badge-warn">${frappe.utils.escape_html(String(rejected))} Rejected</span>`;
+        }
+
+        if (pending > 0) {
+            return `<span class="nks-badge">${frappe.utils.escape_html(String(pending))} Pending</span>`;
+        }
+
+        return '';
+    }
+
+    get_source_context_dom_key(tenant, contextName) {
+        return `${tenant || ''}::${contextName || ''}`;
+    }
+
+    flatten_source_group(group) {
+        if (Array.isArray(group)) {
+            return group;
+        }
+
+        return Object.values(group || {}).reduce((result, value) => {
+            return result.concat(this.flatten_source_group(value));
+        }, []);
+    }
+
+    get_source_group_item_html(row) {
+        const status = row.status || 'Draft';
+        const source_type = row.source_type || 'Manual';
+        const access_policy = row.access_policy || '-';
+        const next_step = row.next_action_label || 'Review source';
+        const disabled_badge = row.disabled
+            ? `<span class="nks-badge nks-badge-warn">Disabled</span>`
+            : '';
+        const approvalSummary = row.answer_approval_summary || {};
+        const compact_tags = [
+            row.sub_context,
+            row.entity_type,
+            row.topic || row.entity
+        ].filter(Boolean);
+
+        return `
+            <details class="nks-source-item" data-source="${frappe.utils.escape_html(row.name || '')}">
+                <summary class="nks-source-item-head">
+                    <div class="nks-source-item-head-title">
+                        <div class="nks-unit-link">
+                            ${frappe.utils.escape_html(row.source_title || row.name)}
+                        </div>
+                        <div class="nks-row-sub">${frappe.utils.escape_html(source_type)} · Chat: ${frappe.utils.escape_html(row.chat_category || '-')}</div>
+                        <div class="nks-source-compact-tags">
+                            ${compact_tags.map((tag) => `<span class="nks-badge">${frappe.utils.escape_html(tag)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="nks-source-item-head-meta">
+                        <span class="nks-badge nks-badge-info">${frappe.utils.escape_html(access_policy)}</span>
+                        <span class="nks-badge ${status === 'Published' ? 'nks-badge-published' : status === 'Processed' ? 'nks-badge-processed' : status === 'Validated' ? 'nks-badge-validated' : ''}">${frappe.utils.escape_html(status)}</span>
+                        ${disabled_badge}
+                    </div>
+                    <span class="nks-source-inline-actions" data-source="${frappe.utils.escape_html(row.name)}">
+                        ${this.get_source_inline_actions_html(row)}
+                    </span>
+                    <button class="btn btn-xs btn-primary nks-source-dashboard-btn" data-name="${frappe.utils.escape_html(row.name)}">
+                        Dashboard
+                    </button>
+                </summary>
+
+                <div class="nks-source-item-body">
+                    <div class="nks-source-detail-box">
+                        <div class="nks-source-detail-label">Classification</div>
+                        <div class="nks-source-detail-value">
+                            ${frappe.utils.escape_html(row.business_unit || '-')}
+                            ${row.sub_context ? '<br>' + frappe.utils.escape_html(row.sub_context) : ''}
+                            ${row.entity_type ? '<br>' + frappe.utils.escape_html(row.entity_type) : ''}
+                            ${row.entity ? ' · ' + frappe.utils.escape_html(row.entity) : ''}
+                            ${row.topic ? '<br>' + frappe.utils.escape_html(row.topic) : ''}
+                        </div>
+                    </div>
+
+                    <div class="nks-source-detail-box">
+                        <div class="nks-source-detail-label">Readiness</div>
+                        <div class="nks-source-detail-value">
+                            Next: <span class="nks-source-next-step" data-source="${frappe.utils.escape_html(row.name)}">${frappe.utils.escape_html(next_step)}</span>
+                            <br>Processing: ${frappe.utils.escape_html(row.processing_status || '-')}
+                            <br>Embedding: ${frappe.utils.escape_html(row.embedding_status || '-')}
+                            <br>Diagnostics: ${frappe.utils.escape_html(row.diagnostics_status || '-')}
+                        </div>
+                    </div>
+
+                    <div class="nks-source-detail-box">
+                        <div class="nks-source-detail-label">Retrieval Assets</div>
+                        <div class="nks-source-detail-value">
+                            Summary: ${frappe.utils.escape_html(row.context_summary_status || 'Missing')}
+                            <br>Index Entries: ${frappe.utils.escape_html(String(row.semantic_index_count || 0))}
+                            <br>Chunks: ${frappe.utils.escape_html(String(row.active_chunk_count || row.chunk_count || 0))}
+                            <br>Approved Answers: <span class="nks-approved-answer-count" data-source="${frappe.utils.escape_html(row.name)}">${frappe.utils.escape_html(String(approvalSummary.approved || 0))}/${frappe.utils.escape_html(String(approvalSummary.total || 0))}</span>
+                            <span class="nks-rejected-answer-count" data-source="${frappe.utils.escape_html(row.name)}">${approvalSummary.rejected ? '<br>Rejected: ' + frappe.utils.escape_html(String(approvalSummary.rejected)) : ''}</span>
+                        </div>
+                    </div>
+
+                    ${this.get_source_index_review_html(row)}
+
+                    <div class="nks-source-item-actions">
+                        <a class="btn btn-xs btn-default" href="/app/nexus-knowledge-source/${encodeURIComponent(row.name)}">
+                            Review Source
+                        </a>
+                    </div>
+                </div>
+            </details>
+        `;
+    }
+
+    get_source_inline_actions_html(row) {
+        const buttons = [];
+        const name = frappe.utils.escape_html(row.name || '');
+
+        if (this.is_source_prepared(row)) {
+            buttons.push('<span class="nks-badge nks-badge-processed">Processed</span>');
+        }
+
+        if (this.is_source_validated(row)) {
+            buttons.push('<span class="nks-badge nks-badge-validated">Validated</span>');
+        }
+
+        if (this.can_show_process_source_action(row)) {
+            buttons.push(`
+                <button class="btn btn-xs btn-primary nks-inline-process-source-btn" data-name="${name}">
+                    Process
+                </button>
+            `);
+        }
+
+        if (row.can_validate) {
+            buttons.push(`
+                <button class="btn btn-xs btn-primary nks-inline-validate-source-btn" data-name="${name}">
+                    Validate
+                </button>
+            `);
+        }
+
+        if (row.can_publish) {
+            buttons.push(`
+                <button class="btn btn-xs btn-primary nks-inline-publish-source-btn" data-name="${name}">
+                    Publish
+                </button>
+            `);
+        }
+
+        if (row.can_unpublish) {
+            buttons.push(`
+                <button class="btn btn-xs btn-default nks-inline-unpublish-source-btn" data-name="${name}">
+                    Unpublish
+                </button>
+            `);
+        }
+
+        if (this.can_show_generate_test_cases_action(row)) {
+            buttons.push(`
+                <button class="btn btn-xs btn-default nks-inline-generate-tests-btn" data-name="${name}">
+                    Validation Tests
+                </button>
+            `);
+        }
+
+        return buttons.join('');
+    }
+
+    is_source_validated(row) {
+        row = row || {};
+
+        const status = String(row.status || '').toLowerCase();
+        const validationStatus = String(
+            row.validation_status ||
+            (row.technical_status && row.technical_status.validation_status) ||
+            ''
+        ).toLowerCase();
+
+        return (
+            ['ready to publish', 'published'].includes(status) ||
+            ['passed', 'validated', 'tested'].includes(validationStatus)
+        );
+    }
+
+    get_source_index_review_html(row) {
+        const summary = row.semantic_index_summary || {};
+        const review_entries = summary.review_entries || {};
+        const questions = review_entries.user_question || [];
+        const intellectual_summaries = review_entries.intellectual_summary || [];
+
+        if (!questions.length && !intellectual_summaries.length) {
+            return `
+                <div class="nks-source-detail-box nks-source-detail-box-wide">
+                    <div class="nks-source-detail-label">Reviewable Retrieval Index</div>
+                    <div class="nks-source-detail-value">No active possible questions or intellectual summaries found for this source.</div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="nks-source-detail-box nks-source-detail-box-wide">
+                <div class="nks-source-detail-label">Reviewable Retrieval Index</div>
+                <div class="nks-source-index-review-grid">
+                    <div>
+                        <div class="nks-source-detail-value">
+                            Possible Questions (${frappe.utils.escape_html(String(summary.user_question || questions.length || 0))})
+                        </div>
+                        ${this.get_source_index_review_list_html(questions, true, row.name)}
+                    </div>
+                    <div>
+                        <div class="nks-source-detail-value">
+                            Intellectual Summaries (${frappe.utils.escape_html(String(summary.intellectual_summary || intellectual_summaries.length || 0))})
+                        </div>
+                        ${this.get_source_index_review_list_html(intellectual_summaries, false, row.name)}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    get_source_index_review_list_html(entries, includeAnswerReview, sourceName) {
+        if (!entries || !entries.length) {
+            return '<div class="nks-row-sub" style="margin-top: 8px;">No entries available.</div>';
+        }
+
+        return `
+            <ol class="nks-source-index-review-list">
+                ${entries.map((entry) => {
+                    const text = entry.canonical_text || entry.display_summary || entry.answer_preview || entry.name || '';
+                    const answer = entry.generated_answer || entry.answer_preview || '';
+                    const reviewStatus = entry.answer_review_status || 'Pending Review';
+
+                    return `
+                        <li class="nks-source-index-review-entry" data-entry-name="${frappe.utils.escape_html(entry.name || '')}" data-source="${frappe.utils.escape_html(sourceName || '')}">
+                            ${frappe.utils.escape_html(text)}
+                            ${
+                                includeAnswerReview
+                                    ? `
+                                        <div class="nks-source-index-answer">
+                                            <strong>Generated Answer:</strong><br>
+                                            ${frappe.utils.escape_html(answer || 'No generated answer available.')}
+                                        </div>
+                                        <div class="nks-row-sub nks-index-answer-review-status">
+                                            Review: ${frappe.utils.escape_html(reviewStatus)}
+                                            ${entry.answer_reviewed_by ? ' by ' + frappe.utils.escape_html(entry.answer_reviewed_by) : ''}
+                                        </div>
+                                        <div class="nks-source-index-actions">
+                                            ${this.get_index_answer_review_actions_html(entry.name, reviewStatus)}
+                                        </div>
+                                    `
+                                    : ''
+                            }
+                            ${entry.embedding_status ? `<div class="nks-row-sub">Embedding: ${frappe.utils.escape_html(entry.embedding_status)}</div>` : ''}
+                        </li>
+                    `;
+                }).join('')}
+            </ol>
+        `;
+    }
+
+    get_index_answer_review_actions_html(entryName, reviewStatus) {
+        const isApproved = String(reviewStatus || '').toLowerCase() === 'approved';
+        const safeName = frappe.utils.escape_html(entryName || '');
+        const primaryAction = isApproved ? 'unapprove' : 'approve';
+        const primaryLabel = isApproved ? 'Unapprove' : 'Approve Answer';
+        const primaryClass = isApproved ? 'btn-default' : 'btn-primary';
+
+        return `
+            <button class="btn btn-xs ${primaryClass} nks-index-answer-review-btn" data-name="${safeName}" data-action="${primaryAction}">
+                ${primaryLabel}
+            </button>
+            <button class="btn btn-xs btn-default nks-index-answer-review-btn" data-name="${safeName}" data-action="reject">
+                Reject
+            </button>
+        `;
+    }
+
+    review_index_answer(name, action, $button) {
+        if (!name || !action) {
+            frappe.msgprint('Generated answer review action is missing.');
+            return;
+        }
+        const normalizedAction = String(action || '').toLowerCase();
+        const actionLabel = normalizedAction === 'approve'
+            ? 'Approving generated answer...'
+            : normalizedAction === 'unapprove'
+                ? 'Unapproving generated answer...'
+                : 'Rejecting generated answer...';
+
+        const $entry = $button && $button.length
+            ? $button.closest('.nks-source-index-review-entry')
+            : $();
+        const $buttons = $entry.length
+            ? $entry.find('.nks-index-answer-review-btn')
+            : $button;
+
+        if ($buttons && $buttons.length) {
+            $buttons.prop('disabled', true);
+        }
+
+        if ($entry.length) {
+            $entry.find('.nks-index-answer-review-status').html('Review: Updating...');
+        }
+
+        frappe.call({
+            method: this.api.review_index_answer,
+            args: {
+                name: name,
+                action: action
+            },
+            freeze: true,
+            freeze_message: actionLabel,
+            callback: (r) => {
+                const result = r.message || {};
+
+                if (!result.success) {
+                    frappe.msgprint({
+                        title: 'Answer Review Failed',
+                        indicator: 'orange',
+                        message: frappe.utils.escape_html(result.message || 'Unable to update generated answer review.')
+                    });
+
+                    if ($buttons && $buttons.length) {
+                        $buttons.prop('disabled', false);
+                    }
+                    return;
+                }
+
+                this.apply_index_answer_review_result(name, result, $button);
+
+                frappe.show_alert({
+                    message: result.message || 'Generated answer review updated.',
+                    indicator: normalizedAction === 'approve' ? 'green' : 'orange'
+                });
+
+                this.load_source_summary({ render: false });
+            },
+            error: () => {
+                if ($buttons && $buttons.length) {
+                    $buttons.prop('disabled', false);
+                }
+
+                if ($entry.length) {
+                    $entry.find('.nks-index-answer-review-status').html('Review: Update failed');
+                }
+
+                frappe.msgprint({
+                    title: 'Answer Review Failed',
+                    indicator: 'red',
+                    message: 'Unable to update generated answer review. Please check the server error log.'
+                });
+            }
+        });
+    }
+
+    apply_index_answer_review_result(name, result, $button) {
+        const sourceName = result.source_name || (
+            $button && $button.length
+                ? $button.closest('.nks-source-index-review-entry').data('source')
+                : ''
+        );
+        const reviewStatus = result.answer_review_status || 'Pending Review';
+        const reviewedBy = result.answer_reviewed_by || (frappe.session && frappe.session.user) || '';
+        const reviewText = `Review: ${frappe.utils.escape_html(reviewStatus)}${reviewedBy ? ' by ' + frappe.utils.escape_html(reviewedBy) : ''}`;
+
+        $(document.body)
+            .find('.nks-source-index-review-entry')
+            .filter((index, element) => {
+                return String($(element).data('entryName') || '') === String(name || '');
+            })
+            .each((index, element) => {
+                const $entry = $(element);
+                $entry.find('.nks-index-answer-review-status').html(reviewText);
+                $entry
+                    .find('.nks-source-index-actions')
+                    .html(this.get_index_answer_review_actions_html(name, reviewStatus));
+            });
+
+        this.update_source_answer_review_state(name, result);
+
+        if (sourceName && result.answer_approval_summary) {
+            const summary = result.answer_approval_summary || {};
+            const approvedText = `${summary.approved || 0}/${summary.total || 0}`;
+            const rejectedText = summary.rejected ? `<br>Rejected: ${frappe.utils.escape_html(String(summary.rejected))}` : '';
+
+            $(document.body)
+                .find('.nks-approved-answer-count')
+                .filter((index, element) => String($(element).data('source') || '') === String(sourceName))
+                .text(approvedText);
+
+            $(document.body)
+                .find('.nks-rejected-answer-count')
+                .filter((index, element) => String($(element).data('source') || '') === String(sourceName))
+                .html(rejectedText);
+
+            this.refresh_source_context_answer_stats(sourceName);
+        }
+    }
+
+    update_source_answer_review_state(name, result) {
+        const sourceName = result.source_name || '';
+        const reviewStatus = result.answer_review_status || 'Pending Review';
+
+        (this.sources || []).forEach((source) => {
+            if (sourceName && source.name !== sourceName) {
+                return;
+            }
+
+            const reviewEntries = (
+                source.semantic_index_summary &&
+                source.semantic_index_summary.review_entries &&
+                source.semantic_index_summary.review_entries.user_question
+            ) || [];
+
+            reviewEntries.forEach((entry) => {
+                if (entry.name !== name) {
+                    return;
+                }
+
+                entry.answer_review_status = reviewStatus;
+                entry.answer_reviewed_by = result.answer_reviewed_by || (frappe.session && frappe.session.user) || '';
+                entry.answer_reviewed_on = result.answer_reviewed_on || '';
+            });
+
+            if (result.answer_approval_summary) {
+                source.answer_approval_summary = result.answer_approval_summary;
+                source.retrieval_ready = result.retrieval_ready || 0;
+
+                if (source.semantic_index_summary && result.answer_approval_summary.semantic_index_summary) {
+                    source.semantic_index_summary = result.answer_approval_summary.semantic_index_summary;
+                }
+            }
+
+            if (result.readiness) {
+                Object.assign(source, result.readiness);
+            }
+        });
+
+        if (sourceName) {
+            this.refresh_source_inline_readiness(sourceName);
+        }
+    }
+
+    refresh_source_context_answer_stats(sourceName) {
+        const source = (this.sources || []).find((item) => item.name === sourceName);
+
+        if (!source) {
+            return;
+        }
+
+        const tenant = this.get_source_group_value(source, 'tenant', 'No Tenant');
+        const contextName = this.get_source_group_value(source, 'context', 'Unclassified Context');
+        const contextKey = this.get_source_context_dom_key(tenant, contextName);
+        const contextSources = (this.sources || []).filter((item) => {
+            return (
+                this.get_source_group_value(item, 'tenant', 'No Tenant') === tenant &&
+                this.get_source_group_value(item, 'context', 'Unclassified Context') === contextName
+            );
+        });
+        const stats = this.get_source_group_stats(contextSources);
+
+        $(document.body)
+            .find('.nks-context-approved-answer-count')
+            .filter((index, element) => String($(element).data('contextKey') || '') === String(contextKey))
+            .text(`Answers ${stats.answer_approved}/${stats.answer_total}`);
+
+        $(document.body)
+            .find('.nks-context-pending-answer-count')
+            .filter((index, element) => String($(element).data('contextKey') || '') === String(contextKey))
+            .html(this.get_context_answer_review_gap_badge_html(stats));
+    }
+
+    refresh_source_inline_readiness(sourceName) {
+        const source = (this.sources || []).find((item) => item.name === sourceName);
+
+        if (!source) {
+            return;
+        }
+
+        $(document.body)
+            .find('.nks-source-next-step')
+            .filter((index, element) => String($(element).data('source') || '') === String(sourceName))
+            .text(source.next_action_label || 'Review source');
+
+        $(document.body)
+            .find('.nks-source-inline-actions')
+            .filter((index, element) => String($(element).data('source') || '') === String(sourceName))
+            .html(this.get_source_inline_actions_html(source));
     }
 
     render_sources_error() {
@@ -2763,18 +3832,16 @@ class NexusStudioPage {
             return;
         }
 
-        const $rows = this.body.find('#nks-knowledge-source-rows');
+        const $container = this.body.find('#nks-knowledge-source-rows');
 
-        if (!$rows.length) {
+        if (!$container.length) {
             return;
         }
 
-        $rows.html(`
-            <tr>
-                <td colspan="7" class="text-danger text-center">
-                    Failed to load knowledge sources.
-                </td>
-            </tr>
+        $container.html(`
+            <div class="text-danger text-center">
+                Failed to load knowledge sources.
+            </div>
         `);
     }
 
@@ -2940,7 +4007,7 @@ class NexusStudioPage {
             return false;
         }
 
-        return true;
+        return !this.is_source_prepared(row);
     }
 
     show_source_dashboard(name) {
@@ -3164,6 +4231,14 @@ class NexusStudioPage {
             </button>
         `);
 
+        if (this.is_source_prepared(row)) {
+            buttons.push('<span class="nks-badge nks-badge-processed">Processed</span>');
+        }
+
+        if (this.is_source_validated(row)) {
+            buttons.push('<span class="nks-badge nks-badge-validated">Validated</span>');
+        }
+
         if (this.can_show_process_source_action(row)) {
             buttons.push(`
                 <button class="btn btn-sm btn-primary nks-dashboard-process-source-btn">
@@ -3191,7 +4266,7 @@ class NexusStudioPage {
         if (this.can_show_generate_test_cases_action(row)) {
             buttons.push(`
                 <button class="btn btn-sm btn-default nks-dashboard-generate-test-cases-btn" data-name="${frappe.utils.escape_html(row.name)}">
-                    Generate Test Cases
+                    Generate Validation Tests
                 </button>
             `);
         }
@@ -3239,13 +4314,13 @@ generate_test_cases_from_source_dashboard(name) {
         frappe.msgprint({
             title: 'Source Not Published',
             indicator: 'orange',
-            message: 'Suggested test cases can be generated only after the Knowledge Source is published.'
+            message: 'Validation tests can be generated only after the Knowledge Source is published.'
         });
         return;
     }
 
     const dialog = new frappe.ui.Dialog({
-        title: 'Generate Suggested Test Cases',
+        title: 'Generate Validation Tests',
         size: 'large',
         fields: [
             {
@@ -3283,8 +4358,9 @@ generate_test_cases_from_source_dashboard(name) {
                         </p>
 
                         <p style="margin: 10px 0 0; color: #526887; font-size: 12px; line-height: 1.45; font-weight: 700;">
-                            Nexus will generate draft Knowledge Test Cases from this published source.
-                            The generated tests should be reviewed before being treated as final validation scenarios.
+                            Nexus will generate draft validation tests from the current retrieval index,
+                            especially active Possible Questions linked to approved chunks.
+                            Review them before using them as approved validation scenarios.
                         </p>
                     </div>
                 `
@@ -3292,10 +4368,10 @@ generate_test_cases_from_source_dashboard(name) {
             {
                 fieldname: 'test_count',
                 fieldtype: 'Int',
-                label: 'Number of Test Cases',
+                label: 'Number of Validation Tests',
                 default: 5,
                 reqd: 1,
-                description: 'Recommended: 5 to 10 test cases per published source.'
+                description: 'Recommended: 5 to 10 validation tests per published source.'
             },
             {
                 fieldname: 'use_case',
@@ -3313,29 +4389,30 @@ generate_test_cases_from_source_dashboard(name) {
             {
                 fieldname: 'include_boundary_tests',
                 fieldtype: 'Check',
-                label: 'Include fallback / boundary test cases',
-                default: 1
+                label: 'Include fallback / boundary validation tests',
+                default: 0,
+                description: 'Keep off unless you are intentionally validating safe fallback behaviour.'
             },
             {
                 fieldname: 'include_followup_tests',
                 fieldtype: 'Check',
                 label: 'Include follow-up style questions',
-                default: 1
+                default: 0
             },
             {
                 fieldname: 'auto_enable',
                 fieldtype: 'Check',
-                label: 'Enable generated test cases immediately',
+                label: 'Enable generated validation tests immediately',
                 default: 0,
                 description: 'Recommended to keep disabled until reviewed.'
             }
         ],
-        primary_action_label: 'Generate Test Cases',
+        primary_action_label: 'Generate Validation Tests',
         primary_action: (values) => {
             const test_count = cint(values.test_count || 0);
 
             if (!test_count || test_count < 1) {
-                frappe.msgprint('Please enter a valid number of test cases.');
+                frappe.msgprint('Please enter a valid number of validation tests.');
                 return;
             }
 
@@ -3355,19 +4432,20 @@ generate_source_test_cases(name, values, dialog) {
             use_case: values.use_case || 'Q&A',
             include_boundary_tests: values.include_boundary_tests ? 1 : 0,
             include_followup_tests: values.include_followup_tests ? 1 : 0,
-            auto_enable: values.auto_enable ? 1 : 0
+            auto_enable: values.auto_enable ? 1 : 0,
+            replace_existing: 1
         },
         freeze: true,
-        freeze_message: 'Generating suggested test cases...',
+        freeze_message: 'Generating validation tests...',
         callback: (r) => {
             const result = r.message || {};
 
             if (!result.success) {
                 frappe.msgprint({
-                    title: 'Test Case Generation Failed',
+                    title: 'Validation Test Generation Failed',
                     indicator: 'orange',
                     message: frappe.utils.escape_html(
-                        result.message || 'Unable to generate suggested test cases.'
+                        result.message || 'Unable to generate validation tests.'
                     )
                 });
                 return;
@@ -3379,21 +4457,23 @@ generate_source_test_cases(name, values, dialog) {
 
             const created = result.created || [];
             const skipped = result.skipped || [];
+            const replaced_count = result.replaced_count || result.archived_count || 0;
 
             frappe.msgprint({
-                title: 'Suggested Test Cases Generated',
+                title: 'Validation Tests Generated',
                 indicator: 'green',
                 message: `
                     <div class="nks-readiness-dialog">
-                        <p>${frappe.utils.escape_html(result.message || 'Suggested Knowledge Test Cases generated successfully.')}</p>
+                        <p>${frappe.utils.escape_html(result.message || 'Validation tests generated successfully.')}</p>
 
                         <p><b>Created:</b> ${frappe.utils.escape_html(String(created.length || result.created_count || 0))}</p>
                         <p><b>Skipped:</b> ${frappe.utils.escape_html(String(skipped.length || result.skipped_count || 0))}</p>
+                        <p><b>Replaced older generated validation tests:</b> ${frappe.utils.escape_html(String(replaced_count))}</p>
 
                         ${
                             created.length
                                 ? `
-                                    <p><b>Generated Test Cases:</b></p>
+                                    <p><b>Generated Validation Tests:</b></p>
                                     <ul style="margin: 8px 0 0; padding-left: 18px;">
                                         ${created.map((item) => {
                                             const label = item.title || item.test_title || item.name || item;
@@ -3414,15 +4494,15 @@ generate_source_test_cases(name, values, dialog) {
                             font-size: 12px;
                             font-weight: 700;
                         ">
-                            Review the generated draft test cases before using them as approved validation scenarios.
+                            Review the generated draft validation tests before using them as approved validation scenarios.
                         </div>
 
                         <div style="margin-top: 12px;">
                             <a class="btn btn-sm btn-primary" href="/app/nexus-knowledge-test-case">
-                                Open Test Cases
+                                Open Validation Tests
                             </a>
                             <a class="btn btn-sm btn-default" href="/app/nexus-knowledge-test-run" style="margin-left: 6px;">
-                                Open Test Runs
+                                Open Validation Runs
                             </a>
                         </div>
                     </div>
@@ -3434,9 +4514,9 @@ generate_source_test_cases(name, values, dialog) {
         },
         error: () => {
             frappe.msgprint({
-                title: 'Test Case Generation Failed',
+                title: 'Validation Test Generation Failed',
                 indicator: 'red',
-                message: 'Unable to generate suggested test cases. Please check the server error log.'
+                message: 'Unable to generate validation tests. Please check the server error log.'
             });
         }
     });
@@ -3445,7 +4525,7 @@ generate_source_test_cases(name, values, dialog) {
 run_source_test_cases_from_dashboard(sourceName, dialog) {
     if (!sourceName) {
         frappe.msgprint({
-            title: 'Run Source Tests',
+            title: 'Run Validation Tests',
             indicator: 'red',
             message: 'Knowledge Source is required.'
         });
@@ -3456,7 +4536,7 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
 
     if (!row) {
         frappe.msgprint({
-            title: 'Run Source Tests',
+            title: 'Run Validation Tests',
             indicator: 'orange',
             message: 'Source details are not available. Please refresh and try again.'
         });
@@ -3464,7 +4544,7 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
     }
 
     frappe.confirm(
-        `Run all generated test cases for ${frappe.utils.escape_html(row.source_title || row.name)}?`,
+        `Run all generated validation tests for ${frappe.utils.escape_html(row.source_title || row.name)}?`,
         () => {
             frappe.call({
                 method: this.api.run_source_test_cases,
@@ -3475,16 +4555,16 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
                     limit: 50
                 },
                 freeze: true,
-                freeze_message: 'Running source test cases...',
+                freeze_message: 'Running validation tests...',
                 callback: (r) => {
                     const result = r.message || {};
 
                     if (!result.success) {
                         frappe.msgprint({
-                            title: 'Source Test Run Failed',
+                            title: 'Validation Run Failed',
                             indicator: 'red',
                             message: frappe.utils.escape_html(
-                                result.message || 'Unable to run source test cases.'
+                                result.message || 'Unable to run validation tests.'
                             )
                         });
                         return;
@@ -3507,12 +4587,12 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
                     }
 
                     frappe.msgprint({
-                        title: 'Source Test Run Completed',
+                        title: 'Validation Run Completed',
                         indicator: indicator,
                         message: `
                             <div class="nks-test-run-result">
                                 <p style="margin-top: 0;">
-                                    ${frappe.utils.escape_html(result.message || 'Source test cases executed.')}
+                                    ${frappe.utils.escape_html(result.message || 'Validation tests executed.')}
                                 </p>
 
                                 <div class="nks-test-run-result-grid">
@@ -3540,7 +4620,7 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
 
                                 <div class="nks-test-run-result-actions">
                                     <button class="btn btn-sm btn-primary nks-after-run-open-runs">
-                                        Open Test Runs
+                                        Open Validation Runs
                                     </button>
 
                                     <button class="btn btn-sm btn-default nks-after-run-open-issues">
@@ -3574,12 +4654,12 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
                     this.load_source_summary();
                 },
                 error: (err) => {
-                    console.error('Run Source Tests Error:', err);
+                    console.error('Run Validation Tests Error:', err);
 
                     frappe.msgprint({
-                        title: 'Run Source Tests Error',
+                        title: 'Run Validation Tests Error',
                         indicator: 'red',
-                        message: 'Could not run source test cases. Please check the server logs.'
+                        message: 'Could not run validation tests. Please check the server logs.'
                     });
                 }
             });
@@ -3938,36 +5018,12 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
                                 <div class="nks-readiness-dialog">
                                     <p>${frappe.utils.escape_html(result.message || 'Knowledge Source published successfully.')}</p>
                                     <p>This source is now marked as <b>Published</b> and available for Nexus answers.</p>
-
-                                    <div style="
-                                        margin-top: 12px;
-                                        padding: 10px 12px;
-                                        border-radius: 12px;
-                                        background: #eef6ff;
-                                        border: 1px solid rgba(33, 119, 255, 0.22);
-                                        color: #0b3c91;
-                                        font-size: 12px;
-                                        font-weight: 700;
-                                    ">
-                                        Next recommended step: generate suggested Knowledge Test Cases from this published source.
-                                    </div>
                                 </div>
                             `
                         });
 
                         this.load_sources();
                         this.load_source_summary();
-
-                        frappe.confirm(
-                            'Source published successfully. Do you want to generate suggested Knowledge Test Cases now?',
-                            () => {
-                                this.load_sources();
-
-                                setTimeout(() => {
-                                    this.generate_test_cases_from_source_dashboard(name);
-                                }, 400);
-                            }
-                        );
                     }
                 });
             }

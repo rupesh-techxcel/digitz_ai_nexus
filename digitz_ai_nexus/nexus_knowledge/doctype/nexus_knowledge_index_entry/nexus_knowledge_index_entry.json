@@ -12,6 +12,12 @@
   "canonical_text",
   "display_summary",
   "answer_preview",
+  "answer_approval_section",
+  "generated_answer",
+  "answer_review_status",
+  "answer_review_notes",
+  "answer_reviewed_by",
+  "answer_reviewed_on",
   "link_section",
   "knowledge_source",
   "knowledge_unit",
@@ -84,6 +90,43 @@
    "fieldname": "answer_preview",
    "fieldtype": "Small Text",
    "label": "Answer Preview"
+  },
+  {
+   "fieldname": "answer_approval_section",
+   "fieldtype": "Section Break",
+   "label": "Answer Approval"
+  },
+  {
+   "fieldname": "generated_answer",
+   "fieldtype": "Text Editor",
+   "label": "Generated Answer"
+  },
+  {
+   "default": "Pending Review",
+   "fieldname": "answer_review_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Answer Review Status",
+   "options": "Pending Review\nApproved\nRejected"
+  },
+  {
+   "fieldname": "answer_review_notes",
+   "fieldtype": "Small Text",
+   "label": "Answer Review Notes"
+  },
+  {
+   "fieldname": "answer_reviewed_by",
+   "fieldtype": "Link",
+   "label": "Answer Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "answer_reviewed_on",
+   "fieldtype": "Datetime",
+   "label": "Answer Reviewed On",
+   "read_only": 1
   },
   {
    "fieldname": "link_section",

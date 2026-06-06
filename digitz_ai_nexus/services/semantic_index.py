@@ -347,6 +347,16 @@ def create_index_entry(chunk_doc, payload):
     doc.display_summary = payload.get("display_summary")
     doc.answer_preview = compact_text(chunk_doc.get("chunk_text"), limit=320)
 
+    if doc.meta.has_field("generated_answer"):
+        doc.generated_answer = doc.answer_preview
+
+    if doc.meta.has_field("answer_review_status"):
+        doc.answer_review_status = (
+            "Pending Review"
+            if doc.entry_type == "User Question"
+            else "Approved"
+        )
+
     doc.knowledge_source = chunk_doc.get("knowledge_source")
     doc.knowledge_unit = chunk_doc.get("knowledge_unit")
     doc.knowledge_chunk = chunk_doc.name

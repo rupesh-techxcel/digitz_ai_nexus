@@ -649,8 +649,15 @@ def _get_source_semantic_index_summary(source_name):
         "total": 0,
         "intellectual_summary": 0,
         "user_question": 0,
+        "user_question_approved": 0,
+        "user_question_pending": 0,
+        "user_question_rejected": 0,
         "embedding_completed": 0,
         "embedding_failed": 0,
+        "review_entries": {
+            "intellectual_summary": [],
+            "user_question": [],
+        },
     }
 
     if not source_name or not frappe.db.exists("DocType", "Nexus Knowledge Index Entry"):
@@ -665,12 +672,26 @@ def _get_source_semantic_index_summary(source_name):
     if meta.has_field("status"):
         filters["status"] = "Active"
 
-    fields = ["entry_type", "embedding_status"]
+    fields = [
+        "name",
+        "entry_type",
+        "canonical_text",
+        "display_summary",
+        "answer_preview",
+        "generated_answer",
+        "answer_review_status",
+        "answer_review_notes",
+        "answer_reviewed_by",
+        "answer_reviewed_on",
+        "knowledge_chunk",
+        "embedding_status",
+    ]
     rows = frappe.get_all(
         "Nexus Knowledge Index Entry",
         filters=filters,
         fields=fields,
         limit_page_length=1000,
+        order_by="entry_type asc, priority desc, modified desc",
     )
 
     summary = dict(empty)
@@ -686,13 +707,184 @@ def _get_source_semantic_index_summary(source_name):
 
         if entry_type == "User Question":
             summary["user_question"] += 1
+            review_status = str(item.get("answer_review_status") or "Pending Review").strip()
+
+            if review_status == "Approved":
+                summary["user_question_approved"] += 1
+            elif review_status == "Rejected":
+                summary["user_question_rejected"] += 1
+            else:
+                summary["user_question_pending"] += 1
 
         if embedding_status == "Completed":
             summary["embedding_completed"] += 1
         elif embedding_status == "Failed":
             summary["embedding_failed"] += 1
 
+        review_key = None
+
+        if entry_type == "Intellectual Summary":
+            review_key = "intellectual_summary"
+        elif entry_type == "User Question":
+            review_key = "user_question"
+
+        review_limit = 500 if review_key == "user_question" else 8
+
+        if review_key and len(summary["review_entries"][review_key]) < review_limit:
+            summary["review_entries"][review_key].append({
+                "name": item.get("name"),
+                "canonical_text": item.get("canonical_text"),
+                "display_summary": item.get("display_summary"),
+                "answer_preview": item.get("answer_preview"),
+                "generated_answer": item.get("generated_answer"),
+                "answer_review_status": item.get("answer_review_status") or "Pending Review",
+                "answer_review_notes": item.get("answer_review_notes"),
+                "answer_reviewed_by": item.get("answer_reviewed_by"),
+                "answer_reviewed_on": item.get("answer_reviewed_on"),
+                "knowledge_chunk": item.get("knowledge_chunk"),
+                "embedding_status": item.get("embedding_status"),
+            })
+
     return summary
+
+
+def _get_source_answer_approval_summary(source_name):
+    semantic_summary = _get_source_semantic_index_summary(source_name)
+    total = semantic_summary.get("user_question") or 0
+    approved = semantic_summary.get("user_question_approved") or 0
+    pending = semantic_summary.get("user_question_pending") or 0
+    rejected = semantic_summary.get("user_question_rejected") or 0
+
+    return {
+        "total": total,
+        "approved": approved,
+        "pending": pending,
+        "rejected": rejected,
+        "strict_ready": 1 if total > 0 and approved == total and rejected == 0 else 0,
+        "semantic_index_summary": semantic_summary,
+    }
+
+
+def _sync_source_retrieval_ready_from_answer_approvals(source_name):
+    if not source_name or not frappe.db.exists("Nexus Knowledge Source", source_name):
+        return {
+            "retrieval_ready": 0,
+            "answer_approval_summary": _get_source_answer_approval_summary(source_name),
+        }
+
+    source_doc = frappe.get_doc("Nexus Knowledge Source", source_name)
+    approval_summary = _get_source_answer_approval_summary(source_name)
+
+    is_published = str(source_doc.get("status") or "").strip() == "Published" or cint(source_doc.get("published") or 0)
+    embedding_ready = str(source_doc.get("embedding_status") or "") == "Completed"
+    diagnostics_ready = str(source_doc.get("diagnostics_status") or "") == "Healthy"
+    has_chunks = cint(source_doc.get("active_chunk_count") or source_doc.get("chunk_count") or 0) > 0
+    strict_ready = bool(approval_summary.get("strict_ready"))
+
+    retrieval_ready = 1 if is_published and embedding_ready and diagnostics_ready and has_chunks and strict_ready else 0
+
+    _set_if_exists(source_doc, "retrieval_ready", retrieval_ready)
+
+    validation_passed = str(source_doc.get("validation_status") or "").strip() == "Passed"
+
+    if not is_published:
+        _set_if_exists(source_doc, "ready_to_publish", 1 if validation_passed and strict_ready else 0)
+
+        if validation_passed and strict_ready:
+            _safe_set_select_value(source_doc, "status", "Ready to Publish")
+            _set_if_exists(source_doc, "review_reason", None)
+        elif validation_passed:
+            _safe_set_select_value(source_doc, "status", "Processed")
+            _set_if_exists(source_doc, "review_reason", "Generated possible-question answers require manual approval.")
+
+    source_doc.save(ignore_permissions=True)
+
+    return {
+        "retrieval_ready": retrieval_ready,
+        "answer_approval_summary": approval_summary,
+    }
+
+
+def _get_source_group_label(row, fieldname, fallback="Unclassified"):
+    value = _normalize_context_value(row.get(fieldname))
+    return value or fallback
+
+
+def _build_source_classification_stats(rows):
+    tenant_stats = {}
+    classification_options = {
+        "tenant": [],
+        "business_unit": [],
+        "context": [],
+        "sub_context": [],
+        "entity_type": [],
+        "entity": [],
+        "topic": [],
+        "chat_category": [],
+    }
+    option_sets = {key: set() for key in classification_options}
+
+    for row in rows:
+        tenant = _get_source_group_label(row, "tenant", "No Tenant")
+        business_unit = _get_source_group_label(row, "business_unit")
+        context = _get_source_group_label(row, "context")
+        sub_context = _get_source_group_label(row, "sub_context")
+        entity_type = _get_source_group_label(row, "entity_type")
+        entity = _get_source_group_label(row, "entity")
+        topic = _get_source_group_label(row, "topic")
+        chat_category = _get_source_group_label(row, "chat_category")
+
+        if tenant not in tenant_stats:
+            tenant_stats[tenant] = {
+                "tenant": tenant,
+                "total": 0,
+                "published": 0,
+                "retrieval_ready": 0,
+                "context_summaries": 0,
+                "semantic_index_entries": 0,
+                "business_units": {},
+                "contexts": {},
+                "topics": {},
+            }
+
+        tenant_row = tenant_stats[tenant]
+        tenant_row["total"] += 1
+
+        if row.get("status") == "Published" or row.get("published"):
+            tenant_row["published"] += 1
+
+        if row.get("retrieval_ready"):
+            tenant_row["retrieval_ready"] += 1
+
+        tenant_row["business_units"].setdefault(business_unit, {"label": business_unit, "total": 0})["total"] += 1
+        tenant_row["contexts"].setdefault(context, {"label": context, "total": 0})["total"] += 1
+        tenant_row["topics"].setdefault(topic, {"label": topic, "total": 0})["total"] += 1
+
+        for fieldname, value in [
+            ("tenant", tenant),
+            ("business_unit", business_unit),
+            ("context", context),
+            ("sub_context", sub_context),
+            ("entity_type", entity_type),
+            ("entity", entity),
+            ("topic", topic),
+            ("chat_category", chat_category),
+        ]:
+            if value and value != "Unclassified":
+                option_sets[fieldname].add(value)
+
+    for tenant, stat in tenant_stats.items():
+        stat["business_units"] = sorted(stat["business_units"].values(), key=lambda item: item["label"])
+        stat["contexts"] = sorted(stat["contexts"].values(), key=lambda item: item["label"])
+        stat["topics"] = sorted(stat["topics"].values(), key=lambda item: item["label"])
+
+    for fieldname, values in option_sets.items():
+        classification_options[fieldname] = sorted(values)
+
+    return {
+        "tenant_stats": sorted(tenant_stats.values(), key=lambda item: item["tenant"]),
+        "classification_options": classification_options,
+    }
 
 
 def _build_source_readiness_payload(row):
@@ -777,6 +969,18 @@ def _build_source_readiness_payload(row):
         normalized_status in ["validated", "tested", "ready to publish", "published"]
         or normalized_validation in ["validated", "passed", "tested"]
     )
+    answer_approval_summary = row.get("answer_approval_summary") or {}
+
+    if not answer_approval_summary:
+        source_name = row.get("name")
+
+        if source_name:
+            answer_approval_summary = _get_source_answer_approval_summary(source_name)
+
+    strict_answer_ready = bool(answer_approval_summary.get("strict_ready"))
+    answer_question_total = cint(answer_approval_summary.get("total") or 0)
+    answer_question_pending = cint(answer_approval_summary.get("pending") or 0)
+    answer_question_rejected = cint(answer_approval_summary.get("rejected") or 0)
 
     has_quality_issue = (
         needs_review
@@ -826,10 +1030,22 @@ def _build_source_readiness_payload(row):
         next_action = "wait"
         next_action_label = "Wait for completion"
 
+    elif is_prepared and not strict_answer_ready:
+        readiness_status = "needs_answer_approval"
+        readiness_label = "Needs Answer Approval"
+        if answer_question_total <= 0:
+            readiness_message = "Generate possible questions and answers before this source can be retrieval-ready."
+        elif answer_question_rejected:
+            readiness_message = f"{answer_question_rejected} generated answer(s) were rejected and must be corrected."
+        else:
+            readiness_message = f"{answer_question_pending} generated answer(s) need manual approval."
+        next_action = "review_answers"
+        next_action_label = "Review generated answers"
+
     elif published:
         readiness_status = "published"
         readiness_label = "Published"
-        readiness_message = "This source is available for AI answers."
+        readiness_message = "Published and answer approvals are complete."
         next_action = "none"
         next_action_label = "No action needed"
 
@@ -863,8 +1079,8 @@ def _build_source_readiness_payload(row):
 
     can_prepare = readiness_status == "ready"
     can_validate = readiness_status == "ready_for_validation"
-    can_publish = readiness_status == "ready_to_publish"
-    can_unpublish = readiness_status == "published"
+    can_publish = readiness_status == "ready_to_publish" and strict_answer_ready
+    can_unpublish = published
 
     return {
         "readiness_status": readiness_status,
@@ -880,6 +1096,7 @@ def _build_source_readiness_payload(row):
         "missing_fields": missing_fields,
         "has_content": 1 if has_content else 0,
         "has_classification": 1 if has_classification else 0,
+        "answer_approval_summary": answer_approval_summary,
         "technical_status": {
         "status": status,
         "processing_status": processing_status,
@@ -1221,6 +1438,8 @@ def get_knowledge_source_summary():
         if row.get("disabled"):
             disabled += 1
 
+    classification_stats = _build_source_classification_stats(rows)
+
     return {
         "success": True,
         "active_tenant": active_context.get("tenant"),
@@ -1243,6 +1462,8 @@ def get_knowledge_source_summary():
             "disabled": disabled,
             "context_summaries": context_summary_count,
             "semantic_index_entries": semantic_index_entry_count,
+            "tenant_stats": classification_stats.get("tenant_stats") or [],
+            "classification_options": classification_stats.get("classification_options") or {},
         },
     }
 
@@ -1289,6 +1510,19 @@ def get_knowledge_sources(filters=None):
     if filters.get("disabled") in ["0", "1"] and meta.has_field("disabled"):
         db_filters["disabled"] = int(filters.get("disabled"))
 
+    for fieldname in [
+        "tenant",
+        "business_unit",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+        "chat_category",
+    ]:
+        if filters.get(fieldname) and meta.has_field(fieldname):
+            db_filters[fieldname] = filters.get(fieldname)
+
     or_filters = []
 
     if filters.get("search"):
@@ -1320,10 +1554,12 @@ def get_knowledge_sources(filters=None):
     sources = []
 
     for row in rows:
-        readiness = _build_source_readiness_payload(row)
         test_case_summary = _get_source_test_case_summary(row.get("name"))
         context_summary = _get_source_context_summary(row)
-        semantic_index_summary = _get_source_semantic_index_summary(row.get("name"))
+        answer_approval_summary = _get_source_answer_approval_summary(row.get("name"))
+        semantic_index_summary = answer_approval_summary.get("semantic_index_summary") or {}
+        row["answer_approval_summary"] = answer_approval_summary
+        readiness = _build_source_readiness_payload(row)
 
         sources.append({
             "name": row.get("name"),
@@ -1375,6 +1611,7 @@ def get_knowledge_sources(filters=None):
             "context_summary_status": context_summary.get("status"),
             "semantic_index_summary": semantic_index_summary,
             "semantic_index_count": semantic_index_summary.get("total"),
+            "answer_approval_summary": answer_approval_summary,
 
             **readiness,
         })
@@ -1385,6 +1622,94 @@ def get_knowledge_sources(filters=None):
         "active_context": active_context,
         "applied_filters": db_filters,
         "sources": sources,
+    }
+
+
+@frappe.whitelist()
+def review_knowledge_index_answer(name: str, action: str, notes: str = None):
+    """
+    Manually approve/reject a generated answer for a possible question.
+    Strict source readiness depends on all User Question entries being approved.
+    """
+
+    if not name:
+        return {
+            "success": False,
+            "message": "Knowledge Index Entry is required.",
+        }
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Index Entry"):
+        return {
+            "success": False,
+            "message": "Nexus Knowledge Index Entry doctype does not exist.",
+        }
+
+    if not frappe.db.exists("Nexus Knowledge Index Entry", name):
+        return {
+            "success": False,
+            "message": f"Nexus Knowledge Index Entry not found: {name}",
+        }
+
+    doc = frappe.get_doc("Nexus Knowledge Index Entry", name)
+    source_name = doc.get("knowledge_source")
+
+    if source_name and frappe.db.exists("Nexus Knowledge Source", source_name):
+        source_doc = frappe.get_doc("Nexus Knowledge Source", source_name)
+        if not frappe.has_permission("Nexus Knowledge Source", "write", doc=source_doc):
+            frappe.throw("Not permitted to review generated answers for this source", frappe.PermissionError)
+    elif not frappe.has_permission("Nexus Knowledge Index Entry", "write", doc=doc):
+        frappe.throw("Not permitted to review this generated answer", frappe.PermissionError)
+
+    if doc.get("entry_type") != "User Question":
+        return {
+            "success": False,
+            "message": "Only possible-question entries require generated-answer approval.",
+        }
+
+    normalized_action = str(action or "").strip().lower()
+
+    if normalized_action in ["approve", "approved"]:
+        review_status = "Approved"
+    elif normalized_action in ["reject", "rejected"]:
+        review_status = "Rejected"
+    elif normalized_action in ["unapprove", "pending", "reset"]:
+        review_status = "Pending Review"
+    else:
+        return {
+            "success": False,
+            "message": "Action must be approve, unapprove, or reject.",
+        }
+
+    if doc.meta.has_field("answer_review_status"):
+        doc.answer_review_status = review_status
+
+    if doc.meta.has_field("answer_review_notes"):
+        doc.answer_review_notes = notes or ""
+
+    if doc.meta.has_field("answer_reviewed_by"):
+        doc.answer_reviewed_by = frappe.session.user
+
+    if doc.meta.has_field("answer_reviewed_on"):
+        doc.answer_reviewed_on = now_datetime()
+
+    doc.save(ignore_permissions=True)
+
+    sync_result = _sync_source_retrieval_ready_from_answer_approvals(source_name)
+    readiness = {}
+
+    if source_name and frappe.db.exists("Nexus Knowledge Source", source_name):
+        readiness = _build_source_readiness_payload(frappe.get_doc("Nexus Knowledge Source", source_name))
+
+    return {
+        "success": True,
+        "message": f"Generated answer {review_status.lower()}.",
+        "entry": name,
+        "source_name": source_name,
+        "answer_review_status": review_status,
+        "answer_reviewed_by": doc.get("answer_reviewed_by"),
+        "answer_reviewed_on": doc.get("answer_reviewed_on"),
+        "readiness": readiness,
+        **sync_result,
     }
 
 
@@ -2161,12 +2486,21 @@ def validate_knowledge_source(name: str, test_query: str = None):
     validation = _build_source_validation_answer(test_query, blocks)
 
     if validation.get("passed"):
+        approval_summary = _get_source_answer_approval_summary(doc.name)
+        strict_answer_ready = bool(approval_summary.get("strict_ready"))
         _set_if_exists(doc, "validation_status", "Passed")
-        _set_if_exists(doc, "ready_to_publish", 1)
+        _set_if_exists(doc, "ready_to_publish", 1 if strict_answer_ready else 0)
         _set_if_exists(doc, "needs_review", 0)
-        _set_if_exists(doc, "review_reason", None)
+        _set_if_exists(
+            doc,
+            "review_reason",
+            None if strict_answer_ready else "Generated possible-question answers require manual approval.",
+        )
 
-        _safe_set_select_value(doc, "status", "Ready to Publish")
+        if strict_answer_ready:
+            _safe_set_select_value(doc, "status", "Ready to Publish")
+        else:
+            _safe_set_select_value(doc, "status", "Processed")
 
         if _has_field(doc.doctype, "validated_on"):
             doc.set("validated_on", frappe.utils.now())
@@ -2184,11 +2518,16 @@ def validate_knowledge_source(name: str, test_query: str = None):
 
         return {
             "success": True,
-            "message": "Source validation passed. Source is ready to publish.",
+            "message": (
+                "Source validation passed. Approve all generated possible-question answers before publishing."
+                if not strict_answer_ready
+                else "Source validation passed. Source is ready to publish."
+            ),
             "test_query": test_query,
             "answer": validation.get("answer"),
             "confidence": validation.get("confidence"),
             "sources": validation.get("sources"),
+            "answer_approval_summary": approval_summary,
             "readiness": _build_source_readiness_payload(doc),
         }
 
@@ -2307,6 +2646,50 @@ def _get_source_chunk_text_for_test_generation(source_name: str, generated_unit:
     return "\n\n".join(texts)
 
 
+def _get_source_semantic_index_entries_for_test_generation(source_name: str) -> list:
+    """
+    Return active reviewable retrieval index entries for source-level validation.
+
+    These entries are generated during the current ingestion flow before/with
+    vector embedding. Validation tests should prefer User Question entries so
+    they test the same intent surface the live retrieval layer checks first.
+    """
+
+    if not source_name or not frappe.db.exists("DocType", "Nexus Knowledge Index Entry"):
+        return []
+
+    meta = frappe.get_meta("Nexus Knowledge Index Entry")
+    fields = {df.fieldname for df in meta.fields}
+
+    filters = {"knowledge_source": source_name}
+
+    if "status" in fields:
+        filters["status"] = "Active"
+
+    if "disabled" in fields:
+        filters["disabled"] = 0
+
+    result_fields = [
+        "name",
+        "entry_type",
+        "canonical_text",
+        "display_summary",
+        "answer_preview",
+        "knowledge_chunk",
+        "priority",
+        "embedding_status",
+    ]
+    result_fields = [fieldname for fieldname in result_fields if fieldname in fields or fieldname == "name"]
+
+    return frappe.get_all(
+        "Nexus Knowledge Index Entry",
+        filters=filters,
+        fields=result_fields,
+        order_by="entry_type desc, priority desc, modified desc",
+        limit_page_length=200,
+    )
+
+
 def _build_source_test_generation_context(source_doc) -> dict:
     """
     Build source metadata and source text used for AI suggested test case generation.
@@ -2358,6 +2741,8 @@ def _build_source_test_generation_context(source_doc) -> dict:
     if chunk_text:
         content_parts.append(chunk_text)
 
+    semantic_index_entries = _get_source_semantic_index_entries_for_test_generation(source_doc.name)
+
     compact_content = _compact_test_generation_text(
         "\n\n".join([str(part).strip() for part in content_parts if str(part).strip()])
     )
@@ -2384,6 +2769,7 @@ def _build_source_test_generation_context(source_doc) -> dict:
             else ""
         ),
         "generated_knowledge_unit": generated_unit,
+        "semantic_index_entries": semantic_index_entries,
         "content": compact_content[:12000],
     }
 
@@ -2395,6 +2781,18 @@ def _build_test_case_generation_prompt(
     include_boundary_tests: int,
     include_followup_tests: int,
 ) -> str:
+    semantic_index_entries = source_context.get("semantic_index_entries") or []
+    possible_questions = [
+        item.get("canonical_text")
+        for item in semantic_index_entries
+        if item.get("entry_type") == "User Question" and item.get("canonical_text")
+    ][:20]
+    intellectual_summaries = [
+        item.get("canonical_text")
+        for item in semantic_index_entries
+        if item.get("entry_type") == "Intellectual Summary" and item.get("canonical_text")
+    ][:20]
+
     return f"""
 Generate {test_count} validation test cases for this published Knowledge Source.
 
@@ -2416,12 +2814,13 @@ Return JSON only in this exact shape:
 }}
 
 Rules:
-- Generate realistic questions a real user may ask.
-- Validate retrieval and answer quality from this published source.
-- Prefer direct answer tests.
+- Prefer the provided Possible Questions. They are generated by the current retrieval index workflow.
+- Generate direct grounded-answer tests only from Possible Questions or clearly supported source content.
+- Validate retrieval and answer quality from this exact published source.
 - Include follow-up style questions only if requested.
 - Include fallback/boundary tests only if requested.
-- Do not invent source facts.
+- Do not invent source facts or questions unsupported by the source.
+- Keep required_keywords minimal. Use [] unless the exact answer text must contain a specific source term.
 - Do not expose or request confidential content for public sources.
 - Questions must be useful for {use_case}.
 
@@ -2443,6 +2842,12 @@ Source Metadata:
 - Entity: {source_context.get("entity")}
 - Topic: {source_context.get("topic")}
 - Access Policy: {source_context.get("access_policy")}
+
+Possible Questions from Retrieval Index:
+{json.dumps(possible_questions, indent=2)}
+
+Intellectual Summaries from Retrieval Index:
+{json.dumps(intellectual_summaries, indent=2)}
 
 Source Content:
 {source_context.get("content")}
@@ -2569,22 +2974,16 @@ def _generate_deterministic_source_test_cases(
     include_followup_tests: int,
 ) -> list:
     """
-    Deterministic fallback. This ensures the Studio action still works
-    when the LLM provider is not configured.
+    Deterministic generator aligned with the current retrieval workflow.
 
-    Important:
-    - Direct/follow-up tests expect grounded answers with source evidence.
-    - Boundary/fallback tests expect safe fallback behavior and should not
-      require source evidence or high confidence.
-
-    MVP confidence calibration:
-    - Current answer service confidence for correct grounded answers is commonly around 0.35–0.45.
-    - Therefore grounded tests use 0.35 for now.
-    - Fallback tests use 0.30.
+    It prefers active User Question index entries, because those are the
+    intent probes live retrieval checks before falling back to chunk search.
+    This keeps generated validation tests grounded and avoids broad questions
+    that the source never promised to answer.
     """
 
-    DIRECT_MIN_CONFIDENCE = 0.35
-    FOLLOWUP_MIN_CONFIDENCE = 0.35
+    DIRECT_MIN_CONFIDENCE = 0.30
+    FOLLOWUP_MIN_CONFIDENCE = 0.30
     FALLBACK_MIN_CONFIDENCE = 0.30
 
     source_title = (
@@ -2596,11 +2995,52 @@ def _generate_deterministic_source_test_cases(
 
     topic = source_context.get("topic") or source_context.get("entity") or source_title
     context = source_context.get("context") or source_context.get("business_unit") or ""
-    access_policy = _normalize_access_level(source_context.get("access_policy") or "Public")
+    semantic_index_entries = source_context.get("semantic_index_entries") or []
 
     suggestions = []
+    seen_questions = set()
 
-    if topic and context:
+    for entry in semantic_index_entries:
+        if entry.get("entry_type") != "User Question":
+            continue
+
+        question = str(entry.get("canonical_text") or "").strip()
+
+        if not question:
+            continue
+
+        question_key = question.lower()
+
+        if question_key in seen_questions:
+            continue
+
+        seen_questions.add(question_key)
+
+        title = question
+        if len(title) > 76:
+            title = title[:73].rstrip() + "..."
+
+        suggestions.append({
+            "title": title,
+            "question": question,
+            "test_type": "direct",
+            "expected_behavior": (
+                "Retrieve the linked approved source/chunk and answer only from grounded knowledge."
+            ),
+            "expected_result_type": "grounded_answer",
+            "expected_fallback": False,
+            "expected_source_required": True,
+            "minimum_confidence": DIRECT_MIN_CONFIDENCE,
+            "required_keywords": [],
+            "forbidden_keywords": [],
+            "generated_from_index_entry": entry.get("name"),
+            "expected_chunk": entry.get("knowledge_chunk"),
+        })
+
+        if len(suggestions) >= test_count:
+            return suggestions[:test_count]
+
+    if len(suggestions) < test_count and topic and context:
         suggestions.append({
             "title": f"Explain {topic}",
             "question": f"Explain {topic} in {context}.",
@@ -2614,33 +3054,21 @@ def _generate_deterministic_source_test_cases(
             "forbidden_keywords": [],
         })
 
-    suggestions.append({
-        "title": f"Summarize {source_title}",
-        "question": f"What is {source_title}?",
-        "test_type": "direct",
-        "expected_behavior": "Provide a concise grounded answer from the published source.",
-        "expected_result_type": "grounded_answer",
-        "expected_fallback": False,
-        "expected_source_required": True,
-        "minimum_confidence": DIRECT_MIN_CONFIDENCE,
-        "required_keywords": _keywords_from_test_generation_text(str(source_title)),
-        "forbidden_keywords": [],
-    })
+    if len(suggestions) < test_count:
+        suggestions.append({
+            "title": f"Summarize {source_title}",
+            "question": f"What is {source_title}?",
+            "test_type": "direct",
+            "expected_behavior": "Provide a concise grounded answer from the published source.",
+            "expected_result_type": "grounded_answer",
+            "expected_fallback": False,
+            "expected_source_required": True,
+            "minimum_confidence": DIRECT_MIN_CONFIDENCE,
+            "required_keywords": [],
+            "forbidden_keywords": [],
+        })
 
-    suggestions.append({
-        "title": f"Business use of {topic}",
-        "question": f"How is {topic} useful in business operations?",
-        "test_type": "direct",
-        "expected_behavior": "Explain the business relevance using only approved source knowledge.",
-        "expected_result_type": "grounded_answer",
-        "expected_fallback": False,
-        "expected_source_required": True,
-        "minimum_confidence": DIRECT_MIN_CONFIDENCE,
-        "required_keywords": _keywords_from_test_generation_text(str(topic)),
-        "forbidden_keywords": [],
-    })
-
-    if include_followup_tests:
+    if include_followup_tests and len(suggestions) < test_count:
         suggestions.append({
             "title": f"Follow-up on {topic}",
             "question": f"Can you explain that with more details about {topic}?",
@@ -2654,7 +3082,7 @@ def _generate_deterministic_source_test_cases(
             "forbidden_keywords": [],
         })
 
-    if include_boundary_tests:
+    if include_boundary_tests and len(suggestions) < test_count:
         suggestions.append({
             "title": f"Boundary test for {source_title}",
             "question": f"What confidential internal pricing or private implementation details are available for {source_title}?",
@@ -2680,24 +3108,29 @@ def _generate_test_case_suggestions(
     include_boundary_tests: int,
     include_followup_tests: int,
 ) -> list:
-    llm_suggestions = _generate_test_case_suggestions_with_llm(
+    deterministic_suggestions = _generate_deterministic_source_test_cases(
         source_context=source_context,
         test_count=test_count,
+        use_case=use_case,
+        include_boundary_tests=include_boundary_tests,
+        include_followup_tests=include_followup_tests,
+    )
+
+    if len(deterministic_suggestions) >= test_count:
+        return deterministic_suggestions[:test_count]
+
+    llm_suggestions = _generate_test_case_suggestions_with_llm(
+        source_context=source_context,
+        test_count=test_count - len(deterministic_suggestions),
         use_case=use_case,
         include_boundary_tests=include_boundary_tests,
         include_followup_tests=include_followup_tests,
     )
 
     if llm_suggestions:
-        return llm_suggestions[:test_count]
+        return (deterministic_suggestions + llm_suggestions)[:test_count]
 
-    return _generate_deterministic_source_test_cases(
-        source_context=source_context,
-        test_count=test_count,
-        use_case=use_case,
-        include_boundary_tests=include_boundary_tests,
-        include_followup_tests=include_followup_tests,
-    )
+    return deterministic_suggestions[:test_count]
 
 
 def _split_test_generation_keywords(value: str) -> list:
@@ -2782,273 +3215,19 @@ def _normalize_test_case_suggestion(
         suggestion.get("expected_result_type") or "grounded_answer"
     ).strip().lower()
 
-    source_text = str(source_content or "").lower()
-    question_text = f"{title} {question}".lower()
-
-    source_subject_signals = [
-        "purchase invoice",
-        "purchase invoices",
-    ]
-
-    broad_question_signals = [
-        "tell me about",
-        "what is",
-        "overview",
-        "general overview",
-        "explain",
-        "describe",
-        "summarize",
-        "how does",
-        "what happens",
-        "what are",
-        "purpose",
-        "functionality",
-    ]
-
-    mentions_source_subject = any(
-        signal in source_text and signal in question_text
-        for signal in source_subject_signals
-    )
-
-    is_broad_answerable_question = (
-        mentions_source_subject
-        and any(signal in question_text for signal in broad_question_signals)
-    )
-
-    answerable_signal_groups = [
-        {
-            "source_signals": [
-                "purchase invoice",
-                "record supplier bills",
-                "financial ledgers",
-                "expenses",
-                "taxes",
-                "payables",
-                "accounts payable",
-                "financial recognition",
-            ],
-            "question_signals": [
-                "purpose",
-                "purchase invoice",
-                "supplier bill",
-                "payable",
-                "expense",
-                "liability",
-                "financial recognition",
-            ],
-        },
-        {
-            "source_signals": [
-                "supplier",
-                "posting date",
-                "items / services",
-                "taxability",
-                "line item discount",
-                "rate includes tax",
-                "project / cost center",
-            ],
-            "question_signals": [
-                "key fields",
-                "fields",
-                "supplier",
-                "posting date",
-                "taxability",
-                "rate includes tax",
-                "project",
-                "cost center",
-            ],
-        },
-        {
-            "source_signals": [
-                "default company purchase price list",
-                "supplier does not have a specific price list assigned",
-                "specific price list assigned",
-                "price list assigned",
-                "use supplier last price",
-                "supplier price lists",
-            ],
-            "question_signals": [
-                "supplier",
-                "price list",
-                "assigned",
-                "default company purchase price list",
-                "last price",
-                "pricing",
-            ],
-        },
-        {
-            "source_signals": [
-                "service billing",
-                "service-type items",
-                "without affecting stock",
-                "expense entries",
-                "do not involve inventory",
-                "maintenance",
-                "consultancy",
-                "professional services",
-            ],
-            "question_signals": [
-                "service billing",
-                "service",
-                "stock",
-                "inventory",
-                "expense",
-                "maintenance",
-                "consultancy",
-            ],
-        },
-        {
-            "source_signals": [
-                "purchase receipt handles the physical movement of stock",
-                "purchase invoice handles the financial posting",
-                "financial posting",
-                "physical movement of stock",
-                "while the purchase receipt handles the physical movement of stock",
-            ],
-            "question_signals": [
-                "purchase receipt",
-                "purchase invoice",
-                "stock movement",
-                "financial posting",
-                "difference",
-                "physical movement",
-            ],
-        },
-        {
-            "source_signals": [
-                "on submission",
-                "accounting entries",
-                "accounts payable",
-                "payment mode",
-                "expense and tax accounts",
-                "rate includes tax",
-                "perpetual inventory",
-                "cash or bank",
-            ],
-            "question_signals": [
-                "submitted",
-                "submission",
-                "posting",
-                "accounting entries",
-                "accounts payable",
-                "payment mode",
-                "tax",
-                "cash",
-                "bank",
-            ],
-        },
-        {
-            "source_signals": [
-                "supplier ledger",
-                "purchase receipt",
-                "accounting reports",
-                "tax reports",
-                "project / cost center",
-                "price lists and supplier records",
-                "profit & loss",
-                "trial balance",
-                "general ledger",
-            ],
-            "question_signals": [
-                "integration",
-                "integrates",
-                "supplier ledger",
-                "reports",
-                "purchase receipt",
-                "tax reports",
-                "general ledger",
-                "trial balance",
-            ],
-        },
-    ]
-
-    looks_answerable_from_source = is_broad_answerable_question
-
-    if not looks_answerable_from_source:
-        for group in answerable_signal_groups:
-            source_has_signal = any(
-                signal in source_text
-                for signal in group.get("source_signals") or []
-            )
-
-            question_has_signal = any(
-                signal in question_text
-                for signal in group.get("question_signals") or []
-            )
-
-            if source_has_signal and question_has_signal:
-                looks_answerable_from_source = True
-                break
-
-    unanswered_policy_question_signals = [
-        "future date",
-        "future posting date",
-        "posted with a future date",
-        "posting with a future date",
-        "allowed or not",
-        "is allowed",
-        "not allowed",
-        "can a purchase invoice be posted",
-        "can it be posted",
-        "without a recognized supplier",
-        "without a valid supplier",
-        "non-existent supplier",
-        "unrecognized supplier",
-        "missing supplier",
-        "supplier master record is missing",
-        "internal approval matrix",
-        "approval matrix",
-        "confidential",
-        "internal pricing",
-        "private implementation",
-    ]
-
-    source_contains_policy_answer_signals = [
-        "future date is allowed",
-        "future posting date is allowed",
-        "future date is not allowed",
-        "cannot be posted with a future date",
-        "can be posted with a future date",
-        "recognized supplier",
-        "valid supplier",
-        "unrecognized supplier",
-        "supplier master record",
-        "approval matrix",
-        "internal approval",
-    ]
-
-    asks_unanswered_policy_question = any(
-        signal in question_text
-        for signal in unanswered_policy_question_signals
-    )
-
-    source_has_policy_answer = any(
-        signal in source_text
-        for signal in source_contains_policy_answer_signals
-    )
-
-    if asks_unanswered_policy_question and not source_has_policy_answer:
-        looks_answerable_from_source = False
-        test_type = "fallback"
-        expected_result_type = "safe_fallback"
-        suggestion["expected_fallback"] = True
-        suggestion["minimum_confidence"] = FALLBACK_MIN_CONFIDENCE
-        suggestion["required_keywords"] = []
-
-    if looks_answerable_from_source:
-        if test_type in ["fallback", "boundary", "access"]:
-            test_type = "direct"
-
-        expected_result_type = "grounded_answer"
-        suggestion["expected_fallback"] = False
-
-    if test_type == "boundary" and expected_result_type == "grounded_answer":
+    if test_type not in ["direct", "follow_up", "boundary", "fallback", "access"]:
         test_type = "direct"
 
     is_fallback_style_test = (
         test_type in ["fallback", "boundary", "access"]
         or expected_result_type == "safe_fallback"
     )
+
+    if is_fallback_style_test:
+        expected_result_type = "safe_fallback"
+    else:
+        expected_result_type = "grounded_answer"
+        suggestion["expected_fallback"] = False
 
     expected_fallback = suggestion.get("expected_fallback")
 
@@ -3285,7 +3464,11 @@ def _apply_test_case_values(doc, source_doc, normalized: dict, use_case: str, au
     _set_first_available_test_case_field(
         doc,
         ["generation_notes", "notes", "description"],
-        "AI-generated suggested test case from published Knowledge Source. Review before final validation use.",
+        (
+            "Generated from the current retrieval-index workflow. Direct tests "
+            "prefer active User Question index entries linked to approved chunks. "
+            "Review before final validation use."
+        ),
     )
 
     _set_first_available_test_case_field(
@@ -3372,12 +3555,17 @@ def _find_existing_source_test_case(source_name: str, question: str):
     if not source_field or not question_field:
         return None
 
+    filters = {
+        source_field: source_name,
+        question_field: question,
+    }
+
+    if "status" in fields:
+        filters["status"] = ["!=", "Archived"]
+
     existing = frappe.get_all(
         "Nexus Knowledge Test Case",
-        filters={
-            source_field: source_name,
-            question_field: question,
-        },
+        filters=filters,
         pluck="name",
         limit_page_length=1,
     )
@@ -3442,6 +3630,38 @@ def _get_existing_generated_test_cases_for_source(source_name: str):
         order_by="creation desc",
         limit_page_length=100,
     )
+
+
+def _delete_existing_generated_test_cases_for_source(source_name: str) -> int:
+    """
+    Delete old AI-generated validation tests before regenerating.
+
+    Validation tests are derived artifacts. Regeneration should replace the
+    previous generated set so Studio shows the current suite only.
+    """
+
+    rows = _get_existing_generated_test_cases_for_source(source_name)
+
+    if not rows:
+        return 0
+
+    deleted_count = 0
+
+    for row in rows:
+        name = row.get("name")
+
+        if not name:
+            continue
+
+        frappe.delete_doc(
+            "Nexus Knowledge Test Case",
+            name,
+            ignore_permissions=False,
+            force=True,
+        )
+        deleted_count += 1
+
+    return deleted_count
     
 def _get_source_test_case_summary(source_name: str):
     """
@@ -3451,9 +3671,11 @@ def _get_source_test_case_summary(source_name: str):
 
     summary = {
         "total": 0,
+        "historical_total": 0,
         "generated": 0,
         "draft": 0,
         "active": 0,
+        "archived": 0,
         "enabled": 0,
         "pending_review": 0,
         "approved": 0,
@@ -3500,11 +3722,17 @@ def _get_source_test_case_summary(source_name: str):
         limit_page_length=500,
     )
 
-    summary["total"] = len(rows)
+    summary["historical_total"] = len(rows)
     summary["has_test_cases"] = 1 if rows else 0
 
     if rows:
-        latest = rows[0]
+        latest = next(
+            (
+                item for item in rows
+                if str(item.get("status") or "").strip().lower() != "archived"
+            ),
+            rows[0],
+        )
         summary["latest_test_case"] = {
             "name": latest.get("name"),
             "test_title": latest.get("test_title") or latest.get("name"),
@@ -3515,6 +3743,13 @@ def _get_source_test_case_summary(source_name: str):
     for row in rows:
         status = str(row.get("status") or "").strip().lower()
         review_status = str(row.get("review_status") or "").strip().lower()
+        is_archived = status == "archived"
+
+        if is_archived:
+            summary["archived"] += 1
+            continue
+
+        summary["total"] += 1
 
         if row.get("generated_by_ai") or row.get("generated_from_source"):
             summary["generated"] += 1
@@ -3541,9 +3776,10 @@ def generate_source_test_cases(
     name: str,
     test_count: int = 5,
     use_case: str = "Q&A",
-    include_boundary_tests: int = 1,
-    include_followup_tests: int = 1,
+    include_boundary_tests: int = 0,
+    include_followup_tests: int = 0,
     auto_enable: int = 0,
+    replace_existing: int = 1,
 ):
     """
     Generate suggested Nexus Knowledge Test Case records from a published Knowledge Source.
@@ -3600,23 +3836,29 @@ def generate_source_test_cases(
     include_boundary_tests = cint(include_boundary_tests)
     include_followup_tests = cint(include_followup_tests)
     auto_enable = cint(auto_enable)
+    replace_existing = cint(replace_existing)
 
     source_context = _build_source_test_generation_context(source_doc)
 
     if not source_context.get("content"):
         return {
             "success": False,
-            "message": "No source content or active chunk content found for generating test cases.",
+            "message": "No source content or active chunk content found for generating validation tests.",
         }
     
     existing_generated = _get_existing_generated_test_cases_for_source(source_doc.name)
+    replaced_count = 0
+
+    if existing_generated and replace_existing:
+        replaced_count = _delete_existing_generated_test_cases_for_source(source_doc.name)
+        existing_generated = []
 
     if existing_generated:
         return {
             "success": True,
             "message": (
-                f"{len(existing_generated)} AI-generated Knowledge Test Case(s) already exist "
-                "for this Knowledge Source. No duplicate test cases were created."
+                f"{len(existing_generated)} generated validation test(s) already exist "
+                "for this Knowledge Source. Enable replace existing to regenerate them."
             ),
             "created": [],
             "skipped": [
@@ -3629,6 +3871,8 @@ def generate_source_test_cases(
             ],
             "created_count": 0,
             "skipped_count": len(existing_generated),
+            "replaced_count": replaced_count,
+            "archived_count": replaced_count,
         }
 
     suggestions = _generate_test_case_suggestions(
@@ -3642,14 +3886,18 @@ def generate_source_test_cases(
     if not suggestions:
         return {
             "success": False,
-            "message": "No test case suggestions could be generated from this source.",
+            "message": "No validation test suggestions could be generated from this source.",
         }
 
     created = []
     skipped = []
 
     for suggestion in suggestions:
-        normalized = _normalize_test_case_suggestion(suggestion, use_case)
+        normalized = _normalize_test_case_suggestion(
+            suggestion,
+            use_case,
+            source_content=source_context.get("content") or "",
+        )
 
         if not normalized.get("question"):
             skipped.append({
@@ -3710,11 +3958,15 @@ def generate_source_test_cases(
 
     return {
         "success": True,
-        "message": f"Generated {len(created)} suggested Knowledge Test Case(s) from published source.",
+        "message": (
+            f"Generated {len(created)} retrieval-index aligned validation test(s) from published source."
+        ),
         "created": created,
         "skipped": skipped,
         "created_count": len(created),
         "skipped_count": len(skipped),
+        "replaced_count": replaced_count,
+        "archived_count": replaced_count,
     }
 
 
@@ -3934,7 +4186,7 @@ def publish_knowledge_source(name: str):
 	if not readiness.get("can_publish"):
 		return {
 			"success": False,
-			"message": "Knowledge Source is not ready to publish. Validate the source before publishing.",
+			"message": "Knowledge Source is not ready to publish. Validate the source and approve all generated possible-question answers first.",
 			"readiness": readiness,
 		}
 
@@ -3964,7 +4216,7 @@ def publish_knowledge_source(name: str):
 	_set_if_exists(doc, "ready_to_publish", 0)
 	_set_if_exists(doc, "needs_review", 0)
 	_set_if_exists(doc, "review_reason", None)
-	_set_if_exists(doc, "retrieval_ready", 1)
+	_set_if_exists(doc, "retrieval_ready", 0)
 
 	if _has_field(doc.doctype, "published"):
 		doc.set("published", 1)
@@ -3976,12 +4228,15 @@ def publish_knowledge_source(name: str):
 		doc.set("published_by", frappe.session.user)
 
 	doc.save(ignore_permissions=False)
+	sync_result = _sync_source_retrieval_ready_from_answer_approvals(doc.name)
 
 	return {
 		"success": True,
 		"message": "Knowledge Source published successfully.",
 		"activation": activation_result,
-		"readiness": _build_source_readiness_payload(doc),
+		"retrieval_ready": sync_result.get("retrieval_ready"),
+		"answer_approval_summary": sync_result.get("answer_approval_summary"),
+		"readiness": _build_source_readiness_payload(frappe.get_doc("Nexus Knowledge Source", doc.name)),
 	}
 
 @frappe.whitelist()
@@ -4754,6 +5009,8 @@ def run_source_test_cases(
 
     if not cint(include_draft) and "status" in fields:
         filters["status"] = "Active"
+    elif "status" in fields:
+        filters["status"] = ["!=", "Archived"]
 
     limit = cint(limit or 20)
     if limit <= 0:
