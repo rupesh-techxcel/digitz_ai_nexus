@@ -145,6 +145,8 @@ CORE RULES:
 7. If the approved knowledge is insufficient, answer exactly:
 "{safe_fallback}"
 8. Keep the response aligned with the requested response behavior.
+9. Retrieval index entries, possible questions, intellectual summaries, context summaries, scores, and routing metadata are only search signals. Do NOT use them as factual answer content.
+10. The only factual evidence you may use is the text inside each Source's Knowledge section.
 
 RESPONSE BEHAVIOR:
 Mode: {final_mode_label}

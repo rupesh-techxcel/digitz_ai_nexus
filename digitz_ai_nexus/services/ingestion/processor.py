@@ -8,6 +8,11 @@ from digitz_ai_nexus.services.ingestion.parser_txt import extract_txt_text
 from digitz_ai_nexus.services.ingestion.normalizer import normalize_text
 from digitz_ai_nexus.services.ingestion.chunker import chunk_text
 from digitz_ai_nexus.services.ingestion.embeddings import generate_embedding_json
+from digitz_ai_nexus.services.semantic_index import (
+    archive_existing_index_entries,
+    generate_index_entries_for_chunks,
+    refresh_context_summaries_for_chunks,
+)
 
 
 def set_if_field(doc, fieldname, value):
@@ -195,6 +200,7 @@ def create_knowledge_unit(source_doc, normalized_text, processing_version):
     set_if_field(unit, "scope_type", source_doc.get("scope_type") or "general")
     set_if_field(unit, "default_access_policy", access_policy)
     set_if_field(unit, "access_policy", access_policy)
+    set_if_field(unit, "priority", source_doc.get("priority") or 0)
     set_if_field(unit, "allowed_roles", source_doc.get("allowed_roles"))
     set_if_field(unit, "denied_roles", source_doc.get("denied_roles"))
     set_if_field(unit, "disabled", 0 if source_doc.get("status") == "Published" else 1)
@@ -233,6 +239,7 @@ def create_knowledge_chunks(source_doc, unit_doc, chunks, processing_version):
     )
 
     scope_type = source_doc.get("scope_type") or unit_doc.get("scope_type") or "general"
+    priority = source_doc.get("priority") or unit_doc.get("priority") or 0
 
     for index, chunk in enumerate(chunks, start=1):
         chunk_text_value = str(chunk or "").strip()
@@ -270,6 +277,7 @@ def create_knowledge_chunks(source_doc, unit_doc, chunks, processing_version):
         set_if_field(chunk_doc, "chunk_hash", chunk_hash)
         set_if_field(chunk_doc, "character_count", len(chunk_text_value))
         set_if_field(chunk_doc, "source_version", processing_version)
+        set_if_field(chunk_doc, "priority", priority)
 
         set_if_field(chunk_doc, "tenant", source_doc.get("tenant") or unit_doc.get("tenant"))
         set_if_field(chunk_doc, "business_unit", source_doc.get("business_unit") or unit_doc.get("business_unit"))
@@ -368,6 +376,7 @@ def process_knowledge_source(source_name):
         next_version = int(source_doc.get("processing_version") or 0) + 1
 
         archive_existing_chunks(source_doc.name)
+        archived_index_count = archive_existing_index_entries(source_doc.name)
         disable_existing_knowledge_units(source_doc)
 
         chunks = chunk_text(normalized_text, chunk_size=650, overlap=100)
@@ -382,6 +391,15 @@ def process_knowledge_source(source_name):
         embedded_count = chunk_result["embedded_count"]
         warning_count = chunk_result["warning_count"]
         critical_count = chunk_result["critical_count"]
+        index_result = generate_index_entries_for_chunks(
+            created_chunks,
+            chat_category=source_doc.get("chat_category"),
+            generation_method="LLM",
+        )
+        context_summary_result = refresh_context_summaries_for_chunks(
+            created_chunks,
+            generation_method="LLM",
+        )
 
         embedding_status = get_embedding_status_for_chunks(created_chunks)
         processed_time = frappe.utils.now()
@@ -430,7 +448,11 @@ def process_knowledge_source(source_name):
 
         success_log = (
             f"Processed successfully. Created Knowledge Unit {unit_doc.name} "
-            f"and {len(created_chunks)} chunks. Version {next_version}."
+            f"and {len(created_chunks)} chunks. Created "
+            f"{len(index_result.get('created') or [])} semantic index entries. "
+            f"Updated {len(context_summary_result.get('updated') or [])} grouped context summaries. "
+            f"Archived {archived_index_count} old semantic index entries. "
+            f"Version {next_version}."
         )
 
         set_if_field(source_doc, "processing_log", success_log)
@@ -451,6 +473,10 @@ def process_knowledge_source(source_name):
             "diagnostics_status": diagnostics_status,
             "retrieval_ready": 1 if retrieval_ready else 0,
             "chunks": created_chunks,
+            "semantic_index_entries": index_result.get("created") or [],
+            "semantic_index_failed": index_result.get("failed") or [],
+            "context_summaries": context_summary_result.get("updated") or [],
+            "context_summary_failed": context_summary_result.get("failed") or [],
         }
 
     except Exception as e:

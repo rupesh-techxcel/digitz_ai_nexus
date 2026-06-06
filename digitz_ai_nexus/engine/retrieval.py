@@ -27,6 +27,8 @@ STOP_WORDS = {
 VECTOR_WEIGHT = 0.75
 KEYWORD_WEIGHT = 0.20
 PRIORITY_WEIGHT = 0.05
+QUESTION_FIRST_THRESHOLD = 0.68
+QUESTION_FIRST_CANDIDATE_LIMIT = 5
 
 CHUNK_FIELDS = [
     "name",
@@ -56,6 +58,51 @@ CHUNK_FIELDS = [
     "topic",
     "context_path",
     "priority",
+]
+
+INDEX_ENTRY_FIELDS = [
+    "name",
+    "entry_type",
+    "canonical_text",
+    "display_summary",
+    "knowledge_source",
+    "knowledge_unit",
+    "knowledge_chunk",
+    "chat_category",
+    "tenant",
+    "business_unit",
+    "project",
+    "context",
+    "sub_context",
+    "entity_type",
+    "entity",
+    "topic",
+    "context_path",
+    "access_policy",
+    "sensitivity",
+    "priority",
+    "embedding",
+    "embedding_status",
+]
+
+CONTEXT_SUMMARY_FIELDS = [
+    "name",
+    "summary_title",
+    "summary_text",
+    "tenant",
+    "business_unit",
+    "project",
+    "context",
+    "sub_context",
+    "entity_type",
+    "entity",
+    "topic",
+    "context_path",
+    "access_policy",
+    "sensitivity",
+    "priority",
+    "embedding",
+    "embedding_status",
 ]
 
 def normalize_project(value):
@@ -304,6 +351,296 @@ def fetch_chunks(filters):
     return enrich_chunk_roles_from_unit(rows)
 
 
+def semantic_index_available():
+    return frappe.db.exists("DocType", "Nexus Knowledge Index Entry")
+
+
+def context_summary_available():
+    return frappe.db.exists("DocType", "Nexus Knowledge Context Summary")
+
+
+def build_semantic_index_filters(query_contract, entry_types=None):
+    filters = {
+        "disabled": 0,
+        "status": "Active",
+        "embedding_status": "Completed",
+    }
+
+    allowed_policies = query_contract.get("allowed_access_policies")
+    if allowed_policies:
+        filters["access_policy"] = ["in", allowed_policies]
+
+    for field in [
+        "tenant",
+        "business_unit",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+        "chat_category",
+    ]:
+        if query_contract.get(field):
+            filters[field] = query_contract.get(field)
+
+    if entry_types:
+        filters["entry_type"] = ["in", entry_types]
+
+    return filters
+
+
+def fetch_semantic_index_entries(query_contract, entry_types=None):
+    if not semantic_index_available():
+        return []
+
+    meta = frappe.get_meta("Nexus Knowledge Index Entry")
+    valid_fields = [
+        field for field in INDEX_ENTRY_FIELDS
+        if field == "name" or meta.has_field(field)
+    ]
+
+    return frappe.get_all(
+        "Nexus Knowledge Index Entry",
+        filters=build_semantic_index_filters(query_contract, entry_types=entry_types),
+        fields=valid_fields,
+        limit_page_length=700,
+    )
+
+
+def build_context_summary_filters(query_contract):
+    filters = {
+        "disabled": 0,
+        "status": "Active",
+        "embedding_status": "Completed",
+    }
+
+    allowed_policies = query_contract.get("allowed_access_policies")
+    if allowed_policies:
+        filters["access_policy"] = ["in", allowed_policies]
+
+    for field in [
+        "tenant",
+        "business_unit",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+    ]:
+        if query_contract.get(field):
+            filters[field] = query_contract.get(field)
+
+    return filters
+
+
+def fetch_context_summaries(query_contract):
+    if not context_summary_available():
+        return []
+
+    meta = frappe.get_meta("Nexus Knowledge Context Summary")
+    valid_fields = [
+        field for field in CONTEXT_SUMMARY_FIELDS
+        if field == "name" or meta.has_field(field)
+    ]
+
+    return frappe.get_all(
+        "Nexus Knowledge Context Summary",
+        filters=build_context_summary_filters(query_contract),
+        fields=valid_fields,
+        limit_page_length=300,
+    )
+
+
+def score_semantic_index_entries(query_contract, query_embedding=None, embedding_provider=None, entry_types=None):
+    query = query_contract.get("query")
+    if not query:
+        return {}
+
+    entries = fetch_semantic_index_entries(query_contract, entry_types=entry_types)
+    if not entries:
+        return {}
+
+    project = normalize_project(query_contract.get("project"))
+    scope_mode = query_contract.get("project_scope_mode") or "with_general"
+
+    if project:
+        if scope_mode == "strict":
+            entries = [
+                row for row in entries
+                if normalize_project(row.get("project")) == project
+            ]
+        else:
+            entries = [
+                row for row in entries
+                if normalize_project(row.get("project")) in ("", project)
+            ]
+    else:
+        entries = [
+            row for row in entries
+            if not normalize_project(row.get("project"))
+        ]
+
+    if not entries:
+        return {}
+
+    if query_embedding is None:
+        query_embedding = generate_embedding(query, provider=embedding_provider)
+
+    best_by_chunk = {}
+
+    for row in entries:
+        chunk_name = row.get("knowledge_chunk")
+        row_embedding = row.get("embedding")
+
+        if not chunk_name or not row_embedding:
+            continue
+
+        try:
+            vector = cosine_similarity(query_embedding, json.loads(row_embedding))
+        except Exception:
+            vector = 0.0
+
+        text = " ".join([
+            row.get("canonical_text") or "",
+            row.get("display_summary") or "",
+            row.get("context_path") or "",
+        ])
+        key_score = keyword_score(query, text, row.get("context_path"))
+        priority = priority_score(row.get("priority"))
+
+        entry_type = row.get("entry_type")
+        type_boost = {
+            "User Question": 0.08,
+            "Intellectual Summary": 0.06,
+        }.get(entry_type, 0.0)
+
+        score = min((vector * 0.70) + (key_score * 0.22) + (priority * 0.04) + type_boost, 1.0)
+
+        existing = best_by_chunk.get(chunk_name)
+        if existing and float(existing.get("semantic_index_score") or 0) > score:
+            continue
+
+        best_by_chunk[chunk_name] = {
+            "semantic_index_entry": row.get("name"),
+            "semantic_index_type": entry_type,
+            "semantic_index_text": row.get("canonical_text"),
+            "semantic_index_summary": row.get("display_summary"),
+            "semantic_index_score": round(score, 6),
+            "semantic_index_vector_score": round(float(vector or 0), 6),
+            "semantic_index_keyword_score": round(float(key_score or 0), 6),
+        }
+
+    return best_by_chunk
+
+
+def get_question_first_matches(semantic_matches, threshold=QUESTION_FIRST_THRESHOLD):
+    if not semantic_matches:
+        return []
+
+    question_matches = [
+        {
+            **match,
+            "chunk": chunk_name,
+        }
+        for chunk_name, match in semantic_matches.items()
+        if match.get("semantic_index_type") == "User Question"
+        and float(match.get("semantic_index_score") or 0) >= threshold
+    ]
+
+    return sorted(
+        question_matches,
+        key=lambda row: float(row.get("semantic_index_score") or 0),
+        reverse=True,
+    )
+
+
+def group_matches_row(summary, row):
+    for fieldname in [
+        "tenant",
+        "business_unit",
+        "project",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+        "access_policy",
+    ]:
+        summary_value = normalize_project(summary.get(fieldname)) if fieldname == "project" else (summary.get(fieldname) or "")
+        row_value_text = normalize_project(row.get(fieldname)) if fieldname == "project" else (row.get(fieldname) or "")
+
+        if str(summary_value or "") != str(row_value_text or ""):
+            return False
+
+    return True
+
+
+def score_context_summaries(query_contract, query_embedding=None, embedding_provider=None):
+    query = query_contract.get("query")
+    if not query:
+        return []
+
+    summaries = fetch_context_summaries(query_contract)
+    if not summaries:
+        return []
+
+    project = normalize_project(query_contract.get("project"))
+    scope_mode = query_contract.get("project_scope_mode") or "with_general"
+
+    if project:
+        if scope_mode == "strict":
+            summaries = [
+                row for row in summaries
+                if normalize_project(row.get("project")) == project
+            ]
+        else:
+            summaries = [
+                row for row in summaries
+                if normalize_project(row.get("project")) in ("", project)
+            ]
+    else:
+        summaries = [
+            row for row in summaries
+            if not normalize_project(row.get("project"))
+        ]
+
+    if not summaries:
+        return []
+
+    if query_embedding is None:
+        query_embedding = generate_embedding(query, provider=embedding_provider)
+
+    scored = []
+
+    for row in summaries:
+        try:
+            vector = cosine_similarity(query_embedding, json.loads(row.get("embedding") or "[]"))
+        except Exception:
+            vector = 0.0
+
+        text = " ".join([
+            row.get("summary_title") or "",
+            row.get("summary_text") or "",
+            row.get("context_path") or "",
+        ])
+        key_score = keyword_score(query, text, row.get("context_path"))
+        priority = priority_score(row.get("priority"))
+        score = min((vector * 0.68) + (key_score * 0.24) + (priority * 0.08), 1.0)
+
+        scored.append({
+            **row,
+            "context_summary_score": round(score, 6),
+            "context_summary_vector_score": round(float(vector or 0), 6),
+            "context_summary_keyword_score": round(float(key_score or 0), 6),
+        })
+
+    return sorted(
+        scored,
+        key=lambda row: float(row.get("context_summary_score") or 0),
+        reverse=True,
+    )
+
+
 def get_candidate_chunks(query_contract):
     filters = build_context_filters(query_contract)
 
@@ -468,7 +805,53 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
         query_variants = [query] + query_variants
 
     candidate_chunks = get_candidate_chunks(query_contract)
+    original_candidate_count = len(candidate_chunks)
     weights = get_retrieval_weights()
+    base_query_embedding = query_embedding
+
+    if base_query_embedding is None:
+        base_query_embedding = generate_embedding(query, provider=embedding_provider)
+
+    disable_question_first = bool(query_contract.get("disable_question_first"))
+    question_first_matches_by_chunk = {}
+    question_first_matches = []
+
+    if not disable_question_first:
+        question_first_matches_by_chunk = score_semantic_index_entries(
+            query_contract,
+            query_embedding=base_query_embedding,
+            embedding_provider=embedding_provider,
+            entry_types=["User Question"],
+        )
+        question_first_matches = get_question_first_matches(question_first_matches_by_chunk)
+    question_first_chunk_names = [
+        row.get("chunk")
+        for row in question_first_matches[:QUESTION_FIRST_CANDIDATE_LIMIT]
+        if row.get("chunk")
+    ]
+    question_first_applied = False
+
+    if question_first_chunk_names:
+        question_first_chunk_set = set(question_first_chunk_names)
+        narrowed_candidate_chunks = [
+            row for row in candidate_chunks
+            if row_value(row, "name") in question_first_chunk_set
+        ]
+
+        if narrowed_candidate_chunks:
+            candidate_chunks = narrowed_candidate_chunks
+            question_first_applied = True
+
+    semantic_matches = score_semantic_index_entries(
+        query_contract,
+        query_embedding=base_query_embedding,
+        embedding_provider=embedding_provider,
+    )
+    context_summary_matches = score_context_summaries(
+        query_contract,
+        query_embedding=base_query_embedding,
+        embedding_provider=embedding_provider,
+    )
 
     # When allowed_access_policies is present the DB filter already enforced
     # access by classification. Running can_access_chunk() on top would apply
@@ -485,6 +868,8 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     for variant_query in query_variants:
         if query_embedding is not None:
             variant_embedding = query_embedding
+        elif variant_query == query:
+            variant_embedding = base_query_embedding
         else:
             variant_embedding = generate_embedding(
                 variant_query,
@@ -579,6 +964,49 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             candidate["stable_project_score"] = float(candidate.get("project_boost") or 0)
             candidate["stable_rerank_score"] = 0.0
 
+            semantic_match = semantic_matches.get(row_value(row, "name")) or {}
+            semantic_index_score = float(semantic_match.get("semantic_index_score") or 0)
+            semantic_boost = min(semantic_index_score * 0.18, 0.18)
+
+            if semantic_match:
+                candidate.update(semantic_match)
+                candidate["semantic_index_boost"] = round(semantic_boost, 6)
+                candidate["hybrid_score"] = min(
+                    float(candidate.get("hybrid_score") or 0) + semantic_boost,
+                    1.0,
+                )
+                candidate["score"] = candidate.get("hybrid_score") or 0
+                candidate["final_score"] = max(
+                    float(candidate.get("final_score") or 0),
+                    float(candidate.get("hybrid_score") or 0),
+                )
+
+            context_summary_match = next(
+                (
+                    summary for summary in context_summary_matches
+                    if group_matches_row(summary, row)
+                ),
+                None,
+            )
+            context_summary_boost = 0.0
+
+            if context_summary_match:
+                context_summary_score = float(context_summary_match.get("context_summary_score") or 0)
+                context_summary_boost = min(context_summary_score * 0.12, 0.12)
+                candidate["context_summary"] = context_summary_match.get("name")
+                candidate["context_summary_title"] = context_summary_match.get("summary_title")
+                candidate["context_summary_score"] = round(context_summary_score, 6)
+                candidate["context_summary_boost"] = round(context_summary_boost, 6)
+                candidate["hybrid_score"] = min(
+                    float(candidate.get("hybrid_score") or 0) + context_summary_boost,
+                    1.0,
+                )
+                candidate["score"] = candidate.get("hybrid_score") or 0
+                candidate["final_score"] = max(
+                    float(candidate.get("final_score") or 0),
+                    float(candidate.get("hybrid_score") or 0),
+                )
+
             candidate["stable_final_score"] = round(
                 (
                     candidate["stable_vector_score"] * 0.45
@@ -586,6 +1014,8 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
                     + candidate["stable_priority_score"] * 0.10
                     + candidate["stable_project_score"] * 0.10
                     + candidate["stable_rerank_score"] * 0.10
+                    + semantic_boost
+                    + context_summary_boost
                 ),
                 6,
             )
@@ -616,6 +1046,10 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
                 "stable_rerank_score",
                 "stable_final_score",
                 "retrieval_stability_score",
+                "semantic_index_score",
+                "semantic_index_boost",
+                "context_summary_score",
+                "context_summary_boost",
             ]:
                 existing[score_key] = max(
                     float(existing.get(score_key) or 0),
@@ -627,6 +1061,34 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             matched_queries = existing.get("matched_queries") or []
             matched_queries.extend(candidate.get("matched_queries") or [])
             existing["matched_queries"] = list(dict.fromkeys(matched_queries))
+
+            if candidate.get("semantic_index_entry") and (
+                not existing.get("semantic_index_entry")
+                or float(candidate.get("semantic_index_score") or 0) >= float(existing.get("semantic_index_score") or 0)
+            ):
+                for key in [
+                    "semantic_index_entry",
+                    "semantic_index_type",
+                    "semantic_index_text",
+                    "semantic_index_summary",
+                    "semantic_index_score",
+                    "semantic_index_vector_score",
+                    "semantic_index_keyword_score",
+                    "semantic_index_boost",
+                ]:
+                    existing[key] = candidate.get(key)
+
+            if candidate.get("context_summary") and (
+                not existing.get("context_summary")
+                or float(candidate.get("context_summary_score") or 0) >= float(existing.get("context_summary_score") or 0)
+            ):
+                for key in [
+                    "context_summary",
+                    "context_summary_title",
+                    "context_summary_score",
+                    "context_summary_boost",
+                ]:
+                    existing[key] = candidate.get(key)
 
     scored = sorted(
         merged_candidates.values(),
@@ -790,6 +1252,7 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
         "denied": denied,
         "query_variants": query_variants,
         "candidate_count": len(candidate_chunks),
+        "original_candidate_count": original_candidate_count,
         "allowed_count": len(scored),
         "denied_count": len(denied),
         "retrieval_mode": "hybrid_grounded_rag",
@@ -810,6 +1273,15 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
             "multi_query": bool(enable_multi_query),
             "reranking": bool(enable_reranking),
             "retrieval_debug": bool(enable_retrieval_debug),
+            "semantic_index": bool(semantic_matches),
+            "context_summary": bool(context_summary_matches),
+            "question_first": bool(question_first_applied),
+        },
+        "question_first": {
+            "applied": bool(question_first_applied),
+            "threshold": QUESTION_FIRST_THRESHOLD,
+            "matched_chunks": question_first_chunk_names if question_first_applied else [],
+            "match_count": len(question_first_matches),
         },
     }
 def clamp_score(value, minimum=0.0, maximum=1.0):

@@ -450,6 +450,120 @@ footer.web-footer{
 }
 
 /* =========================
+   Hero Product Icon Nodes
+   Three icons at 120° intervals on the orbit ring.
+   Container: 400×400, center: (200,200), ring r=146.
+   Icon 76×76 → top-left = center − 38.
+   chat  (  0°, top):        center (200, 54)  → top:16px  left:162px
+   qa    (120°, btm-right):  center (326,273)  → top:235px left:288px
+   apps  (240°, btm-left):   center ( 74,273)  → top:235px left: 36px
+   ========================= */
+
+.nexus-home .nexus-product-node{
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  z-index:5;
+}
+
+.nexus-home .npn-icon-wrap{
+  width:76px;
+  height:76px;
+  border-radius:22px;
+  overflow:hidden;
+  border:2px solid rgba(255,255,255,0.18);
+  transition:transform 0.28s ease, box-shadow 0.28s ease;
+  flex-shrink:0;
+}
+
+.nexus-home .npn-icon-wrap:hover{
+  transform:scale(1.10) translateY(-4px);
+}
+
+.nexus-home .npn-icon-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.nexus-home .npn-label{
+  display:inline-block;
+  font-size:0.68rem;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.94);
+  background:rgba(255,255,255,0.13);
+  border:1px solid rgba(255,255,255,0.24);
+  border-radius:999px;
+  padding:3px 11px;
+  white-space:nowrap;
+  backdrop-filter:blur(6px);
+}
+
+.nexus-home .npn-sublabel{
+  font-size:0.60rem;
+  font-weight:700;
+  letter-spacing:0.04em;
+  color:rgba(255,255,255,0.72);
+  white-space:nowrap;
+  text-align:center;
+}
+
+/* — Positions — */
+.nexus-home .npn-chat{
+  top:6px;
+  left:162px;
+  animation:nexusIconFloat 4.8s ease-in-out infinite;
+}
+
+.nexus-home .npn-qa{
+  top:235px;
+  left:288px;
+  animation:nexusIconFloat 4.2s ease-in-out 1s infinite;
+}
+
+.nexus-home .npn-apps{
+  top:235px;
+  left:36px;
+  animation:nexusIconFloat 5.4s ease-in-out 2s infinite;
+}
+
+/* — Per-icon glow (blends with dark hero gradient) — */
+.nexus-home .npn-chat .npn-icon-wrap{
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.42),
+    0 0 0 2px rgba(255,255,255,0.16),
+    0 0 38px rgba(33,77,187,0.72);
+}
+
+.nexus-home .npn-qa .npn-icon-wrap{
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.32),
+    0 0 0 2px rgba(255,255,255,0.16),
+    0 0 38px rgba(22,163,127,0.68);
+}
+
+.nexus-home .npn-apps .npn-icon-wrap{
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.40),
+    0 0 0 2px rgba(255,255,255,0.16),
+    0 0 38px rgba(22,163,127,0.55);
+}
+
+@keyframes nexusIconFloat{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-8px); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .nexus-home .nexus-product-node{ animation:none; }
+}
+
+/* =========================
    Intro strip
    ========================= */
 .nexus-home .nexus-intro-strip{
@@ -1601,6 +1715,15 @@ footer.web-footer{
     height:360px;
   }
 
+  /* Wrap 360px, ring r=135. Icon 76×76 (half=38).
+     chat center (180,45): top=7  left=142
+     qa   center (297,247): top=209 left=259
+     apps center (63,247):  top=209 left=25  */
+  .nexus-home .npn-chat{ top:7px;   left:142px; }
+  .nexus-home .npn-qa{   top:209px; left:259px; }
+  .nexus-home .npn-apps{ top:209px; left:25px;  }
+
+
   .nexus-home .nexus-ring{
     width:270px;
     height:270px;
@@ -1741,6 +1864,24 @@ footer.web-footer{
     display:none;
   }
 
+  /* Wrap 300px, ring r=110. Icon shrinks to 62×62 (half=31).
+     chat center (150,40):  top=9   left=119
+     qa   center (245,205): top=174 left=214
+     apps center ( 55,205): top=174 left=24  */
+  .nexus-home .npn-icon-wrap{
+    width:62px;
+    height:62px;
+    border-radius:18px;
+  }
+  .nexus-home .npn-label{
+    font-size:0.62rem;
+    padding:2px 9px;
+  }
+  .nexus-home .npn-sublabel{ display:none; }
+  .nexus-home .npn-chat{ top:4px;   left:119px; }
+  .nexus-home .npn-qa{   top:174px; left:214px; }
+  .nexus-home .npn-apps{ top:174px; left:24px;  }
+
   .nexus-home .nexus-intro-strip{
     margin-top:-18px;
   }
@@ -1874,6 +2015,20 @@ footer.web-footer{
 
   .nexus-home .n2{ right:-24px; }
   .nexus-home .n4{ left:-24px; }
+
+  /* Wrap 240px, ring r=89. Icon shrinks to 50×50 (half=25).
+     chat center (120,31):  top=6   left=95
+     qa   center (197,164): top=139 left=172
+     apps center ( 43,164): top=139 left=18  */
+  .nexus-home .npn-icon-wrap{
+    width:50px;
+    height:50px;
+    border-radius:14px;
+  }
+  .nexus-home .npn-label{ display:none; }
+  .nexus-home .npn-chat{ top:6px;   left:95px;  }
+  .nexus-home .npn-qa{   top:139px; left:172px; }
+  .nexus-home .npn-apps{ top:139px; left:18px;  }
 
   .nexus-home .nexus-card-highlights{
     grid-template-columns:1fr;

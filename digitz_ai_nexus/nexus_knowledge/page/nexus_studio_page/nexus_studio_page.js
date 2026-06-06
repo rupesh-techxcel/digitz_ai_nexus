@@ -673,6 +673,14 @@ class NexusStudioPage {
                     linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
             }
 
+            .nks-source-dashboard-summary,
+            .nks-source-dashboard-index {
+                border-color: rgba(0, 184, 148, 0.22);
+                background:
+                    radial-gradient(circle at 0% 0%, rgba(0, 184, 148, 0.09), transparent 28%),
+                    linear-gradient(180deg, #ffffff 0%, #f4fffc 100%);
+            }
+
             .nks-source-dashboard-panel h4 {
                 margin: 0 0 10px;
                 color: #0b3c91;
@@ -706,6 +714,38 @@ class NexusStudioPage {
                 margin-top: 6px;
                 color: #526887;
                 font-size: 12px;
+                font-weight: 850;
+            }
+
+            .nks-source-summary-title {
+                margin-top: 8px;
+                color: #102b67;
+                font-size: 14px;
+                font-weight: 950;
+            }
+
+            .nks-source-summary-text {
+                margin: 8px 0 0;
+                color: #314d78;
+                font-size: 13px;
+                line-height: 1.55;
+                font-weight: 720;
+            }
+
+            .nks-source-summary-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-top: 12px;
+            }
+
+            .nks-source-summary-meta span {
+                padding: 6px 9px;
+                border-radius: 999px;
+                background: #ffffff;
+                border: 1px solid rgba(0, 184, 148, 0.18);
+                color: #008c78;
+                font-size: 11px;
                 font-weight: 850;
             }
 
@@ -1408,11 +1448,12 @@ class NexusStudioPage {
             ${this.get_summary_card_html('Total Sources', source.total_sources || 0)}
             ${this.get_summary_card_html('Processed Sources', source.ingested || source.processed || 0, 'good')}
             ${this.get_summary_card_html('Published Sources', source.published || 0, 'good')}
+            ${this.get_summary_card_html('Context Summaries', source.context_summaries || 0, 'good')}
+            ${this.get_summary_card_html('Semantic Index', source.semantic_index_entries || 0)}
             ${this.get_summary_card_html('Needs Attention', (source.sync_failed || 0) + (source.disabled || 0), 'warn')}
             ${this.get_summary_card_html('Prepared Units', unit.chunked_units || 0)}
             ${this.get_summary_card_html('Search Ready Units', unit.embedded_units || 0, 'good')}
             ${this.get_summary_card_html('Unit Review Queue', unit.needs_review_units || 0, 'warn')}
-            ${this.get_summary_card_html('Missing Required', unit.missing_required_units || 0, 'warn')}
         `;
     }
 
@@ -1466,6 +1507,8 @@ class NexusStudioPage {
                 ${this.get_summary_card_html('Approved for Ingestion', s.approved_for_ingestion || 0, 'good')}
                 ${this.get_summary_card_html('Ingested', s.ingested || 0, 'good')}
                 ${this.get_summary_card_html('Partially Ingested', s.partially_ingested || 0)}
+                ${this.get_summary_card_html('Context Summaries', s.context_summaries || 0, 'good')}
+                ${this.get_summary_card_html('Semantic Index', s.semantic_index_entries || 0)}
                 ${this.get_summary_card_html('Sync Failed', s.sync_failed || 0, 'warn')}
                 ${this.get_summary_card_html('Stale', s.stale || 0, 'warn')}
                 ${this.get_summary_card_html('Disabled', s.disabled || 0)}
@@ -1596,6 +1639,98 @@ class NexusStudioPage {
         });
 
         return options.join('');
+    }
+
+    get_source_context_summary_dashboard_html(row) {
+        const summary = row.context_summary || {};
+        const exists = Boolean(summary.exists);
+        const status = summary.status || 'Missing';
+
+        return `
+            <div class="nks-source-dashboard-panel ${exists ? 'nks-source-dashboard-summary' : ''}">
+                <div class="nks-source-dashboard-panel-head">
+                    <div>
+                        <h4>Context Documentation Summary</h4>
+                        <p>
+                            Human-readable summary grouped by tenant, context, sub-context, entity, topic, and access policy.
+                        </p>
+                    </div>
+
+                    <div class="nks-source-test-status-pill ${exists ? 'has-tests' : 'no-tests'}">
+                        ${frappe.utils.escape_html(status)}
+                    </div>
+                </div>
+
+                ${
+                    exists
+                        ? `
+                            <div class="nks-source-summary-title">
+                                ${frappe.utils.escape_html(summary.title || summary.name || 'Context Summary')}
+                            </div>
+                            <p class="nks-source-summary-text">
+                                ${frappe.utils.escape_html(summary.summary_preview || summary.summary_text || '')}
+                            </p>
+                            <div class="nks-source-summary-meta">
+                                <span>${frappe.utils.escape_html(String(summary.source_count || 0))} source(s)</span>
+                                <span>${frappe.utils.escape_html(String(summary.chunk_count || 0))} chunk(s)</span>
+                                <span>${frappe.utils.escape_html(summary.embedding_status || '-')}</span>
+                                <span>${frappe.utils.escape_html(summary.generation_method || '-')}</span>
+                            </div>
+                        `
+                        : `
+                            <div class="nks-source-dashboard-note nks-source-dashboard-note-muted">
+                                No grouped summary exists yet for this source scope. Processing an approved source will create or refresh the tenant/context documentation summary.
+                            </div>
+                        `
+                }
+            </div>
+        `;
+    }
+
+    get_source_semantic_index_dashboard_html(row) {
+        const summary = row.semantic_index_summary || {};
+        const total = cint(summary.total || row.semantic_index_count || 0);
+        const hasIndex = total > 0;
+
+        return `
+            <div class="nks-source-dashboard-panel nks-source-dashboard-index">
+                <div class="nks-source-dashboard-panel-head">
+                    <div>
+                        <h4>Semantic Retrieval Index</h4>
+                        <p>
+                            Intent labels and likely user questions used to find the right approved chunks before answer generation.
+                        </p>
+                    </div>
+
+                    <div class="nks-source-test-status-pill ${hasIndex ? 'has-tests' : 'no-tests'}">
+                        ${hasIndex ? `${total} Entr${total === 1 ? 'y' : 'ies'}` : 'No Index'}
+                    </div>
+                </div>
+
+                <div class="nks-source-test-grid">
+                    <div class="nks-source-test-stat">
+                        <div class="nks-source-test-value">${frappe.utils.escape_html(String(summary.intellectual_summary || 0))}</div>
+                        <div class="nks-source-test-label">Intent Summaries</div>
+                    </div>
+                    <div class="nks-source-test-stat">
+                        <div class="nks-source-test-value">${frappe.utils.escape_html(String(summary.user_question || 0))}</div>
+                        <div class="nks-source-test-label">User Questions</div>
+                    </div>
+                    <div class="nks-source-test-stat">
+                        <div class="nks-source-test-value">${frappe.utils.escape_html(String(summary.embedding_completed || 0))}</div>
+                        <div class="nks-source-test-label">Vector Ready</div>
+                    </div>
+                    <div class="nks-source-test-stat">
+                        <div class="nks-source-test-value">${frappe.utils.escape_html(String(summary.embedding_failed || 0))}</div>
+                        <div class="nks-source-test-label">Failed</div>
+                    </div>
+                </div>
+
+                <div class="nks-source-dashboard-note nks-source-dashboard-note-info">
+                    Retrieval checks these entries first for similar intent, then uses the linked approved chunks for grounded Q&A and chat answers.
+                </div>
+            </div>
+        `;
     }
 
     get_source_test_case_dashboard_html(row) {
@@ -2556,6 +2691,9 @@ class NexusStudioPage {
                         <div class="nks-row-sub">
                             ${frappe.utils.escape_html(source_type)}
                         </div>
+                        <div class="nks-row-sub">
+                            Chat: ${frappe.utils.escape_html(row.chat_category || '-')}
+                        </div>
                     </td>
 
                     <td>
@@ -2584,6 +2722,10 @@ class NexusStudioPage {
                         ${readiness_badge}
                         <div class="nks-row-sub">
                             ${frappe.utils.escape_html(row.readiness_message || '')}
+                        </div>
+                        <div class="nks-row-sub">
+                            Summary: ${frappe.utils.escape_html(row.context_summary_status || 'Missing')}
+                            · Index: ${frappe.utils.escape_html(String(row.semantic_index_count || 0))}
                         </div>
                         ${
                             row.missing_fields && row.missing_fields.length
@@ -2870,6 +3012,14 @@ class NexusStudioPage {
                         ${missing_fields_html}
                     </div>
                     <div class="nks-dashboard-full-row">
+                        ${this.get_source_context_summary_dashboard_html(row)}
+                    </div>
+
+                    <div class="nks-dashboard-full-row">
+                        ${this.get_source_semantic_index_dashboard_html(row)}
+                    </div>
+
+                    <div class="nks-dashboard-full-row">
                          ${this.get_source_test_case_dashboard_html(row)}
                      </div>
 
@@ -2915,6 +3065,8 @@ class NexusStudioPage {
                         <p><b>Active Chunk Count:</b> ${frappe.utils.escape_html(String(this.get_source_technical_value(row, technical_status, 'active_chunk_count', 0)))}</p>
                         <p><b>Retrieval Ready:</b> ${this.format_source_yes_no(this.get_source_technical_value(row, technical_status, 'retrieval_ready', 0))}</p>
                         <p><b>Generated Knowledge Unit:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'generated_knowledge_unit'))}</p>
+                        <p><b>Context Summary:</b> ${frappe.utils.escape_html((row.context_summary && row.context_summary.name) || '-')}</p>
+                        <p><b>Semantic Index Entries:</b> ${frappe.utils.escape_html(String(row.semantic_index_count || 0))}</p>
                         <p><b>Last Processed On:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'last_processed_on'))}</p>
                         <p><b>Validation Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'validation_status'))}</p>
                         <p><b>Last Error:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'last_error'))}</p>

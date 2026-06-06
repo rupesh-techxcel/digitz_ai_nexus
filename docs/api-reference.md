@@ -101,6 +101,18 @@ Executes the retrieval engine against a query for testing and debugging.
 
 Returns the full retrieval result including `results`, `denied`, `debug`, `access_status`, and scoring details. Useful for debugging why a chunk is or is not being retrieved.
 
+Current retrieval diagnostics can include:
+
+| Field | Meaning |
+|---|---|
+| features.semantic_index | Whether semantic index entries were available for the query |
+| features.context_summary | Whether grouped context summaries were available |
+| features.question_first | Whether question-first narrowing was applied |
+| original_candidate_count | Candidate chunk count before question-first narrowing |
+| candidate_count | Candidate chunk count after narrowing/fallback path |
+| question_first | Matched chunks, threshold, and match count for the possible-question shortcut |
+| question_first_retry | Present when answer service retried broad content search after question-first no/low context |
+
 ---
 
 ## Setup

@@ -8,12 +8,74 @@ BUSINESS_UNIT = "DIGITZ AI NEXUS"
 PUBLIC_CONTEXT = "DIGITZ AI NEXUS WEBSITE"
 INTERNAL_CONTEXT = "DIGITZ AI NEXUS INTERNAL"
 CHANNEL = "WEBSITE-CHAT"
-CHAT_CATEGORY = "GENERAL-SUPPORT"
+CHAT_CATEGORY = "Nexus Platform Know-How"
 PUBLIC_AGENT = "PUBLIC-AI-ASSISTANT"
 INTERNAL_AGENT = "INTERNAL-AI-ASSISTANT"
 
 
 PUBLIC_SOURCES = [
+    {
+        "title": "DIGITZ AI Nexus - Nexus Platform Know-How",
+        "context": PUBLIC_CONTEXT,
+        "sub_context": "Public Website",
+        "entity_type": "Product Knowledge",
+        "entity": "DIGITZ AI Nexus",
+        "topic": "Nexus Platform Know-How",
+        "chat_category": CHAT_CATEGORY,
+        "access_policy": "Public",
+        "priority": 10,
+        "manual_content": """
+DIGITZ AI Nexus is a governed AI knowledge and chat platform for organizations that need controlled answers from approved knowledge.
+
+DIGITZ AI Nexus helps a business make approved knowledge available through public website chat, Q&A widgets, internal chat, support workflows, and future AI assistant experiences.
+
+Nexus does not treat AI as an uncontrolled answering tool. Nexus organizes approved knowledge, applies tenant and access boundaries, retrieves only permitted content, and prepares grounded answers.
+
+The primary business problem solved by Nexus is safe enterprise AI adoption. Organizations can let visitors, customers, and employees ask natural language questions while keeping answers limited to approved and permitted knowledge.
+
+The core value of Nexus is governed enterprise AI. Approved knowledge is managed before use. Knowledge is classified by tenant, business unit, public context, topic, and access policy. Runtime retrieval checks those boundaries before an answer is produced.
+
+Public website chat in Nexus is limited to public knowledge. A public visitor can ask about the product, features, high-level governance model, public support direction, demo interest, and contact guidance.
+
+Public website chat must not expose internal configuration, customer-private information, credentials, restricted runbooks, admin operations, internal routing details, or account-specific content.
+
+If approved public knowledge is insufficient, Nexus should not guess. The assistant should explain that it does not have enough approved knowledge and guide the visitor to contact the DIGITZ AI Nexus team.
+
+Nexus supports different chat access levels by combining the channel, selected chat category, and verified identity level. The resolved route selects the correct AI Agent Profile and access boundary.
+
+Verification does not unlock all knowledge. Verification selects the right profile and the right access boundary. Public users remain limited to public knowledge. Verified users can receive additional knowledge only when their identity, chat purpose, profile, and access policy allow it.
+
+Nexus can support public website visitors, verified customers, support users, internal employees, and future API-based assistant calls through the same governed knowledge model.
+
+Nexus Studio is used to feed, classify, process, validate, and publish knowledge. Knowledge can be entered manually or through supported document sources, then converted into retrievable chunks with embeddings.
+
+Nexus Administration manages tenant configuration and runtime defaults. Nexus Live supports public website chat and internal chat operations. Nexus Platform supports diagnostics, validation, access checks, and readiness evidence.
+
+Nexus Support is a customer support experience powered by DIGITZ AI Nexus. It can answer from approved support knowledge, ask clarifying questions, prepare ticket-ready summaries, and escalate unresolved or policy-sensitive requests to human teams.
+
+Nexus Support should be understood as a support enablement layer, not only as a chatbot. It improves first response, issue intake, repetitive support handling, and handoff quality.
+
+A ticket-ready support handoff can include customer identity or verified contact path, affected product or workflow, issue summary, steps already attempted, AI guidance already given, priority, attachments when available, and recommended next action.
+
+DIGITZ AI Nexus can evolve beyond knowledge answers into controlled ERP AI tool integration. Authorized users can ask for business outcomes in natural language while Nexus uses permitted ERP tools, APIs, workflows, reports, and transaction services.
+
+ERP AI tool integration must remain governed. Public chat can explain ERP capabilities from public knowledge. Internal staff can use ERP tools only when identity, profile, role, and access policies allow it.
+
+ERP database queries, document lookups, reports, and transactions must be authenticated, authorized, validated, and auditable. Sensitive operations should require confirmation, approval, or workflow handoff before execution.
+
+Nexus can support SOP implementation by turning approved procedures into conversational guidance. Employees can ask process questions, follow step-by-step workflows, understand required documents and approvals, and escalate exceptions with context.
+
+Nexus can support employee onboarding by answering approved questions about policies, departments, tools, workflows, responsibilities, checklists, support channels, and training paths.
+
+Nexus can support customer support and ticketing by answering common questions, collecting issue context, creating structured ticket summaries, suggesting next steps, escalating unresolved issues, and giving support agents conversation context.
+
+Nexus can support training by turning approved product knowledge, SOPs, onboarding material, policy documents, and process manuals into role-aware conversational assistance.
+
+Nexus answers should preserve approved facts and avoid invented claims. The system should provide citations when required and keep query logs for traceability, quality review, audit, and operational improvement.
+
+Nexus Platform Know-How is the public chat category for explaining DIGITZ AI Nexus at a product and commercial level. It should cover what Nexus is, what it does, how governed knowledge works, how public chat and Q&A work, how verification protects access, how support escalation works, and how ERP or business systems can be connected safely.
+""",
+    },
     {
         "title": "DIGITZ AI Nexus - Public Overview",
         "context": PUBLIC_CONTEXT,
@@ -21,6 +83,7 @@ PUBLIC_SOURCES = [
         "entity_type": "Product",
         "entity": "DIGITZ AI Nexus",
         "topic": "Overview",
+        "chat_category": CHAT_CATEGORY,
         "access_policy": "Public",
         "priority": 8,
         "manual_content": """
@@ -40,6 +103,7 @@ The core value of Nexus is safe enterprise AI: knowledge is organized, chunked, 
         "entity_type": "Feature",
         "entity": "Website Chat",
         "topic": "Capabilities",
+        "chat_category": CHAT_CATEGORY,
         "access_policy": "Public",
         "priority": 8,
         "manual_content": """
@@ -59,6 +123,7 @@ Visitors can ask questions such as: What is DIGITZ AI Nexus? What can the websit
         "entity_type": "FAQ",
         "entity": "DIGITZ AI Nexus",
         "topic": "Frequently Asked Questions",
+        "chat_category": CHAT_CATEGORY,
         "access_policy": "Public",
         "priority": 7,
         "manual_content": """
@@ -87,6 +152,7 @@ Answer: No. Public chat is routed through public-only access and should retrieve
         "entity_type": "Support",
         "entity": "DIGITZ AI Nexus",
         "topic": "Contact and Escalation",
+        "chat_category": CHAT_CATEGORY,
         "access_policy": "Public",
         "priority": 6,
         "manual_content": """
@@ -106,6 +172,7 @@ Escalation should be used when a visitor needs human assistance, when the questi
         "entity_type": "Governance",
         "entity": "DIGITZ AI Nexus",
         "topic": "Privacy and Data Usage",
+        "chat_category": CHAT_CATEGORY,
         "access_policy": "Public",
         "priority": 6,
         "manual_content": """
@@ -397,14 +464,14 @@ def ensure_chat_category():
         doc = frappe.new_doc("Nexus Chat Category")
         doc.category_code = CHAT_CATEGORY
 
-    doc.category_label = "General Support"
+    doc.category_label = "Nexus Platform Know-How"
     doc.channel = CHANNEL
     doc.enabled = 1
     doc.requires_authentication = 0
     doc.identity_verification_mode = "None"
     doc.allow_public_fallback = 0
     doc.display_order = 10
-    doc.description = "General public website support category for DIGITZ AI Nexus."
+    doc.description = "Public website category for DIGITZ AI Nexus product, platform, governance, Q&A, chat, support, and ERP know-how."
     doc.save(ignore_permissions=True)
     return doc.name
 
@@ -590,6 +657,8 @@ def upsert_knowledge_source(source):
     doc.entity_type = source["entity_type"]
     doc.entity = source["entity"]
     doc.topic = source["topic"]
+    if doc.meta.has_field("chat_category"):
+        doc.chat_category = source.get("chat_category") or CHAT_CATEGORY
     doc.access_policy = source["access_policy"]
     doc.status = "Published"
     doc.priority = source.get("priority", 0)

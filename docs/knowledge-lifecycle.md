@@ -4,14 +4,17 @@ This document covers how knowledge enters the system, how it is processed into r
 
 ---
 
-## Three-Layer Model
+## Knowledge Storage Model
 
-Knowledge is stored across three DocTypes in a parent-child hierarchy:
+Approved content is stored across the source/unit/chunk hierarchy, then supported by two semantic layers:
 
 ```
 Nexus Knowledge Source
     └── Nexus Knowledge Unit
             └── Nexus Knowledge Chunk (retrievable)
+
+Nexus Knowledge Index Entry       (chunk-linked semantic retrieval metadata)
+Nexus Knowledge Context Summary   (group-level human-readable summary)
 ```
 
 | Layer | Purpose | Autoname |
@@ -19,6 +22,8 @@ Nexus Knowledge Source
 | Knowledge Source | Top-level entry; holds source file or manual content | field:title |
 | Knowledge Unit | Parsed and versioned content unit; created from a source | NKU-.##### |
 | Knowledge Chunk | Smallest retrievable unit; carries embedding and access policy | NKC-.##### |
+| Knowledge Index Entry | Chunk-linked possible questions and intellectual summaries used for retrieval | NKIE-.##### |
+| Knowledge Context Summary | Consolidated summary for a tenant/classification group | NKCS-.##### |
 
 **Access policy propagates downward:**
 
@@ -27,6 +32,8 @@ Source.access_policy → Unit.access_policy → Chunk.access_policy
 ```
 
 Retrieval filters are applied at the **chunk level** — this is the runtime enforcement point.
+
+The source is provenance. The chunk is the grounded answer content. The context summary is not owned by a single source; it is owned by the tenant/classification group and can consolidate many sources that describe the same aspect.
 
 ---
 
@@ -52,6 +59,7 @@ Retrieval filters are applied at the **chunk level** — this is the runtime enf
 | access_policy | Link → Nexus Access Policy | **Required before publishing** |
 | status | Select | Draft / Ready to Publish / Published / Archived |
 | priority | Int | Boosts retrieval score for this source's chunks |
+| chat_category | Link → Nexus Chat Category | Optional category used by chat/Q&A routing |
 | processing_status | Select | Tracks ingestion progress |
 | embedding_status | Select | Tracks embedding generation progress |
 | diagnostics_status | Select | Quality check status |
@@ -112,6 +120,13 @@ Triggered by `services/knowledge_source_processor.py` → `process_knowledge_sou
 8. Update source status flags:
    - processing_status, embedding_status, diagnostics_status
    - Set retrieval_ready = 1 if conditions are met
+9. Generate `Nexus Knowledge Index Entry` rows for each new chunk:
+   - `Intellectual Summary`: intent-oriented meaning labels, e.g. "what a cat is"
+   - `User Question`: likely questions that the chunk can answer
+   - Each entry links to the source, unit, chunk, chat category, access policy, and classification fields
+10. Refresh `Nexus Knowledge Context Summary` for each affected tenant/classification group:
+   - Uses all active completed chunks in the same group
+   - Updates `source_count`, `chunk_count`, `generated_from_sources`, summary text, and embedding
 ```
 
 ### Chunking Algorithm
@@ -199,6 +214,76 @@ The source's `retrieval_ready` flag is also checked at a higher level before fet
 
 ---
 
+## Knowledge Index Entry
+
+`Nexus Knowledge Index Entry` stores retrieval-friendly semantic metadata. It is **chunk-owned** and exists to find the correct approved chunk faster.
+
+### Entry Types
+
+| Entry Type | Purpose |
+|---|---|
+| Intellectual Summary | Technical intent label describing what the fact is about |
+| User Question | Likely user question that can be answered by the linked chunk |
+
+### Ownership
+
+```
+Tenant / Classification / Access Policy
+    └── Knowledge Source
+            └── Knowledge Unit
+                    └── Knowledge Chunk
+                            └── Knowledge Index Entry
+```
+
+Every index entry carries:
+
+- `knowledge_source`, `knowledge_unit`, `knowledge_chunk`
+- `tenant`, `business_unit`, `project`
+- `context`, `sub_context`, `entity_type`, `entity`, `topic`, `context_path`
+- `access_policy`, `sensitivity`, `priority`
+- `chat_category`
+- `embedding`, `embedding_model`, `embedding_status`
+
+The index entry is never treated as answer evidence. It is a retrieval shortcut that points back to the approved chunk.
+
+---
+
+## Knowledge Context Summary
+
+`Nexus Knowledge Context Summary` stores a consolidated human-readable summary for a tenant/classification group. It is **group-owned**, not source-owned.
+
+### Group Key
+
+The summary is grouped by:
+
+```
+tenant
+business_unit
+project
+context
+sub_context
+entity_type
+entity
+topic
+access_policy
+```
+
+This allows multiple sources about the same business aspect to contribute to one summary.
+
+### Coverage Fields
+
+| Field | Purpose |
+|---|---|
+| source_count | Number of active contributing sources |
+| chunk_count | Number of active completed chunks in the group |
+| generated_from_sources | JSON list of source names |
+| summary_text | Human-readable group summary |
+| embedding | Vector used as a broad retrieval signal |
+
+The context summary can be shown in Q&A popup summary sections and can boost retrieval toward the right group. It is not used as factual answer text unless the same facts are present in approved chunks.
+
+---
+
 ## Test Cases and Test Runs
 
 `Nexus Knowledge Test Case` and `Nexus Knowledge Test Run` support pre-publish validation.
@@ -217,6 +302,9 @@ When a source is re-processed:
 2. Old chunks are archived (`disabled = 1`)
 3. A new unit is created with an incremented version number
 4. New chunks are generated and embedded
-5. `retrieval_ready` is reset and recalculated
+5. Old index entries for that source are archived
+6. New chunk-linked index entries are generated
+7. Affected grouped context summaries are refreshed
+8. `retrieval_ready` is reset and recalculated
 
 The old data is kept in the database for traceability. Only the new chunks participate in retrieval.

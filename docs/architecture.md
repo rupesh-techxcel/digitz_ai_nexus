@@ -91,6 +91,13 @@ Generate query embedding
 (engine/embedding.py → OpenAI text-embedding-3-small)
     │
     ▼
+Check User Question index entries
+(Nexus Knowledge Index Entry → linked chunks)
+    │
+    ├── strong match → narrow candidate chunks
+    └── no strong match → broad chunk search
+    │
+    ▼
 Fetch candidate chunks from DB
 (filters: access_policy IN allowed, disabled=0, embedding_status=Completed)
     │
@@ -98,6 +105,10 @@ Fetch candidate chunks from DB
 Score candidates — hybrid
 (vector 75% + keyword 20% + priority 5%)
 (engine/retrieval_engine/scoring.py)
+    │
+    ▼
+Apply semantic boosts
+(Intellectual Summary/User Question index + Context Summary)
     │
     ▼
 Re-rank candidates
@@ -110,11 +121,12 @@ Apply scope balance (project vs general)
 Check confidence threshold
 (answer_service.py → min 0.20 default)
     │
-    ├── Below threshold → safe fallback response
+    ├── Question-first no/low context → retry broad content retrieval
+    ├── Below threshold after retry → safe fallback response
     │
     ▼
 Build prompt
-(engine/prompt.py — behavior-driven, mode-aware)
+(engine/prompt.py — behavior-driven, mode-aware, approved chunks only)
     │
     ▼
 Call LLM
@@ -192,5 +204,8 @@ See [Tenant and Tenant Configuration](tenant-ecosystem.md) for the admin page ma
 3. **Chunk-level enforcement** — access policy is stored on each chunk and checked at retrieval time via `chunk.access_policy IN [allowed_policies]`.
 4. **Profile-driven behavior** — tone, style, fallback, and do-not-answer rules come from `Nexus AI Agent Profile` fields. `Nexus AI Behaviour` is a template only.
 5. **Hybrid retrieval** — combines vector similarity with keyword matching and priority boosting for better recall and precision.
-6. **Configurable, not hard-coded** — only `Public` is a primitive policy. All others are user-defined. Chunk size, scoring weights, and model choices are settings.
-7. **App isolation** — retrieval logic, access resolution, and prompt building live only in this app. The live and experience apps call these services; they do not reimplement them.
+6. **Semantic support layers are retrieval signals** — `Nexus Knowledge Index Entry` and `Nexus Knowledge Context Summary` improve routing and ranking, but final answers remain grounded in approved chunk text.
+7. **Question-first is guarded** — likely user questions can narrow retrieval to linked chunks, but no/low-confidence narrowed results retry broader chunk search before fallback.
+8. **Prompt evidence boundary** — the LLM is told that possible questions, intellectual summaries, context summaries, scores, and routing metadata are search signals only.
+9. **Configurable, not hard-coded** — only `Public` is a primitive policy. All others are user-defined. Chunk size, scoring weights, and model choices are settings.
+10. **App isolation** — retrieval logic, access resolution, and prompt building live only in this app. The live and experience apps call these services; they do not reimplement them.

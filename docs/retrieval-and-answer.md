@@ -18,6 +18,7 @@ Guard: allowed_access_policies must not be empty
 Retrieve chunks  (engine/retrieval.py)
     │
     ├── access_status = "restricted" → return restricted response
+    ├── question-first produced no/weak usable context → retry broad content retrieval
     ├── no chunks found → return safe fallback
     │
     ▼
@@ -60,6 +61,8 @@ The `query_contract` dict must include:
 | project | No | Narrow by project |
 | project_scope_mode | No | `with_general` (default) or `strict` |
 | top_k | No | Override top-K setting |
+| chat_category | No | Narrows semantic index lookup for routed chat/Q&A |
+| disable_question_first | No | Internal retry flag; bypasses question-first narrowing |
 | user.roles | No | Used by legacy role-based check |
 | is_public / force_public_only | No | Forces Public-only filter |
 
@@ -84,14 +87,41 @@ filters = {
 
 Chunks are fetched from `Nexus Knowledge Chunk`. Role fields are then enriched from the parent `Nexus Knowledge Unit` (for legacy role-based checks).
 
-### Step 3: Project Scope Modes
+### Step 3: Question-First Semantic Index
+
+Before broad chunk scoring, retrieval checks `Nexus Knowledge Index Entry` rows with `entry_type = "User Question"`.
+
+If one or more possible questions match the user query above `QUESTION_FIRST_THRESHOLD` (`0.68`), retrieval narrows candidate chunks to the linked `knowledge_chunk` values, capped by `QUESTION_FIRST_CANDIDATE_LIMIT` (`5`).
+
+This is an optimization, not a guarantee:
+
+- It is used only when confidence is high.
+- It only identifies candidate chunks.
+- It does not answer from the stored question text.
+- If no strong possible-question match exists, retrieval continues with the normal broader content search.
+- If answer service later finds that the narrowed result is missing or below confidence, it retries retrieval with `disable_question_first = 1`.
+
+`Nexus Knowledge Index Entry` can also contain `entry_type = "Intellectual Summary"`. These entries are scored as semantic retrieval signals and boost linked chunks, but they do not by themselves narrow the candidate set.
+
+### Step 4: Context Summary Signal
+
+Retrieval also scores matching `Nexus Knowledge Context Summary` records. These summaries are grouped by tenant/business unit/context/sub-context/entity/topic/access policy.
+
+The context summary:
+
+- boosts chunks that belong to the same classification group,
+- helps broad routing toward the right knowledge area,
+- is not answer evidence,
+- is not passed to the LLM as approved factual knowledge.
+
+### Step 5: Project Scope Modes
 
 | Mode | Behavior |
 |---|---|
 | `with_general` (default) | Returns chunks from the requested project AND general chunks (no project) |
 | `strict` | Returns only chunks from the exact requested project |
 
-### Step 4: Hybrid Scoring
+### Step 6: Hybrid Scoring
 
 For each query variant and each candidate chunk, a composite score is calculated:
 
@@ -126,27 +156,29 @@ why, when, where, does, do, can, you, me, explain, tell
 
 **Priority score:** Normalized chunk priority (`chunk.priority / 10`, capped at 1.0).
 
-### Step 5: Multi-Query Merge
+Semantic index and context summary scores can add bounded boosts to `hybrid_score` after the base chunk score is calculated. The final answer still uses the linked chunk's `chunk_text` as the grounded source.
+
+### Step 7: Multi-Query Merge
 
 Across all query variants, the best score for each chunk is kept. `matched_queries` accumulates which variants each chunk matched.
 
-### Step 6: Sort and Limit
+### Step 8: Sort and Limit
 
 Candidates are sorted descending by `(hybrid_score, retrieval_stability_score, keyword_score, vector_score, priority_score)`. The list is then trimmed to `retrieval_candidate_limit` (default 30).
 
-### Step 7: Restricted Check
+### Step 9: Restricted Check
 
 Before re-ranking, the engine compares the best-scoring denied chunk against the best-scoring allowed chunk. If the denied chunk scores higher, the result is `access_status: restricted` — meaning the system has relevant knowledge but the user cannot access it.
 
-### Step 8: Re-ranking
+### Step 10: Re-ranking
 
 If `enable_reranking = 1`, `engine/retrieval_engine/reranker.py` re-ranks candidates. It applies bonus scores based on secondary signals (exact match, project alignment, semantic quality). Re-ranking adjusts `rank_after_rerank`, `rerank_bonus`, and `rerank_score` on each candidate.
 
-### Step 9: Scope Balance
+### Step 11: Scope Balance
 
 `apply_scope_balance()` ensures the final top-K results include at least one project-specific chunk and one general chunk when both exist. This prevents project-scoped queries from returning only generic knowledge.
 
-### Step 10: Return
+### Step 12: Return
 
 ```python
 {
@@ -155,6 +187,7 @@ If `enable_reranking = 1`, `engine/retrieval_engine/reranker.py` re-ranks candid
     "denied": [...],              # denied chunks with reasons
     "query_variants": [...],
     "candidate_count": N,
+    "original_candidate_count": N,
     "allowed_count": N,
     "denied_count": N,
     "retrieval_mode": "hybrid_grounded_rag",
@@ -162,6 +195,12 @@ If `enable_reranking = 1`, `engine/retrieval_engine/reranker.py` re-ranks candid
     "access_status": "allowed" | "no_context" | "restricted",
     "weights": {...},
     "features": {...},
+    "question_first": {
+        "applied": true | false,
+        "threshold": 0.68,
+        "matched_chunks": ["NKC-..."],
+        "match_count": N,
+    },
 }
 ```
 
@@ -178,6 +217,8 @@ stable_final_score =
   + rerank_score  × 0.10
 ```
 
+Semantic index and context summary boosts are also included in the pre-rerank stability score so the linked chunk remains visible in diagnostics.
+
 ---
 
 ## Confidence Calculation
@@ -192,7 +233,9 @@ confidence = (top_score * 0.7) + (avg_score * 0.3)
 
 `final_score` is preferred, falling back to `score`, then `hybrid_score`.
 
-The minimum confidence threshold defaults to **0.20** and is configurable in `Nexus Settings.minimum_confidence`. If retrieved chunks fail to meet the threshold, a safe fallback response is returned.
+The minimum confidence threshold defaults to **0.20** and is configurable in `Nexus Settings.minimum_confidence`.
+
+If retrieved chunks fail to meet the threshold and question-first narrowing was applied, `answer_query()` retries retrieval with `disable_question_first = 1`. This ensures a possible-question match cannot suppress broader content search. If the retry finds restricted knowledge, the response remains restricted. If the retry still cannot produce grounded context, a safe fallback response is returned.
 
 ---
 
@@ -253,7 +296,9 @@ CORE RULES:
 2. Do NOT guess, invent, or add outside knowledge.
 3. Do NOT expose restricted or hidden information.
 4. Preserve exact named labels, policies, codes, and identifiers from the knowledge.
-5–8. ...
+5. Retrieval index entries, possible questions, intellectual summaries, context summaries, scores, and routing metadata are only search signals.
+6. The only factual evidence the LLM may use is the text inside each Source's Knowledge section.
+7. If approved knowledge is insufficient, return the configured safe fallback exactly.
 
 RESPONSE BEHAVIOR:
 Mode: {mode_label}
@@ -311,6 +356,7 @@ ANSWER:
 This exact string is returned when:
 - No chunks retrieved
 - Confidence below threshold
+- Question-first and broad retry cannot produce usable approved context
 - LLM returns empty response
 - LLM echoes back the fallback phrase verbatim
 

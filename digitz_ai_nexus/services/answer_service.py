@@ -48,6 +48,33 @@ def answer_query(
             denied=denied,
         )
 
+    if not chunks and (retrieval_result.get("question_first") or {}).get("applied"):
+        retry_result = retry_without_question_first(
+            payload,
+            retrieval_fn=retrieval_fn,
+            embedding_provider=embedding_provider,
+            query_embedding=query_embedding,
+            reason="question_first_no_context",
+        )
+        retry_chunks = retry_result.get("results") or []
+        retry_denied = retry_result.get("denied") or []
+
+        if retry_result.get("access_status") == "restricted" or retry_denied:
+            return build_restricted_response(
+                retrieval_result=retry_result,
+                denied=retry_denied,
+            )
+
+        if retry_chunks:
+            retrieval_result = retry_result
+            chunks = retry_chunks
+            denied = retry_denied
+        else:
+            return build_safe_fallback(
+                retrieval_result=retry_result,
+                denied=retry_denied or denied,
+            )
+
     if not chunks:
         return build_safe_fallback(
             retrieval_result=retrieval_result,
@@ -58,10 +85,45 @@ def answer_query(
     minimum_confidence = get_minimum_confidence()
 
     if confidence < minimum_confidence:
+        if (retrieval_result.get("question_first") or {}).get("applied"):
+            retry_result = retry_without_question_first(
+                payload,
+                retrieval_fn=retrieval_fn,
+                embedding_provider=embedding_provider,
+                query_embedding=query_embedding,
+            )
+            retry_chunks = retry_result.get("results") or []
+            retry_denied = retry_result.get("denied") or []
+            retry_confidence = calculate_confidence(retry_chunks)
+
+            if retry_result.get("access_status") == "restricted" or retry_denied:
+                return build_restricted_response(
+                    retrieval_result=retry_result,
+                    denied=retry_denied,
+                )
+
+            if retry_chunks and retry_confidence >= minimum_confidence:
+                retrieval_result = retry_result
+                chunks = retry_chunks
+                confidence = retry_confidence
+            else:
+                return build_safe_fallback(
+                    retrieval_result=retry_result or retrieval_result,
+                    denied=retry_result.get("denied") if retry_result else denied,
+                    confidence=max(confidence, retry_confidence),
+                )
+
+        else:
+            return build_safe_fallback(
+                retrieval_result=retrieval_result,
+                denied=denied,
+                confidence=confidence,
+            )
+
+    if not chunks:
         return build_safe_fallback(
             retrieval_result=retrieval_result,
             denied=denied,
-            confidence=confidence,
         )
 
     prompt = build_prompt(payload, chunks)
@@ -95,6 +157,28 @@ def answer_query(
         "retrieval_result": retrieval_result,
         "fallback_used": 0,
     }
+
+
+def retry_without_question_first(
+    payload,
+    retrieval_fn,
+    embedding_provider=None,
+    query_embedding=None,
+    reason="question_first_low_confidence",
+):
+    retry_payload = dict(payload or {})
+    retry_payload["disable_question_first"] = 1
+
+    retry_result = retrieval_fn(
+        retry_payload,
+        query_embedding=query_embedding,
+        embedding_provider=embedding_provider,
+    )
+    retry_result["question_first_retry"] = {
+        "reason": reason,
+        "used_broader_content_search": True,
+    }
+    return retry_result
         
 def build_sources(chunks):
     sources = []
@@ -149,6 +233,14 @@ def build_sources(chunks):
             "rank_after_rerank": row.get("rank_after_rerank"),
             "rerank_reason": row.get("rerank_reason"),
             "rerank_reasons": row.get("rerank_reasons") or [],
+            "semantic_index_entry": row.get("semantic_index_entry"),
+            "semantic_index_type": row.get("semantic_index_type"),
+            "semantic_index_score": row.get("semantic_index_score"),
+            "semantic_index_boost": row.get("semantic_index_boost"),
+            "context_summary": row.get("context_summary"),
+            "context_summary_title": row.get("context_summary_title"),
+            "context_summary_score": row.get("context_summary_score"),
+            "context_summary_boost": row.get("context_summary_boost"),
         })
 
     return sources

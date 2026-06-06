@@ -42,6 +42,13 @@ Nexus Knowledge Source  →  Nexus Knowledge Unit  →  Nexus Knowledge Chunk
 
 Access policy is set at the source and propagates down to chunks. Retrieval filters at the **chunk level**.
 
+Processing also builds two semantic support layers:
+
+- **Nexus Knowledge Index Entry** — chunk-linked intellectual summaries and likely user questions. These are stored with embeddings and point back to approved chunks.
+- **Nexus Knowledge Context Summary** — tenant/classification/access-policy summary consolidated across sources in the same group.
+
+The index and summary layers improve retrieval. They are not used as answer evidence; answers remain grounded in approved chunk text.
+
 ### Access Governance
 
 Access is category-based, not direct role-to-policy:
@@ -71,6 +78,8 @@ hybrid_score = (vector × 0.75) + (keyword × 0.20) + (priority × 0.05)
 ```
 
 Query expansion, re-ranking, and scope balancing are all configurable via `Nexus Settings`.
+
+Before broad chunk scoring, Nexus can use a question-first shortcut: stored `User Question` index entries are checked for a strong match and, when confident, narrow retrieval to linked chunks. If that narrowed path produces no usable or low-confidence context, answer generation retries the broader chunk/content search before falling back.
 
 ### Security
 

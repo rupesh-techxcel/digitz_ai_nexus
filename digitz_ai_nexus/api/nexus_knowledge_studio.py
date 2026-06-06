@@ -450,6 +450,7 @@ def _get_knowledge_source_fields():
         "source_reference_name",
         "manual_content",
         "extracted_text",
+        "chat_category",
         "context",
         "sub_context",
         "entity_type",
@@ -504,6 +505,194 @@ def _get_source_content_value(row):
         return extracted_text
 
     return None
+
+
+def _build_group_match_filters(doctype, row):
+    if not frappe.db.exists("DocType", doctype):
+        return None
+
+    meta = frappe.get_meta(doctype)
+    filters = {}
+
+    for fieldname in [
+        "tenant",
+        "business_unit",
+        "project",
+        "context",
+        "sub_context",
+        "entity_type",
+        "entity",
+        "topic",
+        "access_policy",
+    ]:
+        if not meta.has_field(fieldname):
+            continue
+
+        value = _normalize_context_value(row.get(fieldname))
+        filters[fieldname] = value if value else ["in", ["", None]]
+
+    return filters
+
+
+def _count_context_summaries(active_context):
+    if not frappe.db.exists("DocType", "Nexus Knowledge Context Summary"):
+        return 0
+
+    filters = {}
+    filters = _apply_active_context_filters_for_doctype(
+        "Nexus Knowledge Context Summary",
+        filters,
+        active_context,
+    )
+
+    meta = frappe.get_meta("Nexus Knowledge Context Summary")
+
+    if meta.has_field("disabled"):
+        filters["disabled"] = 0
+
+    if meta.has_field("status"):
+        filters["status"] = "Active"
+
+    return frappe.db.count("Nexus Knowledge Context Summary", filters)
+
+
+def _count_semantic_index_entries(active_context):
+    if not frappe.db.exists("DocType", "Nexus Knowledge Index Entry"):
+        return 0
+
+    filters = {}
+    filters = _apply_active_context_filters_for_doctype(
+        "Nexus Knowledge Index Entry",
+        filters,
+        active_context,
+    )
+
+    meta = frappe.get_meta("Nexus Knowledge Index Entry")
+
+    if meta.has_field("disabled"):
+        filters["disabled"] = 0
+
+    if meta.has_field("status"):
+        filters["status"] = "Active"
+
+    return frappe.db.count("Nexus Knowledge Index Entry", filters)
+
+
+def _get_source_context_summary(row):
+    if not frappe.db.exists("DocType", "Nexus Knowledge Context Summary"):
+        return {
+            "exists": 0,
+            "status": "Missing",
+        }
+
+    filters = _build_group_match_filters("Nexus Knowledge Context Summary", row)
+    if not filters:
+        return {
+            "exists": 0,
+            "status": "Missing",
+        }
+
+    meta = frappe.get_meta("Nexus Knowledge Context Summary")
+
+    if meta.has_field("disabled"):
+        filters["disabled"] = 0
+
+    if meta.has_field("status"):
+        filters["status"] = "Active"
+
+    fields = [
+        "name",
+        "summary_title",
+        "summary_text",
+        "source_count",
+        "chunk_count",
+        "embedding_status",
+        "generated_on",
+        "generation_method",
+    ]
+    fields = [fieldname for fieldname in fields if fieldname == "name" or meta.has_field(fieldname)]
+
+    rows = frappe.get_all(
+        "Nexus Knowledge Context Summary",
+        filters=filters,
+        fields=fields,
+        order_by="generated_on desc, modified desc",
+        limit_page_length=1,
+    )
+
+    if not rows:
+        return {
+            "exists": 0,
+            "status": "Missing",
+        }
+
+    summary = rows[0]
+    summary_text = summary.get("summary_text") or ""
+
+    return {
+        "exists": 1,
+        "status": "Ready" if summary.get("embedding_status") == "Completed" else "Needs Embedding",
+        "name": summary.get("name"),
+        "title": summary.get("summary_title") or summary.get("name"),
+        "summary_text": summary_text,
+        "summary_preview": summary_text[:360],
+        "source_count": summary.get("source_count") or 0,
+        "chunk_count": summary.get("chunk_count") or 0,
+        "embedding_status": summary.get("embedding_status"),
+        "generated_on": summary.get("generated_on"),
+        "generation_method": summary.get("generation_method"),
+    }
+
+
+def _get_source_semantic_index_summary(source_name):
+    empty = {
+        "total": 0,
+        "intellectual_summary": 0,
+        "user_question": 0,
+        "embedding_completed": 0,
+        "embedding_failed": 0,
+    }
+
+    if not source_name or not frappe.db.exists("DocType", "Nexus Knowledge Index Entry"):
+        return empty
+
+    meta = frappe.get_meta("Nexus Knowledge Index Entry")
+    filters = {"knowledge_source": source_name}
+
+    if meta.has_field("disabled"):
+        filters["disabled"] = 0
+
+    if meta.has_field("status"):
+        filters["status"] = "Active"
+
+    fields = ["entry_type", "embedding_status"]
+    rows = frappe.get_all(
+        "Nexus Knowledge Index Entry",
+        filters=filters,
+        fields=fields,
+        limit_page_length=1000,
+    )
+
+    summary = dict(empty)
+
+    for item in rows:
+        entry_type = item.get("entry_type")
+        embedding_status = item.get("embedding_status")
+
+        summary["total"] += 1
+
+        if entry_type == "Intellectual Summary":
+            summary["intellectual_summary"] += 1
+
+        if entry_type == "User Question":
+            summary["user_question"] += 1
+
+        if embedding_status == "Completed":
+            summary["embedding_completed"] += 1
+        elif embedding_status == "Failed":
+            summary["embedding_failed"] += 1
+
+    return summary
 
 
 def _build_source_readiness_payload(row):
@@ -996,6 +1185,8 @@ def get_knowledge_source_summary():
     sync_failed = 0
     stale = 0
     disabled = 0
+    context_summary_count = _count_context_summaries(active_context)
+    semantic_index_entry_count = _count_semantic_index_entries(active_context)
 
     rows = frappe.get_all(
         "Nexus Knowledge Source",
@@ -1050,6 +1241,8 @@ def get_knowledge_source_summary():
             "sync_failed": sync_failed,
             "stale": stale,
             "disabled": disabled,
+            "context_summaries": context_summary_count,
+            "semantic_index_entries": semantic_index_entry_count,
         },
     }
 
@@ -1129,6 +1322,8 @@ def get_knowledge_sources(filters=None):
     for row in rows:
         readiness = _build_source_readiness_payload(row)
         test_case_summary = _get_source_test_case_summary(row.get("name"))
+        context_summary = _get_source_context_summary(row)
+        semantic_index_summary = _get_source_semantic_index_summary(row.get("name"))
 
         sources.append({
             "name": row.get("name"),
@@ -1139,6 +1334,7 @@ def get_knowledge_sources(filters=None):
             "business_unit": row.get("business_unit"),
             "project": row.get("project"),
             "channel": row.get("channel"),
+            "chat_category": row.get("chat_category"),
             "context": row.get("context"),
             "sub_context": row.get("sub_context"),
             "entity_type": row.get("entity_type"),
@@ -1174,6 +1370,11 @@ def get_knowledge_sources(filters=None):
             "generated_test_case_count": test_case_summary.get("generated"),
             "active_test_case_count": test_case_summary.get("active"),
             "draft_test_case_count": test_case_summary.get("draft"),
+            "context_summary": context_summary,
+            "context_summary_exists": context_summary.get("exists"),
+            "context_summary_status": context_summary.get("status"),
+            "semantic_index_summary": semantic_index_summary,
+            "semantic_index_count": semantic_index_summary.get("total"),
 
             **readiness,
         })

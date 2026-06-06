@@ -73,6 +73,7 @@ def log_query(payload, retrieval_result, answer=None, status="Success", error_me
         log.llm_model = frappe.get_single("Nexus Settings").llm_model
         log.error_message = error_message
 
+        log.flags.ignore_links = True
         log.insert(ignore_permissions=True)
         frappe.db.commit()
 
@@ -110,10 +111,13 @@ def build_retrieval_debug_response(retrieval_result):
         "features": retrieval_result.get("features") or {},
         "weights": retrieval_result.get("weights") or {},
         "candidate_count": retrieval_result.get("candidate_count") or 0,
+        "original_candidate_count": retrieval_result.get("original_candidate_count") or 0,
         "allowed_count": retrieval_result.get("allowed_count") or 0,
         "denied_count": retrieval_result.get("denied_count") or 0,
         "retrieval_mode": retrieval_result.get("retrieval_mode"),
         "project_scope_mode": retrieval_result.get("project_scope_mode"),
+        "question_first": retrieval_result.get("question_first") or {},
+        "question_first_retry": retrieval_result.get("question_first_retry") or {},
     }
 
 

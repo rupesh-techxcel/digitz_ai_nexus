@@ -4,7 +4,7 @@ from digitz_ai_nexus.services.answer_service import (
     answer_query,
     RESTRICTED_ANSWER,
 )
-from digitz_ai_nexus.engine.prompt import SAFE_FALLBACK_ANSWER
+from digitz_ai_nexus.engine.prompt import SAFE_FALLBACK_ANSWER, build_prompt
 from digitz_ai_nexus.api.query import ask
 
 
@@ -75,6 +75,31 @@ def fake_restricted_retrieval(payload, query_embedding=None, embedding_provider=
     }
 
 
+def fake_question_first_then_broad_retrieval(payload, query_embedding=None, embedding_provider=None, **kwargs):
+    if payload.get("disable_question_first"):
+        result = fake_allowed_retrieval(payload, query_embedding, embedding_provider, **kwargs)
+        result["question_first_retry"] = {
+            "reason": "question_first_no_context",
+            "used_broader_content_search": True,
+        }
+        return result
+
+    return {
+        "results": [],
+        "denied": [],
+        "query_variants": [payload.get("query")],
+        "debug": [],
+        "candidate_count": 1,
+        "allowed_count": 0,
+        "denied_count": 0,
+        "features": {"question_first": True},
+        "question_first": {
+            "applied": True,
+            "matched_chunks": ["NKC-MISSING-EMBEDDING"],
+        },
+    }
+
+
 def base_payload():
     return {
         "query": "Hire Return valuation",
@@ -133,6 +158,29 @@ class TestNexusAnswerService(FrappeTestCase):
         self.assertEqual(res["fallback_used"], 1)
         self.assertEqual(res["sources"], [])
         self.assertGreaterEqual(len(res["denied"]), 1)
+
+    def test_question_first_no_context_retries_broader_content_search(self):
+        res = answer_query(
+            base_payload(),
+            retrieval_fn=fake_question_first_then_broad_retrieval,
+            llm_provider=MockLLMProvider(),
+        )
+
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["access_status"], "allowed")
+        self.assertEqual(res["fallback_used"], 0)
+        self.assertTrue(res["retrieval_result"]["question_first_retry"]["used_broader_content_search"])
+        self.assertEqual(res["retrieval_result"]["question_first_retry"]["reason"], "question_first_no_context")
+
+    def test_prompt_declares_retrieval_metadata_is_not_factual_evidence(self):
+        prompt = build_prompt(
+            base_payload(),
+            fake_allowed_retrieval(base_payload())["results"],
+        )
+
+        self.assertIn("Retrieval index entries", prompt)
+        self.assertIn("only search signals", prompt)
+        self.assertIn("The only factual evidence", prompt)
 
     def test_query_api_returns_log_and_retrieval_debug(self):
         res = ask(

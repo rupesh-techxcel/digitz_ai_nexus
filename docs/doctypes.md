@@ -138,6 +138,7 @@ Top-level knowledge entry. A source is a document or piece of content to be inge
 | **Status** | | |
 | status | Select | Draft / Ready to Publish / Published / Archived |
 | priority | Int | Boosts chunks in retrieval scoring |
+| chat_category | Link → Nexus Chat Category | Optional chat/Q&A category propagated to semantic index entries |
 | processing_status | Select | Ingestion pipeline state |
 | embedding_status | Select | Embedding generation state |
 | diagnostics_status | Select | Quality check state |
@@ -225,6 +226,78 @@ Smallest retrievable unit. Holds the chunk text, embedding, and access policy.
 Autoname: `NKC-.#####`. Permissions: System Manager only.
 
 **Retrieval filter:** `access_policy IN allowed_policies AND disabled = 0 AND embedding_status = "Completed"`
+
+---
+
+### Nexus Knowledge Index Entry
+
+Chunk-linked semantic retrieval metadata generated during source processing.
+
+| Field | Type | Notes |
+|---|---|---|
+| entry_type | Select | `Intellectual Summary` or `User Question` |
+| status | Select | Draft / Active / Archived |
+| canonical_text | Small Text | The retrieval phrase/question |
+| display_summary | Small Text | Short display context only |
+| answer_preview | Small Text | Preview from linked chunk |
+| knowledge_source | Link → Nexus Knowledge Source | Provenance |
+| knowledge_unit | Link → Nexus Knowledge Unit | Parent unit |
+| knowledge_chunk | Link → Nexus Knowledge Chunk | Grounded answer content |
+| chat_category | Link → Nexus Chat Category | Used by routed chat/Q&A |
+| tenant, business_unit, project | Data/Link | Scope fields copied from chunk |
+| context, sub_context, entity_type, entity, topic | Data/Link | Classification fields copied from chunk |
+| context_path | Data | Pre-built path string |
+| access_policy | Link → Nexus Access Policy | Runtime filter copied from chunk |
+| sensitivity | Select | Metadata |
+| priority | Int | Retrieval boost |
+| disabled | Check | 1 = ignored |
+| generation_method | Select | LLM / Heuristic / Manual |
+| entry_hash | Data | Unique hash |
+| embedding | Long Text | Vector for semantic matching |
+| embedding_status | Select | Pending / Completed / Failed |
+
+Autoname: `NKIE-.#####`. Permissions: System Manager only.
+
+`User Question` entries are searched first as a cost-saving shortcut. A strong match narrows retrieval to linked chunks. `Intellectual Summary` entries provide intent-oriented boosts. Neither entry type is used as factual answer evidence.
+
+---
+
+### Nexus Knowledge Context Summary
+
+Group-level human-readable summary consolidated across active chunks with the same classification and access boundary.
+
+| Field | Type | Notes |
+|---|---|---|
+| summary_title | Data | Human-readable group title |
+| status | Select | Draft / Active / Archived |
+| summary_text | Long Text | Human-readable group summary |
+| coverage_notes | Small Text | Generation notes |
+| tenant, business_unit, project | Data/Link | Group scope |
+| context, sub_context, entity_type, entity, topic | Data/Link | Group classification |
+| context_path | Data | Optional path |
+| access_policy | Link → Nexus Access Policy | Group access boundary |
+| sensitivity | Select | Metadata |
+| priority | Int | Retrieval boost |
+| disabled | Check | 1 = ignored |
+| source_count | Int | Number of contributing sources |
+| chunk_count | Int | Number of contributing chunks |
+| summary_key | Data | Unique group hash |
+| generated_from_sources | Long Text | JSON list of source names |
+| generation_method | Select | LLM / Heuristic / Manual |
+| generated_on | Datetime | Last refresh time |
+| embedding | Long Text | Vector for broad retrieval signal |
+| embedding_status | Select | Pending / Completed / Failed |
+
+Autoname: `NKCS-.#####`. Permissions: System Manager only.
+
+Ownership is by group:
+
+```
+tenant + business_unit + project + context + sub_context
++ entity_type + entity + topic + access_policy
+```
+
+It can be shown in Q&A popup summary views and can boost retrieval toward the right group. The LLM does not answer from the context summary unless the same facts are present in approved chunks.
 
 ---
 

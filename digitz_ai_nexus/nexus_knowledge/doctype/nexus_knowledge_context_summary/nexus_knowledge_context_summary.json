@@ -1,0 +1,271 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:NKCS-.{#####}",
+ "creation": "2026-06-06 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "summary_section",
+  "summary_title",
+  "status",
+  "summary_text",
+  "coverage_notes",
+  "classification_section",
+  "tenant",
+  "business_unit",
+  "project",
+  "context",
+  "sub_context",
+  "entity_type",
+  "entity",
+  "topic",
+  "context_path",
+  "access_section",
+  "access_policy",
+  "sensitivity",
+  "priority",
+  "disabled",
+  "source_section",
+  "source_count",
+  "chunk_count",
+  "summary_key",
+  "generated_from_sources",
+  "generation_section",
+  "generation_method",
+  "generation_notes",
+  "generated_on",
+  "embedding_section",
+  "embedding",
+  "embedding_model",
+  "embedding_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "summary_section",
+   "fieldtype": "Section Break",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "summary_title",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Summary Title",
+   "reqd": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nActive\nArchived",
+   "reqd": 1
+  },
+  {
+   "fieldname": "summary_text",
+   "fieldtype": "Long Text",
+   "in_global_search": 1,
+   "label": "Summary Text",
+   "reqd": 1
+  },
+  {
+   "fieldname": "coverage_notes",
+   "fieldtype": "Small Text",
+   "label": "Coverage Notes"
+  },
+  {
+   "fieldname": "classification_section",
+   "fieldtype": "Section Break",
+   "label": "Classification"
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Tenant"
+  },
+  {
+   "fieldname": "business_unit",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Business Unit",
+   "options": "Nexus Business Unit"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Data",
+   "label": "Project"
+  },
+  {
+   "fieldname": "context",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Context",
+   "options": "Nexus Public Context"
+  },
+  {
+   "fieldname": "sub_context",
+   "fieldtype": "Data",
+   "label": "Sub Context"
+  },
+  {
+   "fieldname": "entity_type",
+   "fieldtype": "Data",
+   "label": "Entity Type"
+  },
+  {
+   "fieldname": "entity",
+   "fieldtype": "Data",
+   "label": "Entity"
+  },
+  {
+   "fieldname": "topic",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Topic"
+  },
+  {
+   "fieldname": "context_path",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Context Path"
+  },
+  {
+   "fieldname": "access_section",
+   "fieldtype": "Section Break",
+   "label": "Access"
+  },
+  {
+   "fieldname": "access_policy",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Access Policy",
+   "options": "Nexus Access Policy",
+   "reqd": 1
+  },
+  {
+   "default": "public",
+   "fieldname": "sensitivity",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Sensitivity",
+   "options": "public\ncustomer\noperational\ninternal\nfinancial\nhr\nconfidential",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "source_section",
+   "fieldtype": "Section Break",
+   "label": "Coverage"
+  },
+  {
+   "default": "0",
+   "fieldname": "source_count",
+   "fieldtype": "Int",
+   "label": "Source Count"
+  },
+  {
+   "default": "0",
+   "fieldname": "chunk_count",
+   "fieldtype": "Int",
+   "label": "Chunk Count"
+  },
+  {
+   "fieldname": "summary_key",
+   "fieldtype": "Data",
+   "label": "Summary Key",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "generated_from_sources",
+   "fieldtype": "Long Text",
+   "label": "Generated From Sources"
+  },
+  {
+   "fieldname": "generation_section",
+   "fieldtype": "Section Break",
+   "label": "Generation"
+  },
+  {
+   "default": "LLM",
+   "fieldname": "generation_method",
+   "fieldtype": "Select",
+   "label": "Generation Method",
+   "options": "LLM\nHeuristic\nManual"
+  },
+  {
+   "fieldname": "generation_notes",
+   "fieldtype": "Small Text",
+   "label": "Generation Notes"
+  },
+  {
+   "fieldname": "generated_on",
+   "fieldtype": "Datetime",
+   "label": "Generated On"
+  },
+  {
+   "fieldname": "embedding_section",
+   "fieldtype": "Section Break",
+   "label": "Embedding"
+  },
+  {
+   "fieldname": "embedding",
+   "fieldtype": "Long Text",
+   "label": "Embedding"
+  },
+  {
+   "fieldname": "embedding_model",
+   "fieldtype": "Data",
+   "label": "Embedding Model"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "embedding_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Embedding Status",
+   "options": "Pending\nCompleted\nFailed"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-06 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Knowledge",
+ "name": "Nexus Knowledge Context Summary",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "summary_title"
+}
