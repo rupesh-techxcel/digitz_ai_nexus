@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="116" fill="#17439D"/>
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="url(#bg)"/>
+  <path d="M256 82v54" stroke="#F4D88F" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="256" cy="68" r="30" fill="#F4D88F"/>
+  <path d="M132 186c0-42 34-76 76-76h96c42 0 76 34 76 76v72c0 59-48 107-107 107h-34c-59 0-107-48-107-107v-72Z" fill="#F8FBFF"/>
+  <path d="M132 186c0-42 34-76 76-76h96c42 0 76 34 76 76v72c0 59-48 107-107 107h-34c-59 0-107-48-107-107v-72Z" stroke="#8FE2C6" stroke-width="14"/>
+  <path d="M162 178h34M316 178h34" stroke="#B8ECDD" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="206" cy="178" r="8" fill="#16A37F"/>
+  <circle cx="306" cy="178" r="8" fill="#16A37F"/>
+  <rect x="218" y="124" width="76" height="46" rx="23" fill="#16A37F"/>
+  <path d="M234 156V138h7l19 20v-20h8v18h-7l-19-20v20h-8Z" fill="#FFFFFF"/>
+  <rect x="174" y="176" width="164" height="96" rx="42" fill="#214DBB"/>
+  <circle cx="222" cy="224" r="17" fill="#8FE2C6"/>
+  <circle cx="290" cy="224" r="17" fill="#8FE2C6"/>
+  <path d="M224 294c19 17 45 17 64 0" stroke="#16A37F" stroke-width="16" stroke-linecap="round"/>
+  <path d="M132 226H94c-24 0-44 20-44 44v31" stroke="#F8FBFF" stroke-width="26" stroke-linecap="round"/>
+  <path d="M380 226h38c24 0 44 20 44 44v31" stroke="#F8FBFF" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="50" cy="330" r="33" fill="#F4D88F"/>
+  <circle cx="462" cy="330" r="33" fill="#F4D88F"/>
+  <rect x="180" y="358" width="152" height="64" rx="32" fill="#F8FBFF"/>
+  <path d="M216 390h80" stroke="#16A37F" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="196" cy="390" r="8" fill="#16A37F"/>
+  <circle cx="316" cy="390" r="8" fill="#16A37F"/>
+  <defs>
+    <linearGradient id="bg" x1="92" y1="72" x2="426" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3A67D8"/>
+      <stop offset="0.55" stop-color="#214DBB"/>
+      <stop offset="1" stop-color="#16A37F"/>
+    </linearGradient>
+  </defs>
+</svg>
