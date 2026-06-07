@@ -8,6 +8,44 @@ This document covers the full pipeline from receiving a query to producing an an
 
 The pipeline is orchestrated by `services/answer_service.py` → `answer_query()`.
 
+### Chat Mode Pipeline
+
+In chat mode (`response_mode = "chat"` or `"live chat"`), two pre-checks run before the RAG pipeline:
+
+```
+Query arrives (chat mode)
+    │
+    ▼
+1. Length Guard
+    If message > 500 characters:
+        → LLM generates friendly nudge to shorten the question
+        → Return immediately
+    │
+    ▼
+2. Intent Router  (single LLM call)
+    LLM receives: user message + conversation context + resolved intent handlers
+    │
+    ├── ACTION:ESCALATE
+    │       → access_status: "intent_handled", user_requested_human: True
+    │       → caller (live_chat_service) handles escalation
+    │
+    ├── ACTION:PREDEFINED:<name>
+    │       → access_status: "intent_handled"
+    │       → answer: configured response_template for that handler
+    │
+    ├── ACTION:DECLINED:<name>
+    │       → access_status: "intent_handled"
+    │       → answer: configured decline_response for that handler
+    │
+    ├── Conversational response
+    │       → access_status: "conversational"
+    │       → answer: LLM-generated 1-2 sentence social response
+    │
+    └── ROUTE_TO_KNOWLEDGE → continue to RAG pipeline
+```
+
+### RAG Pipeline (all modes)
+
 ```
 Query arrives
     │
@@ -19,12 +57,12 @@ Retrieve chunks  (engine/retrieval.py)
     │
     ├── access_status = "restricted" → return restricted response
     ├── question-first produced no/weak usable context → retry broad content retrieval
-    ├── no chunks found → return safe fallback
+    ├── no chunks found → return fallback (chat: LLM Host; Q&A: safe string)
     │
     ▼
 Calculate confidence
     │
-    ├── below minimum threshold → return safe fallback
+    ├── below minimum threshold → return fallback (chat: LLM Host; Q&A: safe string)
     │
     ▼
 Build prompt  (engine/prompt.py)
@@ -32,7 +70,7 @@ Build prompt  (engine/prompt.py)
     ▼
 Call LLM  (engine/llm.py)
     │
-    ├── empty or fallback answer → return safe fallback
+    ├── empty or fallback answer → return fallback (chat: LLM Host; Q&A: safe string)
     │
     ▼
 Build sources and citations
@@ -40,6 +78,13 @@ Build sources and citations
     ▼
 Return success response
 ```
+
+### Chat Fallback vs Q&A Fallback
+
+| Mode | Fallback behaviour |
+|---|---|
+| `chat` / `live chat` | LLM Host generates a warm, graceful response. No facts stated. May ask a clarifying question. Does NOT offer to connect with team — that is handled by the Intent Handler system. |
+| All other modes | Hard fallback string: `"I do not have enough approved knowledge to answer this."` |
 
 ---
 
@@ -389,9 +434,21 @@ An `OpenAIEmbeddingProvider` class wraps the client. Fake providers are used in 
 
 ## Answer Service Response Structure
 
-`services/answer_service.py` → `answer_query()` returns:
+`services/answer_service.py` → `answer_query()` returns one of the following shapes.
 
-### Success
+### `access_status` values
+
+| Value | When |
+|---|---|
+| `allowed` | RAG found usable knowledge; answer is grounded |
+| `conversational` | Router handled the turn directly (social exchange) |
+| `intent_handled` | A special case intent was matched (escalate / predefined / declined) |
+| `no_context` | RAG found no usable knowledge; fallback response returned |
+| `restricted` | Knowledge exists but the user lacks access |
+
+---
+
+### RAG Success
 
 ```python
 {
@@ -422,6 +479,72 @@ An `OpenAIEmbeddingProvider` class wraps the client. Fake providers are used in 
 }
 ```
 
+### Conversational (router handled directly)
+
+```python
+{
+    "status": "success",
+    "access_status": "conversational",
+    "answer": "Hi! How can I help you today?",
+    "confidence": 1.0,
+    "sources": [],
+    "citations": [],
+    "retrieval_result": {},
+    "fallback_used": 0,
+}
+```
+
+### Intent Handled — Escalate
+
+```python
+{
+    "status": "success",
+    "access_status": "intent_handled",
+    "answer": "I'll connect you with our team shortly.",
+    "confidence": 1.0,
+    "sources": [],
+    "citations": [],
+    "retrieval_result": {},
+    "fallback_used": 0,
+    "user_requested_human": True,
+    "intent_action": "escalate",
+}
+```
+
+`user_requested_human: True` is read by `live_chat_service` to trigger escalation.
+
+### Intent Handled — Predefined Answer
+
+```python
+{
+    "status": "success",
+    "access_status": "intent_handled",
+    "answer": "Our support team is available Monday–Friday, 9am–6pm.",
+    "confidence": 1.0,
+    "sources": [],
+    "citations": [],
+    "retrieval_result": {},
+    "fallback_used": 0,
+    "intent_action": "predefined",
+}
+```
+
+### Intent Handled — Declined
+
+```python
+{
+    "status": "success",
+    "access_status": "intent_handled",
+    "answer": "Pricing information is not available through this assistant.",
+    "confidence": 1.0,
+    "sources": [],
+    "citations": [],
+    "retrieval_result": {},
+    "fallback_used": 0,
+    "intent_action": "declined",
+}
+```
+
 ### Fallback (no usable knowledge)
 
 ```python
@@ -429,6 +552,7 @@ An `OpenAIEmbeddingProvider` class wraps the client. Fake providers are used in 
     "status": "success",
     "access_status": "no_context",
     "answer": "I do not have enough approved knowledge to answer this.",
+    # In chat mode: LLM Host generates a warm, graceful version of this
     "confidence": 0.0,
     "sources": [],
     "citations": [],

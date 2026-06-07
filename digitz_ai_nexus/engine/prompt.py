@@ -2,35 +2,133 @@ from digitz_ai_nexus.engine.response_mode import get_response_mode
 
 SAFE_FALLBACK_ANSWER = "I do not have enough approved knowledge to answer this."
 
+ROUTE_TO_KNOWLEDGE_TOKEN = "ROUTE_TO_KNOWLEDGE"
 
-def build_conversational_prompt(query_contract):
+
+def build_router_prompt(query_contract, resolved_intents=None):
     """
-    Minimal prompt for social/conversational turns (greetings, introductions,
-    acknowledgements). No retrieval evidence is required or injected.
+    Combined intent router + conversational responder for chat mode.
+
+    Output is one of:
+    - A natural 1-2 sentence response       (conversational turn)
+    - Exactly ROUTE_TO_KNOWLEDGE            (knowledge-seeking — send to RAG)
+    - ACTION:ESCALATE                       (user wants a human agent)
+    - ACTION:PREDEFINED:<handler-name>      (matched a predefined answer case)
+    - ACTION:DECLINED:<handler-name>        (intent disabled for this profile)
     """
-    profile = _resolve_profile_fields(query_contract)
-    tone = profile.get("tone") or "friendly and helpful"
-    behavior = profile.get("behavior_prompt") or ""
-    conversation_context = query_contract.get("conversation_context") or ""
     original_query = (
         query_contract.get("original_query") or query_contract.get("query") or ""
     )
+    conversation_context = query_contract.get("conversation_context") or ""
+    intents = resolved_intents or query_contract.get("resolved_intents") or []
 
-    behavior_block = f"\nAGENT BEHAVIOUR:\n{behavior}\n" if behavior else ""
     context_block = (
         f"\nCONVERSATION SO FAR:\n{conversation_context}\n"
         if conversation_context
         else ""
     )
 
-    return f"""You are DIGITZ AI Nexus, a helpful enterprise assistant.
+    active_intents = [i for i in intents if i.get("active")]
+    disabled_intents = [i for i in intents if not i.get("active")]
 
-The user has sent a conversational message such as a greeting, introduction, or social exchange.
-Respond naturally and warmly in 1–2 sentences. Do not mention knowledge, sources, or policies.
-Tone: {tone}
-{behavior_block}{context_block}
+    special_cases_block = ""
+    if active_intents:
+        lines = ["SPECIAL CASES (evaluate BEFORE routing rules, in priority order):"]
+        for idx, intent in enumerate(active_intents, 1):
+            name = intent["name"]
+            action_type = intent.get("action_type", "predefined_answer")
+            if action_type == "escalate":
+                token = "ACTION:ESCALATE"
+            else:
+                token = f"ACTION:PREDEFINED:{name}"
+            lines.append(
+                f"\n[{idx}] {intent['intent_name']}\n"
+                f"    Trigger: {intent['trigger_description']}\n"
+                f"    If matched: respond with exactly: {token}"
+            )
+        special_cases_block = "\n".join(lines)
+
+    declined_block = ""
+    if disabled_intents:
+        lines = ["UNAVAILABLE (acknowledge gracefully, do not route to knowledge):"]
+        for intent in disabled_intents:
+            lines.append(
+                f"\n- {intent['intent_name']}\n"
+                f"  Trigger: {intent['trigger_description']}\n"
+                f"  If matched: respond with exactly: ACTION:DECLINED:{intent['name']}"
+            )
+        declined_block = "\n".join(lines)
+
+    special_section = ""
+    combined = "\n\n".join(filter(None, [special_cases_block, declined_block]))
+    if combined:
+        special_section = f"\n\n{combined}\n"
+
+    return f"""You are the Nexus Conversation Router — the first contact point in this enterprise chat assistant.
+
+PURPOSE:
+Decide whether this message is a casual conversational exchange, matches a special case, or requires a knowledge lookup.
+{special_section}
+ROUTING RULES:
+1. Check special cases first (listed above). If the message matches one, respond with the exact action token shown.
+2. If the message is a greeting, introduction, acknowledgement, farewell, small talk, or social exchange → respond naturally in 1-2 sentences.
+3. If the message asks about any topic, product, service, policy, process, feature, price, procedure, or subject that requires information → respond with exactly: {ROUTE_TO_KNOWLEDGE_TOKEN}
+4. If uncertain → respond with exactly: {ROUTE_TO_KNOWLEDGE_TOKEN}
+5. Never generate factual information in your response — your only roles are routing, social acknowledgement, or returning an action token.
+{context_block}
 USER MESSAGE:
 {original_query}
+
+RESPONSE:""".strip()
+
+
+def build_host_fallback_prompt(query_contract):
+    """
+    Graceful LLM-generated response for chat mode when RAG finds no usable knowledge.
+    No facts. No knowledge. Only warm, honest guidance.
+    """
+    original_query = (
+        query_contract.get("original_query") or query_contract.get("query") or ""
+    )
+    conversation_context = query_contract.get("conversation_context") or ""
+
+    context_block = (
+        f"\nCONVERSATION SO FAR:\n{conversation_context}\n"
+        if conversation_context
+        else ""
+    )
+
+    return f"""You are the Nexus Conversation Host for an enterprise chat assistant.
+
+PURPOSE:
+The knowledge system has been searched and could not find confirmed information to answer the user's question.
+Your job is to respond gracefully — acknowledge the user, explain the limitation honestly, and optionally invite a narrower follow-up.
+
+STRICT RULES:
+1. Do NOT state any facts, prices, policies, procedures, names, product details, or timelines.
+2. Do NOT guess, infer, or extrapolate any information whatsoever.
+3. You MAY acknowledge what the user asked.
+4. You MAY explain that confirmed information is not currently available on this topic.
+5. You MAY ask one clarifying question to help narrow the search.
+6. Do NOT offer to connect the user with a team member or raise a support request — that is handled separately.
+7. Keep the response to 2-3 sentences maximum.
+8. Tone: professional, warm, and genuinely helpful.
+{context_block}
+USER MESSAGE:
+{original_query}
+
+RESPONSE:""".strip()
+
+
+def build_query_too_long_prompt(query_contract):
+    """
+    Friendly nudge when the user message exceeds the 500-character limit.
+    """
+    return """You are the Nexus Conversation Host for an enterprise chat assistant.
+
+The user has sent a very long message that is too detailed to process in one go.
+Politely ask them to shorten their question to a single focused query.
+Keep your response to 1-2 sentences. Tone: friendly and helpful.
 
 RESPONSE:""".strip()
 

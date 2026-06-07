@@ -1,52 +1,102 @@
-import re
 import frappe
 
 from digitz_ai_nexus.engine.retrieval import retrieve_allowed_chunks
-from digitz_ai_nexus.engine.prompt import build_prompt, build_conversational_prompt, SAFE_FALLBACK_ANSWER
+from digitz_ai_nexus.engine.prompt import (
+    build_prompt,
+    build_router_prompt,
+    build_host_fallback_prompt,
+    build_query_too_long_prompt,
+    SAFE_FALLBACK_ANSWER,
+    ROUTE_TO_KNOWLEDGE_TOKEN,
+)
 from digitz_ai_nexus.engine.llm import generate_answer
 
 
 RESTRICTED_ANSWER = "You do not have permission to access this information."
 
-_CONVERSATIONAL_PATTERNS = [
-    r"^(hi+|hello+|hey+|howdy|greetings|good\s+(morning|afternoon|evening|day))\s*[!.,]*$",
-    r"^(my name is|i am|i'm|this is)\s+\w+.*$",
-    r"^(thanks?(\s+you)?|ok(ay)?|got\s+it|sure|alright|great|perfect|noted|understood|cool|nice)\s*[!.,]*$",
-    r"^(how are you|what'?s up|how do you do|how'?s it going)\s*[?.!]*$",
-    r"^(bye+|goodbye|see\s+you|take\s+care|later|ciao)\s*[!.,]*$",
-    r"^(good\s+to\s+(meet|know)\s+you|nice\s+to\s+meet\s+you)\s*[!.,]*$",
-]
-
-_QUESTION_WORDS = re.compile(
-    r"\b(what|how|why|when|who|where|which|can|could|should|is|are|does|do|will|would|tell\s+me|explain|define|describe)\b",
-    re.IGNORECASE,
-)
+MAX_QUERY_CHARS = 500
 
 
-def is_conversational_message(query, response_mode):
-    """Returns True if the query is a social/conversational turn that needs no knowledge lookup."""
-    if not query:
-        return False
-    mode = str(response_mode or "").lower()
-    if mode not in ("chat", "live chat"):
-        return False
-    q = query.strip()
-    for pattern in _CONVERSATIONAL_PATTERNS:
-        if re.fullmatch(pattern, q, re.IGNORECASE):
-            return True
-    # Very short utterances with no question words are almost always social (greetings, exclamations)
-    if len(q) <= 15 and not _QUESTION_WORDS.search(q):
-        return True
-    return False
+def _is_chat_mode(response_mode_key):
+    return str(response_mode_key or "").lower() in ("chat", "live chat")
 
 
-def handle_conversational_message(payload, llm_provider=None):
-    """Send conversational turns directly to the LLM — no retrieval, no fallback, no escalation."""
-    prompt = build_conversational_prompt(payload)
-    answer = generate_answer(prompt, provider=llm_provider)
-    answer = (answer or "").strip()
+def route_intent(payload, llm_provider=None):
+    """
+    Combined router + conversational responder for chat mode.
+
+    Returns a dict with an "action" key:
+      {"action": "conversational",  "answer": "..."}
+      {"action": "knowledge_seeking"}
+      {"action": "escalate",        "answer": "..."}
+      {"action": "predefined",      "answer": "..."}
+      {"action": "declined",        "answer": "..."}
+    """
+    resolved_intents = payload.get("resolved_intents") or []
+    prompt = build_router_prompt(payload, resolved_intents=resolved_intents)
+    response = (generate_answer(prompt, provider=llm_provider) or "").strip()
+
+    if not response or response.startswith(ROUTE_TO_KNOWLEDGE_TOKEN):
+        return {"action": "knowledge_seeking"}
+
+    if response.startswith("ACTION:ESCALATE"):
+        escalate_intent = next(
+            (i for i in resolved_intents if i.get("action_type") == "escalate" and i.get("active")),
+            None,
+        )
+        answer = (escalate_intent or {}).get("response_template") or "I'll connect you with our team shortly."
+        return {"action": "escalate", "answer": answer}
+
+    if response.startswith("ACTION:PREDEFINED:"):
+        handler_name = response[len("ACTION:PREDEFINED:"):].strip()
+        intent = next((i for i in resolved_intents if i.get("name") == handler_name), None)
+        answer = (intent or {}).get("response_template") or ""
+        return {"action": "predefined", "answer": answer}
+
+    if response.startswith("ACTION:DECLINED:"):
+        handler_name = response[len("ACTION:DECLINED:"):].strip()
+        intent = next((i for i in resolved_intents if i.get("name") == handler_name), None)
+        answer = (intent or {}).get("decline_response") or "That option is not available in this context."
+        return {"action": "declined", "answer": answer}
+
+    return {"action": "conversational", "answer": response}
+
+
+def handle_host_fallback(payload, llm_provider=None):
+    """
+    Graceful LLM-generated response for chat mode when RAG finds no usable knowledge.
+    fallback_used=1 is preserved so the escalation signal still fires.
+    """
+    prompt = build_host_fallback_prompt(payload)
+    answer = (generate_answer(prompt, provider=llm_provider) or "").strip()
     if not answer:
-        answer = "Hello! How can I help you today?"
+        answer = (
+            "I wasn't able to find confirmed information on that. "
+            "Could you rephrase or provide more context so I can search more precisely?"
+        )
+    return {
+        "status": "success",
+        "access_status": "no_context",
+        "answer": answer,
+        "confidence": 0.0,
+        "sources": [],
+        "citations": [],
+        "retrieval_result": {},
+        "fallback_used": 1,
+    }
+
+
+def handle_query_too_long(payload, llm_provider=None):
+    """
+    Friendly LLM response when the user message exceeds MAX_QUERY_CHARS.
+    """
+    prompt = build_query_too_long_prompt(payload)
+    answer = (generate_answer(prompt, provider=llm_provider) or "").strip()
+    if not answer:
+        answer = (
+            "Your message is quite long — could you summarise your question in a few words? "
+            "I work best with focused questions."
+        )
     return {
         "status": "success",
         "access_status": "conversational",
@@ -73,11 +123,57 @@ def answer_query(
     if not query:
         frappe.throw("Query is required")
 
-    # Conversational bypass: greetings, introductions, and social exchanges
-    # in chat/live-chat mode skip retrieval entirely to avoid fallback + escalation.
     response_mode_key = payload.get("response_mode") or payload.get("use_case")
-    if is_conversational_message(query, response_mode_key):
-        return handle_conversational_message(payload, llm_provider=llm_provider)
+    is_chat = _is_chat_mode(response_mode_key)
+
+    if is_chat:
+        # 1. Length guard — nudge user to shorten before any processing
+        if len(query.strip()) > MAX_QUERY_CHARS:
+            return handle_query_too_long(payload, llm_provider=llm_provider)
+
+        # 2. Intent router — special cases, conversational, or knowledge-seeking
+        route = route_intent(payload, llm_provider=llm_provider)
+        action = route.get("action")
+
+        if action == "escalate":
+            return {
+                "status": "success",
+                "access_status": "intent_handled",
+                "answer": route.get("answer") or "I'll connect you with our team shortly.",
+                "confidence": 1.0,
+                "sources": [],
+                "citations": [],
+                "retrieval_result": {},
+                "fallback_used": 0,
+                "user_requested_human": True,
+                "intent_action": "escalate",
+            }
+
+        if action in ("predefined", "declined"):
+            return {
+                "status": "success",
+                "access_status": "intent_handled",
+                "answer": route.get("answer") or "",
+                "confidence": 1.0,
+                "sources": [],
+                "citations": [],
+                "retrieval_result": {},
+                "fallback_used": 0,
+                "intent_action": action,
+            }
+
+        if action == "conversational":
+            return {
+                "status": "success",
+                "access_status": "conversational",
+                "answer": route.get("answer"),
+                "confidence": 1.0,
+                "sources": [],
+                "citations": [],
+                "retrieval_result": {},
+                "fallback_used": 0,
+            }
+        # action == "knowledge_seeking" — fall through to RAG pipeline
 
     # Guard: if allowed_access_policies was resolved but came back empty,
     # deny retrieval — fail closed, never treat empty as "allow all".
@@ -127,13 +223,15 @@ def answer_query(
             chunks = retry_chunks
             denied = retry_denied
         else:
-            return build_safe_fallback(
+            return _fallback(
+                is_chat, payload, llm_provider,
                 retrieval_result=retry_result,
                 denied=retry_denied or denied,
             )
 
     if not chunks:
-        return build_safe_fallback(
+        return _fallback(
+            is_chat, payload, llm_provider,
             retrieval_result=retrieval_result,
             denied=denied,
         )
@@ -164,21 +262,24 @@ def answer_query(
                 chunks = retry_chunks
                 confidence = retry_confidence
             else:
-                return build_safe_fallback(
+                return _fallback(
+                    is_chat, payload, llm_provider,
                     retrieval_result=retry_result or retrieval_result,
                     denied=retry_result.get("denied") if retry_result else denied,
                     confidence=max(confidence, retry_confidence),
                 )
 
         else:
-            return build_safe_fallback(
+            return _fallback(
+                is_chat, payload, llm_provider,
                 retrieval_result=retrieval_result,
                 denied=denied,
                 confidence=confidence,
             )
 
     if not chunks:
-        return build_safe_fallback(
+        return _fallback(
+            is_chat, payload, llm_provider,
             retrieval_result=retrieval_result,
             denied=denied,
         )
@@ -189,14 +290,16 @@ def answer_query(
     answer = (answer or "").strip()
 
     if not answer:
-        return build_safe_fallback(
+        return _fallback(
+            is_chat, payload, llm_provider,
             retrieval_result=retrieval_result,
             denied=denied,
             confidence=confidence,
         )
 
     if is_fallback_answer(answer):
-        return build_safe_fallback(
+        return _fallback(
+            is_chat, payload, llm_provider,
             retrieval_result=retrieval_result,
             denied=denied,
             confidence=confidence,
@@ -214,6 +317,20 @@ def answer_query(
         "retrieval_result": retrieval_result,
         "fallback_used": 0,
     }
+
+
+def _fallback(is_chat, payload, llm_provider, retrieval_result=None, denied=None, confidence=0.0):
+    """
+    Route fallback to the LLM Host (chat mode) or the hard string (Q&A mode).
+    Single point of control — all fallback paths go through here.
+    """
+    if is_chat:
+        return handle_host_fallback(payload, llm_provider=llm_provider)
+    return build_safe_fallback(
+        retrieval_result=retrieval_result,
+        denied=denied,
+        confidence=confidence,
+    )
 
 
 def retry_without_question_first(
