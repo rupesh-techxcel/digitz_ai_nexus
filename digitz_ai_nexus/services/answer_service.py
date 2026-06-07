@@ -4,7 +4,6 @@ from digitz_ai_nexus.engine.retrieval import retrieve_allowed_chunks
 from digitz_ai_nexus.engine.prompt import (
     build_prompt,
     build_router_prompt,
-    build_host_fallback_prompt,
     build_query_too_long_prompt,
     SAFE_FALLBACK_ANSWER,
     ROUTE_TO_KNOWLEDGE_TOKEN,
@@ -64,16 +63,17 @@ def route_intent(payload, llm_provider=None):
 
 def handle_host_fallback(payload, llm_provider=None):
     """
-    Graceful LLM-generated response for chat mode when RAG finds no usable knowledge.
+    Direct fallback for chat mode when RAG finds no usable knowledge.
+    Uses the profile's configured fallback_message if set; otherwise a safe default.
+    No LLM call — avoids the model generating clarifying questions when it has no knowledge.
     fallback_used=1 is preserved so the escalation signal still fires.
     """
-    prompt = build_host_fallback_prompt(payload)
-    answer = (generate_answer(prompt, provider=llm_provider) or "").strip()
-    if not answer:
-        answer = (
-            "I wasn't able to find confirmed information on that. "
-            "Could you rephrase or provide more context so I can search more precisely?"
-        )
+    ai_profile = payload.get("ai_profile") or {}
+    answer = (
+        ai_profile.get("fallback_message")
+        or payload.get("agent_fallback_message")
+        or "I don't currently have confirmed information on that topic."
+    )
     return {
         "status": "success",
         "access_status": "no_context",

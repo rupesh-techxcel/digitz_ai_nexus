@@ -35,9 +35,11 @@ class NexusStudioPage {
             review_index_answer: 'digitz_ai_nexus.api.nexus_knowledge_studio.review_knowledge_index_answer',
             run_knowledge_test_case: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_knowledge_test_case',
             run_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_source_test_cases',
+            get_chat_reachability: 'digitz_ai_nexus.nexus_knowledge.doctype.nexus_knowledge_source.nexus_knowledge_source.get_source_chat_reachability',
+            get_tenants_chat_reachability: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_tenants_chat_reachability',
         };
 
-        this.active_tab = 'overview';
+        this.active_tab = 'sources';
 
         this.filters = {
             search: '',
@@ -240,6 +242,43 @@ class NexusStudioPage {
                 font-size: 13px;
                 line-height: 1.48;
                 font-weight: 750;
+            }
+
+            .nks-page-title-block {
+                display: flex;
+                align-items: flex-start;
+                padding: 20px 0 16px;
+                border-bottom: 2px solid #eef2f7;
+                margin-bottom: 20px;
+            }
+
+            .nks-page-title-text {
+                margin: 0;
+                font-size: 22px;
+                font-weight: 800;
+                color: #0b3c91;
+                letter-spacing: -0.3px;
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .nks-page-title-text::after {
+                content: "";
+                display: inline-block;
+                width: 34px;
+                height: 4px;
+                border-radius: 999px;
+                background: #e0a62f;
+            }
+
+            .nks-page-title-sub {
+                margin: 6px 0 0;
+                color: #526887;
+                font-size: 13px;
+                line-height: 1.5;
+                font-weight: 500;
+                max-width: 680px;
             }
 
             .nks-context-grid {
@@ -1022,23 +1061,91 @@ class NexusStudioPage {
             }
 
             .nks-source-item-head {
-                display: flex;
-                align-items: center;
-                gap: 10px;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto;
+                column-gap: 10px;
+                row-gap: 6px;
                 padding: 12px;
             }
 
-            .nks-source-item-head-title {
-                flex: 1;
-                min-width: 0;
+            .nks-source-item-head::after {
+                grid-column: 2;
+                grid-row: 1;
+                align-self: start;
             }
 
-            .nks-source-item-head-meta {
+            .nks-source-item-head-title {
+                grid-column: 1;
+                grid-row: 1;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            .nks-source-item-head-footer {
+                grid-column: 1 / -1;
+                grid-row: 2;
                 display: flex;
                 align-items: center;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .nks-source-title-text {
+                font-weight: 900;
+                color: #0b60d8;
+                font-size: 13px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .nks-source-title-sub {
+                display: flex;
+                align-items: center;
+                flex-wrap: nowrap;
                 gap: 4px;
+                margin-top: 2px;
+                color: #7a8daa;
+                font-size: 11px;
+                font-weight: 700;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .nks-source-title-sub span {
+                white-space: nowrap;
                 flex-shrink: 0;
             }
+
+            .nks-source-head-sep {
+                color: #bcc8da;
+                flex-shrink: 0;
+            }
+
+            .nks-source-title-path {
+                margin-top: 3px;
+                color: #526887;
+                font-size: 11px;
+                font-weight: 600;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .nks-source-title-tags {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-top: 4px;
+            }
+
+            .nks-badge-compact {
+                font-size: 10px;
+                padding: 1px 7px;
+                flex-shrink: 0;
+            }
+
 
             .nks-source-item-body {
                 display: grid;
@@ -1176,11 +1283,7 @@ class NexusStudioPage {
                 }
 
                 .nks-source-item-head {
-                    flex-wrap: wrap;
-                }
-
-                .nks-source-item-head-title {
-                    flex-basis: 100%;
+                    column-gap: 6px;
                 }
 
                 .nks-source-dashboard-panel-head {
@@ -1355,10 +1458,6 @@ class NexusStudioPage {
 
                 <div id="nks-active-context-panel"></div>
 
-                <div class="nks-tabs">
-                    ${this.get_tabs_html()}
-                </div>
-
                 <div id="nks-tab-content"></div>
             </div>
         `);
@@ -1370,10 +1469,7 @@ class NexusStudioPage {
 
     get_tabs_html() {
         const tabs = [
-            ['overview', 'Overview'],
             ['sources', 'Source Library'],
-            ['quality', 'Answer Quality'],
-            ['improvements', 'Improvement Areas']
         ];
 
         return tabs.map(([key, label]) => {
@@ -1594,6 +1690,12 @@ class NexusStudioPage {
             this.show_source_dashboard($(e.currentTarget).data('name'));
         });
 
+        this.body.on('click', '.nks-tenant-reachability-detail-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.show_tenant_reachability_dialog($(e.currentTarget).data('tenant'));
+        });
+
         this.body.on('click', '.nks-inline-process-source-btn', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1791,6 +1893,150 @@ class NexusStudioPage {
                 if (shouldRender && this.active_tab === 'sources') {
                     this.render_active_tab();
                 }
+
+                this.load_tenants_chat_reachability();
+            }
+        });
+    }
+
+    load_tenants_chat_reachability() {
+        frappe.call({
+            method: this.api.get_tenants_chat_reachability,
+            freeze: false,
+            callback: (r) => {
+                this.tenant_reachability = (r.message && r.message.success)
+                    ? (r.message.tenants || {})
+                    : null;
+
+                const $grid = this.body.find('.nks-source-tenant-grid');
+                if ($grid.length) {
+                    $grid.replaceWith(this.get_source_tenant_stats_html());
+                }
+            },
+            error: () => {
+                this.tenant_reachability = null;
+                const $grid = this.body.find('.nks-source-tenant-grid');
+                if ($grid.length) {
+                    $grid.replaceWith(this.get_source_tenant_stats_html());
+                }
+            }
+        });
+    }
+
+    get_tenant_reachability_inline_html(tenant, data) {
+        if (!data) {
+            return `<span style="color:#999;">Reachability unavailable</span>`;
+        }
+
+        const reasonLabels = {
+            no_access_policy_field: 'No access policy field on chunks',
+            no_access_policies: 'No access policy on active chunks',
+            no_access_categories: 'No access category covers this knowledge',
+            no_agent_profiles: 'No agent profile has an enabled access category',
+            no_assignments: 'Profile(s) found but none assigned',
+            ok: '',
+        };
+
+        if (!data.reachable) {
+            const reason = reasonLabels[data.reason] || 'Chain incomplete';
+            return `
+                <span style="color:#e74c3c; font-weight:500;">&#10007; Not Reachable</span>
+                <span style="color:#999; margin-left:4px;">— ${frappe.utils.escape_html(reason)}</span>
+                ${data.profiles && data.profiles.length ? `
+                    <button class="btn btn-xs nks-tenant-reachability-detail-btn"
+                        style="margin-left:6px; font-size:11px;"
+                        data-tenant="${frappe.utils.escape_html(tenant)}">Details</button>
+                ` : ''}
+            `;
+        }
+
+        return `
+            <span style="color:#27ae60; font-weight:500;">&#10003; Reachable</span>
+            <span style="color:#666; margin-left:4px;">— ${data.reachable_count} of ${data.total_profile_count} profile(s) active</span>
+            <button class="btn btn-xs nks-tenant-reachability-detail-btn"
+                style="margin-left:6px; font-size:11px;"
+                data-tenant="${frappe.utils.escape_html(tenant)}">Details</button>
+        `;
+    }
+
+    show_tenant_reachability_dialog(tenant) {
+        const tenantKey = tenant;
+        frappe.call({
+            method: this.api.get_tenants_chat_reachability,
+            freeze: true,
+            freeze_message: 'Loading reachability...',
+            callback: (r) => {
+                if (!r.message || !r.message.success) {
+                    frappe.msgprint('Could not load reachability data.');
+                    return;
+                }
+
+                const data = (r.message.tenants || {})[tenantKey];
+                if (!data) {
+                    frappe.msgprint('No reachability data found for this tenant.');
+                    return;
+                }
+
+                const profileRows = (data.profiles || []).map(p => {
+                    const lines = [];
+
+                    if (p.user_assignments && p.user_assignments.length) {
+                        lines.push(`<span style="color:#27ae60;">&#10003; User Assignment</span> — ${p.user_assignments.length} active user(s)`);
+                    }
+
+                    if (p.identity_routes && p.identity_routes.length) {
+                        const routeList = p.identity_routes.map(r => {
+                            const parts = [r.channel, r.chat_category, r.identity_type].filter(Boolean);
+                            return frappe.utils.escape_html(parts.join(' / '));
+                        }).join('<br>');
+                        lines.push(`<span style="color:#2980b9;">&#10003; Category Identity Route</span><br>${routeList}`);
+                    }
+
+                    if (!lines.length) {
+                        lines.push(`<span style="color:#e74c3c;">&#10007; No active assignments or routes</span>`);
+                    }
+
+                    const statusIcon = p.reachable
+                        ? `<span style="color:#27ae60;">&#10003;</span>`
+                        : `<span style="color:#e74c3c;">&#10007;</span>`;
+
+                    return `
+                        <tr style="border-bottom:1px solid #f0f0f0;">
+                            <td style="padding:6px 8px;">${statusIcon}</td>
+                            <td style="padding:6px 8px; font-weight:500;">${frappe.utils.escape_html(p.profile_label || p.profile)}</td>
+                            <td style="padding:6px 8px; font-size:12px;">${lines.join('<br>')}</td>
+                        </tr>`;
+                }).join('');
+
+                const statusBadge = data.reachable
+                    ? `<span class="nks-badge nks-badge-good">Reachable — ${data.reachable_count} of ${data.total_profile_count} profile(s)</span>`
+                    : `<span class="nks-badge nks-badge-warn">Not Reachable</span>`;
+
+                const dialog = new frappe.ui.Dialog({
+                    title: `Chat Reachability: ${tenantKey}`,
+                    size: 'large',
+                    fields: [{ fieldname: 'html', fieldtype: 'HTML' }]
+                });
+
+                dialog.fields_dict.html.$wrapper.html(`
+                    <div style="padding:8px 0;">
+                        <p style="margin-bottom:12px;">${statusBadge}</p>
+                        ${profileRows.length ? `
+                            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                                <thead>
+                                    <tr style="border-bottom:2px solid #eee; color:#888; font-size:12px;">
+                                        <th style="padding:4px 8px; width:24px;"></th>
+                                        <th style="padding:4px 8px; text-align:left;">AI Agent Profile</th>
+                                        <th style="padding:4px 8px; text-align:left;">Assigned Via</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${profileRows}</tbody>
+                            </table>
+                        ` : `<p class="text-muted">No agent profiles found in the access chain for this tenant's knowledge.</p>`}
+                    </div>
+                `);
+
+                dialog.show();
             }
         });
     }
@@ -1858,37 +2104,14 @@ class NexusStudioPage {
     }
 
     refresh_current_tab_if_needed() {
-        if (this.active_tab === 'overview') {
-            this.render_active_tab();
-        }
+        this.render_active_tab();
     }
 
     render_active_tab() {
         const $content = this.body.find('#nks-tab-content');
-
-        if (this.active_tab === 'overview') {
-            $content.html(this.get_overview_html());
-            return;
-        }
-
-        if (this.active_tab === 'sources') {
-            $content.html(this.get_sources_html());
-            this.render_sources_table();
-            return;
-        }
-
-        if (this.active_tab === 'quality') {
-            $content.html(this.get_answer_quality_html());
-            return;
-        }
-
-        if (this.active_tab === 'improvements') {
-            $content.html(this.get_improvement_areas_html());
-            return;
-        }
-
-        this.active_tab = 'overview';
-        $content.html(this.get_overview_html());
+        this.active_tab = 'sources';
+        $content.html(this.get_sources_html());
+        this.render_sources_table();
     }
 
     get_overview_html() {
@@ -2001,11 +2224,13 @@ class NexusStudioPage {
             </div>
 
             <div class="nks-section-panel">
-                <div class="nks-section-head">
-                    <h3>Source Library</h3>
-                    <p>
-                        Register, govern, and review source material by tenant and business classification before it becomes usable by Nexus answers.
-                    </p>
+                <div class="nks-page-title-block">
+                    <div class="nks-page-title-main">
+                        <h2 class="nks-page-title-text">Knowledge Sources</h2>
+                        <p class="nks-page-title-sub">
+                            Register, govern, and review source material by tenant and business classification before it becomes usable by Nexus answers.
+                        </p>
+                    </div>
                 </div>
 
                 ${this.get_source_tenant_stats_html()}
@@ -2083,9 +2308,16 @@ class NexusStudioPage {
         return `
             <div class="nks-source-tenant-grid">
                 ${tenant_stats.map((row) => {
+                    const tenantKey = frappe.utils.escape_html(row.tenant || 'No Tenant');
+                    const reachability = this.tenant_reachability
+                        ? (this.tenant_reachability[row.tenant || 'No Tenant'] || null)
+                        : undefined;
+                    const reachabilityHtml = reachability === undefined
+                        ? `<span style="color:#999; font-size:12px;">Checking reachability...</span>`
+                        : this.get_tenant_reachability_inline_html(row.tenant || 'No Tenant', reachability);
                     return `
-                        <div class="nks-source-tenant-card">
-                            <div class="nks-source-tenant-title">${frappe.utils.escape_html(row.tenant || 'No Tenant')}</div>
+                        <div class="nks-source-tenant-card" data-tenant="${tenantKey}">
+                            <div class="nks-source-tenant-title">${tenantKey}</div>
                             <div class="nks-source-tenant-stats">
                                 <div>
                                     <strong>${frappe.utils.escape_html(String(row.total || 0))}</strong>
@@ -2099,6 +2331,9 @@ class NexusStudioPage {
                                     <strong>${frappe.utils.escape_html(String(row.retrieval_ready || 0))}</strong>
                                     <span>Retrieval Ready</span>
                                 </div>
+                            </div>
+                            <div class="nks-tenant-reachability" style="margin-top:8px; font-size:12px;">
+                                ${reachabilityHtml}
                             </div>
                         </div>
                     `;
@@ -3375,7 +3610,6 @@ class NexusStudioPage {
             : '';
         const approvalSummary = row.answer_approval_summary || {};
         const compact_tags = [
-            row.sub_context,
             row.entity_type,
             row.topic || row.entity
         ].filter(Boolean);
@@ -3384,25 +3618,31 @@ class NexusStudioPage {
             <details class="nks-source-item" data-source="${frappe.utils.escape_html(row.name || '')}">
                 <summary class="nks-source-item-head">
                     <div class="nks-source-item-head-title">
-                        <div class="nks-unit-link">
-                            ${frappe.utils.escape_html(row.source_title || row.name)}
+                        <div class="nks-source-title-text">${frappe.utils.escape_html(row.source_title || row.name)}</div>
+                        <div class="nks-source-title-sub">
+                            <span>${frappe.utils.escape_html(source_type)}</span>
+                            ${row.chat_category ? `<span class="nks-source-head-sep">·</span><span>${frappe.utils.escape_html(row.chat_category)}</span>` : ''}
                         </div>
-                        <div class="nks-row-sub">${frappe.utils.escape_html(source_type)} · Chat: ${frappe.utils.escape_html(row.chat_category || '-')}</div>
-                        <div class="nks-source-compact-tags">
-                            ${compact_tags.map((tag) => `<span class="nks-badge">${frappe.utils.escape_html(tag)}</span>`).join('')}
-                        </div>
+                        ${(row.context_path || row.context) ? `
+                        <div class="nks-source-title-path">
+                            ${frappe.utils.escape_html(row.context_path || [row.business_unit, row.context, row.sub_context].filter(Boolean).join(' › '))}
+                        </div>` : ''}
+                        ${compact_tags.length ? `
+                        <div class="nks-source-title-tags">
+                            ${compact_tags.map((tag) => `<span class="nks-badge nks-badge-compact">${frappe.utils.escape_html(tag)}</span>`).join('')}
+                        </div>` : ''}
                     </div>
-                    <div class="nks-source-item-head-meta">
-                        <span class="nks-badge nks-badge-info">${frappe.utils.escape_html(access_policy)}</span>
+                    <div class="nks-source-item-head-footer">
+                        ${access_policy ? `<span class="nks-badge nks-badge-info">${frappe.utils.escape_html(access_policy)}</span>` : ''}
                         <span class="nks-badge ${status === 'Published' ? 'nks-badge-published' : status === 'Processed' ? 'nks-badge-processed' : status === 'Validated' ? 'nks-badge-validated' : ''}">${frappe.utils.escape_html(status)}</span>
                         ${disabled_badge}
+                        <span class="nks-source-inline-actions" data-source="${frappe.utils.escape_html(row.name)}">
+                            ${this.get_source_inline_actions_html(row)}
+                        </span>
+                        <button class="btn btn-xs btn-primary nks-source-dashboard-btn" data-name="${frappe.utils.escape_html(row.name)}">
+                            Dashboard
+                        </button>
                     </div>
-                    <span class="nks-source-inline-actions" data-source="${frappe.utils.escape_html(row.name)}">
-                        ${this.get_source_inline_actions_html(row)}
-                    </span>
-                    <button class="btn btn-xs btn-primary nks-source-dashboard-btn" data-name="${frappe.utils.escape_html(row.name)}">
-                        Dashboard
-                    </button>
                 </summary>
 
                 <div class="nks-source-item-body">
@@ -3453,14 +3693,6 @@ class NexusStudioPage {
     get_source_inline_actions_html(row) {
         const buttons = [];
         const name = frappe.utils.escape_html(row.name || '');
-
-        if (this.is_source_prepared(row)) {
-            buttons.push('<span class="nks-badge nks-badge-processed">Processed</span>');
-        }
-
-        if (this.is_source_validated(row)) {
-            buttons.push('<span class="nks-badge nks-badge-validated">Validated</span>');
-        }
 
         if (this.can_show_process_source_action(row)) {
             buttons.push(`
@@ -4010,6 +4242,92 @@ class NexusStudioPage {
         return !this.is_source_prepared(row);
     }
 
+    get_source_chat_reachability_html(result) {
+        if (!result) {
+            return `
+                <div class="nks-dashboard-card" style="width:100%;">
+                    <h5>Chat Reachability</h5>
+                    <p class="text-muted">Reachability data unavailable.</p>
+                </div>`;
+        }
+
+        const reasonLabels = {
+            no_access_policy_field: 'Chunks have no access policy field.',
+            no_access_policies: 'No access policy is set on any active chunk.',
+            no_access_categories: 'No access category includes this knowledge\'s access policy.',
+            no_agent_profiles: 'No AI Agent Profile has an enabled access category covering this knowledge.',
+            no_assignments: 'Agent profile(s) found, but none are assigned to any user or channel route.',
+            access_category_lookup_failed: 'Could not read access category configuration.',
+            profile_lookup_failed: 'Could not read agent profile configuration.',
+            ok: '',
+        };
+
+        if (!result.reachable) {
+            const reason = reasonLabels[result.reason] || 'Reachability chain is incomplete.';
+            return `
+                <div class="nks-dashboard-card" style="width:100%; border-left: 3px solid #e74c3c;">
+                    <h5>Chat Reachability</h5>
+                    <p>
+                        <span class="nks-badge nks-badge-warn">Not Reachable</span>
+                    </p>
+                    <p class="text-muted">${frappe.utils.escape_html(reason)}</p>
+                    ${result.profiles && result.profiles.length ? `
+                        <p class="text-muted" style="margin-top:8px;">
+                            <b>${result.profiles.length}</b> profile(s) found in access chain but none have active assignments or routes.
+                        </p>
+                        <ul style="margin:6px 0 0; padding-left:18px; color:#666;">
+                            ${result.profiles.map(p => `<li>${frappe.utils.escape_html(p.profile_label || p.profile)}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>`;
+        }
+
+        const profileRows = (result.profiles || []).map(p => {
+            const lines = [];
+
+            if (p.user_assignments && p.user_assignments.length) {
+                lines.push(`<span style="color:#27ae60;">&#10003; User Assignment</span> — ${p.user_assignments.length} active user(s)`);
+            }
+
+            if (p.identity_routes && p.identity_routes.length) {
+                const routeList = p.identity_routes.map(r => {
+                    const parts = [r.channel, r.chat_category, r.identity_type].filter(Boolean);
+                    return frappe.utils.escape_html(parts.join(' / '));
+                }).join(', ');
+                lines.push(`<span style="color:#2980b9;">&#10003; Category Identity Route</span> — ${routeList}`);
+            }
+
+            if (!lines.length) {
+                lines.push(`<span class="text-muted">No active assignments or routes</span>`);
+            }
+
+            return `
+                <tr>
+                    <td style="padding:4px 8px; font-weight:500;">${frappe.utils.escape_html(p.profile)}</td>
+                    <td style="padding:4px 8px;">${lines.join('<br>')}</td>
+                </tr>`;
+        }).join('');
+
+        return `
+            <div class="nks-dashboard-card" style="width:100%; border-left: 3px solid #27ae60;">
+                <h5>Chat Reachability</h5>
+                <p>
+                    <span class="nks-badge nks-badge-good">Reachable via ${result.reachable_count} of ${result.total_profile_count} profile(s)</span>
+                </p>
+                <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:13px;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #eee; color:#888; font-size:12px;">
+                            <th style="padding:4px 8px; text-align:left;">AI Agent Profile</th>
+                            <th style="padding:4px 8px; text-align:left;">Assigned Via</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${profileRows}
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
     show_source_dashboard(name) {
         const row = (this.sources || []).find((item) => item.name === name);
 
@@ -4090,6 +4408,13 @@ class NexusStudioPage {
                          ${this.get_source_test_case_dashboard_html(row)}
                      </div>
 
+                    <div class="nks-dashboard-full-row" id="nks-chat-reachability-panel">
+                        <div class="nks-dashboard-card" style="width:100%;">
+                            <h5>Chat Reachability</h5>
+                            <p class="text-muted">Checking reachability chain...</p>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="nks-dashboard-actions">
@@ -4143,6 +4468,28 @@ class NexusStudioPage {
         `);
 
         dialog.show();
+
+        frappe.call({
+            method: this.api.get_chat_reachability,
+            args: { source_name: name },
+            callback: (r) => {
+                const panel = dialog.$wrapper.find('#nks-chat-reachability-panel');
+                if (!panel.length) return;
+                const result = (r && r.message) ? r.message : null;
+                panel.html(this.get_source_chat_reachability_html(result));
+            },
+            error: () => {
+                const panel = dialog.$wrapper.find('#nks-chat-reachability-panel');
+                if (panel.length) {
+                    panel.html(`
+                        <div class="nks-dashboard-card" style="width:100%;">
+                            <h5>Chat Reachability</h5>
+                            <p class="text-muted">Could not load reachability data.</p>
+                        </div>
+                    `);
+                }
+            }
+        });
 
         dialog.$wrapper.find('.nks-dashboard-review-source-btn').on('click', () => {
             frappe.set_route('Form', 'Nexus Knowledge Source', row.name);

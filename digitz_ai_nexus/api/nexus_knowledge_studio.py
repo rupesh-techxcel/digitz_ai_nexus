@@ -1370,6 +1370,177 @@ def get_active_studio_context():
 # -------------------------------------------------------------------------
 
 @frappe.whitelist()
+def get_tenants_chat_reachability():
+    """
+    For every tenant that has published knowledge, walk the full access chain and
+    return which AI Agent Profiles can reach it — and whether each profile is
+    wired to a real user or channel route.
+
+    Chain per tenant:
+      Chunk.access_policy (published, active chunks)
+        → Nexus Access Category Policy
+          → Nexus AI Agent Profile Access Category (enabled)
+            → Nexus User Profile Assignment (active)   — desk users
+            → Nexus Category Identity Route (enabled)  — live chat visitors
+    """
+    chunk_meta = frappe.get_meta("Nexus Knowledge Chunk")
+    if not chunk_meta.has_field("access_policy") or not chunk_meta.has_field("tenant"):
+        return {"success": True, "tenants": {}}
+
+    # Step 1: Distinct (tenant, access_policy) pairs from active published chunks
+    raw = frappe.get_all(
+        "Nexus Knowledge Chunk",
+        filters={"disabled": 0, "embedding_status": "Completed"},
+        fields=["tenant", "access_policy"],
+    )
+
+    tenant_policies = {}
+    for row in raw:
+        tenant = row.get("tenant") or "No Tenant"
+        policy = row.get("access_policy")
+        if not policy:
+            continue
+        tenant_policies.setdefault(tenant, set()).add(policy)
+
+    if not tenant_policies:
+        return {"success": True, "tenants": {}}
+
+    # Step 2: All policies across tenants → categories
+    all_policies = list({p for policies in tenant_policies.values() for p in policies})
+
+    try:
+        cat_rows = frappe.get_all(
+            "Nexus Access Category Policy",
+            filters={"access_policy": ["in", all_policies]},
+            fields=["parent", "access_policy"],
+        )
+    except Exception:
+        return {"success": True, "tenants": {}}
+
+    policy_to_categories = {}
+    for row in cat_rows:
+        policy = row.get("access_policy")
+        cat = row.get("parent")
+        if policy and cat:
+            policy_to_categories.setdefault(policy, set()).add(cat)
+
+    all_categories = list({c for cats in policy_to_categories.values() for c in cats})
+
+    if not all_categories:
+        return {"success": True, "tenants": {_tenant: _no_chain(reason="no_access_categories") for _tenant in tenant_policies}}
+
+    # Step 3: Categories → AI Agent Profiles (enabled links)
+    try:
+        profile_rows = frappe.get_all(
+            "Nexus AI Agent Profile Access Category",
+            filters={"access_category": ["in", all_categories], "enabled": 1},
+            fields=["ai_agent_profile", "access_category"],
+        )
+    except Exception:
+        return {"success": True, "tenants": {}}
+
+    category_to_profiles = {}
+    for row in profile_rows:
+        cat = row.get("access_category")
+        profile = row.get("ai_agent_profile")
+        if cat and profile:
+            category_to_profiles.setdefault(cat, set()).add(profile)
+
+    all_profile_names = list({p for profiles in category_to_profiles.values() for p in profiles})
+
+    # Step 4a: Fetch human-readable label for each profile (agent field = title_field)
+    profile_labels = {}
+    agent_name_counts = {}
+    try:
+        for row in frappe.get_all(
+            "Nexus AI Agent Profile",
+            filters={"name": ["in", all_profile_names]},
+            fields=["name", "agent"],
+        ):
+            agent_val = row.get("agent") or ""
+            profile_labels[row["name"]] = agent_val
+            agent_name_counts[agent_val] = agent_name_counts.get(agent_val, 0) + 1
+    except Exception:
+        pass
+
+    # Step 4: Assignments and routes for every profile (one query each, not per-profile)
+    profile_user_assignments = {}
+    profile_identity_routes = {}
+
+    try:
+        for row in frappe.get_all(
+            "Nexus User Profile Assignment",
+            filters={"ai_agent_profile": ["in", all_profile_names], "active": 1},
+            fields=["ai_agent_profile", "user"],
+        ):
+            profile_user_assignments.setdefault(row["ai_agent_profile"], []).append(row["user"])
+    except Exception:
+        pass
+
+    try:
+        for row in frappe.get_all(
+            "Nexus Category Identity Route",
+            filters={"ai_agent_profile": ["in", all_profile_names], "enabled": 1},
+            fields=["ai_agent_profile", "channel", "chat_category", "identity_type"],
+        ):
+            profile_identity_routes.setdefault(row["ai_agent_profile"], []).append({
+                "channel": row.get("channel") or "",
+                "chat_category": row.get("chat_category") or "",
+                "identity_type": row.get("identity_type") or "",
+            })
+    except Exception:
+        pass
+
+    # Step 5: Assemble per-tenant result
+    result = {}
+    for tenant, policies in tenant_policies.items():
+        # Profiles reachable for this tenant's policies
+        tenant_categories = set()
+        for policy in policies:
+            tenant_categories.update(policy_to_categories.get(policy, set()))
+
+        tenant_profiles_names = set()
+        for cat in tenant_categories:
+            tenant_profiles_names.update(category_to_profiles.get(cat, set()))
+
+        if not tenant_profiles_names:
+            result[tenant] = _no_chain(reason="no_agent_profiles")
+            continue
+
+        profiles = []
+        for profile_name in sorted(tenant_profiles_names):
+            assignments = profile_user_assignments.get(profile_name, [])
+            routes = profile_identity_routes.get(profile_name, [])
+            agent_val = profile_labels.get(profile_name, "")
+            # If multiple profiles share the same agent name, append a short disambiguator
+            if agent_val and agent_name_counts.get(agent_val, 1) > 1:
+                label = f"{agent_val} ({profile_name[:6]})"
+            else:
+                label = agent_val or profile_name
+            profiles.append({
+                "profile": profile_name,
+                "profile_label": label,
+                "user_assignments": assignments,
+                "identity_routes": routes,
+                "reachable": bool(assignments or routes),
+            })
+
+        reachable = [p for p in profiles if p["reachable"]]
+        result[tenant] = {
+            "reachable": bool(reachable),
+            "reason": "ok" if reachable else "no_assignments",
+            "profiles": profiles,
+            "reachable_count": len(reachable),
+            "total_profile_count": len(profiles),
+        }
+
+    return {"success": True, "tenants": result}
+
+
+def _no_chain(reason):
+    return {"reachable": False, "reason": reason, "profiles": [], "reachable_count": 0, "total_profile_count": 0}
+
+@frappe.whitelist()
 def get_knowledge_source_summary():
     """
     Returns tenant/user-context scoped Knowledge Source summary counters.

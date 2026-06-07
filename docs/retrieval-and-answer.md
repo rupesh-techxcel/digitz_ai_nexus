@@ -83,7 +83,7 @@ Return success response
 
 | Mode | Fallback behaviour |
 |---|---|
-| `chat` / `live chat` | LLM Host generates a warm, graceful response. No facts stated. May ask a clarifying question. Does NOT offer to connect with team — that is handled by the Intent Handler system. |
+| `chat` / `live chat` | Fallback message returned directly — no LLM call. Uses the `fallback_message` configured on the AI Agent Profile, or the system default. No clarifying questions, no implied knowledge. See [chat-handling.md](chat-handling.md) Step 6. |
 | All other modes | Hard fallback string: `"I do not have enough approved knowledge to answer this."` |
 
 ---
@@ -552,7 +552,7 @@ An `OpenAIEmbeddingProvider` class wraps the client. Fake providers are used in 
     "status": "success",
     "access_status": "no_context",
     "answer": "I do not have enough approved knowledge to answer this.",
-    # In chat mode: LLM Host generates a warm, graceful version of this
+    # In chat mode: profile fallback_message is used, or the system default — no LLM call
     "confidence": 0.0,
     "sources": [],
     "citations": [],

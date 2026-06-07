@@ -130,6 +130,142 @@ class NexusKnowledgeSource(Document):
 
 
 @frappe.whitelist()
+def get_source_chat_reachability(source_name):
+    """
+    Walk the access chain for a knowledge source and report which AI Agent Profiles
+    can reach it, and whether each profile is wired to a real user or channel route.
+
+    Chain:
+      Chunk.access_policy
+        → Nexus Access Category Policy (child of Nexus Access Category)
+          → Nexus AI Agent Profile Access Category
+            → Nexus User Profile Assignment (active)   — desk users
+            → Nexus Category Identity Route (enabled)  — live chat visitors
+    """
+    if not source_name:
+        frappe.throw("Source name is required")
+
+    chunk_meta = frappe.get_meta("Nexus Knowledge Chunk")
+    if not chunk_meta.has_field("access_policy"):
+        return {"reachable": False, "reason": "no_access_policy_field", "profiles": []}
+
+    # Step 1: distinct access_policies on active chunks
+    raw_policies = frappe.get_all(
+        "Nexus Knowledge Chunk",
+        filters={"knowledge_source": source_name, "disabled": 0},
+        pluck="access_policy",
+    )
+    policies = list({p for p in raw_policies if p})
+
+    if not policies:
+        return {"reachable": False, "reason": "no_access_policies", "profiles": []}
+
+    # Step 2: Access Categories that contain any of these policies
+    try:
+        cat_rows = frappe.get_all(
+            "Nexus Access Category Policy",
+            filters={"access_policy": ["in", policies]},
+            fields=["parent", "access_policy"],
+        )
+    except Exception:
+        return {"reachable": False, "reason": "access_category_lookup_failed", "profiles": []}
+
+    categories = list({r["parent"] for r in cat_rows if r.get("parent")})
+
+    if not categories:
+        return {"reachable": False, "reason": "no_access_categories", "profiles": []}
+
+    # Step 3: AI Agent Profiles that have any of these categories (and are enabled)
+    try:
+        profile_rows = frappe.get_all(
+            "Nexus AI Agent Profile Access Category",
+            filters={"access_category": ["in", categories], "enabled": 1},
+            fields=["ai_agent_profile", "access_category"],
+        )
+    except Exception:
+        return {"reachable": False, "reason": "profile_lookup_failed", "profiles": []}
+
+    profile_names = list({r["ai_agent_profile"] for r in profile_rows if r.get("ai_agent_profile")})
+
+    if not profile_names:
+        return {"reachable": False, "reason": "no_agent_profiles", "profiles": []}
+
+    # Step 4a: Fetch human-readable label for each profile (agent field = title_field)
+    profile_labels = {}
+    agent_name_counts = {}
+    try:
+        for row in frappe.get_all(
+            "Nexus AI Agent Profile",
+            filters={"name": ["in", profile_names]},
+            fields=["name", "agent"],
+        ):
+            agent_val = row.get("agent") or ""
+            profile_labels[row["name"]] = agent_val
+            agent_name_counts[agent_val] = agent_name_counts.get(agent_val, 0) + 1
+    except Exception:
+        pass
+
+    # Step 4: For each profile, check real-world assignments and routes
+    profiles = []
+    for profile_name in sorted(profile_names):
+        assignments = []
+        routes = []
+
+        try:
+            user_assignments = frappe.get_all(
+                "Nexus User Profile Assignment",
+                filters={"ai_agent_profile": profile_name, "active": 1},
+                fields=["user"],
+            )
+            assignments = [a["user"] for a in user_assignments if a.get("user")]
+        except Exception:
+            pass
+
+        try:
+            identity_routes = frappe.get_all(
+                "Nexus Category Identity Route",
+                filters={"ai_agent_profile": profile_name, "enabled": 1},
+                fields=["channel", "chat_category", "identity_type"],
+            )
+            routes = [
+                {
+                    "channel": r.get("channel") or "",
+                    "chat_category": r.get("chat_category") or "",
+                    "identity_type": r.get("identity_type") or "",
+                }
+                for r in identity_routes
+            ]
+        except Exception:
+            pass
+
+        agent_val = profile_labels.get(profile_name, "")
+        if agent_val and agent_name_counts.get(agent_val, 1) > 1:
+            label = f"{agent_val} ({profile_name[:6]})"
+        else:
+            label = agent_val or profile_name
+
+        profiles.append({
+            "profile": profile_name,
+            "profile_label": label,
+            "user_assignments": assignments,
+            "identity_routes": routes,
+            "reachable": bool(assignments or routes),
+        })
+
+    reachable_profiles = [p for p in profiles if p["reachable"]]
+
+    return {
+        "reachable": bool(reachable_profiles),
+        "reason": "ok" if reachable_profiles else "no_assignments",
+        "profiles": profiles,
+        "reachable_count": len(reachable_profiles),
+        "total_profile_count": len(profiles),
+        "policies_found": len(policies),
+        "categories_found": len(categories),
+    }
+
+
+@frappe.whitelist()
 def get_source_quality_panel(source_name):
     if not source_name:
         frappe.throw("Source name is required")
