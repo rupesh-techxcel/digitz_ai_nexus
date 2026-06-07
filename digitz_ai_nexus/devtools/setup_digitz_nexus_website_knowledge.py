@@ -583,15 +583,15 @@ def ensure_public_route(profile):
 
 def ensure_ecosystem():
     existing = frappe.db.get_value(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         {"tenant": TENANT, "ecosystem_name": "DIGITZ AI Nexus Website"},
         "name",
     )
 
     if existing:
-        doc = frappe.get_doc("Nexus Ecosystem", existing)
+        doc = frappe.get_doc("Nexus Tenant Configuration", existing)
     else:
-        doc = frappe.new_doc("Nexus Ecosystem")
+        doc = frappe.new_doc("Nexus Tenant Configuration")
         doc.tenant = TENANT
         doc.ecosystem_name = "DIGITZ AI Nexus Website"
 

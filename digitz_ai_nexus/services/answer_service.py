@@ -1,11 +1,62 @@
+import re
 import frappe
 
 from digitz_ai_nexus.engine.retrieval import retrieve_allowed_chunks
-from digitz_ai_nexus.engine.prompt import build_prompt, SAFE_FALLBACK_ANSWER
+from digitz_ai_nexus.engine.prompt import build_prompt, build_conversational_prompt, SAFE_FALLBACK_ANSWER
 from digitz_ai_nexus.engine.llm import generate_answer
 
 
 RESTRICTED_ANSWER = "You do not have permission to access this information."
+
+_CONVERSATIONAL_PATTERNS = [
+    r"^(hi+|hello+|hey+|howdy|greetings|good\s+(morning|afternoon|evening|day))\s*[!.,]*$",
+    r"^(my name is|i am|i'm|this is)\s+\w+.*$",
+    r"^(thanks?(\s+you)?|ok(ay)?|got\s+it|sure|alright|great|perfect|noted|understood|cool|nice)\s*[!.,]*$",
+    r"^(how are you|what'?s up|how do you do|how'?s it going)\s*[?.!]*$",
+    r"^(bye+|goodbye|see\s+you|take\s+care|later|ciao)\s*[!.,]*$",
+    r"^(good\s+to\s+(meet|know)\s+you|nice\s+to\s+meet\s+you)\s*[!.,]*$",
+]
+
+_QUESTION_WORDS = re.compile(
+    r"\b(what|how|why|when|who|where|which|can|could|should|is|are|does|do|will|would|tell\s+me|explain|define|describe)\b",
+    re.IGNORECASE,
+)
+
+
+def is_conversational_message(query, response_mode):
+    """Returns True if the query is a social/conversational turn that needs no knowledge lookup."""
+    if not query:
+        return False
+    mode = str(response_mode or "").lower()
+    if mode not in ("chat", "live chat"):
+        return False
+    q = query.strip()
+    for pattern in _CONVERSATIONAL_PATTERNS:
+        if re.fullmatch(pattern, q, re.IGNORECASE):
+            return True
+    # Very short utterances with no question words are almost always social (greetings, exclamations)
+    if len(q) <= 15 and not _QUESTION_WORDS.search(q):
+        return True
+    return False
+
+
+def handle_conversational_message(payload, llm_provider=None):
+    """Send conversational turns directly to the LLM — no retrieval, no fallback, no escalation."""
+    prompt = build_conversational_prompt(payload)
+    answer = generate_answer(prompt, provider=llm_provider)
+    answer = (answer or "").strip()
+    if not answer:
+        answer = "Hello! How can I help you today?"
+    return {
+        "status": "success",
+        "access_status": "conversational",
+        "answer": answer,
+        "confidence": 1.0,
+        "sources": [],
+        "citations": [],
+        "retrieval_result": {},
+        "fallback_used": 0,
+    }
 
 
 def answer_query(
@@ -21,6 +72,12 @@ def answer_query(
     query = payload.get("query")
     if not query:
         frappe.throw("Query is required")
+
+    # Conversational bypass: greetings, introductions, and social exchanges
+    # in chat/live-chat mode skip retrieval entirely to avoid fallback + escalation.
+    response_mode_key = payload.get("response_mode") or payload.get("use_case")
+    if is_conversational_message(query, response_mode_key):
+        return handle_conversational_message(payload, llm_provider=llm_provider)
 
     # Guard: if allowed_access_policies was resolved but came back empty,
     # deny retrieval — fail closed, never treat empty as "allow all".

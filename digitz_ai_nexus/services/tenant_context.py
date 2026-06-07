@@ -49,19 +49,19 @@ def get_user_context(user=None):
     return frappe.get_doc("Nexus User Context", context_name)
 
 
-def get_ecosystem_for_tenant(tenant):
+def get_tenant_configuration(tenant):
     """
-    Returns the active Nexus Ecosystem configuration for a tenant.
+    Returns the active Nexus Tenant Configuration for a tenant.
 
     Priority:
-    1. exactly one enabled ecosystem
-    2. no fallback if more than one enabled ecosystem exists
+    1. exactly one enabled configuration
+    2. no fallback if more than one enabled configuration exists
     """
     if not tenant:
         return None
 
-    ecosystems = frappe.get_all(
-        "Nexus Ecosystem",
+    configs = frappe.get_all(
+        "Nexus Tenant Configuration",
         filters={
             "tenant": tenant,
             "enabled": 1,
@@ -71,26 +71,26 @@ def get_ecosystem_for_tenant(tenant):
         limit_page_length=2,
     )
 
-    if len(ecosystems) > 1:
+    if len(configs) > 1:
         frappe.throw(
             (
-                "Multiple enabled Nexus Ecosystems exist for this tenant. "
-                "Keep one enabled ecosystem and disable the rest."
+                "Multiple enabled Tenant Configurations exist for this tenant. "
+                "Keep one enabled configuration and disable the rest."
             )
         )
 
-    if not ecosystems:
+    if not configs:
         return None
 
-    return frappe.get_doc("Nexus Ecosystem", ecosystems[0].name)
+    return frappe.get_doc("Nexus Tenant Configuration", configs[0].name)
 
 
-def get_default_channel_for_payload(payload=None, user_context=None, ecosystem=None):
+def get_default_channel_for_payload(payload=None, user_context=None, tenant_config=None):
     """
     Resolve the best default channel for the current runtime purpose.
 
-    Chat and Q&A flows have separate ecosystem defaults. Non-specific runtime
-    calls do not receive a channel default.
+    Chat and Q&A flows have separate tenant configuration defaults.
+    Non-specific runtime calls do not receive a channel default.
     """
     payload = payload or {}
 
@@ -101,7 +101,7 @@ def get_default_channel_for_payload(payload=None, user_context=None, ecosystem=N
     if user_context and user_context.active_channel:
         return user_context.active_channel
 
-    if not ecosystem:
+    if not tenant_config:
         return None
 
     purpose = (
@@ -113,10 +113,10 @@ def get_default_channel_for_payload(payload=None, user_context=None, ecosystem=N
     purpose = str(purpose).strip().lower()
 
     if purpose in {"q&a", "qa", "question", "question_answering"}:
-        return ecosystem.default_qa_channel
+        return tenant_config.default_qa_channel
 
     if purpose in {"chat", "live chat", "live_chat"}:
-        return ecosystem.default_chat_channel
+        return tenant_config.default_chat_channel
 
     return None
 
@@ -128,7 +128,7 @@ def resolve_tenant_context(payload=None, user=None, require_tenant=True):
     Resolution priority:
     1. Explicit payload values
     2. Current user's Nexus User Context
-    3. Nexus Ecosystem defaults
+    3. Nexus Tenant Configuration defaults
     4. Error if tenant is required
     """
     payload = payload or {}
@@ -147,31 +147,31 @@ def resolve_tenant_context(payload=None, user=None, require_tenant=True):
             "Tenant is required. Please select an active tenant in Nexus Administration."
         )
 
-    ecosystem = get_ecosystem_for_tenant(tenant)
+    tenant_config = get_tenant_configuration(tenant)
 
     business_unit = (
         payload.get("business_unit")
         or payload.get("active_business_unit")
         or (user_context.active_business_unit if user_context else None)
-        or (ecosystem.default_business_unit if ecosystem else None)
+        or (tenant_config.default_business_unit if tenant_config else None)
     )
 
     project = (
         payload.get("project")
         or payload.get("active_project")
         or (user_context.active_project if user_context else None)
-        or (ecosystem.default_project if ecosystem else None)
+        or (tenant_config.default_project if tenant_config else None)
     )
 
     channel = get_default_channel_for_payload(
         payload=payload,
         user_context=user_context,
-        ecosystem=ecosystem,
+        tenant_config=tenant_config,
     )
 
     context = (
         payload.get("context")
-        or (ecosystem.default_public_context if ecosystem else None)
+        or (tenant_config.default_public_context if tenant_config else None)
     )
 
     resolved = frappe._dict({
@@ -182,15 +182,15 @@ def resolve_tenant_context(payload=None, user=None, require_tenant=True):
         "channel": channel,
         "context": context,
         "user_context": user_context.name if user_context else None,
-        "ecosystem": ecosystem.name if ecosystem else None,
-        "ecosystem_activation_status": ecosystem.activation_status if ecosystem else None,
-        "qa_enabled": ecosystem.qa_enabled if ecosystem else None,
-        "live_chat_enabled": ecosystem.live_chat_enabled if ecosystem else None,
-        "default_qa_channel": ecosystem.default_qa_channel if ecosystem else None,
-        "default_chat_channel": ecosystem.default_chat_channel if ecosystem else None,
-        "default_top_k": ecosystem.default_top_k if ecosystem else None,
-        "require_approved_knowledge": ecosystem.require_approved_knowledge if ecosystem else None,
-        "strict_tenant_mode": ecosystem.strict_tenant_mode if ecosystem else None,
+        "tenant_configuration": tenant_config.name if tenant_config else None,
+        "activation_status": tenant_config.activation_status if tenant_config else None,
+        "qa_enabled": tenant_config.qa_enabled if tenant_config else None,
+        "live_chat_enabled": tenant_config.live_chat_enabled if tenant_config else None,
+        "default_qa_channel": tenant_config.default_qa_channel if tenant_config else None,
+        "default_chat_channel": tenant_config.default_chat_channel if tenant_config else None,
+        "default_top_k": tenant_config.default_top_k if tenant_config else None,
+        "require_approved_knowledge": tenant_config.require_approved_knowledge if tenant_config else None,
+        "strict_tenant_mode": tenant_config.strict_tenant_mode if tenant_config else None,
     })
 
     return resolved
@@ -221,7 +221,7 @@ def apply_tenant_context_to_payload(payload=None, user=None, require_tenant=True
 
     enriched["_resolved_tenant_context"] = {
         "user_context": resolved.user_context,
-        "ecosystem": resolved.ecosystem,
+        "tenant_configuration": resolved.tenant_configuration,
         "tenant": resolved.tenant,
         "business_unit": resolved.business_unit,
         "project": resolved.project,

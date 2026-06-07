@@ -136,14 +136,14 @@ Top-level knowledge entry. A source is a document or piece of content to be inge
 | entity | Data | |
 | topic | Data | |
 | **Status** | | |
-| status | Select | Draft / Ready to Publish / Published / Archived |
+| status | Select | Draft / Pending Review / Processed / Ready to Publish / Published / Disabled |
 | priority | Int | Boosts chunks in retrieval scoring |
 | chat_category | Link → Nexus Chat Category | Optional chat/Q&A category propagated to semantic index entries |
 | processing_status | Select | Ingestion pipeline state |
 | embedding_status | Select | Embedding generation state |
 | diagnostics_status | Select | Quality check state |
-| validation_status | Select | |
-| retrieval_ready | Check | 1 = safe to retrieve from |
+| validation_status | Select | Pending / Passed / Failed |
+| retrieval_ready | Check | 1 only when Published + all answers approved + embedding complete + chunks present |
 | **Validation** | | |
 | validation_query | Data | Test query for pre-publish validation |
 | validation_confidence | Float | Last validation score |
@@ -240,6 +240,7 @@ Chunk-linked semantic retrieval metadata generated during source processing.
 | canonical_text | Small Text | The retrieval phrase/question |
 | display_summary | Small Text | Short display context only |
 | answer_preview | Small Text | Preview from linked chunk |
+| generated_answer | Text | LLM-generated answer used during answer review |
 | knowledge_source | Link → Nexus Knowledge Source | Provenance |
 | knowledge_unit | Link → Nexus Knowledge Unit | Parent unit |
 | knowledge_chunk | Link → Nexus Knowledge Chunk | Grounded answer content |
@@ -255,10 +256,17 @@ Chunk-linked semantic retrieval metadata generated during source processing.
 | entry_hash | Data | Unique hash |
 | embedding | Long Text | Vector for semantic matching |
 | embedding_status | Select | Pending / Completed / Failed |
+| **Answer Review** | | `User Question` entries only |
+| answer_review_status | Select | Pending Review / Approved / Rejected |
+| answer_review_notes | Small Text | Reviewer notes |
+| answer_reviewed_by | Link → User | |
+| answer_reviewed_on | Datetime | |
 
 Autoname: `NKIE-.#####`. Permissions: System Manager only.
 
 `User Question` entries are searched first as a cost-saving shortcut. A strong match narrows retrieval to linked chunks. `Intellectual Summary` entries provide intent-oriented boosts. Neither entry type is used as factual answer evidence.
+
+`User Question` entries require answer review before a source can reach `Ready to Publish`. All `User Question` entries for a source must be `Approved` before the source's `strict_ready` condition is satisfied. `Intellectual Summary` entries do not require approval.
 
 ---
 

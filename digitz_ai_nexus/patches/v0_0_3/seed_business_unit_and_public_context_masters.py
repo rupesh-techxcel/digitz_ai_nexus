@@ -5,18 +5,17 @@ BUSINESS_UNIT_FIELDS = {
 	"Nexus Knowledge Unit": ["business_unit"],
 	"Nexus Knowledge Chunk": ["business_unit"],
 	"Nexus Knowledge Source": ["business_unit"],
-	"Nexus Ecosystem": ["default_business_unit"],
+	"Nexus Tenant Configuration": ["default_business_unit"],
 	"Nexus User Context": ["active_business_unit"],
 	"Nexus Knowledge Test Case": ["business_unit"],
 	"Nexus Knowledge Test Run": ["business_unit"],
 	"Nexus Query Log": ["business_unit"],
 	"Nexus Live Agent": ["business_unit"],
-	"Nexus Role Access Category": ["business_unit"],
 	"Nexus Test Case": ["business_unit"],
 }
 
 PUBLIC_CONTEXT_FIELDS = {
-	"Nexus Ecosystem": ["default_public_context"],
+	"Nexus Tenant Configuration": ["default_public_context"],
 	"Nexus Knowledge Unit": ["context"],
 	"Nexus Knowledge Chunk": ["context"],
 	"Nexus Knowledge Source": ["context"],

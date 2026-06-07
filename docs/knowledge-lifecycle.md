@@ -57,13 +57,14 @@ The source is provenance. The chunk is the grounded answer content. The context 
 | source_file | Attach | Uploaded file |
 | manual_content | Long Text | For Manual type |
 | access_policy | Link → Nexus Access Policy | **Required before publishing** |
-| status | Select | Draft / Ready to Publish / Published / Archived |
+| status | Select | Draft / Pending Review / Processed / Ready to Publish / Published / Disabled |
 | priority | Int | Boosts retrieval score for this source's chunks |
 | chat_category | Link → Nexus Chat Category | Optional category used by chat/Q&A routing |
 | processing_status | Select | Tracks ingestion progress |
 | embedding_status | Select | Tracks embedding generation progress |
 | diagnostics_status | Select | Quality check status |
-| retrieval_ready | Check | Set to 1 only when fully processed and embeddable |
+| validation_status | Select | Pending / Passed / Failed |
+| retrieval_ready | Check | Set to 1 only when Published + all answers approved + embedding complete + chunks present |
 | generated_knowledge_unit | Link | Points to the active unit |
 
 ### Business Classification Fields
@@ -74,10 +75,23 @@ These are metadata for filtering relevance (not access enforcement):
 - `context`, `sub_context`
 - `entity_type`, `entity`, `topic`
 
-### Status Rules
+### Status Flow
+
+```
+Draft
+  → [Process] → Processed
+                  → [Approve Answers] → (strict_ready satisfied)
+                  → [Validate]        → Ready to Publish   (validation passed + all answers approved)
+                                      → Processed          (validation passed but answers not all approved)
+                                      → Pending Review     (missing required fields)
+                  → [Publish]         → Published
+  → [Disable]   → Disabled
+```
 
 - A source without `access_policy` cannot be published.
-- `retrieval_ready` is set to `1` only after: status = Published, at least one active chunk with `embedding_status = Completed`, and validation passed (if required).
+- `Pending Review` is set when validation detects missing required fields; a human must correct and re-validate.
+- `Ready to Publish` requires both validation passing **and** all `User Question` index entries being `Approved` (strict_ready).
+- `retrieval_ready` is set to `1` only after: `status = Published`, at least one active chunk with `embedding_status = Completed`, `diagnostics_status` complete, and **all User Question index entries Approved** (`strict_ready = 1`).
 - `retrieval_ready` resets to `0` if the source is unpublished, re-ingested, or its access policy changes.
 
 ---
@@ -119,7 +133,8 @@ Triggered by `services/knowledge_source_processor.py` → `process_knowledge_sou
       - Set embedding_status = Completed
 8. Update source status flags:
    - processing_status, embedding_status, diagnostics_status
-   - Set retrieval_ready = 1 if conditions are met
+   - Source status moves to `Processed`
+   - retrieval_ready remains 0 until answer approval and validation are complete
 9. Generate `Nexus Knowledge Index Entry` rows for each new chunk:
    - `Intellectual Summary`: intent-oriented meaning labels, e.g. "what a cat is"
    - `User Question`: likely questions that the chunk can answer
@@ -154,6 +169,36 @@ Each chunk inherits a `context_path` string built from its classification metada
 Example: `Operations/Procurement/Vendor/ACME Corp/Payment Terms`
 
 This is used in keyword scoring during retrieval.
+
+---
+
+## Answer Approval
+
+After processing, each `User Question` index entry generated for the source must be reviewed before the source can reach `Ready to Publish`.
+
+### Why It Exists
+
+Processing generates candidate questions the AI believes the chunk can answer. A human reviews these to confirm they are accurate — approving correct ones and rejecting misleading ones. Only when every `User Question` entry for the source is either `Approved` (none `Rejected` or `Pending Review`) does the source satisfy `strict_ready`. Without `strict_ready`, the source cannot move to `Ready to Publish`, and even if Published, `retrieval_ready` stays `0`.
+
+### Answer Review Fields on Index Entry
+
+| Field | Values | Purpose |
+|---|---|---|
+| `answer_review_status` | Pending Review / Approved / Rejected | Per-entry review decision |
+| `answer_review_notes` | Small Text | Reviewer notes |
+| `answer_reviewed_by` | Link → User | Who reviewed |
+| `answer_reviewed_on` | Datetime | When reviewed |
+
+Only `User Question` entries require review. `Intellectual Summary` entries are excluded from the `strict_ready` calculation.
+
+### strict_ready Condition
+
+```
+strict_ready = 1  when:
+    total User Question entries > 0
+    AND all entries have answer_review_status = "Approved"
+    AND none are "Rejected" or "Pending Review"
+```
 
 ---
 

@@ -45,7 +45,7 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
         self.assertEqual(first.get("ecosystem"), second.get("ecosystem"))
 
         ecosystems = frappe.get_all(
-            "Nexus Ecosystem",
+            "Nexus Tenant Configuration",
             filters={"tenant": TEST_TENANT, "enabled": 1},
             fields=["name", "ecosystem_type", "default_public_context", "is_default"],
         )
@@ -66,7 +66,7 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
 
         self.assertTrue(first.get("ecosystem"))
 
-        doc = frappe.new_doc("Nexus Ecosystem")
+        doc = frappe.new_doc("Nexus Tenant Configuration")
         doc.tenant = TEST_TENANT
         doc.ecosystem_name = "Second Enabled Ecosystem"
         doc.ecosystem_type = "Sandbox"
@@ -106,7 +106,7 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
 
         frappe.db.sql(
             """
-            insert into `tabNexus Ecosystem`
+            insert into `tabNexus Tenant Configuration`
                 (name, owner, creation, modified, modified_by, docstatus, idx,
                  tenant, ecosystem_name, ecosystem_type, enabled, is_default)
             values
@@ -155,7 +155,7 @@ def cleanup_test_records():
     )
 
     delete_records(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         [["tenant", "=", TEST_TENANT]],
     )
 

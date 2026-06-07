@@ -103,43 +103,6 @@ def ensure_access_category(category_name, policies, title=None, description="", 
     return doc.name
 
 
-def ensure_role_access_category(role, access_category, description=""):
-    """
-    Create a global Role → Access Category mapping.
-    """
-
-    if not role or not access_category:
-        return None
-
-    if not frappe.db.exists("Role", role):
-        return None
-
-    existing = frappe.get_all(
-        "Nexus Role Access Category",
-        filters={
-            "role": role,
-            "access_category": access_category,
-            "tenant": ["in", ["", None]],
-            "business_unit": ["in", ["", None]],
-            "project": ["in", ["", None]],
-        },
-        fields=["name"],
-        limit_page_length=1,
-    )
-
-    if existing:
-        doc = frappe.get_doc("Nexus Role Access Category", existing[0].name)
-    else:
-        doc = frappe.new_doc("Nexus Role Access Category")
-        doc.role = role
-        doc.access_category = access_category
-
-    doc.disabled = 0
-    doc.description = description or ""
-    doc.save(ignore_permissions=True)
-
-    return doc.name
-
 
 def seed_default_access_governance():
     """
@@ -197,31 +160,6 @@ def seed_default_access_governance():
         policies=[public_policy, internal_policy, restricted_policy],
         description="Allows Public, Internal, and Restricted knowledge.",
         priority=30,
-    )
-
-    # Role mappings.
-    ensure_role_access_category(
-        role="Guest",
-        access_category=public_access,
-        description="Guest users can access Public knowledge only.",
-    )
-
-    ensure_role_access_category(
-        role="Website User",
-        access_category=public_access,
-        description="Website users can access Public knowledge only by default.",
-    )
-
-    ensure_role_access_category(
-        role="Employee",
-        access_category=internal_access,
-        description="Employees can access Public and Internal knowledge.",
-    )
-
-    ensure_role_access_category(
-        role="System Manager",
-        access_category=restricted_access,
-        description="System Managers can access Public, Internal, and Restricted knowledge.",
     )
 
     frappe.db.commit()

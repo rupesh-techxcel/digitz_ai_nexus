@@ -2,11 +2,11 @@ import frappe
 
 
 def execute():
-    if not frappe.db.exists("DocType", "Nexus Ecosystem"):
+    if not frappe.db.exists("DocType", "Nexus Tenant Configuration"):
         return
 
     tenants = frappe.get_all(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         filters={"enabled": 1},
         pluck="tenant",
         distinct=True,
@@ -17,7 +17,7 @@ def execute():
             continue
 
         ecosystems = frappe.get_all(
-            "Nexus Ecosystem",
+            "Nexus Tenant Configuration",
             filters={
                 "tenant": tenant,
                 "enabled": 1,
@@ -30,7 +30,7 @@ def execute():
         if len(ecosystems) <= 1:
             if ecosystems and not int(ecosystems[0].get("is_default") or 0):
                 frappe.db.set_value(
-                    "Nexus Ecosystem",
+                    "Nexus Tenant Configuration",
                     ecosystems[0].name,
                     "is_default",
                     1,
@@ -41,7 +41,7 @@ def execute():
         keep = ecosystems[0].name
 
         frappe.db.set_value(
-            "Nexus Ecosystem",
+            "Nexus Tenant Configuration",
             keep,
             "is_default",
             1,
@@ -50,7 +50,7 @@ def execute():
 
         for row in ecosystems[1:]:
             frappe.db.set_value(
-                "Nexus Ecosystem",
+                "Nexus Tenant Configuration",
                 row.name,
                 {
                     "enabled": 0,

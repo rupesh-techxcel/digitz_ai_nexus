@@ -3,12 +3,12 @@
  "allow_copy": 1,
  "allow_rename": 1,
  "autoname": "field:ecosystem_name",
- "creation": "2026-05-15 00:00:00",
+ "creation": "2026-06-06 00:00:00",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "ecosystem_identity_section",
+  "configuration_identity_section",
   "tenant",
   "ecosystem_name",
   "ecosystem_type",
@@ -45,9 +45,9 @@
  ],
  "fields": [
   {
-   "fieldname": "ecosystem_identity_section",
+   "fieldname": "configuration_identity_section",
    "fieldtype": "Section Break",
-   "label": "Ecosystem Identity"
+   "label": "Configuration Identity"
   },
   {
    "fieldname": "tenant",
@@ -61,7 +61,7 @@
    "fieldname": "ecosystem_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Ecosystem Name",
+   "label": "Configuration Name",
    "reqd": 1,
    "unique": 1
   },
@@ -70,7 +70,7 @@
    "fieldname": "ecosystem_type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Ecosystem Type",
+   "label": "Configuration Type",
    "options": "\nProduction\nSandbox\nSynthetic Validation\nInternal Platform"
   },
   {
@@ -85,7 +85,7 @@
    "fieldname": "is_default",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "label": "Tenant Default Ecosystem"
+   "label": "Tenant Default"
   },
   {
    "default": "Draft",
@@ -251,10 +251,10 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-05 05:57:32.469285",
+ "modified": "2026-06-06 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nexus Operations",
- "name": "Nexus Ecosystem",
+ "name": "Nexus Tenant Configuration",
  "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [

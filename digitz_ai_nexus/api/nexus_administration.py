@@ -28,23 +28,21 @@ def get_administration_snapshot(tenant=None):
     tenant = tenant or get_first_tenant_name(selectors.get("tenants"))
     tenant_doc = get_tenant_summary(tenant)
 
-    ecosystems = get_ecosystem_snapshots_for_tenant(tenant) if tenant else []
-    tenant_configuration = resolve_selected_ecosystem(
+    tenant_configurations = get_tenant_configurations_for_tenant(tenant) if tenant else []
+    tenant_configuration = resolve_selected_tenant_configuration(
         tenant=tenant,
-        ecosystems=ecosystems,
+        ecosystems=tenant_configurations,
     )
 
     return {
         "tenant": tenant_doc,
         "tenant_configuration": tenant_configuration,
-        "tenant_configurations": ecosystems,
+        "tenant_configurations": tenant_configurations,
         "user_context": None,
         "resolved_context": {
             "tenant": tenant,
-            "ecosystem": tenant_configuration.get("name") if tenant_configuration else None,
+            "tenant_configuration": tenant_configuration.get("name") if tenant_configuration else None,
         },
-        "ecosystem": tenant_configuration,
-        "ecosystems": ecosystems,
         "selectors": selectors,
         "readiness": get_readiness_summary(
             tenant=tenant,
@@ -82,7 +80,7 @@ def build_administration_resolved_context(
     Priority:
         explicit resolver/base values
         user context
-        selected ecosystem defaults
+        selected tenant configuration defaults
     """
     user_context = user_context or {}
     selected_ecosystem = selected_ecosystem or {}
@@ -144,7 +142,7 @@ def get_user_context_snapshot():
         "enabled": context.enabled,
         "is_default": context.is_default,
         "active_tenant": context.active_tenant,
-        "active_ecosystem": get_single_ecosystem_name_for_tenant(context.active_tenant),
+        "active_tenant_configuration": get_tenant_configuration_name(context.active_tenant),
         "active_business_unit": context.active_business_unit,
         "active_project": context.active_project,
         "active_channel": context.active_channel,
@@ -157,7 +155,7 @@ def get_user_context_snapshot():
 def set_active_user_context(
     tenant,
     ecosystem=None,
-    active_ecosystem=None,
+    active_tenant_configuration=None,
     business_unit=None,
     project=None,
     channel=None,
@@ -171,7 +169,7 @@ def set_active_user_context(
     if not tenant:
         frappe.throw("Tenant is required.")
 
-    selected_ecosystem_doc = get_default_or_first_ecosystem_for_tenant(tenant)
+    selected_ecosystem_doc = get_default_tenant_configuration(tenant)
     selected_ecosystem = selected_ecosystem_doc.name if selected_ecosystem_doc else None
 
     doc = get_or_create_user_context_doc()
@@ -183,8 +181,8 @@ def set_active_user_context(
 
     ensure_master_value("Nexus Business Unit", business_unit, tenant=tenant)
 
-    if has_field("Nexus User Context", "active_ecosystem"):
-        doc.active_ecosystem = selected_ecosystem
+    if has_field("Nexus User Context", "active_tenant_configuration"):
+        doc.active_tenant_configuration = selected_ecosystem
 
     doc.active_business_unit = business_unit
     doc.active_project = project
@@ -198,7 +196,7 @@ def set_active_user_context(
         "status": "success",
         "context": doc.name,
         "tenant": doc.active_tenant,
-        "ecosystem": get_doc_value(doc, "active_ecosystem"),
+        "ecosystem": get_doc_value(doc, "active_tenant_configuration"),
         "business_unit": doc.active_business_unit,
         "project": doc.active_project,
         "channel": doc.active_channel,
@@ -253,6 +251,7 @@ def get_selector_options():
     projects = []
     channels = []
     ecosystems = []
+    tenant_configurations = []
 
     if frappe.db.exists("DocType", "Nexus Tenant"):
         tenants = frappe.get_all(
@@ -265,12 +264,12 @@ def get_selector_options():
             limit_page_length=500,
         )
 
-    if frappe.db.exists("DocType", "Nexus Ecosystem"):
+    if frappe.db.exists("DocType", "Nexus Tenant Configuration"):
         ecosystems = frappe.get_all(
-            "Nexus Ecosystem",
+            "Nexus Tenant Configuration",
             filters={"enabled": 1},
             fields=get_existing_fields(
-                "Nexus Ecosystem",
+                "Nexus Tenant Configuration",
                 [
                     "name",
                     "tenant",
@@ -283,6 +282,7 @@ def get_selector_options():
             order_by="modified desc",
             limit_page_length=500,
         )
+        tenant_configurations = ecosystems
 
     business_units = get_business_unit_options()
     public_contexts = get_public_context_options()
@@ -318,7 +318,7 @@ def get_selector_options():
 
     return {
         "tenants": tenants,
-        "ecosystems": ecosystems,
+        "tenant_configurations": tenant_configurations,
         "business_units": business_units,
         "public_contexts": public_contexts,
         "projects": projects,
@@ -372,7 +372,7 @@ def get_legacy_business_unit_options():
     source_doctypes = [
         "Nexus Knowledge Unit",
         "Nexus Knowledge Chunk",
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         "Nexus User Context",
         "Nexus Test Case",
     ]
@@ -419,7 +419,7 @@ def get_legacy_public_context_options():
         "Nexus Knowledge Unit",
         "Nexus Knowledge Chunk",
         "Nexus Knowledge Source",
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         "Nexus Test Case",
         "Nexus Knowledge Test Case",
         "Nexus Knowledge Test Run",
@@ -495,17 +495,17 @@ def ensure_master_value(doctype, value, tenant=None):
 # ---------------------------------------------------------------------
 
 @frappe.whitelist()
-def get_ecosystem_snapshot(tenant=None, ecosystem=None):
+def get_tenant_configuration_snapshot(tenant=None, ecosystem=None):
     """
-    Returns selected ecosystem configuration.
+    Returns selected tenant configuration.
 
-    If ecosystem is provided, returns that ecosystem.
-    Otherwise returns default/first ecosystem for tenant.
+    If tenant_config is provided, returns that configuration.
+    Otherwise returns default/first configuration for tenant.
     """
     doc = None
 
     if ecosystem:
-        doc = frappe.get_doc("Nexus Ecosystem", ecosystem)
+        doc = frappe.get_doc("Nexus Tenant Configuration", ecosystem)
     else:
         if not tenant:
             user_context = get_user_context_snapshot()
@@ -518,28 +518,28 @@ def get_ecosystem_snapshot(tenant=None, ecosystem=None):
         if not tenant:
             return None
 
-        doc = get_default_or_first_ecosystem_for_tenant(tenant)
+        doc = get_default_tenant_configuration(tenant)
 
     if not doc:
         return None
 
-    return ecosystem_doc_to_dict(doc)
+    return tenant_config_to_dict(doc)
 
 
-def get_ecosystem_snapshots_for_tenant(tenant):
+def get_tenant_configurations_for_tenant(tenant):
     """
-    Returns enabled ecosystem profiles for a tenant.
+    Returns enabled configurations for a tenant.
     """
-    if not tenant or not frappe.db.exists("DocType", "Nexus Ecosystem"):
+    if not tenant or not frappe.db.exists("DocType", "Nexus Tenant Configuration"):
         return []
 
     fields = get_existing_fields(
-        "Nexus Ecosystem",
-        get_ecosystem_field_list(),
+        "Nexus Tenant Configuration",
+        get_configuration_field_list(),
     )
 
     rows = frappe.get_all(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         filters={
             "tenant": tenant,
             "enabled": 1,
@@ -549,18 +549,18 @@ def get_ecosystem_snapshots_for_tenant(tenant):
         limit_page_length=500,
     )
 
-    return [normalize_ecosystem_row(row) for row in rows]
+    return [normalize_configuration_row(row) for row in rows]
 
 
-def get_default_or_first_ecosystem_for_tenant(tenant):
+def get_default_tenant_configuration(tenant):
     """
-    Returns the single enabled ecosystem for a tenant.
+    Returns the single enabled configuration for a tenant.
     """
-    if not tenant:
+    if not tenant or not frappe.db.exists("DocType", "Nexus Tenant Configuration"):
         return None
 
     rows = frappe.get_all(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         filters={
             "tenant": tenant,
             "enabled": 1,
@@ -573,42 +573,42 @@ def get_default_or_first_ecosystem_for_tenant(tenant):
     if len(rows) > 1:
         frappe.throw(
             (
-                "Multiple enabled Nexus Ecosystems exist for this tenant. "
-                "Keep one enabled ecosystem and disable the rest."
+                "Multiple enabled Tenant Configurations exist for this tenant. "
+                "Keep one enabled configuration and disable the rest."
             )
         )
 
-    return frappe.get_doc("Nexus Ecosystem", rows[0].name) if rows else None
+    return frappe.get_doc("Nexus Tenant Configuration", rows[0].name) if rows else None
 
 
-def resolve_selected_ecosystem(tenant=None, ecosystems=None):
+def resolve_selected_tenant_configuration(tenant=None, ecosystems=None):
     """
     Resolves the tenant runtime profile for the UI snapshot.
     """
     ecosystems = ecosystems or []
-    enabled_ecosystems = [
+    enabled_configurations = [
         row for row in ecosystems
         if int(row.get("enabled") if row.get("enabled") is not None else 1)
     ]
 
-    for row in enabled_ecosystems:
+    for row in enabled_configurations:
         if row.get("is_default"):
             return row
 
-    if enabled_ecosystems:
-        return enabled_ecosystems[0]
+    if enabled_configurations:
+        return enabled_configurations[0]
 
-    doc = get_default_or_first_ecosystem_for_tenant(tenant)
-    return ecosystem_doc_to_dict(doc) if doc else None
+    doc = get_default_tenant_configuration(tenant)
+    return tenant_config_to_dict(doc) if doc else None
 
 
 @frappe.whitelist()
 def save_ecosystem_configuration(values):
     """
-    Creates or updates Nexus Ecosystem.
+    Creates or updates Nexus Tenant Configuration.
 
     Final model:
-        Save selected ecosystem by:
+        Save selected tenant configuration by:
             1. values.name / values.ecosystem
             2. tenant + ecosystem_name
             3. create new ecosystem
@@ -620,7 +620,7 @@ def save_ecosystem_configuration(values):
     if not tenant:
         frappe.throw("Tenant is required.")
 
-    doc = get_or_create_ecosystem_from_values(values)
+    doc = get_or_create_tenant_configuration(values)
 
     ensure_master_value("Nexus Business Unit", values.get("default_business_unit"), tenant=tenant)
     ensure_master_value("Nexus Public Context", values.get("default_public_context"), tenant=tenant)
@@ -655,11 +655,11 @@ def save_ecosystem_configuration(values):
     }
 
     for fieldname in allowed_fields:
-        if fieldname in values and has_field("Nexus Ecosystem", fieldname):
+        if fieldname in values and has_field("Nexus Tenant Configuration", fieldname):
             doc.set(fieldname, values.get(fieldname))
 
     if not doc.ecosystem_name:
-        doc.ecosystem_name = make_default_ecosystem_name(
+        doc.ecosystem_name = make_default_configuration_name(
             tenant=tenant,
             ecosystem_type=values.get("ecosystem_type"),
         )
@@ -673,10 +673,10 @@ def save_ecosystem_configuration(values):
     if not doc.activation_status:
         doc.activation_status = "Configured"
 
-    apply_ecosystem_defaults_if_missing(doc)
+    apply_configuration_defaults(doc)
 
     if doc.get("is_default"):
-        unset_other_default_ecosystems(
+        unset_other_default_configurations(
             tenant=doc.tenant,
             current_name=doc.name if not doc.is_new() else None,
         )
@@ -687,7 +687,7 @@ def save_ecosystem_configuration(values):
         doc.save(ignore_permissions=True)
 
     if doc.get("is_default"):
-        unset_other_default_ecosystems(
+        unset_other_default_configurations(
             tenant=doc.tenant,
             current_name=doc.name,
         )
@@ -707,28 +707,28 @@ def save_tenant_configuration(values):
     """
     Public admin API for tenant configuration.
 
-    The current storage DocType remains Nexus Ecosystem for compatibility,
+    The current storage DocType remains Nexus Tenant Configuration for compatibility,
     but callers should treat this as the tenant's configuration record.
     """
     return save_ecosystem_configuration(values)
 
 
-def get_or_create_ecosystem_from_values(values):
+def get_or_create_tenant_configuration(values):
     """
-    Finds an ecosystem by docname first, then by tenant + ecosystem_name.
+    Finds a tenant configuration by docname first, then by tenant + ecosystem_name.
     Creates a new document if none is found.
     """
     docname = values.get("name") or values.get("ecosystem")
 
-    if docname and frappe.db.exists("Nexus Ecosystem", docname):
-        return frappe.get_doc("Nexus Ecosystem", docname)
+    if docname and frappe.db.exists("Nexus Tenant Configuration", docname):
+        return frappe.get_doc("Nexus Tenant Configuration", docname)
 
     tenant = values.get("tenant")
     ecosystem_name = values.get("ecosystem_name")
 
     if tenant and ecosystem_name:
         existing = frappe.db.get_value(
-            "Nexus Ecosystem",
+            "Nexus Tenant Configuration",
             {
                 "tenant": tenant,
                 "ecosystem_name": ecosystem_name,
@@ -737,35 +737,35 @@ def get_or_create_ecosystem_from_values(values):
         )
 
         if existing:
-            return frappe.get_doc("Nexus Ecosystem", existing)
+            return frappe.get_doc("Nexus Tenant Configuration", existing)
 
     if tenant:
-        existing_doc = get_default_or_first_ecosystem_for_tenant(tenant)
+        existing_doc = get_default_tenant_configuration(tenant)
         if existing_doc:
             return existing_doc
 
-    doc = frappe.new_doc("Nexus Ecosystem")
+    doc = frappe.new_doc("Nexus Tenant Configuration")
     doc.tenant = tenant
     return doc
 
 
-def get_single_ecosystem_name_for_tenant(tenant):
+def get_tenant_configuration_name(tenant):
     """
     Returns the tenant-owned runtime profile name for legacy UI fields.
     """
-    doc = get_default_or_first_ecosystem_for_tenant(tenant)
+    doc = get_default_tenant_configuration(tenant)
     return doc.name if doc else None
 
 
-def unset_other_default_ecosystems(tenant, current_name=None):
+def unset_other_default_configurations(tenant, current_name=None):
     """
     Ensures only one tenant runtime profile is marked as default.
     """
-    if not tenant or not has_field("Nexus Ecosystem", "is_default"):
+    if not tenant or not has_field("Nexus Tenant Configuration", "is_default"):
         return
 
     rows = frappe.get_all(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         filters={
             "tenant": tenant,
             "is_default": 1,
@@ -779,7 +779,7 @@ def unset_other_default_ecosystems(tenant, current_name=None):
             continue
 
         frappe.db.set_value(
-            "Nexus Ecosystem",
+            "Nexus Tenant Configuration",
             row.name,
             "is_default",
             0,
@@ -787,7 +787,7 @@ def unset_other_default_ecosystems(tenant, current_name=None):
         )
 
 
-def apply_ecosystem_defaults_if_missing(doc):
+def apply_configuration_defaults(doc):
     """
     Applies safe defaults to a newly created or partially configured ecosystem.
     """
@@ -808,11 +808,11 @@ def apply_ecosystem_defaults_if_missing(doc):
     }
 
     for fieldname, value in default_values.items():
-        if has_field("Nexus Ecosystem", fieldname) and not doc.get(fieldname):
+        if has_field("Nexus Tenant Configuration", fieldname) and not doc.get(fieldname):
             doc.set(fieldname, value)
 
 
-def ensure_ecosystem_for_tenant(
+def ensure_tenant_configuration(
     tenant,
     business_unit=None,
     project=None,
@@ -821,15 +821,15 @@ def ensure_ecosystem_for_tenant(
     is_default=1,
 ):
     """
-    Ensures an ecosystem exists for a tenant.
+    Ensures a tenant configuration exists for a tenant.
 
-    The simplified model allows one enabled ecosystem per tenant.
+    The simplified model allows one enabled configuration per tenant.
     This creates it when missing, otherwise updates the existing one.
     """
     if not tenant:
         frappe.throw("Tenant is required.")
 
-    ecosystem_name = ecosystem_name or make_default_ecosystem_name(
+    ecosystem_name = ecosystem_name or make_default_configuration_name(
         tenant=tenant,
         ecosystem_type=ecosystem_type,
     )
@@ -847,16 +847,16 @@ def ensure_ecosystem_for_tenant(
 
     ensure_master_value("Nexus Business Unit", business_unit, tenant=tenant)
 
-    doc = get_or_create_ecosystem_from_values(values)
+    doc = get_or_create_tenant_configuration(values)
 
     for fieldname, value in values.items():
-        if value is not None and has_field("Nexus Ecosystem", fieldname):
+        if value is not None and has_field("Nexus Tenant Configuration", fieldname):
             doc.set(fieldname, value)
 
-    apply_ecosystem_defaults_if_missing(doc)
+    apply_configuration_defaults(doc)
 
     if doc.get("is_default"):
-        unset_other_default_ecosystems(
+        unset_other_default_configurations(
             tenant=tenant,
             current_name=doc.name if not doc.is_new() else None,
         )
@@ -867,7 +867,7 @@ def ensure_ecosystem_for_tenant(
         doc.save(ignore_permissions=True)
 
     if doc.get("is_default"):
-        unset_other_default_ecosystems(
+        unset_other_default_configurations(
             tenant=tenant,
             current_name=doc.name,
         )
@@ -892,7 +892,7 @@ def create_tenant_onboarding(
 
     Creates:
     - Nexus Tenant
-    - Initial Nexus Ecosystem
+    - Initial Nexus Tenant Configuration
     - Nexus User Context
 
     Final model:
@@ -906,7 +906,7 @@ def create_tenant_onboarding(
         tenant_code=tenant_code,
     )
 
-    ecosystem = ensure_ecosystem_for_tenant(
+    ecosystem = ensure_tenant_configuration(
         tenant=tenant.name,
         business_unit=business_unit_name,
         ecosystem_name=ecosystem_name,
@@ -924,8 +924,8 @@ def create_tenant_onboarding(
         "status": "success",
         "tenant": tenant.name,
         "business_unit": business_unit_name,
-        "ecosystem": ecosystem.name,
-        "ecosystem_name": ecosystem.ecosystem_name,
+        "tenant_configuration": ecosystem.name,
+        "configuration_name": ecosystem.ecosystem_name,
         "user_context": user_context.get("context"),
     }
 
@@ -990,7 +990,7 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         return get_empty_readiness()
 
     if not ecosystem:
-        ecosystem = get_ecosystem_snapshot(tenant=tenant)
+        ecosystem = get_tenant_configuration_snapshot(tenant=tenant)
 
     knowledge_count = count_records_safely(
         doctype="Nexus Knowledge Unit",
@@ -1084,8 +1084,8 @@ def get_readiness_summary(tenant=None, ecosystem=None):
 
     return {
         "tenant": tenant,
-        "ecosystem": ecosystem.get("name") if ecosystem else None,
-        "ecosystem_name": ecosystem.get("ecosystem_name") if ecosystem else None,
+        "tenant_configuration": ecosystem.get("name") if ecosystem else None,
+        "configuration_name": ecosystem.get("ecosystem_name") if ecosystem else None,
         "knowledge_count": knowledge_count,
         "chunk_count": chunk_count,
         "channel_count": channel_count,
@@ -1189,37 +1189,37 @@ def count_registered_identity_routes():
 # Helpers
 # ---------------------------------------------------------------------
 
-def validate_ecosystem_belongs_to_tenant(ecosystem, tenant):
+def validate_configuration_belongs_to_tenant(ecosystem, tenant):
     if not ecosystem:
         return
 
-    if not frappe.db.exists("Nexus Ecosystem", ecosystem):
-        frappe.throw(f"Ecosystem {ecosystem} does not exist.")
+    if not frappe.db.exists("Nexus Tenant Configuration", ecosystem):
+        frappe.throw(f"Tenant Configuration {ecosystem} does not exist.")
 
     ecosystem_tenant = frappe.db.get_value(
-        "Nexus Ecosystem",
+        "Nexus Tenant Configuration",
         ecosystem,
         "tenant",
     )
 
     if ecosystem_tenant != tenant:
-        frappe.throw("Selected ecosystem does not belong to the selected tenant.")
+        frappe.throw("Selected tenant configuration does not belong to the selected tenant.")
 
 
-def ecosystem_doc_to_dict(doc):
+def tenant_config_to_dict(doc):
     if not doc:
         return None
 
-    return normalize_ecosystem_row(
+    return normalize_configuration_row(
         {
             fieldname: get_doc_value(doc, fieldname)
-            for fieldname in get_ecosystem_field_list()
-            if fieldname == "name" or has_field("Nexus Ecosystem", fieldname)
+            for fieldname in get_configuration_field_list()
+            if fieldname == "name" or has_field("Nexus Tenant Configuration", fieldname)
         }
     )
 
 
-def normalize_ecosystem_row(row):
+def normalize_configuration_row(row):
     row = frappe._dict(row or {})
 
     if not row.get("ecosystem_name"):
@@ -1237,7 +1237,7 @@ def normalize_ecosystem_row(row):
     return dict(row)
 
 
-def get_ecosystem_field_list():
+def get_configuration_field_list():
     return [
         "name",
         "tenant",
@@ -1269,7 +1269,7 @@ def get_ecosystem_field_list():
     ]
 
 
-def make_default_ecosystem_name(tenant, ecosystem_type=None):
+def make_default_configuration_name(tenant, ecosystem_type=None):
     ecosystem_type = ecosystem_type or "Sandbox"
 
     tenant_label = frappe.db.get_value(
@@ -1280,7 +1280,7 @@ def make_default_ecosystem_name(tenant, ecosystem_type=None):
 
     tenant_label = tenant_label or tenant
 
-    return f"{tenant_label} {ecosystem_type} Ecosystem"
+    return f"{tenant_label} {ecosystem_type} Configuration"
 
 
 def get_doc_value(doc, fieldname):

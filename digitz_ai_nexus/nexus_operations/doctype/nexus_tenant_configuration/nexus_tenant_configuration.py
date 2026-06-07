@@ -1,24 +1,21 @@
-# Copyright (c) 2026, Techxcel Technologies and contributors
-# For license information, please see license.txt
-
 import frappe
 from frappe.model.document import Document
 from frappe.utils import cint
 
 
-class NexusEcosystem(Document):
+class NexusTenantConfiguration(Document):
 	def validate(self):
-		self.enforce_single_active_ecosystem()
+		self.enforce_single_active_configuration()
 
 		if cint(self.enabled):
 			self.is_default = 1
 
-	def enforce_single_active_ecosystem(self):
+	def enforce_single_active_configuration(self):
 		if not self.tenant or not cint(self.enabled):
 			return
 
 		existing = frappe.get_all(
-			"Nexus Ecosystem",
+			"Nexus Tenant Configuration",
 			filters={
 				"tenant": self.tenant,
 				"enabled": 1,
@@ -31,7 +28,7 @@ class NexusEcosystem(Document):
 		if existing:
 			frappe.throw(
 				(
-					"Only one enabled Nexus Ecosystem is allowed per tenant. "
-					f"Disable or update existing ecosystem {existing[0]} instead."
+					"Only one enabled Tenant Configuration is allowed per tenant. "
+					f"Disable or update existing configuration {existing[0]} instead."
 				)
 			)

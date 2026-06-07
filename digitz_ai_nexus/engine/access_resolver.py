@@ -179,21 +179,3 @@ def resolve_allowed_policies(query_contract):
         "identity_policy_names": list(identity_policies or []),
         "access_cap_applied": "+".join(access_cap_applied) or "profile_only",
     }
-
-
-# ---------------------------------------------------------------------------
-# Retained for reference and admin reporting — NOT called in runtime path
-# ---------------------------------------------------------------------------
-
-def resolve_role_policy_names(user_roles):
-    """Retained for admin reporting only. Not used in runtime access resolution."""
-    if not user_roles:
-        return set()
-
-    category_names = frappe.get_all(
-        "Nexus Role Access Category",
-        filters={"role": ["in", list(user_roles)], "disabled": 0},
-        pluck="access_category",
-    )
-
-    return _policies_from_categories(category_names) if category_names else set()

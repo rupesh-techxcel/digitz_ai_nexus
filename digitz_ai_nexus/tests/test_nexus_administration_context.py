@@ -136,9 +136,9 @@ class TestNexusAdministrationContext(unittest.TestCase):
                 for name in context_names:
                     self.delete_doc_safely("Nexus User Context", name)
 
-        if frappe.db.exists("DocType", "Nexus Ecosystem") and tenant_names:
+        if frappe.db.exists("DocType", "Nexus Tenant Configuration") and tenant_names:
             ecosystem_names = frappe.get_all(
-                "Nexus Ecosystem",
+                "Nexus Tenant Configuration",
                 filters={
                     "tenant": ["in", tenant_names],
                 },
@@ -146,7 +146,7 @@ class TestNexusAdministrationContext(unittest.TestCase):
             )
 
             for name in ecosystem_names:
-                self.delete_doc_safely("Nexus Ecosystem", name)
+                self.delete_doc_safely("Nexus Tenant Configuration", name)
 
         if frappe.db.exists("DocType", "Nexus Tenant") and tenant_names:
             for name in tenant_names:

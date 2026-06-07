@@ -3,6 +3,38 @@ from digitz_ai_nexus.engine.response_mode import get_response_mode
 SAFE_FALLBACK_ANSWER = "I do not have enough approved knowledge to answer this."
 
 
+def build_conversational_prompt(query_contract):
+    """
+    Minimal prompt for social/conversational turns (greetings, introductions,
+    acknowledgements). No retrieval evidence is required or injected.
+    """
+    profile = _resolve_profile_fields(query_contract)
+    tone = profile.get("tone") or "friendly and helpful"
+    behavior = profile.get("behavior_prompt") or ""
+    conversation_context = query_contract.get("conversation_context") or ""
+    original_query = (
+        query_contract.get("original_query") or query_contract.get("query") or ""
+    )
+
+    behavior_block = f"\nAGENT BEHAVIOUR:\n{behavior}\n" if behavior else ""
+    context_block = (
+        f"\nCONVERSATION SO FAR:\n{conversation_context}\n"
+        if conversation_context
+        else ""
+    )
+
+    return f"""You are DIGITZ AI Nexus, a helpful enterprise assistant.
+
+The user has sent a conversational message such as a greeting, introduction, or social exchange.
+Respond naturally and warmly in 1–2 sentences. Do not mention knowledge, sources, or policies.
+Tone: {tone}
+{behavior_block}{context_block}
+USER MESSAGE:
+{original_query}
+
+RESPONSE:""".strip()
+
+
 def _resolve_profile_fields(query_contract):
     """
     Extract AI Agent Profile behaviour fields from query_contract.
@@ -83,7 +115,7 @@ CONVERSATION CONTEXT RULES:
     chat_response_rules = ""
 
     if is_chat_mode:
-        limit = response_sentence_limit or 6
+        limit = response_sentence_limit or 10
 
         chat_response_rules = f"""
 CHAT RESPONSE RULES:

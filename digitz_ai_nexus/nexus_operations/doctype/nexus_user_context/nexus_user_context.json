@@ -14,7 +14,7 @@
   "is_default",
   "tenant_context_section",
   "active_tenant",
-  "active_ecosystem",
+  "active_tenant_configuration",
   "active_business_unit",
   "active_project",
   "active_channel",
@@ -64,11 +64,11 @@
    "reqd": 1
   },
   {
-   "fieldname": "active_ecosystem",
+   "fieldname": "active_tenant_configuration",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "My Active Ecosystem",
-   "options": "Nexus Ecosystem"
+   "label": "My Active Tenant Configuration",
+   "options": "Nexus Tenant Configuration"
   },
   {
    "fieldname": "active_business_unit",
