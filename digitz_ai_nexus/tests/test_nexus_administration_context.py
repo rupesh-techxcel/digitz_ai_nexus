@@ -308,7 +308,6 @@ class TestNexusAdministrationContext(unittest.TestCase):
         admin_api.save_ecosystem_configuration({
             "tenant": self.tenant_a,
             "default_business_unit": BUSINESS_UNIT_ECOSYSTEM,
-            "default_public_context": "Nexus Live",
             "default_top_k": 7,
         })
 
@@ -329,7 +328,6 @@ class TestNexusAdministrationContext(unittest.TestCase):
 
         self.assertEqual(resolved.tenant, self.tenant_a)
         self.assertEqual(resolved.business_unit, BUSINESS_UNIT_ECOSYSTEM)
-        self.assertEqual(resolved.context, "Nexus Live")
         self.assertEqual(int(resolved.default_top_k), 7)
 
     def test_resolve_channel_defaults_by_runtime_purpose(self):
@@ -379,7 +377,6 @@ class TestNexusAdministrationContext(unittest.TestCase):
         result = admin_api.save_ecosystem_configuration({
             "tenant": self.tenant_a,
             "default_business_unit": BUSINESS_UNIT_ECOSYSTEM,
-            "default_public_context": "Nexus Live",
             "qa_enabled": 1,
             "live_chat_enabled": 1,
             "website_widget_enabled": 1,
@@ -391,7 +388,6 @@ class TestNexusAdministrationContext(unittest.TestCase):
         ecosystem = get_ecosystem_for_tenant(self.tenant_a)
 
         self.assertEqual(ecosystem.default_business_unit, BUSINESS_UNIT_ECOSYSTEM)
-        self.assertEqual(ecosystem.default_public_context, "Nexus Live")
         self.assertEqual(ecosystem.qa_enabled, 1)
         self.assertEqual(ecosystem.live_chat_enabled, 1)
         self.assertEqual(ecosystem.website_widget_enabled, 1)

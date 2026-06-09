@@ -105,9 +105,8 @@
   },
   {
    "fieldname": "context",
-   "fieldtype": "Link",
-   "label": "Context",
-   "options": "Nexus Public Context"
+   "fieldtype": "Data",
+   "label": "Context"
   },
   {
    "fieldname": "sub_context",

@@ -1,23 +1,6 @@
 import frappe
 
 
-def resolve_profile_policy_names(ai_agent_profile_name):
-    """Get access policy names for a profile via Nexus AI Agent Profile Access Category."""
-    if not ai_agent_profile_name:
-        return set()
-
-    category_names = frappe.get_all(
-        "Nexus AI Agent Profile Access Category",
-        filters={"ai_agent_profile": ai_agent_profile_name, "enabled": 1},
-        pluck="access_category",
-    )
-
-    if not category_names:
-        return set()
-
-    return _policies_from_categories(category_names)
-
-
 def _policies_from_categories(category_names):
     """Get Access Policy names from a list of Nexus Access Category names."""
     if not category_names:
@@ -49,6 +32,58 @@ def resolve_access_categories_policy_names(access_categories):
         return None
 
     return _policies_from_categories(access_categories)
+
+
+def resolve_knowledge_profile_policy_names(knowledge_profile_name):
+    """
+    Get access policy names via a Knowledge Profile.
+    Knowledge Profile → Knowledge Profile Access Category (child) → Nexus Access Category → policies.
+    """
+    if not knowledge_profile_name:
+        return set()
+
+    if not frappe.db.exists("Knowledge Profile", knowledge_profile_name):
+        return set()
+
+    category_names = frappe.get_all(
+        "Knowledge Profile Access Category",
+        filters={
+            "parent": knowledge_profile_name,
+            "parentfield": "access_categories",
+            "enabled": 1,
+        },
+        pluck="access_category",
+    )
+
+    return _policies_from_categories(category_names)
+
+
+def resolve_profile_policy_names(ai_agent_profile_name):
+    """
+    Get access policy names for an AI Agent Profile.
+
+    Resolution order:
+    1. If the profile has a knowledge_profile set → use Knowledge Profile.
+    2. Fall back to legacy Nexus AI Agent Profile Access Category records.
+    """
+    if not ai_agent_profile_name:
+        return set()
+
+    knowledge_profile = frappe.db.get_value(
+        "Nexus AI Agent Profile", ai_agent_profile_name, "knowledge_profile"
+    )
+
+    if knowledge_profile:
+        return resolve_knowledge_profile_policy_names(knowledge_profile)
+
+    # Legacy path: Nexus AI Agent Profile Access Category
+    category_names = frappe.get_all(
+        "Nexus AI Agent Profile Access Category",
+        filters={"ai_agent_profile": ai_agent_profile_name, "enabled": 1},
+        pluck="access_category",
+    )
+
+    return _policies_from_categories(category_names)
 
 
 def resolve_all_policy_names():
@@ -102,17 +137,19 @@ def resolve_allowed_policies(query_contract):
     Public endpoints (force_public_only=True or is_public=True):
         Returns ["Public"] only. Cannot be overridden.
 
-    Category-routed registered identity requests:
-        Profile policies are intersected with the identity registry safeguard
-        and identity hard cap. This prevents a mis-routed visitor from
-        inheriting broader profile access.
+    System Manager session:
+        Returns all enabled policies — unrestricted.
 
-    Other profiled requests:
-        Profile is the access authority.
-        Resolves via: ai_profile.name → Nexus AI Agent Profile Access Category
-                      → Nexus Access Category → Nexus Access Policy names
+    Desk user with knowledge_profile (no AI profile):
+        Resolves via: knowledge_profile → Knowledge Profile Access Category → policies.
 
-    Fails closed: no profile or empty policy set → returns [] → retrieval denied.
+    AI profile with knowledge_profile:
+        Resolves via: AI profile → knowledge_profile → Knowledge Profile Access Category → policies.
+
+    AI profile without knowledge_profile (legacy):
+        Resolves via: AI profile → Nexus AI Agent Profile Access Category → policies.
+
+    Fails closed: no profile/knowledge_profile or empty policy set → returns [] → retrieval denied.
     """
     ai_profile = query_contract.get("ai_profile") or {}
     force_public_only = bool(
@@ -138,6 +175,19 @@ def resolve_allowed_policies(query_contract):
             "safeguard_policy_names": [],
             "identity_policy_names": [],
             "access_cap_applied": "system_manager",
+        }
+
+    # Desk user path: knowledge_profile without an AI profile
+    knowledge_profile_name = ai_profile.get("knowledge_profile_name")
+    if knowledge_profile_name and not ai_profile.get("name"):
+        kp_policies = resolve_knowledge_profile_policy_names(knowledge_profile_name)
+        return {
+            "allowed_access_policies": list(kp_policies),
+            "force_public_only": False,
+            "profile_policy_names": list(kp_policies),
+            "safeguard_policy_names": [],
+            "identity_policy_names": [],
+            "access_cap_applied": "knowledge_profile",
         }
 
     ai_profile_name = ai_profile.get("name")

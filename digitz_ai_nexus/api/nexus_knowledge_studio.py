@@ -278,7 +278,6 @@ def _resolve_active_studio_context():
 
         context.context = _normalize_context_value(
             resolved_context.get("context")
-            or resolved_context.get("default_public_context")
         )
 
         context.default_top_k = resolved_context.get("default_top_k")

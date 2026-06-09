@@ -382,19 +382,6 @@ def ensure_foundation(result):
         "business_unit_name",
         tenant=TENANT,
     )
-    result["foundation"]["public_context"] = ensure_master(
-        "Nexus Public Context",
-        PUBLIC_CONTEXT,
-        "public_context_name",
-        tenant=TENANT,
-    )
-    result["foundation"]["internal_context"] = ensure_master(
-        "Nexus Public Context",
-        INTERNAL_CONTEXT,
-        "public_context_name",
-        tenant=TENANT,
-    )
-
     result["foundation"]["channel"] = ensure_live_channel()
     result["foundation"]["chat_category"] = ensure_chat_category()
     result["foundation"]["public_agent"] = ensure_live_agent(PUBLIC_AGENT, "Public AI Assistant", "Public Responder")
@@ -600,7 +587,6 @@ def ensure_ecosystem():
     doc.is_default = 1
     doc.activation_status = "Configured"
     doc.default_business_unit = BUSINESS_UNIT
-    doc.default_public_context = PUBLIC_CONTEXT
     doc.require_approved_knowledge = 1
     doc.strict_tenant_mode = 1
     doc.default_top_k = 5

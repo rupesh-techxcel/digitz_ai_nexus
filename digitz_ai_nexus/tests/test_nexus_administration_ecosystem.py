@@ -29,7 +29,6 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
             "ecosystem_type": "Production",
             "enabled": 1,
             "is_default": 1,
-            "default_public_context": "Public Website",
             "default_business_unit": TEST_BU,
         })
 
@@ -38,7 +37,6 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
             "ecosystem_name": "Ignored Second Ecosystem Name",
             "ecosystem_type": "Internal Platform",
             "enabled": 1,
-            "default_public_context": "Internal Knowledge",
             "default_business_unit": TEST_BU,
         })
 
@@ -47,12 +45,11 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
         ecosystems = frappe.get_all(
             "Nexus Tenant Configuration",
             filters={"tenant": TEST_TENANT, "enabled": 1},
-            fields=["name", "ecosystem_type", "default_public_context", "is_default"],
+            fields=["name", "ecosystem_type", "is_default"],
         )
 
         self.assertEqual(len(ecosystems), 1)
         self.assertEqual(ecosystems[0].ecosystem_type, "Internal Platform")
-        self.assertEqual(ecosystems[0].default_public_context, "Internal Knowledge")
         self.assertEqual(int(ecosystems[0].is_default or 0), 1)
 
     def test_direct_second_enabled_ecosystem_is_rejected(self):
@@ -82,7 +79,6 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
             "ecosystem_type": "Production",
             "enabled": 1,
             "is_default": 1,
-            "default_public_context": "Public Website",
             "default_business_unit": TEST_BU,
         })
 

@@ -93,11 +93,6 @@ frappe.pages['nexus-admin'].on_page_load = function(wrapper) {
                     </div>
 
                     <div>
-                        <label>Default Public Context</label>
-                        <select id="nexus_default_public_context" class="form-control"></select>
-                    </div>
-
-                    <div>
                         <label>Default Top K</label>
                         <input id="nexus_default_top_k" class="form-control" type="number" min="1" value="5">
                     </div>
@@ -313,17 +308,6 @@ function populate_selector_options(selectors) {
     );
 
     populate_select(
-        '#nexus_default_public_context',
-        selectors.public_contexts || [],
-        'name',
-        function(row) {
-            return row.public_context_name || row.name;
-        },
-        null,
-        true
-    );
-
-    populate_select(
         '#nexus_default_qa_channel',
         selectors.channels || [],
         'name',
@@ -456,7 +440,6 @@ function populate_tenant_configuration(config) {
     config = config || {};
 
     $('#nexus_default_business_unit').val(config.default_business_unit || '');
-    $('#nexus_default_public_context').val(config.default_public_context || '');
     $('#nexus_default_top_k').val(config.default_top_k || 5);
 
     $('#nexus_qa_enabled').val(String(cint(config.qa_enabled || 0)));
@@ -505,7 +488,6 @@ function save_tenant_configuration() {
         certification_status: 'Not Certified',
 
         default_business_unit: $('#nexus_default_business_unit').val() || null,
-        default_public_context: $('#nexus_default_public_context').val() || null,
         default_top_k: cint($('#nexus_default_top_k').val() || 5),
 
         qa_enabled: cint($('#nexus_qa_enabled').val() || 0),

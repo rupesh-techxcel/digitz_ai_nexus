@@ -1,417 +1,416 @@
 {
-  "actions": [],
-  "allow_rename": 1,
-  "autoname": "format:NKTC-.{#####}",
-  "creation": "2026-05-19 00:00:00.000000",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "field_order": [
-    "test_details_section",
-    "test_title",
-    "status",
-    "enabled",
-    "use_case",
-    "test_type",
-    "priority",
-    "question",
-    "expected_behavior",
-    "expected_result_type",
-    "validation_expectations_section",
-    "knowledge_source",
-    "source_title",
-    "expected_access_level",
-    "minimum_confidence",
-    "expected_fallback",
-    "expected_escalation",
-    "expected_source_required",
-    "required_keywords",
-    "forbidden_keywords",
-    "scope_section",
-    "tenant",
-    "ecosystem",
-    "business_unit",
-    "project",
-    "channel",
-    "context",
-    "sub_context",
-    "entity_type",
-    "entity",
-    "topic",
-    "generation_section",
-    "generated_by_ai",
-    "generated_from_source",
-    "generation_notes",
-    "generated_on",
-    "review_section",
-    "review_status",
-    "reviewed_by",
-    "reviewed_on",
-    "review_notes",
-    "execution_summary_section",
-    "last_run_status",
-    "last_run_on",
-    "last_confidence",
-    "last_fallback_used",
-    "last_failure_reason"
-  ],
-  "fields": [
-    {
-      "fieldname": "test_details_section",
-      "fieldtype": "Section Break",
-      "label": "Test Details"
-    },
-    {
-      "fieldname": "test_title",
-      "fieldtype": "Data",
-      "in_global_search": 1,
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Test Title",
-      "reqd": 1
-    },
-    {
-      "default": "Draft",
-      "fieldname": "status",
-      "fieldtype": "Select",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Status",
-      "options": "Draft\nActive\nDisabled\nArchived"
-    },
-    {
-      "default": "0",
-      "fieldname": "enabled",
-      "fieldtype": "Check",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Enabled"
-    },
-    {
-      "default": "Q&A",
-      "fieldname": "use_case",
-      "fieldtype": "Select",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Use Case",
-      "options": "Q&A\nChat\nLive\nInternal"
-    },
-    {
-      "default": "direct",
-      "fieldname": "test_type",
-      "fieldtype": "Select",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Test Type",
-      "options": "direct\nfollow_up\nboundary\nfallback\naccess"
-    },
-    {
-      "default": "10",
-      "fieldname": "priority",
-      "fieldtype": "Int",
-      "in_list_view": 1,
-      "label": "Priority"
-    },
-    {
-      "fieldname": "question",
-      "fieldtype": "Small Text",
-      "in_global_search": 1,
-      "in_list_view": 1,
-      "label": "Question",
-      "reqd": 1
-    },
-    {
-      "fieldname": "expected_behavior",
-      "fieldtype": "Small Text",
-      "label": "Expected Behavior"
-    },
-    {
-      "default": "grounded_answer",
-      "fieldname": "expected_result_type",
-      "fieldtype": "Select",
-      "in_standard_filter": 1,
-      "label": "Expected Result Type",
-      "options": "grounded_answer\nsafe_fallback\nescalation"
-    },
-    {
-      "fieldname": "validation_expectations_section",
-      "fieldtype": "Section Break",
-      "label": "Validation Expectations"
-    },
-    {
-      "fieldname": "knowledge_source",
-      "fieldtype": "Link",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Knowledge Source",
-      "options": "Nexus Knowledge Source"
-    },
-    {
-      "fieldname": "source_title",
-      "fieldtype": "Data",
-      "label": "Source Title",
-      "read_only": 1
-    },
-    {
-      "default": "Public",
-      "fieldname": "expected_access_level",
-      "fieldtype": "Select",
-      "in_standard_filter": 1,
-      "label": "Expected Access Level",
-      "options": "Public\nInternal\nRestricted"
-    },
-    {
-      "default": "0.7",
-      "fieldname": "minimum_confidence",
-      "fieldtype": "Float",
-      "label": "Minimum Confidence"
-    },
-    {
-      "default": "0",
-      "fieldname": "expected_fallback",
-      "fieldtype": "Check",
-      "label": "Expected Fallback"
-    },
-    {
-      "default": "0",
-      "fieldname": "expected_escalation",
-      "fieldtype": "Check",
-      "label": "Expected Escalation"
-    },
-    {
-      "default": "1",
-      "fieldname": "expected_source_required",
-      "fieldtype": "Check",
-      "label": "Expected Source Required"
-    },
-    {
-      "description": "JSON array or comma-separated keywords expected in the retrieved or answered result.",
-      "fieldname": "required_keywords",
-      "fieldtype": "Small Text",
-      "label": "Required Keywords"
-    },
-    {
-      "description": "JSON array or comma-separated words that should not appear in the answer.",
-      "fieldname": "forbidden_keywords",
-      "fieldtype": "Small Text",
-      "label": "Forbidden Keywords"
-    },
-    {
-      "fieldname": "scope_section",
-      "fieldtype": "Section Break",
-      "label": "Business Scope"
-    },
-    {
-      "fieldname": "tenant",
-      "fieldtype": "Data",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Tenant"
-    },
-    {
-      "fieldname": "ecosystem",
-      "fieldtype": "Data",
-      "in_standard_filter": 1,
-      "label": "Ecosystem"
-    },
-    {
-      "fieldname": "business_unit",
-      "fieldtype": "Link",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Business Unit",
-      "options": "Nexus Business Unit"
-    },
-    {
-      "fieldname": "project",
-      "fieldtype": "Data",
-      "in_standard_filter": 1,
-      "label": "Project"
-    },
-    {
-      "fieldname": "channel",
-      "fieldtype": "Data",
-      "in_standard_filter": 1,
-      "label": "Channel"
-    },
-    {
-      "fieldname": "context",
-      "fieldtype": "Link",
-      "in_standard_filter": 1,
-      "label": "Context",
-      "options": "Nexus Public Context"
-    },
-    {
-      "fieldname": "sub_context",
-      "fieldtype": "Data",
-      "label": "Sub Context"
-    },
-    {
-      "fieldname": "entity_type",
-      "fieldtype": "Data",
-      "label": "Entity Type"
-    },
-    {
-      "fieldname": "entity",
-      "fieldtype": "Data",
-      "label": "Entity"
-    },
-    {
-      "fieldname": "topic",
-      "fieldtype": "Data",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Topic"
-    },
-    {
-      "fieldname": "generation_section",
-      "fieldtype": "Section Break",
-      "label": "Generation"
-    },
-    {
-      "default": "0",
-      "fieldname": "generated_by_ai",
-      "fieldtype": "Check",
-      "in_standard_filter": 1,
-      "label": "Generated By AI"
-    },
-    {
-      "default": "0",
-      "fieldname": "generated_from_source",
-      "fieldtype": "Check",
-      "in_standard_filter": 1,
-      "label": "Generated From Source"
-    },
-    {
-      "fieldname": "generation_notes",
-      "fieldtype": "Small Text",
-      "label": "Generation Notes"
-    },
-    {
-      "fieldname": "generated_on",
-      "fieldtype": "Datetime",
-      "label": "Generated On",
-      "read_only": 1
-    },
-    {
-      "fieldname": "review_section",
-      "fieldtype": "Section Break",
-      "label": "Review"
-    },
-    {
-      "default": "Pending Review",
-      "fieldname": "review_status",
-      "fieldtype": "Select",
-      "in_standard_filter": 1,
-      "label": "Review Status",
-      "options": "Pending Review\nReviewed\nApproved\nRejected"
-    },
-    {
-      "fieldname": "reviewed_by",
-      "fieldtype": "Link",
-      "label": "Reviewed By",
-      "options": "User",
-      "read_only": 1
-    },
-    {
-      "fieldname": "reviewed_on",
-      "fieldtype": "Datetime",
-      "label": "Reviewed On",
-      "read_only": 1
-    },
-    {
-      "fieldname": "review_notes",
-      "fieldtype": "Small Text",
-      "label": "Review Notes"
-    },
-    {
-      "fieldname": "execution_summary_section",
-      "fieldtype": "Section Break",
-      "label": "Execution Summary"
-    },
-    {
-      "default": "Not Run",
-      "fieldname": "last_run_status",
-      "fieldtype": "Select",
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "label": "Last Run Status",
-      "options": "Not Run\nPassed\nFailed\nWarning"
-    },
-    {
-      "fieldname": "last_run_on",
-      "fieldtype": "Datetime",
-      "label": "Last Run On",
-      "read_only": 1
-    },
-    {
-      "fieldname": "last_confidence",
-      "fieldtype": "Float",
-      "label": "Last Confidence",
-      "read_only": 1
-    },
-    {
-      "default": "0",
-      "fieldname": "last_fallback_used",
-      "fieldtype": "Check",
-      "label": "Last Fallback Used",
-      "read_only": 1
-    },
-    {
-      "fieldname": "last_failure_reason",
-      "fieldtype": "Small Text",
-      "label": "Last Failure Reason",
-      "read_only": 1
-    }
-  ],
-  "index_web_pages_for_search": 1,
-  "is_submittable": 0,
-  "issingle": 0,
-  "istable": 0,
-  "modified": "2026-05-19 00:00:00.000000",
-  "modified_by": "Administrator",
-  "module": "Nexus Knowledge",
-  "name": "Nexus Knowledge Test Case",
-  "naming_rule": "Expression",
-  "owner": "Administrator",
-  "permissions": [
-    {
-      "create": 1,
-      "delete": 1,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "System Manager",
-      "share": 1,
-      "write": 1
-    },
-    {
-      "create": 1,
-      "delete": 0,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "Nexus Manager",
-      "share": 1,
-      "write": 1
-    },
-    {
-      "create": 0,
-      "delete": 0,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "Nexus User",
-      "share": 0,
-      "write": 0
-    }
-  ],
-  "sort_field": "modified",
-  "sort_order": "DESC",
-  "states": []
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:NKTC-.{#####}",
+ "creation": "2026-05-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "test_details_section",
+  "test_title",
+  "status",
+  "enabled",
+  "use_case",
+  "test_type",
+  "priority",
+  "question",
+  "expected_behavior",
+  "expected_result_type",
+  "validation_expectations_section",
+  "knowledge_source",
+  "source_title",
+  "expected_access_level",
+  "minimum_confidence",
+  "expected_fallback",
+  "expected_escalation",
+  "expected_source_required",
+  "required_keywords",
+  "forbidden_keywords",
+  "scope_section",
+  "tenant",
+  "ecosystem",
+  "business_unit",
+  "project",
+  "channel",
+  "context",
+  "sub_context",
+  "entity_type",
+  "entity",
+  "topic",
+  "generation_section",
+  "generated_by_ai",
+  "generated_from_source",
+  "generation_notes",
+  "generated_on",
+  "review_section",
+  "review_status",
+  "reviewed_by",
+  "reviewed_on",
+  "review_notes",
+  "execution_summary_section",
+  "last_run_status",
+  "last_run_on",
+  "last_confidence",
+  "last_fallback_used",
+  "last_failure_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "test_details_section",
+   "fieldtype": "Section Break",
+   "label": "Test Details"
+  },
+  {
+   "fieldname": "test_title",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Test Title",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nActive\nDisabled\nArchived"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "Q&A",
+   "fieldname": "use_case",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Use Case",
+   "options": "Q&A\nChat\nLive\nInternal"
+  },
+  {
+   "default": "direct",
+   "fieldname": "test_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Test Type",
+   "options": "direct\nfollow_up\nboundary\nfallback\naccess"
+  },
+  {
+   "default": "10",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Priority"
+  },
+  {
+   "fieldname": "question",
+   "fieldtype": "Small Text",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Question",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expected_behavior",
+   "fieldtype": "Small Text",
+   "label": "Expected Behavior"
+  },
+  {
+   "default": "grounded_answer",
+   "fieldname": "expected_result_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Expected Result Type",
+   "options": "grounded_answer\nsafe_fallback\nescalation"
+  },
+  {
+   "fieldname": "validation_expectations_section",
+   "fieldtype": "Section Break",
+   "label": "Validation Expectations"
+  },
+  {
+   "fieldname": "knowledge_source",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Knowledge Source",
+   "options": "Nexus Knowledge Source"
+  },
+  {
+   "fieldname": "source_title",
+   "fieldtype": "Data",
+   "label": "Source Title",
+   "read_only": 1
+  },
+  {
+   "default": "Public",
+   "fieldname": "expected_access_level",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Expected Access Level",
+   "options": "Public\nInternal\nRestricted"
+  },
+  {
+   "default": "0.7",
+   "fieldname": "minimum_confidence",
+   "fieldtype": "Float",
+   "label": "Minimum Confidence"
+  },
+  {
+   "default": "0",
+   "fieldname": "expected_fallback",
+   "fieldtype": "Check",
+   "label": "Expected Fallback"
+  },
+  {
+   "default": "0",
+   "fieldname": "expected_escalation",
+   "fieldtype": "Check",
+   "label": "Expected Escalation"
+  },
+  {
+   "default": "1",
+   "fieldname": "expected_source_required",
+   "fieldtype": "Check",
+   "label": "Expected Source Required"
+  },
+  {
+   "description": "JSON array or comma-separated keywords expected in the retrieved or answered result.",
+   "fieldname": "required_keywords",
+   "fieldtype": "Small Text",
+   "label": "Required Keywords"
+  },
+  {
+   "description": "JSON array or comma-separated words that should not appear in the answer.",
+   "fieldname": "forbidden_keywords",
+   "fieldtype": "Small Text",
+   "label": "Forbidden Keywords"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Business Scope"
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tenant"
+  },
+  {
+   "fieldname": "ecosystem",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Ecosystem"
+  },
+  {
+   "fieldname": "business_unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Business Unit",
+   "options": "Nexus Business Unit"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Project"
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Channel"
+  },
+  {
+   "fieldname": "context",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Context"
+  },
+  {
+   "fieldname": "sub_context",
+   "fieldtype": "Data",
+   "label": "Sub Context"
+  },
+  {
+   "fieldname": "entity_type",
+   "fieldtype": "Data",
+   "label": "Entity Type"
+  },
+  {
+   "fieldname": "entity",
+   "fieldtype": "Data",
+   "label": "Entity"
+  },
+  {
+   "fieldname": "topic",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Topic"
+  },
+  {
+   "fieldname": "generation_section",
+   "fieldtype": "Section Break",
+   "label": "Generation"
+  },
+  {
+   "default": "0",
+   "fieldname": "generated_by_ai",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Generated By AI"
+  },
+  {
+   "default": "0",
+   "fieldname": "generated_from_source",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Generated From Source"
+  },
+  {
+   "fieldname": "generation_notes",
+   "fieldtype": "Small Text",
+   "label": "Generation Notes"
+  },
+  {
+   "fieldname": "generated_on",
+   "fieldtype": "Datetime",
+   "label": "Generated On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_section",
+   "fieldtype": "Section Break",
+   "label": "Review"
+  },
+  {
+   "default": "Pending Review",
+   "fieldname": "review_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Review Status",
+   "options": "Pending Review\nReviewed\nApproved\nRejected"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reviewed_on",
+   "fieldtype": "Datetime",
+   "label": "Reviewed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_notes",
+   "fieldtype": "Small Text",
+   "label": "Review Notes"
+  },
+  {
+   "fieldname": "execution_summary_section",
+   "fieldtype": "Section Break",
+   "label": "Execution Summary"
+  },
+  {
+   "default": "Not Run",
+   "fieldname": "last_run_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Last Run Status",
+   "options": "Not Run\nPassed\nFailed\nWarning"
+  },
+  {
+   "fieldname": "last_run_on",
+   "fieldtype": "Datetime",
+   "label": "Last Run On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_confidence",
+   "fieldtype": "Float",
+   "label": "Last Confidence",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "last_fallback_used",
+   "fieldtype": "Check",
+   "label": "Last Fallback Used",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_failure_reason",
+   "fieldtype": "Small Text",
+   "label": "Last Failure Reason",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 0,
+ "issingle": 0,
+ "istable": 0,
+ "modified": "2026-05-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Knowledge",
+ "name": "Nexus Knowledge Test Case",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Nexus Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Nexus User",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }

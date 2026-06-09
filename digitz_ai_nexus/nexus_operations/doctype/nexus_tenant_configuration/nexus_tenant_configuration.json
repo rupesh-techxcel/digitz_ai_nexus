@@ -18,7 +18,6 @@
   "default_context_section",
   "default_business_unit",
   "default_project",
-  "default_public_context",
   "knowledge_defaults_section",
   "require_approved_knowledge",
   "strict_tenant_mode",
@@ -111,12 +110,6 @@
    "fieldname": "default_project",
    "fieldtype": "Data",
    "label": "Default Project"
-  },
-  {
-   "fieldname": "default_public_context",
-   "fieldtype": "Link",
-   "label": "Default Public Context",
-   "options": "Nexus Public Context"
   },
   {
    "fieldname": "knowledge_defaults_section",

@@ -568,7 +568,6 @@ ADMIN_HTML = """
             <div class="nexus-chip-row">
                 <span class="nexus-chip">Tenant</span>
                 <span class="nexus-chip">Business Unit</span>
-                <span class="nexus-chip">Public Context</span>
                 <span class="nexus-chip">Channels</span>
                 <span class="nexus-chip">Readiness</span>
             </div>
@@ -591,14 +590,6 @@ ADMIN_HTML = """
             <div>
                 <h3 class="nexus-context-title">Business Scope</h3>
                 <p class="nexus-context-text">Use Business Unit as a master record, not a free text value.</p>
-            </div>
-        </div>
-
-        <div class="nexus-context-card nexus-context-card-teal">
-            <div class="nexus-context-icon nexus-context-icon-mint">PC</div>
-            <div>
-                <h3 class="nexus-context-title">Public Context</h3>
-                <p class="nexus-context-text">Use Public Context as a master record for public-facing scope.</p>
             </div>
         </div>
 
@@ -709,24 +700,6 @@ ADMIN_HTML = """
                 <span class="nexus-tag">Master</span>
                 <span class="nexus-tag">Scope</span>
                 <span class="nexus-tag">Knowledge</span>
-            </div>
-        </a>
-
-        <a class="nexus-card nexus-card-teal nexus-card-teal-bg" href="/app/nexus-public-context">
-            <div class="nexus-card-head">
-                <div class="nexus-card-icon nexus-card-icon-teal">PC</div>
-                <div class="nexus-card-arrow nexus-card-arrow-teal">-&gt;</div>
-            </div>
-            <h3 class="nexus-card-title">Public Contexts</h3>
-            <div class="nexus-card-subtitle nexus-card-subtitle-teal">Public-facing scope master</div>
-            <p class="nexus-card-text">
-                Maintain public context records used by website chat, public Q&amp;A, and tenant
-                knowledge classification.
-            </p>
-            <div class="nexus-tag-row">
-                <span class="nexus-tag nexus-tag-teal">Master</span>
-                <span class="nexus-tag nexus-tag-teal">Public</span>
-                <span class="nexus-tag nexus-tag-teal">Context</span>
             </div>
         </a>
 

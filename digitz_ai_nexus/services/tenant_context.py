@@ -169,10 +169,7 @@ def resolve_tenant_context(payload=None, user=None, require_tenant=True):
         tenant_config=tenant_config,
     )
 
-    context = (
-        payload.get("context")
-        or (tenant_config.default_public_context if tenant_config else None)
-    )
+    context = payload.get("context")
 
     resolved = frappe._dict({
         "user": user,

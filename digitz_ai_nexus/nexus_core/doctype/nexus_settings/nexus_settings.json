@@ -29,7 +29,9 @@
   "section_retrieval_features",
   "enable_multi_query",
   "enable_reranking",
-  "enable_retrieval_debug"
+  "enable_retrieval_debug",
+  "section_live_chat",
+  "chat_idle_timeout_minutes"
  ],
  "fields": [
   {
@@ -181,6 +183,17 @@
    "fieldname": "enable_retrieval_debug",
    "fieldtype": "Check",
    "label": "Enable Retrieval Debug"
+  },
+  {
+   "fieldname": "section_live_chat",
+   "fieldtype": "Section Break",
+   "label": "Live Chat Settings"
+  },
+  {
+   "default": "10",
+   "fieldname": "chat_idle_timeout_minutes",
+   "fieldtype": "Int",
+   "label": "Chat Idle Timeout (Minutes)"
   }
  ],
  "index_web_pages_for_search": 1,

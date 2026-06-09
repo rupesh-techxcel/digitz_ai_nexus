@@ -42,19 +42,19 @@
    "options": "Nexus Tenant",
    "reqd": 1
   },
-{
-  "fieldname": "business_unit",
-  "label": "Business Unit",
-  "fieldtype": "Link",
-  "options": "Nexus Business Unit",
-  "in_list_view": 1
-},
-{
-  "fieldname": "project",
-  "label": "Project",
-  "fieldtype": "Data",
-  "in_list_view": 1
-},
+  {
+   "fieldname": "business_unit",
+   "label": "Business Unit",
+   "fieldtype": "Link",
+   "options": "Nexus Business Unit",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "project",
+   "label": "Project",
+   "fieldtype": "Data",
+   "in_list_view": 1
+  },
   {
    "fieldname": "title",
    "fieldtype": "Data",
@@ -108,10 +108,9 @@
   },
   {
    "fieldname": "context",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Context",
-   "options": "Nexus Public Context",
    "reqd": 1
   },
   {

@@ -111,10 +111,7 @@ def build_administration_resolved_context(
             base_resolved.get("channel")
             or user_context.get("active_channel")
         ),
-        "context": (
-            base_resolved.get("context")
-            or selected_ecosystem.get("default_public_context")
-        ),
+        "context": base_resolved.get("context"),
         "default_top_k": (
             base_resolved.get("default_top_k")
             or selected_ecosystem.get("default_top_k")
@@ -243,9 +240,6 @@ def get_or_create_user_context_doc():
 def get_selector_options():
     """
     Returns options needed by the administration page selectors.
-
-    Business Unit and Public Context are master DocTypes. Legacy fallback
-    scanners are kept so the first migration can still surface existing values.
     """
     tenants = []
     projects = []
@@ -285,7 +279,6 @@ def get_selector_options():
         tenant_configurations = ecosystems
 
     business_units = get_business_unit_options()
-    public_contexts = get_public_context_options()
 
     if frappe.db.exists("DocType", "Nexus Project"):
         projects = frappe.get_all(
@@ -320,7 +313,6 @@ def get_selector_options():
         "tenants": tenants,
         "tenant_configurations": tenant_configurations,
         "business_units": business_units,
-        "public_contexts": public_contexts,
         "projects": projects,
         "channels": channels,
     }
@@ -344,26 +336,6 @@ def get_business_unit_options():
         )
 
     return get_legacy_business_unit_options()
-
-
-def get_public_context_options():
-    """
-    Returns Public Context master options. Falls back to legacy text values when
-    the master DocType has not been synced yet.
-    """
-    if frappe.db.exists("DocType", "Nexus Public Context"):
-        return frappe.get_all(
-            "Nexus Public Context",
-            fields=get_existing_fields(
-                "Nexus Public Context",
-                ["name", "public_context_name", "tenant", "enabled"],
-            ),
-            filters={"enabled": 1} if has_field("Nexus Public Context", "enabled") else {},
-            order_by="public_context_name asc",
-            limit_page_length=500,
-        )
-
-    return get_legacy_public_context_options()
 
 
 def get_legacy_business_unit_options():
@@ -412,54 +384,6 @@ def get_legacy_business_unit_options():
     ]
 
 
-def get_legacy_public_context_options():
-    values = set()
-
-    source_doctypes = [
-        "Nexus Knowledge Unit",
-        "Nexus Knowledge Chunk",
-        "Nexus Knowledge Source",
-        "Nexus Tenant Configuration",
-        "Nexus Test Case",
-        "Nexus Knowledge Test Case",
-        "Nexus Knowledge Test Run",
-        "Nexus Query Log",
-    ]
-
-    candidate_fields = [
-        "context",
-        "default_public_context",
-    ]
-
-    for doctype in source_doctypes:
-        if not frappe.db.exists("DocType", doctype):
-            continue
-
-        for fieldname in candidate_fields:
-            if not has_field(doctype, fieldname):
-                continue
-
-            rows = frappe.get_all(
-                doctype,
-                fields=[fieldname],
-                limit_page_length=500,
-            )
-
-            for row in rows:
-                value = row.get(fieldname)
-
-                if value:
-                    values.add(value)
-
-    return [
-        {
-            "name": value,
-            "public_context_name": value,
-        }
-        for value in sorted(values)
-    ]
-
-
 def ensure_master_value(doctype, value, tenant=None):
     """
     Ensures legacy string values become valid Link targets during transition.
@@ -476,8 +400,6 @@ def ensure_master_value(doctype, value, tenant=None):
 
     if doctype == "Nexus Business Unit":
         doc.business_unit_name = value
-    elif doctype == "Nexus Public Context":
-        doc.public_context_name = value
     else:
         return
 
@@ -623,7 +545,6 @@ def save_ecosystem_configuration(values):
     doc = get_or_create_tenant_configuration(values)
 
     ensure_master_value("Nexus Business Unit", values.get("default_business_unit"), tenant=tenant)
-    ensure_master_value("Nexus Public Context", values.get("default_public_context"), tenant=tenant)
 
     allowed_fields = {
         "tenant",
@@ -634,7 +555,6 @@ def save_ecosystem_configuration(values):
         "activation_status",
         "default_business_unit",
         "default_project",
-        "default_public_context",
         "require_approved_knowledge",
         "strict_tenant_mode",
         "default_top_k",
@@ -1248,7 +1168,6 @@ def get_configuration_field_list():
         "activation_status",
         "default_business_unit",
         "default_project",
-        "default_public_context",
         "require_approved_knowledge",
         "strict_tenant_mode",
         "default_top_k",

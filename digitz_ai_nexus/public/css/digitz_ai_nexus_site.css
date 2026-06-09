@@ -3161,6 +3161,8 @@ body.nexus-qa-modal-open{
 
 .nexus-home .nexus-qa-concept-copy{
   min-width:0;
+  transform:translateZ(0);
+  backface-visibility:hidden;
 }
 
 .nexus-home .nexus-qa-title-row{
@@ -3326,6 +3328,8 @@ body.nexus-qa-modal-open{
   width:100%;
   align-self:center;
   justify-self:end;
+  transform:translateZ(0);
+  backface-visibility:hidden;
 }
 
 .nexus-home .nexus-qa-launch-invite{
