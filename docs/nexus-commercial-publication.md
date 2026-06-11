@@ -466,11 +466,11 @@ Yes. Nexus can power public website chat through a public channel, public chat c
 
 ### Can Nexus support internal users?
 
-Yes. Internal users can be routed through profile assignment and access categories so they can retrieve internal knowledge when permitted.
+Yes. Internal users are resolved via the Identity Registry. Desk users with a registry entry receive knowledge access through their assigned Identity Profiles, scoped to the "Internal" or "Admin" identity type.
 
 ### How does Nexus provide authorized chat access?
 
-Nexus combines the chat category with the user's identity level to select the right AI Agent Profile. That profile controls the access categories and access policies available to the chat. Public visitors stay limited to public knowledge, while verified users can receive broader access only when their identity and profile allow it.
+Nexus combines the chat category with the user's identity level to select the right AI Agent Profile and the permitted Identity Profiles. Knowledge access is determined by the person's Identity Profile assignments — which Knowledge Profiles they hold for their identity type. Public visitors receive only public knowledge; verified users receive the knowledge their Identity Profile grants, capped by the Identity Type safeguard.
 
 ### Can Nexus verify customers before giving support answers?
 
@@ -584,7 +584,7 @@ Before commercial knowledge is published:
 1. Confirm every commercial source uses the Public access policy.
 2. Confirm every commercial source uses the website public context.
 3. Confirm public chat routes to a public AI Agent Profile.
-4. Confirm the public profile allows only public access categories and public policies.
+4. Confirm the public route is configured as `is_public_route = 1` — it will return only Public access policies by design.
 5. Process the sources into knowledge units and chunks.
 6. Confirm chunk embeddings are completed.
 7. Run public website chat validation test cases.

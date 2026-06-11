@@ -1,100 +1,86 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-  <!-- Light panel background -->
-  <rect width="512" height="512" rx="116" fill="#f0faf8"/>
+  <!-- Light panel background (keep the clean app-store feel) -->
+  <rect width="512" height="512" rx="116" fill="#EEF8F5"/>
   <rect width="512" height="512" rx="116" stroke="#8fe2c6" stroke-width="14" fill="none"/>
 
-  <!-- ============================================
-       Diagonal stacked panels — "Apps suite" depth
-       Three panels, each offset 18 px upper-right
-       ============================================ -->
-
+  <!-- Stacked panels — depth / "app suite" metaphor -->
   <!-- Back panel -->
-  <rect x="144" y="32" width="296" height="304" rx="36"
+  <rect x="144" y="32" width="296" height="316" rx="36"
         fill="#17439D" opacity="0.22"/>
-
   <!-- Middle panel -->
-  <rect x="126" y="50" width="296" height="304" rx="36"
+  <rect x="126" y="50" width="296" height="316" rx="36"
         fill="#214DBB" opacity="0.50"/>
-
-  <!-- Front panel (green — the primary Nexus app) -->
-  <rect x="108" y="68" width="296" height="304" rx="36"
+  <!-- Front panel -->
+  <rect x="108" y="68" width="296" height="316" rx="36"
         fill="#16A37F"/>
-  <!-- Top gloss on front panel -->
-  <rect x="108" y="68" width="296" height="152" rx="36"
-        fill="rgba(255,255,255,0.08)"/>
+  <!-- Gloss on front panel -->
+  <rect x="108" y="68" width="296" height="120" rx="36"
+        fill="rgba(255,255,255,0.09)"/>
 
-  <!-- ============================================
-       N mark — upper portion of front panel
-       Same circle → ring → N construction as Q&A
-       ============================================ -->
-
-  <!-- Green fill circle (Nexus body) -->
-  <circle cx="256" cy="196" r="100" fill="#16A37F"/>
+  <!-- === N — green circle + navy ring + white round-cap strokes === -->
+  <!-- Green fill circle -->
+  <circle cx="256" cy="192" r="96" fill="#16A37F"/>
   <!-- Inner highlight ring -->
-  <circle cx="256" cy="196" r="100"
-          stroke="rgba(255,255,255,0.20)" stroke-width="6" fill="none"/>
+  <circle cx="256" cy="192" r="96"
+          stroke="rgba(255,255,255,0.22)" stroke-width="6" fill="none"/>
   <!-- Navy outer ring -->
-  <circle cx="256" cy="196" r="107"
+  <circle cx="256" cy="192" r="104"
           stroke="#17439D" stroke-width="14" fill="none"/>
-
-  <!-- Bold white N (three round-cap strokes, corners at r≈84 — well inside circle r=100) -->
-  <line x1="201" y1="259" x2="201" y2="133"
+  <!-- Bold white N — three round-cap strokes -->
+  <line x1="203" y1="254" x2="203" y2="130"
         stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
-  <line x1="201" y1="133" x2="311" y2="259"
+  <line x1="203" y1="130" x2="309" y2="254"
         stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
-  <line x1="311" y1="133" x2="311" y2="259"
+  <line x1="309" y1="130" x2="309" y2="254"
         stroke="#FFFFFF" stroke-width="26" stroke-linecap="round"/>
 
-  <!-- ============================================
-       App tiles — lower portion of front panel.
-       A row of 4 tiles representing the app suite.
-       ============================================ -->
+  <!-- === APP TILES === -->
+  <!-- Divider -->
+  <line x1="124" y1="308" x2="388" y2="308"
+        stroke="rgba(255,255,255,0.30)" stroke-width="1.5"/>
 
-  <!-- Divider separating N mark from app tiles -->
-  <line x1="124" y1="316" x2="388" y2="316"
-        stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
+  <!-- Tile 1 — Chat -->
+  <rect x="120" y="318" width="60" height="52" rx="14"
+        fill="rgba(255,255,255,0.28)"/>
+  <!-- speech bubble -->
+  <rect x="128" y="324" width="44" height="30" rx="8" fill="rgba(23,67,157,0.55)"/>
+  <path d="M128 354 L122 366 L140 358" fill="rgba(23,67,157,0.55)"/>
+  <!-- dots -->
+  <circle cx="140" cy="339" r="4" fill="white" opacity="0.9"/>
+  <circle cx="150" cy="339" r="4" fill="white" opacity="0.9"/>
+  <circle cx="160" cy="339" r="4" fill="white" opacity="0.9"/>
 
-  <!-- Tile 1 — white/glass -->
-  <rect x="124" y="324" width="54" height="34" rx="9"
-        fill="rgba(255,255,255,0.30)"/>
-  <!-- small icon: two dots (chat) -->
-  <circle cx="141" cy="341" r="6" fill="rgba(23,67,157,0.42)"/>
-  <circle cx="157" cy="341" r="6" fill="rgba(23,67,157,0.42)"/>
+  <!-- Tile 2 — Q&A -->
+  <rect x="194" y="318" width="60" height="52" rx="14"
+        fill="rgba(23,67,157,0.42)"/>
+  <text x="224" y="352" text-anchor="middle"
+        fill="white" font-size="30" font-weight="800"
+        font-family="Georgia, serif">?</text>
 
-  <!-- Tile 2 — navy tint -->
-  <rect x="190" y="324" width="54" height="34" rx="9"
-        fill="rgba(23,67,157,0.38)"/>
-  <!-- small icon: three lines (document) -->
-  <line x1="200" y1="336" x2="234" y2="336"
-        stroke="rgba(255,255,255,0.80)" stroke-width="4" stroke-linecap="round"/>
-  <line x1="200" y1="344" x2="228" y2="344"
-        stroke="rgba(255,255,255,0.54)" stroke-width="3.5" stroke-linecap="round"/>
-
-  <!-- Tile 3 — white/glass -->
-  <rect x="258" y="324" width="54" height="34" rx="9"
+  <!-- Tile 3 — Studio / Knowledge -->
+  <rect x="268" y="318" width="60" height="52" rx="14"
         fill="rgba(255,255,255,0.22)"/>
-  <!-- small icon: ring (analytics) -->
-  <circle cx="285" cy="341" r="9"
-          stroke="rgba(23,67,157,0.50)" stroke-width="4" fill="none"/>
-  <circle cx="285" cy="341" r="3.5" fill="rgba(23,67,157,0.45)"/>
+  <!-- sparkle star -->
+  <path d="M298 324 L302 336 L314 340 L302 344 L298 356 L294 344 L282 340 L294 336 Z"
+        fill="rgba(23,67,157,0.70)"/>
 
-  <!-- Tile 4 — navy tint with plus = "more apps" -->
-  <rect x="324" y="324" width="54" height="34" rx="9"
+  <!-- Tile 4 — More apps -->
+  <rect x="342" y="318" width="60" height="52" rx="14"
         fill="rgba(23,67,157,0.34)"/>
-  <!-- plus icon -->
-  <line x1="334" y1="341" x2="368" y2="341"
-        stroke="rgba(255,255,255,0.80)" stroke-width="4.5" stroke-linecap="round"/>
-  <line x1="351" y1="327" x2="351" y2="355"
-        stroke="rgba(255,255,255,0.80)" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- 2x2 dot grid -->
+  <circle cx="361" cy="337" r="5" fill="rgba(255,255,255,0.80)"/>
+  <circle cx="375" cy="337" r="5" fill="rgba(255,255,255,0.80)"/>
+  <circle cx="361" cy="351" r="5" fill="rgba(255,255,255,0.80)"/>
+  <circle cx="375" cy="351" r="5" fill="rgba(255,255,255,0.80)"/>
 
-  <!-- APPS label — below the panel stack -->
-  <text x="256" y="442" text-anchor="middle"
+  <!-- APPS label -->
+  <text x="256" y="444" text-anchor="middle"
         fill="#17439D" font-size="48" font-weight="800"
         font-family="Inter, Arial, sans-serif" letter-spacing="8">APPS</text>
 
-  <!-- Blue accent dot (matches Q&A and inline SVG style) -->
+  <!-- Accent dot -->
   <circle cx="460" cy="36" r="13" fill="#4a7dff" opacity="0.78"/>
-  <circle cx="460" cy="36" r="7"  fill="#7aaeff"/>
+  <circle cx="460" cy="36" r="7" fill="#7aaeff"/>
 
 </svg>

@@ -199,10 +199,12 @@ header.navbar,
 .standard-sidebar,
 .desk-sidebar,
 .layout-main .layout-side-section {
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
-    border: 1px solid var(--digitz-blue-border) !important;
+    background:
+        radial-gradient(circle at 18% 80%, rgba(22,163,127,0.28), transparent 38%),
+        linear-gradient(180deg, #163985 0%, #1d4db0 55%, #16a37f 100%) !important;
+    border: 1px solid rgba(22,163,127,0.35) !important;
     border-radius: var(--digitz-radius-lg) !important;
-    box-shadow: var(--digitz-shadow-sm) !important;
+    box-shadow: 0 4px 18px rgba(17,42,118,0.18) !important;
 }
 
 .standard-sidebar .standard-sidebar-item,
@@ -211,7 +213,7 @@ header.navbar,
 .tree-link,
 .sidebar-item-label,
 .standard-sidebar-label {
-    color: #233553 !important;
+    color: rgba(255,255,255,0.82) !important;
     font-weight: 500 !important;
     border-radius: 12px !important;
     transition: var(--digitz-transition) !important;
@@ -233,10 +235,10 @@ header.navbar,
 .standard-sidebar .standard-sidebar-item:hover,
 .layout-side-section .sidebar-item:hover,
 .tree-link:hover {
-    background: linear-gradient(180deg, #f6faff 0%, #edf5ff 100%) !important;
-    color: var(--digitz-blue-dark) !important;
-    border-color: #d9e7ff !important;
-    box-shadow: 0 4px 10px rgba(33, 77, 187, 0.06) !important;
+    background: rgba(255,255,255,0.12) !important;
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.20) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12) !important;
     transform: translateX(2px) !important;
 }
 
@@ -246,13 +248,13 @@ header.navbar,
 .layout-side-section .sidebar-item.active,
 .tree-link.active {
     position: relative !important;
-    background: linear-gradient(180deg, #eaf2ff 0%, #dcebff 100%) !important;
-    color: var(--digitz-blue-dark) !important;
+    background: rgba(22,163,127,0.30) !important;
+    color: #ffffff !important;
     font-weight: 700 !important;
-    border: 1px solid #bfd7ff !important;
+    border: 1px solid rgba(22,163,127,0.55) !important;
     box-shadow:
-        0 6px 14px rgba(33, 77, 187, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+        0 6px 14px rgba(0,0,0,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 
 .standard-sidebar .standard-sidebar-item.selected::before,
@@ -267,7 +269,7 @@ header.navbar,
     bottom: 7px !important;
     width: 4px !important;
     border-radius: 999px !important;
-    background: linear-gradient(180deg, #214dbb 0%, #4da3ff 100%) !important;
+    background: linear-gradient(180deg, #f4d88f 0%, #16a37f 100%) !important;
 }
 
 .standard-sidebar .standard-sidebar-item.selected::after,
@@ -301,11 +303,11 @@ header.navbar,
 .indicator-pill,
 .filter-pill {
     border-radius: 999px !important;
-    background: linear-gradient(180deg, #f3f8ff 0%, #eaf2ff 100%) !important;
-    color: var(--digitz-blue) !important;
-    border: 1px solid var(--digitz-blue-border) !important;
+    background: rgba(255,255,255,0.12) !important;
+    color: rgba(255,255,255,0.65) !important;
+    border: 1px solid rgba(255,255,255,0.16) !important;
     font-weight: 700 !important;
-    box-shadow: 0 1px 3px rgba(33, 77, 187, 0.06) !important;
+    box-shadow: none !important;
 }
 
 .standard-sidebar-label,
@@ -496,10 +498,14 @@ header.navbar,
 .shortcut-widget-box a,
 .widget-body a,
 .page-content a,
-.list-link,
-.standard-sidebar a {
+.list-link {
     color: var(--digitz-text) !important;
     transition: color 0.22s ease !important, background 0.22s ease !important, box-shadow 0.22s ease !important;
+}
+
+.standard-sidebar a {
+    color: rgba(255,255,255,0.82) !important;
+    transition: color 0.22s ease !important, background 0.22s ease !important;
 }
 
 .widget a:hover,

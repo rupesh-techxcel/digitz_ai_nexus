@@ -1,12 +1,13 @@
 {
   "actions": [],
   "allow_rename": 1,
-  "autoname": "field:category_name",
+  "autoname": "format:{category_name}-{tenant}",
   "creation": "2026-05-22 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
     "category_name",
+    "tenant",
     "title",
     "disabled",
     "priority",
@@ -20,8 +21,14 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Category Name",
-      "reqd": 1,
-      "unique": 1
+      "reqd": 1
+    },
+    {
+      "fieldname": "tenant",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Tenant",
+      "options": "Nexus Tenant"
     },
     {
       "fieldname": "title",
@@ -65,7 +72,7 @@
   "modified_by": "Administrator",
   "module": "Nexus Access",
   "name": "Nexus Access Category",
-  "naming_rule": "By fieldname",
+  "naming_rule": "Expression",
   "owner": "Administrator",
   "permissions": [
     {

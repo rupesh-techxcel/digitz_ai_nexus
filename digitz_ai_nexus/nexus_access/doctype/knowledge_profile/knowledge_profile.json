@@ -1,12 +1,13 @@
 {
   "actions": [],
   "allow_rename": 1,
-  "autoname": "field:profile_name",
+  "autoname": "format:{profile_name}-{tenant}",
   "creation": "2026-06-09 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
     "profile_name",
+    "tenant",
     "title",
     "enabled",
     "column_break_1",
@@ -20,8 +21,14 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Profile Name",
-      "reqd": 1,
-      "unique": 1
+      "reqd": 1
+    },
+    {
+      "fieldname": "tenant",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Tenant",
+      "options": "Nexus Tenant"
     },
     {
       "fieldname": "title",
@@ -63,7 +70,7 @@
   "modified_by": "Administrator",
   "module": "Nexus Access",
   "name": "Knowledge Profile",
-  "naming_rule": "By fieldname",
+  "naming_rule": "Expression",
   "owner": "Administrator",
   "permissions": [
     {

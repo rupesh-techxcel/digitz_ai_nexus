@@ -447,7 +447,7 @@ An `OpenAIEmbeddingProvider` class wraps the client. Fake providers are used in 
 | `restricted` | Knowledge exists but the user lacks access |
 
 ---
-
+e
 ### RAG Success
 
 ```python

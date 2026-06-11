@@ -22,7 +22,6 @@ def resolve_access_category_policy_names(access_category):
     """Get access policy names for one Nexus Access Category."""
     if not access_category:
         return set()
-
     return _policies_from_categories([access_category])
 
 
@@ -30,13 +29,12 @@ def resolve_access_categories_policy_names(access_categories):
     """Get access policy names for one or more Nexus Access Categories."""
     if access_categories is None:
         return None
-
     return _policies_from_categories(access_categories)
 
 
 def resolve_knowledge_profile_policy_names(knowledge_profile_name):
     """
-    Get access policy names via a Knowledge Profile.
+    Get access policy names via a single Knowledge Profile.
     Knowledge Profile → Knowledge Profile Access Category (child) → Nexus Access Category → policies.
     """
     if not knowledge_profile_name:
@@ -58,32 +56,19 @@ def resolve_knowledge_profile_policy_names(knowledge_profile_name):
     return _policies_from_categories(category_names)
 
 
-def resolve_profile_policy_names(ai_agent_profile_name):
+def resolve_knowledge_profiles_policy_names(knowledge_profile_names):
     """
-    Get access policy names for an AI Agent Profile.
-
-    Resolution order:
-    1. If the profile has a knowledge_profile set → use Knowledge Profile.
-    2. Fall back to legacy Nexus AI Agent Profile Access Category records.
+    Get the union of access policy names across multiple Knowledge Profiles.
+    Used when a person holds multiple Identity Profile mappings for the same identity type.
     """
-    if not ai_agent_profile_name:
+    if not knowledge_profile_names:
         return set()
 
-    knowledge_profile = frappe.db.get_value(
-        "Nexus AI Agent Profile", ai_agent_profile_name, "knowledge_profile"
-    )
+    all_policies = set()
+    for kp_name in knowledge_profile_names:
+        all_policies.update(resolve_knowledge_profile_policy_names(kp_name))
 
-    if knowledge_profile:
-        return resolve_knowledge_profile_policy_names(knowledge_profile)
-
-    # Legacy path: Nexus AI Agent Profile Access Category
-    category_names = frappe.get_all(
-        "Nexus AI Agent Profile Access Category",
-        filters={"ai_agent_profile": ai_agent_profile_name, "enabled": 1},
-        pluck="access_category",
-    )
-
-    return _policies_from_categories(category_names)
+    return all_policies
 
 
 def resolve_all_policy_names():
@@ -91,20 +76,19 @@ def resolve_all_policy_names():
     if not frappe.db.exists("DocType", "Nexus Access Policy"):
         return set()
 
-    policy_names = frappe.get_all(
-        "Nexus Access Policy",
-        filters={"disabled": 0},
-        pluck="name",
+    return set(
+        frappe.get_all(
+            "Nexus Access Policy",
+            filters={"disabled": 0},
+            pluck="name",
+        )
     )
-
-    return set(policy_names)
 
 
 def resolve_identity_policy_cap(identity_type):
-    """Return the hard policy cap imposed by identity, if any."""
+    """Return the hard policy cap imposed by identity type, if any."""
     if identity_type == "Public":
         return {"Public"}
-
     return None
 
 
@@ -113,20 +97,16 @@ def is_system_manager_session_user():
     session_user = getattr(frappe.session, "user", None)
     if not session_user or session_user == "Guest":
         return False
-
     return "System Manager" in frappe.get_roles(session_user)
 
 
 def _intersect_caps(*caps):
     active_caps = [set(cap) for cap in caps if cap is not None]
-
     if not active_caps:
         return None
-
     effective = active_caps[0]
     for cap in active_caps[1:]:
         effective = effective.intersection(cap)
-
     return effective
 
 
@@ -140,16 +120,14 @@ def resolve_allowed_policies(query_contract):
     System Manager session:
         Returns all enabled policies — unrestricted.
 
-    Desk user with knowledge_profile (no AI profile):
-        Resolves via: knowledge_profile → Knowledge Profile Access Category → policies.
+    Registered visitor / desk user with knowledge_profile_names:
+        Resolves via: knowledge_profile_names → union of policies
+        Capped by: identity_safeguard_access_categories (from Identity Type).
 
-    AI profile with knowledge_profile:
-        Resolves via: AI profile → knowledge_profile → Knowledge Profile Access Category → policies.
+    Legacy AI profile path (no knowledge_profile_names):
+        Falls back to Nexus AI Agent Profile access category records.
 
-    AI profile without knowledge_profile (legacy):
-        Resolves via: AI profile → Nexus AI Agent Profile Access Category → policies.
-
-    Fails closed: no profile/knowledge_profile or empty policy set → returns [] → retrieval denied.
+    Fails closed: empty policy set → returns [] → retrieval denied.
     """
     ai_profile = query_contract.get("ai_profile") or {}
     force_public_only = bool(
@@ -177,55 +155,68 @@ def resolve_allowed_policies(query_contract):
             "access_cap_applied": "system_manager",
         }
 
-    # Desk user path: knowledge_profile without an AI profile
-    knowledge_profile_name = ai_profile.get("knowledge_profile_name")
-    if knowledge_profile_name and not ai_profile.get("name"):
-        kp_policies = resolve_knowledge_profile_policy_names(knowledge_profile_name)
-        return {
-            "allowed_access_policies": list(kp_policies),
-            "force_public_only": False,
-            "profile_policy_names": list(kp_policies),
-            "safeguard_policy_names": [],
-            "identity_policy_names": [],
-            "access_cap_applied": "knowledge_profile",
-        }
-
-    ai_profile_name = ai_profile.get("name")
     identity_type = query_contract.get("identity_type") or ai_profile.get("identity_type")
     safeguard_access_categories = query_contract.get("identity_safeguard_access_categories")
     if safeguard_access_categories is None:
         safeguard_access_categories = ai_profile.get("identity_safeguard_access_categories")
 
-    if not ai_profile_name:
+    # ── New path: knowledge_profile_names from Identity Profile resolution ─────
+    knowledge_profile_names = (
+        ai_profile.get("knowledge_profile_names")
+        or query_contract.get("knowledge_profile_names")
+        or []
+    )
+
+    # Single knowledge_profile_name (desk user legacy / backward compat)
+    if not knowledge_profile_names:
+        single_kp = ai_profile.get("knowledge_profile_name") or ""
+        if single_kp:
+            knowledge_profile_names = [single_kp]
+
+    if knowledge_profile_names:
+        profile_policies = resolve_knowledge_profiles_policy_names(knowledge_profile_names)
+        safeguard_policies = resolve_access_categories_policy_names(safeguard_access_categories)
+        identity_policies = resolve_identity_policy_cap(identity_type)
+        effective_cap = _intersect_caps(safeguard_policies, identity_policies)
+        allowed_policies = profile_policies
+        if effective_cap is not None:
+            allowed_policies = profile_policies.intersection(effective_cap)
+
+        access_cap_parts = []
+        if safeguard_policies is not None:
+            access_cap_parts.append("identity_safeguard")
+        if identity_policies is not None:
+            access_cap_parts.append("identity_type")
+
         return {
-            "allowed_access_policies": [],
+            "allowed_access_policies": list(allowed_policies),
+            "force_public_only": False,
+            "profile_policy_names": list(profile_policies),
+            "safeguard_policy_names": list(safeguard_policies or []),
+            "identity_policy_names": list(identity_policies or []),
+            "access_cap_applied": "+".join(access_cap_parts) or "profile_only",
+        }
+
+    # No knowledge profiles resolved.
+    # For Public identity, the cap itself is ["Public"] — allow that minimal access.
+    # For all other identity types, fail closed (no profiles = no access).
+    identity_type = query_contract.get("identity_type") or ai_profile.get("identity_type")
+    identity_cap = resolve_identity_policy_cap(identity_type)
+    if identity_cap:
+        return {
+            "allowed_access_policies": list(identity_cap),
             "force_public_only": False,
             "profile_policy_names": [],
             "safeguard_policy_names": [],
-            "identity_policy_names": [],
-            "access_cap_applied": "no_profile",
+            "identity_policy_names": list(identity_cap),
+            "access_cap_applied": "identity_type_cap_only",
         }
 
-    profile_policies = resolve_profile_policy_names(ai_profile_name)
-    safeguard_policies = resolve_access_categories_policy_names(safeguard_access_categories)
-    identity_policies = resolve_identity_policy_cap(identity_type)
-    effective_cap = _intersect_caps(safeguard_policies, identity_policies)
-    allowed_policies = profile_policies
-
-    if effective_cap is not None:
-        allowed_policies = profile_policies.intersection(effective_cap)
-
-    access_cap_applied = []
-    if safeguard_policies is not None:
-        access_cap_applied.append("identity_safeguard")
-    if identity_policies is not None:
-        access_cap_applied.append("identity_type")
-
     return {
-        "allowed_access_policies": list(allowed_policies),
+        "allowed_access_policies": [],
         "force_public_only": False,
-        "profile_policy_names": list(profile_policies),
-        "safeguard_policy_names": list(safeguard_policies or []),
-        "identity_policy_names": list(identity_policies or []),
-        "access_cap_applied": "+".join(access_cap_applied) or "profile_only",
+        "profile_policy_names": [],
+        "safeguard_policy_names": [],
+        "identity_policy_names": [],
+        "access_cap_applied": "no_profile",
     }

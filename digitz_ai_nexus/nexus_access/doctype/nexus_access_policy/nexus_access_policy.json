@@ -1,12 +1,13 @@
 {
   "actions": [],
   "allow_rename": 1,
-  "autoname": "field:policy_name",
+  "autoname": "format:{policy_name}-{tenant}",
   "creation": "2026-04-29 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
     "policy_name",
+    "tenant",
     "disabled",
     "is_primitive",
     "access_level",
@@ -25,8 +26,14 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Policy Name",
-      "reqd": 1,
-      "unique": 1
+      "reqd": 1
+    },
+    {
+      "fieldname": "tenant",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Tenant",
+      "options": "Nexus Tenant"
     },
     {
       "default": "0",
@@ -105,7 +112,7 @@
   "modified_by": "Administrator",
   "module": "Nexus Access",
   "name": "Nexus Access Policy",
-  "naming_rule": "By fieldname",
+  "naming_rule": "Expression",
   "owner": "Administrator",
   "permissions": [
     {

@@ -358,7 +358,7 @@ Autoname: `field:policy_name`. Permissions: System Manager only.
 
 ### Nexus Access Category
 
-Named group of access policies. Runtime AI profiles map to categories, not directly to policies.
+Named group of access policies. Knowledge Profiles group these categories; Identity Profiles map them to people per identity type.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -387,7 +387,7 @@ One row inside `Nexus Access Category.allowed_policies`. Maps a category to one 
 
 ### Nexus Role Access Category
 
-Maps a Frappe system role to an access category. Retained for admin reporting and backward compatibility. Frappe roles do not directly produce runtime retrieval policies in the current profile-first model.
+Maps a Frappe system role to an access category. Retained for admin reporting only. Frappe roles do not produce runtime retrieval policies — knowledge access is identity-driven via Nexus Identity Registry and Nexus Identity Profile.
 
 | Field | Type | Notes |
 |---|---|---|

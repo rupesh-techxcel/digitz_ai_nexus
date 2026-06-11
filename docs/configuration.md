@@ -157,11 +157,18 @@ Before users can retrieve knowledge, access categories must be assigned to the A
 
 For internal authenticated users:
 
-1. **Create an Access Category** that includes the relevant policies (e.g. PUBLIC + INTERNAL_EMPLOYEE)
-2. **Assign that category to the internal user's resolved AI Agent Profile**
-3. **For registered chat identities**, add matching Safe Guard Access Categories on the person's `Nexus Identity Registry`
+1. **Create an Access Category** and Knowledge Profile containing the relevant policies
+2. **Create a Nexus Identity Profile** with an identity_mapping row: `identity_type = "Internal"` → your Knowledge Profile
+3. **Create a Nexus Identity Registry** for the desk user with `user = frappe_username` and assign the Identity Profile
+4. **Configure the safeguard** on `Nexus Identity Type "Internal"` to cap the maximum permitted categories
 
-Runtime access resolution is profile-first. `Nexus Role Access Category` records are retained for admin/reporting compatibility but are not used by the current query resolver.
+For registered chat visitors:
+
+1. **Create a Nexus Identity Registry** entry with the verified email
+2. **Assign Identity Profiles** with mappings for the visitor's identity type (e.g. "Customer")
+3. **Ensure Nexus Identity Type** has appropriate `safeguard_access_categories` configured
+
+Runtime access resolution is identity-driven. `Nexus Role Access Category` records are retained for admin/reporting compatibility but are not used by the query resolver.
 
 ---
 

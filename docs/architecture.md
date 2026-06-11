@@ -199,8 +199,8 @@ See [Tenant and Tenant Configuration](tenant-ecosystem.md) for the admin page ma
 
 ## Design Principles
 
-1. **Profile plus identity guard access** — every query resolves to one `Nexus AI Agent Profile`. The profile's Access Categories define the profile capability, and registered chat identities are further capped by the `Nexus Identity Registry` Safe Guard categories. Channel membership and Frappe roles are not runtime access inputs.
-2. **Category-based access** — profiles map to access categories, not directly to policies. Categories are reusable bundles that can be assigned to many profiles.
+1. **Identity-driven access, behavior-driven profile** — knowledge access follows the person, not the AI agent. `Nexus AI Agent Profile` owns behavior (tone, fallback, escalation). `Nexus Identity Profile` owns knowledge access (via Knowledge Profiles → Access Categories → Policies). Changing the AI agent does not change what the person can retrieve.
+2. **Class-level safeguard cap** — access ceilings are on `Nexus Identity Type`, not on individual registry entries. All holders of an identity class are uniformly capped. This prevents per-person misconfiguration from exceeding the class boundary. Channel membership and Frappe roles are not runtime access inputs.
 3. **Chunk-level enforcement** — access policy is stored on each chunk and checked at retrieval time via `chunk.access_policy IN [allowed_policies]`.
 4. **Profile-driven behavior** — tone, style, fallback, and do-not-answer rules come from `Nexus AI Agent Profile` fields. `Nexus AI Behaviour` is a template only.
 5. **Hybrid retrieval** — combines vector similarity with keyword matching and priority boosting for better recall and precision.

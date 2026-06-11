@@ -636,6 +636,144 @@ footer.web-footer{
 }
 
 /* =========================
+   Nexus Coverage Section
+   ========================= */
+.nexus-home .nexus-coverage-section{
+  position:relative;
+  z-index:8;
+}
+
+.nexus-home .nexus-coverage-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:28px;
+  align-items:stretch;
+}
+
+/* Coverage section head — Co-Founder blue variant */
+.nexus-home .nxp-coverage-head{
+  background:
+    linear-gradient(135deg, rgba(33,77,187,0.13) 0%, rgba(255,255,255,0.92) 68%),
+    #eef4ff;
+  border-color:rgba(33,77,187,0.16);
+  border-top-color:#214dbb;
+  margin-bottom:32px;
+}
+.nexus-home .nxp-coverage-head .section-kicker{
+  background:#ffffff;
+  border-color:rgba(33,77,187,0.18);
+  color:#214dbb;
+}
+.nexus-home .nxp-coverage-head .nxp-platform-head-text p{
+  color:#4a5e8a;
+}
+.nexus-home .nxp-coverage-head .nxp-platform-head-text h2 .em{
+  color:#214dbb;
+}
+
+/* Large product icon + title row */
+.nexus-home .nexus-coverage-icon-row{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin-bottom:14px;
+}
+
+.nexus-home .nexus-coverage-product-icon{
+  width:86px;
+  height:86px;
+  flex:0 0 86px;
+  border-radius:20px;
+  object-fit:contain;
+  box-shadow:0 6px 20px rgba(0,0,0,0.12);
+  transition:transform 0.22s;
+}
+
+.nexus-home .nexus-product-card:hover .nexus-coverage-product-icon{
+  transform:scale(1.06);
+}
+
+/* Icon as image inside the standard split-icon box (kept for other uses) */
+.nexus-home .nexus-product-icon-img{
+  background:none;
+  box-shadow:none;
+  border:none;
+  padding:0;
+  width:64px;
+  height:64px;
+}
+
+.nexus-home .nexus-product-icon-img img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  border-radius:16px;
+}
+
+/* Chat Bot card — blue accent (matches Co-Founder palette) */
+.nexus-home .nexus-chat-product-card{
+  border-top:4px solid #214dbb;
+  background:
+    linear-gradient(135deg, rgba(33,77,187,0.055) 0%, rgba(255,255,255,0) 42%),
+    #ffffff;
+}
+
+.nexus-home .nexus-chat-product-card .nexus-split-experience-head{
+  background:
+    linear-gradient(135deg, rgba(33,77,187,0.13) 0%, rgba(255,255,255,0.92) 68%),
+    #eef4ff;
+  border-bottom-color:rgba(33,77,187,0.16);
+}
+
+.nexus-home .nexus-chat-product-card .nexus-split-experience-head .section-kicker{
+  background:#ffffff;
+  border-color:rgba(33,77,187,0.18);
+  color:#214dbb;
+}
+
+/* Q&A card — teal accent (matches Co-Worker palette) */
+.nexus-home .nexus-qa-product-card{
+  border-top:4px solid #0f8f7a;
+  background:
+    linear-gradient(135deg, rgba(15,143,122,0.060) 0%, rgba(255,255,255,0) 42%),
+    #ffffff;
+}
+
+.nexus-home .nexus-qa-product-card .nexus-split-experience-head{
+  background:
+    linear-gradient(135deg, rgba(15,143,122,0.14) 0%, rgba(255,255,255,0.92) 68%),
+    #e8fbf7;
+  border-bottom-color:rgba(15,143,122,0.16);
+}
+
+.nexus-home .nexus-qa-product-card .nexus-split-experience-head .section-kicker{
+  background:#ffffff;
+  border-color:rgba(15,143,122,0.18);
+  color:#0f7b6b;
+}
+
+/* Apps card — gold accent */
+.nexus-home .nexus-apps-product-card{
+  border-top:4px solid #c27c10;
+  background:
+    linear-gradient(135deg, rgba(194,124,16,0.055) 0%, rgba(255,255,255,0) 42%),
+    #ffffff;
+}
+
+.nexus-home .nexus-apps-product-card .nexus-split-experience-head{
+  background:
+    linear-gradient(135deg, rgba(224,166,47,0.13) 0%, rgba(255,255,255,0.92) 68%),
+    #fffbf0;
+  border-bottom-color:rgba(194,124,16,0.18);
+}
+
+.nexus-home .nexus-apps-product-card .nexus-split-experience-head .section-kicker{
+  background:#ffffff;
+  border-color:rgba(194,124,16,0.22);
+  color:#a06600;
+}
+
+/* =========================
    Section headings
    ========================= */
 .digitz-website .section{
@@ -1743,6 +1881,14 @@ footer.web-footer{
 
   .nexus-home .nexus-hero-grid{
     min-height:auto;
+  }
+
+  .nexus-home .nexus-coverage-grid{
+    grid-template-columns:1fr;
+  }
+
+  .nexus-home .nexus-coverage-section{
+    margin-top:-18px;
   }
 
   .nexus-home .nexus-intro-panel,
@@ -4148,5 +4294,698 @@ section[id="qna-experience"]{
 
   .nexus-home .nexus-flow-card{
     min-height:auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Nexus Platform Section — replaces chat-flow section
+   Covers: Designated Bot, Multi-Tenant, Identity Grid, Knowledge Hierarchy
+   ═══════════════════════════════════════════════════════════════ */
+
+.nexus-home .nexus-platform-section{
+  padding:0;
+}
+/* Platform section — Co-Worker styled head with dual product icons */
+.nexus-home .nxp-platform-head{
+  display:flex;
+  align-items:center;
+  gap:28px;
+  background:
+    linear-gradient(135deg, rgba(15,143,122,0.14) 0%, rgba(255,255,255,0.92) 68%),
+    #e8fbf7;
+  border:1px solid rgba(15,143,122,0.16);
+  border-top:4px solid #0f8f7a;
+  border-radius:18px;
+  padding:26px 34px;
+  margin-bottom:40px;
+}
+.nexus-home .nxp-platform-head-icons{
+  display:flex;
+  gap:14px;
+  flex-shrink:0;
+}
+.nexus-home .nxp-head-product-icon{
+  width:72px;
+  height:72px;
+  border-radius:18px;
+  object-fit:contain;
+  box-shadow:0 4px 14px rgba(0,0,0,0.10);
+}
+.nexus-home .nxp-platform-head-text{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.nexus-home .nxp-platform-head-text .section-kicker{
+  background:#ffffff;
+  border-color:rgba(15,143,122,0.20);
+  color:#0f7b6b;
+}
+.nexus-home .nxp-platform-head-text h2{
+  font-size:2rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:0;
+  line-height:1.2;
+}
+.nexus-home .nxp-platform-head-text p{
+  font-size:0.9rem;
+  color:#5a7870;
+  margin:0;
+  line-height:1.5;
+}
+@media (max-width:680px){
+  .nexus-home .nxp-platform-head{
+    flex-direction:column;
+    align-items:flex-start;
+    padding:20px 20px;
+  }
+}
+
+/* ── Main 2-col split grid (Designated Bot + Multi-Tenant) ── */
+.nexus-home .nexus-platform-section .nexus-split-experience-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:28px;
+  align-items:stretch;
+  margin-bottom:60px;
+}
+
+/* Designated Bot card — deep blue */
+.nexus-home .nexus-designated-bot-card{
+  border-top:4px solid #214dbb;
+  background:linear-gradient(135deg,rgba(33,77,187,0.045) 0%,rgba(255,255,255,0) 42%),#ffffff;
+}
+.nexus-home .nexus-designated-bot-card .nexus-split-experience-head{
+  background:linear-gradient(135deg,rgba(33,77,187,0.11) 0%,rgba(255,255,255,0.92) 68%),#eef4ff;
+  border-bottom-color:rgba(33,77,187,0.14);
+}
+.nexus-home .nexus-designated-bot-card .nexus-split-experience-head .section-kicker{
+  background:#ffffff;
+  border-color:rgba(33,77,187,0.18);
+  color:#214dbb;
+}
+
+/* Multi-Tenant card — indigo/navy */
+.nexus-home .nexus-multitenant-card{
+  border-top:4px solid #17439d;
+  background:linear-gradient(135deg,rgba(23,67,157,0.045) 0%,rgba(255,255,255,0) 42%),#ffffff;
+}
+.nexus-home .nexus-multitenant-card .nexus-split-experience-head{
+  background:linear-gradient(135deg,rgba(23,67,157,0.10) 0%,rgba(255,255,255,0.92) 68%),#eef2ff;
+  border-bottom-color:rgba(23,67,157,0.14);
+}
+.nexus-home .nexus-multitenant-card .nexus-split-experience-head .section-kicker{
+  background:#ffffff;
+  border-color:rgba(23,67,157,0.18);
+  color:#17439d;
+}
+.nexus-home .nexus-multitenant-card .nexus-split-icon{
+  background:rgba(23,67,157,0.12);
+  color:#17439d;
+  border-radius:14px;
+}
+.nexus-home .nexus-multitenant-card .nexus-split-icon svg{
+  color:#17439d;
+}
+
+/* ── Sub-section wrapper ── */
+.nexus-home .nexus-platform-sub-section{
+  margin-bottom:56px;
+}
+.nexus-home .nexus-platform-sub-section:last-child{
+  margin-bottom:0;
+}
+
+/* ── Sub-section header ── */
+.nexus-home .nexus-platform-sub-head{
+  text-align:center;
+  max-width:760px;
+  margin:0 auto 36px;
+}
+.nexus-home .nexus-sub-kicker{
+  display:inline-block;
+  font-size:0.72rem;
+  font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:#16a37f;
+  background:rgba(22,163,127,0.08);
+  border:1px solid rgba(22,163,127,0.22);
+  border-radius:100px;
+  padding:5px 14px;
+  margin-bottom:12px;
+}
+.nexus-home .nexus-platform-sub-head h3{
+  font-size:1.9rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:0 0 12px;
+  line-height:1.2;
+}
+.nexus-home .nexus-platform-sub-head p{
+  font-size:1rem;
+  color:#5a6880;
+  line-height:1.7;
+  margin:0;
+}
+
+/* ═══ Identity Category Grid ═══ */
+.nexus-home .nexus-identity-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:16px;
+}
+.nexus-home .nexus-identity-card{
+  background:#ffffff;
+  border:1px solid rgba(15,38,80,0.10);
+  border-top-width:3px;
+  border-radius:14px;
+  padding:22px 18px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  transition:box-shadow 0.2s,transform 0.2s;
+}
+.nexus-home .nexus-identity-card:hover{
+  box-shadow:0 8px 28px rgba(15,38,80,0.12);
+  transform:translateY(-3px);
+}
+.nexus-home .nexus-identity-card .nic-badge{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.nexus-home .nexus-identity-card .nic-badge svg{
+  width:22px;
+  height:22px;
+}
+.nexus-home .nexus-identity-card strong{
+  font-size:0.95rem;
+  font-weight:700;
+  line-height:1.3;
+  color:#0f2650;
+}
+.nexus-home .nexus-identity-card span{
+  font-size:0.82rem;
+  color:#5a6880;
+  line-height:1.55;
+}
+.nexus-home .nexus-identity-card.nic-public{ border-top-color:#8fa8f5; }
+.nexus-home .nexus-identity-card.nic-public .nic-badge{ background:rgba(143,168,245,0.14); color:#3c5dc7; }
+.nexus-home .nexus-identity-card.nic-customer{ border-top-color:#16a37f; }
+.nexus-home .nexus-identity-card.nic-customer .nic-badge{ background:rgba(22,163,127,0.12); color:#16a37f; }
+.nexus-home .nexus-identity-card.nic-partner{ border-top-color:#d97706; }
+.nexus-home .nexus-identity-card.nic-partner .nic-badge{ background:rgba(217,119,6,0.10); color:#d97706; }
+.nexus-home .nexus-identity-card.nic-employee{ border-top-color:#214dbb; }
+.nexus-home .nexus-identity-card.nic-employee .nic-badge{ background:rgba(33,77,187,0.10); color:#214dbb; }
+.nexus-home .nexus-identity-card.nic-training{ border-top-color:#7c3aed; }
+.nexus-home .nexus-identity-card.nic-training .nic-badge{ background:rgba(124,58,237,0.10); color:#7c3aed; }
+
+/* ═══ Knowledge Hierarchy Levels ═══ */
+.nexus-home .nexus-knowledge-levels{
+  display:flex;
+  align-items:flex-start;
+  gap:0;
+  overflow-x:auto;
+  padding-bottom:6px;
+}
+.nexus-home .nkl-level{
+  flex:1;
+  min-width:140px;
+  background:#ffffff;
+  border:1px solid rgba(15,38,80,0.09);
+  border-top-width:4px;
+  border-radius:14px;
+  padding:20px 16px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.nexus-home .nkl-label{
+  font-size:0.82rem;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+.nexus-home .nkl-desc{
+  font-size:0.81rem;
+  color:#5a6880;
+  line-height:1.55;
+  flex:1;
+}
+.nexus-home .nkl-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:4px;
+}
+.nexus-home .nkl-chips span{
+  display:inline-block;
+  font-size:0.7rem;
+  font-weight:600;
+  border-radius:100px;
+  padding:3px 9px;
+  background:rgba(15,38,80,0.06);
+  color:#4a5878;
+  white-space:nowrap;
+}
+.nexus-home .nkl-connector{
+  flex:0 0 auto;
+  align-self:center;
+  font-size:1.6rem;
+  color:#c0cce4;
+  padding:0 6px;
+  line-height:1;
+  margin-top:-20px;
+  user-select:none;
+}
+
+/* Knowledge level color variants */
+.nexus-home .nkl-tenant{ border-top-color:#214dbb; }
+.nexus-home .nkl-tenant .nkl-label{ color:#214dbb; }
+.nexus-home .nkl-tenant .nkl-chips span{ background:rgba(33,77,187,0.08); color:#214dbb; }
+
+.nexus-home .nkl-context{ border-top-color:#16a37f; }
+.nexus-home .nkl-context .nkl-label{ color:#16a37f; }
+.nexus-home .nkl-context .nkl-chips span{ background:rgba(22,163,127,0.08); color:#16a37f; }
+
+.nexus-home .nkl-subcontext{ border-top-color:#0f8f7a; }
+.nexus-home .nkl-subcontext .nkl-label{ color:#0f8f7a; }
+.nexus-home .nkl-subcontext .nkl-chips span{ background:rgba(15,143,122,0.08); color:#0f8f7a; }
+
+.nexus-home .nkl-bunit{ border-top-color:#d97706; }
+.nexus-home .nkl-bunit .nkl-label{ color:#d97706; }
+.nexus-home .nkl-bunit .nkl-chips span{ background:rgba(217,119,6,0.08); color:#b45309; }
+
+.nexus-home .nkl-project{ border-top-color:#7c3aed; }
+.nexus-home .nkl-project .nkl-label{ color:#7c3aed; }
+.nexus-home .nkl-project .nkl-chips span{ background:rgba(124,58,237,0.08); color:#6d28d9; }
+
+/* ── Responsive (old sub-section classes, kept for safety) ── */
+@media (max-width:1100px){
+  .nexus-home .nexus-platform-section .nexus-split-experience-grid{
+    grid-template-columns:1fr;
+  }
+  .nexus-home .nexus-identity-grid{
+    grid-template-columns:repeat(3,1fr);
+  }
+  .nexus-home .nexus-knowledge-levels{
+    flex-wrap:wrap;
+  }
+  .nexus-home .nkl-connector{
+    display:none;
+  }
+  .nexus-home .nkl-level{
+    flex:0 0 calc(50% - 8px);
+  }
+}
+@media (max-width:680px){
+  .nexus-home .nexus-identity-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .nexus-home .nkl-level{
+    flex:0 0 100%;
+  }
+  .nexus-home .nexus-platform-sub-head h3{
+    font-size:1.5rem;
+  }
+}
+@media (max-width:420px){
+  .nexus-home .nexus-identity-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Nexus Platform — visual concept layout (nxp-* classes)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Concept row — 2 equal panels side by side */
+.nexus-home .nxp-concept-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:28px;
+  align-items:start;
+  margin-bottom:52px;
+}
+
+/* Generic panel — white card */
+.nexus-home .nxp-panel{
+  background:#ffffff;
+  border:1px solid rgba(15,38,80,0.09);
+  border-top-width:4px;
+  border-radius:18px;
+  padding:28px 26px 22px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* Bot panel — blue accent */
+.nexus-home .nxp-bot-panel{
+  border-top-color:#214dbb;
+}
+.nexus-home .nxp-bot-panel .nexus-sub-kicker{
+  color:#214dbb;
+  background:rgba(33,77,187,0.07);
+  border-color:rgba(33,77,187,0.18);
+}
+.nexus-home .nxp-bot-panel h3{
+  font-size:1.25rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:4px 0 0;
+  line-height:1.25;
+}
+
+/* Categories panel — teal accent */
+.nexus-home .nxp-categories-panel{
+  border-top-color:#16a37f;
+}
+.nexus-home .nxp-categories-panel h3{
+  font-size:1.25rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:4px 0 0;
+  line-height:1.25;
+}
+
+/* Panel icon row (bot image + title) */
+.nexus-home .nxp-panel-icon-row{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.nexus-home .nxp-bot-img{
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  border-radius:16px;
+  object-fit:contain;
+}
+
+/* Short tagline */
+.nexus-home .nxp-tagline{
+  font-size:0.9rem;
+  color:#5a6880;
+  line-height:1.6;
+  margin:0;
+}
+
+/* ── Designated Bot — trait grid ── */
+.nexus-home .nxp-trait-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.nexus-home .nxp-trait{
+  background:rgba(33,77,187,0.05);
+  border:1px solid rgba(33,77,187,0.12);
+  border-radius:10px;
+  padding:10px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.nexus-home .nxp-trait-label{
+  font-size:0.8rem;
+  font-weight:700;
+  color:#214dbb;
+  line-height:1.2;
+}
+.nexus-home .nxp-trait-desc{
+  font-size:0.74rem;
+  color:#6a7a94;
+  line-height:1.3;
+}
+
+/* Bot badge footer strip */
+.nexus-home .nxp-bot-badge{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:0.78rem;
+  font-weight:600;
+  color:#214dbb;
+  background:rgba(33,77,187,0.06);
+  border:1px solid rgba(33,77,187,0.14);
+  border-radius:100px;
+  padding:7px 14px;
+  margin-top:2px;
+}
+.nexus-home .nxp-bot-badge svg{
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  color:#214dbb;
+}
+
+/* ── Chat Categories — 4x2 tile grid ── */
+.nexus-home .nxp-cat-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+.nexus-home .nxp-cat-tile{
+  background:rgba(22,163,127,0.06);
+  border:1px solid rgba(22,163,127,0.18);
+  border-radius:12px;
+  padding:12px 8px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:7px;
+  text-align:center;
+  transition:background 0.18s,border-color 0.18s,transform 0.18s;
+  cursor:default;
+}
+.nexus-home .nxp-cat-tile:hover{
+  background:rgba(22,163,127,0.12);
+  border-color:rgba(22,163,127,0.36);
+  transform:translateY(-2px);
+}
+.nexus-home .nxp-cat-icon{
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#16a37f;
+}
+.nexus-home .nxp-cat-icon svg{
+  width:26px;
+  height:26px;
+}
+.nexus-home .nxp-cat-tile span{
+  font-size:0.72rem;
+  font-weight:700;
+  color:#0a3d2e;
+  line-height:1.25;
+}
+
+/* Multi-tenant strip at bottom of categories panel */
+.nexus-home .nxp-mt-strip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:0.8rem;
+  color:#5a6880;
+  background:rgba(23,67,157,0.05);
+  border:1px solid rgba(23,67,157,0.12);
+  border-radius:10px;
+  padding:10px 14px;
+  line-height:1.4;
+  margin-top:2px;
+}
+.nexus-home .nxp-mt-strip svg{
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
+  color:#17439d;
+}
+.nexus-home .nxp-mt-strip strong{
+  color:#17439d;
+  white-space:nowrap;
+}
+
+/* ── Escalation concept panel ── */
+.nexus-home .nxp-escalation-panel{
+  display:flex;
+  align-items:flex-start;
+  gap:22px;
+  background:
+    linear-gradient(135deg, rgba(194,124,16,0.08) 0%, rgba(255,255,255,0) 50%),
+    #ffffff;
+  border:1px solid rgba(194,124,16,0.18);
+  border-top:4px solid #c27c10;
+  border-radius:16px;
+  padding:22px 28px;
+  margin-bottom:48px;
+}
+.nexus-home .nxp-escalation-icon{
+  flex:0 0 52px;
+  width:52px;
+  height:52px;
+  background:rgba(194,124,16,0.10);
+  border-radius:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#a06600;
+  margin-top:2px;
+}
+.nexus-home .nxp-escalation-icon svg{
+  width:30px;
+  height:30px;
+}
+.nexus-home .nxp-escalation-body{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.nexus-home .nxp-escalation-title-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.nexus-home .nxp-escalation-kicker{
+  color:#a06600;
+  background:rgba(194,124,16,0.08);
+  border-color:rgba(194,124,16,0.22);
+}
+.nexus-home .nxp-escalation-title-row strong{
+  font-size:1rem;
+  font-weight:700;
+  color:#0f2650;
+  line-height:1.3;
+}
+.nexus-home .nxp-escalation-body > p{
+  font-size:0.88rem;
+  color:#5a6880;
+  line-height:1.6;
+  margin:0;
+}
+.nexus-home .nxp-escalation-triggers{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.nexus-home .nxp-escalation-triggers span{
+  display:inline-block;
+  font-size:0.74rem;
+  font-weight:600;
+  padding:4px 11px;
+  border-radius:100px;
+  background:rgba(194,124,16,0.09);
+  border:1px solid rgba(194,124,16,0.22);
+  color:#8c5800;
+  white-space:nowrap;
+}
+@media (max-width:600px){
+  .nexus-home .nxp-escalation-panel{
+    flex-direction:column;
+  }
+}
+
+/* ── Sub-section wrappers (identity + knowledge) ── */
+.nexus-home .nxp-subsec{
+  margin-bottom:48px;
+}
+.nexus-home .nxp-subsec:last-child{
+  margin-bottom:0;
+}
+.nexus-home .nxp-subsec-head{
+  text-align:center;
+  max-width:680px;
+  margin:0 auto 28px;
+}
+.nexus-home .nxp-subsec-head h3{
+  font-size:1.8rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:8px 0 8px;
+  line-height:1.2;
+}
+.nexus-home .nxp-subsec-head p{
+  font-size:0.95rem;
+  color:#5a6880;
+  margin:0;
+  line-height:1.6;
+}
+
+/* ── Identity cards — access chips replace paragraph ── */
+.nexus-home .nexus-identity-card span{
+  display:none; /* hide old paragraph spans */
+}
+.nexus-home .nic-access{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:4px;
+}
+.nexus-home .nic-access span{
+  display:inline-block !important;
+  font-size:0.71rem;
+  font-weight:600;
+  border-radius:100px;
+  padding:3px 9px;
+  background:rgba(15,38,80,0.06);
+  color:#4a5878;
+  white-space:nowrap;
+}
+/* Color the access chips per card type */
+.nexus-home .nexus-identity-card.nic-public .nic-access span{
+  background:rgba(143,168,245,0.14);
+  color:#3c5dc7;
+}
+.nexus-home .nexus-identity-card.nic-customer .nic-access span{
+  background:rgba(22,163,127,0.10);
+  color:#0e7a5c;
+}
+.nexus-home .nexus-identity-card.nic-partner .nic-access span{
+  background:rgba(217,119,6,0.09);
+  color:#a35808;
+}
+.nexus-home .nexus-identity-card.nic-employee .nic-access span{
+  background:rgba(33,77,187,0.09);
+  color:#214dbb;
+}
+.nexus-home .nexus-identity-card.nic-training .nic-access span{
+  background:rgba(124,58,237,0.09);
+  color:#6d28d9;
+}
+
+/* ── Platform section responsive overrides ── */
+@media (max-width:1100px){
+  .nexus-home .nxp-concept-row{
+    grid-template-columns:1fr;
+  }
+  .nexus-home .nxp-cat-grid{
+    grid-template-columns:repeat(4,1fr);
+  }
+}
+@media (max-width:720px){
+  .nexus-home .nxp-cat-grid{
+    grid-template-columns:repeat(4,1fr);
+  }
+  .nexus-home .nxp-trait-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .nexus-home .nxp-subsec-head h3{
+    font-size:1.45rem;
+  }
+}
+@media (max-width:500px){
+  .nexus-home .nxp-cat-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+  .nexus-home .nxp-panel{
+    padding:22px 18px 18px;
   }
 }

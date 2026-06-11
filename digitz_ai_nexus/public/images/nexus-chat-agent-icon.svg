@@ -8,8 +8,10 @@
   <path d="M162 178h34M316 178h34" stroke="#B8ECDD" stroke-width="8" stroke-linecap="round"/>
   <circle cx="206" cy="178" r="8" fill="#16A37F"/>
   <circle cx="306" cy="178" r="8" fill="#16A37F"/>
-  <rect x="218" y="124" width="76" height="46" rx="23" fill="#16A37F"/>
-  <path d="M234 156V138h7l19 20v-20h8v18h-7l-19-20v20h-8Z" fill="#FFFFFF"/>
+  <rect x="192" y="116" width="128" height="58" rx="29" fill="#16A37F"/>
+  <rect x="206" y="122" width="20" height="46" fill="#FFFFFF"/>
+  <rect x="286" y="122" width="20" height="46" fill="#FFFFFF"/>
+  <polygon points="226,122 246,122 286,168 266,168" fill="#FFFFFF"/>
   <rect x="174" y="176" width="164" height="96" rx="42" fill="#214DBB"/>
   <circle cx="222" cy="224" r="17" fill="#8FE2C6"/>
   <circle cx="290" cy="224" r="17" fill="#8FE2C6"/>

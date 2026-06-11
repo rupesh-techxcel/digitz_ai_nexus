@@ -1047,7 +1047,6 @@ function open_nexus_administration_help() {
                     </p>
                     <ul>
                         <li>Default Business Unit</li>
-                        <li>Default Public Context</li>
                         <li>Default Q&A Channel</li>
                         <li>Default Chat Channel</li>
                         <li>Widget defaults</li>

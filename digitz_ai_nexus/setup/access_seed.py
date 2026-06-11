@@ -4,13 +4,12 @@ import frappe
 PUBLIC_POLICY = "Public"
 
 
-def _exists(doctype, name):
-    return frappe.db.exists(doctype, name)
-
-
-def _set_if_field_exists(doc, fieldname, value):
-    if doc.meta.has_field(fieldname):
-        doc.set(fieldname, value)
+def _find(doctype, fieldname, value, tenant=None):
+    """Locate a record by its identifying field + optional tenant. Returns doc name or None."""
+    filters = {fieldname: value}
+    if tenant:
+        filters["tenant"] = tenant
+    return frappe.db.get_value(doctype, filters, "name")
 
 
 def ensure_access_policy(
@@ -19,31 +18,30 @@ def ensure_access_policy(
     sensitivity="public",
     description="",
     primitive=False,
+    tenant=None,
 ):
-    """
-    Create or update a Nexus Access Policy.
-
-    Final rule:
-    - Public is the only primitive/system policy.
-    - Anything other than Public is user-defined.
-    """
-
     policy_name = (policy_name or "").strip()
-
     if not policy_name:
         frappe.throw("Policy name is required.")
 
-    if _exists("Nexus Access Policy", policy_name):
-        doc = frappe.get_doc("Nexus Access Policy", policy_name)
+    existing = _find("Nexus Access Policy", "policy_name", policy_name, tenant)
+
+    if existing:
+        doc = frappe.get_doc("Nexus Access Policy", existing)
     else:
         doc = frappe.new_doc("Nexus Access Policy")
         doc.policy_name = policy_name
+        if tenant and doc.meta.has_field("tenant"):
+            doc.tenant = tenant
 
-    _set_if_field_exists(doc, "disabled", 0)
-    _set_if_field_exists(doc, "access_level", access_level)
-    _set_if_field_exists(doc, "sensitivity", sensitivity)
-    _set_if_field_exists(doc, "description", description)
-
+    if doc.meta.has_field("disabled"):
+        doc.disabled = 0
+    if doc.meta.has_field("access_level"):
+        doc.access_level = access_level
+    if doc.meta.has_field("sensitivity"):
+        doc.sensitivity = sensitivity
+    if doc.meta.has_field("description"):
+        doc.description = description
     if doc.meta.has_field("is_primitive"):
         doc.is_primitive = 1 if policy_name.lower() == "public" else 0
 
@@ -51,28 +49,34 @@ def ensure_access_policy(
     return doc.name
 
 
-def ensure_access_category(category_name, policies, title=None, description="", priority=10):
-    """
-    Create or update Nexus Access Category and its allowed policy rows.
-    """
-
+def ensure_access_category(
+    category_name,
+    policies,
+    title=None,
+    description="",
+    priority=10,
+    tenant=None,
+):
     category_name = (category_name or "").strip()
-
     if not category_name:
         frappe.throw("Access Category name is required.")
 
-    if _exists("Nexus Access Category", category_name):
-        doc = frappe.get_doc("Nexus Access Category", category_name)
+    existing = _find("Nexus Access Category", "category_name", category_name, tenant)
+
+    if existing:
+        doc = frappe.get_doc("Nexus Access Category", existing)
     else:
         doc = frappe.new_doc("Nexus Access Category")
         doc.category_name = category_name
+        if tenant and doc.meta.has_field("tenant"):
+            doc.tenant = tenant
 
     doc.title = title or category_name
     doc.disabled = 0
     doc.priority = priority
     doc.description = description or ""
 
-    existing = {
+    existing_policies = {
         row.access_policy
         for row in (doc.get("allowed_policies") or [])
         if row.access_policy
@@ -80,55 +84,50 @@ def ensure_access_category(category_name, policies, title=None, description="", 
 
     for policy in policies or []:
         policy = (policy or "").strip()
-
         if not policy:
             continue
 
         if not frappe.db.exists("Nexus Access Policy", policy):
-            # Only Public is a primitive policy. Other policies created here are just user-defined examples.
-            ensure_access_policy(
+            policy = ensure_access_policy(
                 policy_name=policy,
                 access_level="Public" if policy.lower() == "public" else "Role Restricted",
                 sensitivity="public" if policy.lower() == "public" else "internal",
                 description=f"Auto-created access policy: {policy}",
+                tenant=tenant,
             )
 
-        if policy not in existing:
+        if policy not in existing_policies:
             doc.append("allowed_policies", {
                 "access_policy": policy,
-                "description": f"Allows {policy} knowledge."
+                "description": f"Allows {policy} knowledge.",
             })
 
     doc.save(ignore_permissions=True)
     return doc.name
 
 
-
-def seed_default_access_governance():
+def seed_default_access_governance(tenant=None):
     """
-    Seed minimum Nexus access governance records.
+    Seed minimum Nexus access governance records under the given tenant.
 
-    Important:
-    - Public is the only primitive/system policy.
-    - Internal and Restricted are only example user-defined policies.
-    - Non-public policies are accessible only through Role Access Category
-      and Channel Access Category mapping.
+    Public is the only primitive/system policy.
+    Internal and Restricted are example user-defined policies.
     """
-
     public_policy = ensure_access_policy(
         policy_name="Public",
         access_level="Public",
         sensitivity="public",
-        description="Primitive system policy. Public knowledge can be consumed only through channels that allow Public.",
+        description="Primitive system policy. Public knowledge accessible through channels that allow Public.",
         primitive=True,
+        tenant=tenant,
     )
 
-    # Example user-defined policies. These are not primitive.
     internal_policy = ensure_access_policy(
         policy_name="Internal",
         access_level="Internal",
         sensitivity="internal",
         description="Example user-defined policy for internal knowledge.",
+        tenant=tenant,
     )
 
     restricted_policy = ensure_access_policy(
@@ -136,6 +135,7 @@ def seed_default_access_governance():
         access_level="Role Restricted",
         sensitivity="confidential",
         description="Example user-defined policy for restricted knowledge.",
+        tenant=tenant,
     )
 
     public_access = ensure_access_category(
@@ -144,6 +144,7 @@ def seed_default_access_governance():
         policies=[public_policy],
         description="Allows Public knowledge only.",
         priority=10,
+        tenant=tenant,
     )
 
     internal_access = ensure_access_category(
@@ -152,6 +153,7 @@ def seed_default_access_governance():
         policies=[public_policy, internal_policy],
         description="Allows Public and Internal knowledge.",
         priority=20,
+        tenant=tenant,
     )
 
     restricted_access = ensure_access_category(
@@ -160,6 +162,7 @@ def seed_default_access_governance():
         policies=[public_policy, internal_policy, restricted_policy],
         description="Allows Public, Internal, and Restricted knowledge.",
         priority=30,
+        tenant=tenant,
     )
 
     frappe.db.commit()
