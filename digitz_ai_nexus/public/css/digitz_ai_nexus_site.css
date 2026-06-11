@@ -641,6 +641,8 @@ footer.web-footer{
 .nexus-home .nexus-coverage-section{
   position:relative;
   z-index:8;
+  margin-top:-28px;
+  padding-top:0;
 }
 
 .nexus-home .nexus-coverage-grid{
@@ -1189,6 +1191,7 @@ footer.web-footer{
    Commercial section
    ========================= */
 .nexus-home .nexus-experience-section{
+  padding-bottom:40px;
   background:
     radial-gradient(circle at 10% 16%, rgba(33,77,187,0.07), transparent 24%),
     radial-gradient(circle at 88% 12%, rgba(224,166,47,0.10), transparent 24%),
@@ -2202,7 +2205,7 @@ footer.web-footer{
    Commercial strip
    ========================= */
 .nexus-home .nexus-commercial-strip{
-  padding:72px 0 64px;
+  padding:40px 0 52px;
   background:
     radial-gradient(circle at 18% 30%, rgba(33,77,187,0.05), transparent 24%),
     radial-gradient(circle at 88% 24%, rgba(224,166,47,0.08), transparent 22%),
@@ -4298,8 +4301,7 @@ section[id="qna-experience"]{
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Nexus Platform Section — replaces chat-flow section
-   Covers: Designated Bot, Multi-Tenant, Identity Grid, Knowledge Hierarchy
+   Nexus Platform Section — AI Chat Bots & Q&A branding
    ═══════════════════════════════════════════════════════════════ */
 
 .nexus-home .nexus-platform-section{
@@ -4309,6 +4311,8 @@ section[id="qna-experience"]{
 .nexus-home .nxp-platform-head{
   display:flex;
   align-items:center;
+  justify-content:center;
+  position:relative;
   gap:28px;
   background:
     linear-gradient(135deg, rgba(15,143,122,0.14) 0%, rgba(255,255,255,0.92) 68%),
@@ -4334,6 +4338,8 @@ section[id="qna-experience"]{
 .nexus-home .nxp-platform-head-text{
   display:flex;
   flex-direction:column;
+  align-items:center;
+  text-align:center;
   gap:6px;
 }
 .nexus-home .nxp-platform-head-text .section-kicker{
@@ -4354,6 +4360,39 @@ section[id="qna-experience"]{
   margin:0;
   line-height:1.5;
 }
+
+/* Launch Q&A button */
+@keyframes nxp-btn-pulse{
+  0%   { box-shadow:0 4px 16px rgba(15,143,122,0.32), 0 0 0 0 rgba(15,143,122,0.36); }
+  65%  { box-shadow:0 4px 16px rgba(15,143,122,0.22), 0 0 0 10px rgba(15,143,122,0); }
+  100% { box-shadow:0 4px 16px rgba(15,143,122,0.32), 0 0 0 0 rgba(15,143,122,0); }
+}
+.nexus-home .nxp-launch-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  position:absolute;right:28px;top:50%;transform:translateY(-50%);
+  padding:10px 24px;
+  font-size:0.86rem;font-weight:700;letter-spacing:0.02em;
+  color:#ffffff;
+  background:linear-gradient(135deg,#0f8f7a 0%,#16a37f 100%);
+  border:none;border-radius:100px;
+  animation:nxp-btn-pulse 2s ease-out infinite;
+  text-decoration:none;
+  transition:transform 0.15s,background 0.15s;
+}
+.nexus-home .nxp-launch-btn svg{
+  width:16px;height:16px;flex:0 0 16px;
+}
+.nexus-home .nxp-launch-btn:hover{
+  background:linear-gradient(135deg,#0d7a6a 0%,#0f8f7a 100%);
+  box-shadow:0 6px 22px rgba(15,143,122,0.42);
+  transform:translateY(-1px);
+  animation:none;
+  color:#ffffff;text-decoration:none;
+}
+.nexus-home .nxp-launch-btn:active{
+  transform:translateY(0);
+}
+
 @media (max-width:680px){
   .nexus-home .nxp-platform-head{
     flex-direction:column;
@@ -4621,371 +4660,740 @@ section[id="qna-experience"]{
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Nexus Platform — visual concept layout (nxp-* classes)
+   Nexus Platform — nxp-* visual layout (refined)
    ═══════════════════════════════════════════════════════════════ */
 
-/* Concept row — 2 equal panels side by side */
+/* ── Section head ── */
+.nexus-home .nxp-platform-head{
+  text-align:center;
+  justify-content:center;
+  margin-bottom:36px;
+}
+.nexus-home .nxp-platform-head-text{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.nexus-home .nxp-platform-head-text h2{
+  font-size:2.1rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:0;
+  line-height:1.2;
+}
+.nexus-home .nxp-platform-head-text p{
+  font-size:0.9rem;
+  color:#5a7870;
+  margin:0;
+  letter-spacing:0.02em;
+}
+
+/* ── Concept row ── */
 .nexus-home .nxp-concept-row{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:28px;
+  gap:24px;
   align-items:start;
-  margin-bottom:52px;
+  margin-bottom:24px;
 }
 
-/* Generic panel — white card */
+/* ── Panel base — no padding; hd/bd handle spacing ── */
 .nexus-home .nxp-panel{
   background:#ffffff;
-  border:1px solid rgba(15,38,80,0.09);
+  border:1px solid rgba(15,38,80,0.08);
   border-top-width:4px;
-  border-radius:18px;
-  padding:28px 26px 22px;
+  border-radius:20px;
+  overflow:hidden;
   display:flex;
   flex-direction:column;
-  gap:18px;
+  box-shadow:0 2px 12px rgba(15,38,80,0.06),0 6px 24px rgba(15,38,80,0.04);
+  padding:0;
+  gap:0;
 }
 
-/* Bot panel — blue accent */
-.nexus-home .nxp-bot-panel{
-  border-top-color:#214dbb;
-}
-.nexus-home .nxp-bot-panel .nexus-sub-kicker{
-  color:#214dbb;
-  background:rgba(33,77,187,0.07);
-  border-color:rgba(33,77,187,0.18);
-}
-.nexus-home .nxp-bot-panel h3{
-  font-size:1.25rem;
-  font-weight:800;
-  color:#0f2650;
-  margin:4px 0 0;
-  line-height:1.25;
-}
-
-/* Categories panel — teal accent */
-.nexus-home .nxp-categories-panel{
-  border-top-color:#16a37f;
-}
-.nexus-home .nxp-categories-panel h3{
-  font-size:1.25rem;
-  font-weight:800;
-  color:#0f2650;
-  margin:4px 0 0;
-  line-height:1.25;
-}
-
-/* Panel icon row (bot image + title) */
-.nexus-home .nxp-panel-icon-row{
+/* Panel header zone */
+.nexus-home .nxp-panel-hd{
+  padding:22px 24px 18px;
   display:flex;
-  align-items:center;
-  gap:16px;
+  flex-direction:column;
+  gap:7px;
+  border-bottom:1px solid transparent;
 }
-.nexus-home .nxp-bot-img{
-  width:64px;
-  height:64px;
-  flex:0 0 64px;
-  border-radius:16px;
-  object-fit:contain;
+.nexus-home .nxp-panel-hd h3{
+  font-size:1.18rem;
+  font-weight:800;
+  color:#0f2650;
+  margin:0;
+  line-height:1.25;
 }
-
-/* Short tagline */
 .nexus-home .nxp-tagline{
-  font-size:0.9rem;
+  font-size:0.84rem;
   color:#5a6880;
-  line-height:1.6;
+  line-height:1.55;
   margin:0;
 }
 
-/* ── Designated Bot — trait grid ── */
+/* Panel body zone */
+.nexus-home .nxp-panel-bd{
+  padding:18px 24px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  flex:1;
+}
+
+/* ── Bot panel — blue ── */
+.nexus-home .nxp-bot-panel{ border-top-color:#214dbb; }
+.nexus-home .nxp-bot-panel .nxp-panel-hd{
+  background:linear-gradient(135deg,rgba(33,77,187,0.09) 0%,rgba(255,255,255,0.95) 68%),#eef4ff;
+  border-bottom-color:rgba(33,77,187,0.11);
+}
+.nexus-home .nxp-bot-panel .nexus-sub-kicker{
+  color:#214dbb;
+  background:rgba(33,77,187,0.08);
+  border-color:rgba(33,77,187,0.18);
+}
+
+/* ── Categories panel — teal ── */
+.nexus-home .nxp-categories-panel{ border-top-color:#0f8f7a; }
+.nexus-home .nxp-categories-panel .nxp-panel-hd{
+  background:linear-gradient(135deg,rgba(15,143,122,0.09) 0%,rgba(255,255,255,0.95) 68%),#e8fbf7;
+  border-bottom-color:rgba(15,143,122,0.11);
+}
+.nexus-home .nxp-categories-panel .nexus-sub-kicker{
+  color:#0f7b6b;
+  background:rgba(15,143,122,0.08);
+  border-color:rgba(15,143,122,0.18);
+}
+
+/* ── Trait grid ── */
 .nexus-home .nxp-trait-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8px;
+  gap:7px;
 }
 .nexus-home .nxp-trait{
-  background:rgba(33,77,187,0.05);
-  border:1px solid rgba(33,77,187,0.12);
-  border-radius:10px;
+  background:#f7f9ff;
+  border:1px solid rgba(33,77,187,0.09);
+  border-left:3px solid #214dbb;
+  border-radius:0 10px 10px 0;
   padding:10px 12px;
   display:flex;
   flex-direction:column;
   gap:3px;
 }
 .nexus-home .nxp-trait-label{
-  font-size:0.8rem;
+  font-size:0.78rem;
   font-weight:700;
   color:#214dbb;
   line-height:1.2;
 }
 .nexus-home .nxp-trait-desc{
-  font-size:0.74rem;
+  font-size:0.71rem;
   color:#6a7a94;
   line-height:1.3;
 }
 
-/* Bot badge footer strip */
+/* Bot badge */
 .nexus-home .nxp-bot-badge{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:0.78rem;
-  font-weight:600;
+  display:flex;align-items:center;gap:8px;
+  font-size:0.76rem;font-weight:600;
   color:#214dbb;
-  background:rgba(33,77,187,0.06);
-  border:1px solid rgba(33,77,187,0.14);
-  border-radius:100px;
-  padding:7px 14px;
-  margin-top:2px;
+  background:rgba(33,77,187,0.05);
+  border:1px solid rgba(33,77,187,0.13);
+  border-radius:100px;padding:6px 14px;
 }
-.nexus-home .nxp-bot-badge svg{
-  width:16px;
-  height:16px;
-  flex:0 0 16px;
-  color:#214dbb;
-}
+.nexus-home .nxp-bot-badge svg{ width:15px;height:15px;flex:0 0 15px;color:#214dbb; }
 
-/* ── Chat Categories — 4x2 tile grid ── */
+/* ── Category tile grid ── */
 .nexus-home .nxp-cat-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:8px;
+  gap:7px;
 }
 .nexus-home .nxp-cat-tile{
-  background:rgba(22,163,127,0.06);
-  border:1px solid rgba(22,163,127,0.18);
+  background:#f0fdfb;
+  border:1px solid rgba(15,143,122,0.15);
   border-radius:12px;
-  padding:12px 8px 10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:7px;
-  text-align:center;
+  padding:14px 6px 12px;
+  display:flex;flex-direction:column;
+  align-items:center;gap:8px;text-align:center;
   transition:background 0.18s,border-color 0.18s,transform 0.18s;
   cursor:default;
 }
 .nexus-home .nxp-cat-tile:hover{
-  background:rgba(22,163,127,0.12);
-  border-color:rgba(22,163,127,0.36);
+  background:rgba(15,143,122,0.10);
+  border-color:rgba(15,143,122,0.28);
   transform:translateY(-2px);
 }
 .nexus-home .nxp-cat-icon{
-  width:34px;
-  height:34px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#16a37f;
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(15,143,122,0.11);
+  border-radius:9px;color:#0f8f7a;
 }
-.nexus-home .nxp-cat-icon svg{
-  width:26px;
-  height:26px;
-}
+.nexus-home .nxp-cat-icon svg{ width:20px;height:20px; }
 .nexus-home .nxp-cat-tile span{
-  font-size:0.72rem;
-  font-weight:700;
-  color:#0a3d2e;
-  line-height:1.25;
+  font-size:0.69rem;font-weight:700;color:#0a3d2e;line-height:1.25;
 }
 
-/* Multi-tenant strip at bottom of categories panel */
+/* Multi-tenant strip */
 .nexus-home .nxp-mt-strip{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:0.8rem;
-  color:#5a6880;
+  display:flex;align-items:center;gap:8px;
+  font-size:0.78rem;color:#5a6880;
   background:rgba(23,67,157,0.05);
-  border:1px solid rgba(23,67,157,0.12);
-  border-radius:10px;
-  padding:10px 14px;
-  line-height:1.4;
-  margin-top:2px;
+  border:1px solid rgba(23,67,157,0.11);
+  border-radius:10px;padding:9px 13px;line-height:1.4;
 }
-.nexus-home .nxp-mt-strip svg{
-  width:18px;
-  height:18px;
-  flex:0 0 18px;
-  color:#17439d;
-}
-.nexus-home .nxp-mt-strip strong{
-  color:#17439d;
-  white-space:nowrap;
+.nexus-home .nxp-mt-strip svg{ width:16px;height:16px;flex:0 0 16px;color:#17439d; }
+.nexus-home .nxp-mt-strip strong{ color:#17439d;white-space:nowrap; }
+
+/* ── Sub-kicker pill ── */
+.nexus-home .nexus-sub-kicker{
+  display:inline-block;
+  font-size:0.67rem;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:#16a37f;
+  background:rgba(22,163,127,0.08);
+  border:1px solid rgba(22,163,127,0.22);
+  border-radius:100px;padding:4px 12px;
 }
 
-/* ── Escalation concept panel ── */
+/* ── Escalation panel ── */
 .nexus-home .nxp-escalation-panel{
-  display:flex;
-  align-items:flex-start;
-  gap:22px;
-  background:
-    linear-gradient(135deg, rgba(194,124,16,0.08) 0%, rgba(255,255,255,0) 50%),
-    #ffffff;
-  border:1px solid rgba(194,124,16,0.18);
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid rgba(194,124,16,0.22);
   border-top:4px solid #c27c10;
-  border-radius:16px;
-  padding:22px 28px;
-  margin-bottom:48px;
+  margin-bottom:36px;
+  box-shadow:0 4px 24px rgba(194,124,16,0.14), 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* Header zone — rich amber gradient */
+.nexus-home .nxp-escalation-hd{
+  display:flex;align-items:center;gap:28px;
+  padding:22px 28px 20px;
+  background:
+    linear-gradient(135deg,rgba(194,124,16,0.20) 0%,rgba(255,248,230,0.90) 60%),
+    #fef3c7;
+  border-bottom:1px solid rgba(194,124,16,0.16);
+  flex-wrap:wrap;
+}
+.nexus-home .nxp-escalation-hd-left{
+  display:flex;align-items:center;gap:16px;flex:0 0 auto;
 }
 .nexus-home .nxp-escalation-icon{
-  flex:0 0 52px;
-  width:52px;
-  height:52px;
-  background:rgba(194,124,16,0.10);
-  border-radius:13px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#a06600;
-  margin-top:2px;
+  width:60px;height:60px;flex:0 0 60px;
+  background:rgba(194,124,16,0.14);
+  border:1px solid rgba(194,124,16,0.22);
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  color:#92510a;
 }
-.nexus-home .nxp-escalation-icon svg{
-  width:30px;
-  height:30px;
-}
-.nexus-home .nxp-escalation-body{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.nexus-home .nxp-escalation-title-row{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  flex-wrap:wrap;
-}
+.nexus-home .nxp-escalation-icon svg{ width:34px;height:34px; }
 .nexus-home .nxp-escalation-kicker{
-  color:#a06600;
-  background:rgba(194,124,16,0.08);
-  border-color:rgba(194,124,16,0.22);
+  color:#92510a;
+  background:rgba(194,124,16,0.12);
+  border-color:rgba(194,124,16,0.26);
+  display:block;margin-bottom:6px;
 }
-.nexus-home .nxp-escalation-title-row strong{
-  font-size:1rem;
-  font-weight:700;
-  color:#0f2650;
-  line-height:1.3;
+.nexus-home .nxp-escalation-title{
+  margin:0;font-size:1.1rem;font-weight:800;
+  color:#431d00;line-height:1.3;
 }
-.nexus-home .nxp-escalation-body > p{
-  font-size:0.88rem;
-  color:#5a6880;
-  line-height:1.6;
-  margin:0;
+.nexus-home .nxp-escalation-desc{
+  flex:1;min-width:220px;
+  font-size:0.86rem;color:#78460a;line-height:1.6;margin:0;
+}
+
+/* Body zone — trigger chips */
+.nexus-home .nxp-escalation-bd{
+  padding:18px 28px 20px;
+  background:#ffffff;
+}
+.nexus-home .nxp-escalation-bd-label{
+  font-size:0.7rem;font-weight:700;letter-spacing:0.10em;
+  text-transform:uppercase;color:#b07030;
+  margin:0 0 10px;
 }
 .nexus-home .nxp-escalation-triggers{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
+  display:flex;flex-wrap:wrap;gap:8px;
 }
 .nexus-home .nxp-escalation-triggers span{
-  display:inline-block;
-  font-size:0.74rem;
-  font-weight:600;
-  padding:4px 11px;
-  border-radius:100px;
-  background:rgba(194,124,16,0.09);
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:0.78rem;font-weight:600;
+  padding:6px 13px;border-radius:100px;
+  background:rgba(194,124,16,0.07);
   border:1px solid rgba(194,124,16,0.22);
-  color:#8c5800;
-  white-space:nowrap;
+  color:#7a4a00;white-space:nowrap;
+  transition:background 0.15s,border-color 0.15s;
 }
-@media (max-width:600px){
-  .nexus-home .nxp-escalation-panel{
-    flex-direction:column;
-  }
+.nexus-home .nxp-escalation-triggers span:hover{
+  background:rgba(194,124,16,0.15);
+  border-color:rgba(194,124,16,0.38);
+}
+.nexus-home .nxp-escalation-triggers span svg{
+  width:13px;height:13px;flex:0 0 13px;color:#a06600;
+}
+@media (max-width:700px){
+  .nexus-home .nxp-escalation-hd{ flex-direction:column;align-items:flex-start;gap:14px; }
+  .nexus-home .nxp-escalation-desc{ min-width:0; }
 }
 
-/* ── Sub-section wrappers (identity + knowledge) ── */
-.nexus-home .nxp-subsec{
-  margin-bottom:48px;
-}
-.nexus-home .nxp-subsec:last-child{
-  margin-bottom:0;
-}
+/* ── Sub-section wrappers ── */
+.nexus-home .nxp-subsec{ margin-bottom:40px; }
+.nexus-home .nxp-subsec:last-child{ margin-bottom:0; }
 .nexus-home .nxp-subsec-head{
-  text-align:center;
-  max-width:680px;
-  margin:0 auto 28px;
+  text-align:center;max-width:660px;margin:0 auto 22px;
 }
 .nexus-home .nxp-subsec-head h3{
-  font-size:1.8rem;
-  font-weight:800;
-  color:#0f2650;
-  margin:8px 0 8px;
-  line-height:1.2;
+  font-size:1.65rem;font-weight:800;color:#0f2650;
+  margin:7px 0 7px;line-height:1.2;
 }
 .nexus-home .nxp-subsec-head p{
-  font-size:0.95rem;
-  color:#5a6880;
-  margin:0;
-  line-height:1.6;
+  font-size:0.9rem;color:#5a6880;margin:0;line-height:1.6;
 }
 
-/* ── Identity cards — access chips replace paragraph ── */
-.nexus-home .nexus-identity-card span{
-  display:none; /* hide old paragraph spans */
+/* ── Identity grid ── */
+.nexus-home .nexus-identity-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:13px;
 }
-.nexus-home .nic-access{
-  display:flex;
-  flex-wrap:wrap;
-  gap:5px;
-  margin-top:4px;
+.nexus-home .nexus-identity-card{
+  background:#ffffff;
+  border:1px solid rgba(15,38,80,0.08);border-top-width:3px;
+  border-radius:14px;padding:18px 15px 15px;
+  display:flex;flex-direction:column;gap:9px;
+  box-shadow:0 2px 10px rgba(15,38,80,0.05);
+  transition:box-shadow 0.2s,transform 0.2s;
 }
+.nexus-home .nexus-identity-card:hover{
+  box-shadow:0 6px 22px rgba(15,38,80,0.10);transform:translateY(-2px);
+}
+.nexus-home .nexus-identity-card .nic-badge{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+}
+.nexus-home .nexus-identity-card .nic-badge svg{ width:19px;height:19px; }
+.nexus-home .nexus-identity-card strong{
+  font-size:0.88rem;font-weight:700;line-height:1.3;color:#0f2650;
+}
+.nexus-home .nexus-identity-card span{ display:none; }
+.nexus-home .nic-access{ display:flex;flex-wrap:wrap;gap:4px;margin-top:2px; }
 .nexus-home .nic-access span{
   display:inline-block !important;
-  font-size:0.71rem;
-  font-weight:600;
-  border-radius:100px;
-  padding:3px 9px;
-  background:rgba(15,38,80,0.06);
-  color:#4a5878;
+  font-size:0.67rem;font-weight:600;
+  border-radius:100px;padding:3px 8px;
   white-space:nowrap;
 }
-/* Color the access chips per card type */
-.nexus-home .nexus-identity-card.nic-public .nic-access span{
-  background:rgba(143,168,245,0.14);
-  color:#3c5dc7;
+
+.nexus-home .nexus-identity-card.nic-public{ border-top-color:#8fa8f5; }
+.nexus-home .nexus-identity-card.nic-public .nic-badge{ background:rgba(143,168,245,0.14);color:#3c5dc7; }
+.nexus-home .nexus-identity-card.nic-public .nic-access span{ background:rgba(143,168,245,0.13);color:#3c5dc7; }
+.nexus-home .nexus-identity-card.nic-customer{ border-top-color:#16a37f; }
+.nexus-home .nexus-identity-card.nic-customer .nic-badge{ background:rgba(22,163,127,0.12);color:#16a37f; }
+.nexus-home .nexus-identity-card.nic-customer .nic-access span{ background:rgba(22,163,127,0.09);color:#0e7a5c; }
+.nexus-home .nexus-identity-card.nic-partner{ border-top-color:#d97706; }
+.nexus-home .nexus-identity-card.nic-partner .nic-badge{ background:rgba(217,119,6,0.10);color:#d97706; }
+.nexus-home .nexus-identity-card.nic-partner .nic-access span{ background:rgba(217,119,6,0.08);color:#a35808; }
+.nexus-home .nexus-identity-card.nic-employee{ border-top-color:#214dbb; }
+.nexus-home .nexus-identity-card.nic-employee .nic-badge{ background:rgba(33,77,187,0.10);color:#214dbb; }
+.nexus-home .nexus-identity-card.nic-employee .nic-access span{ background:rgba(33,77,187,0.08);color:#214dbb; }
+.nexus-home .nexus-identity-card.nic-training{ border-top-color:#7c3aed; }
+.nexus-home .nexus-identity-card.nic-training .nic-badge{ background:rgba(124,58,237,0.10);color:#7c3aed; }
+.nexus-home .nexus-identity-card.nic-training .nic-access span{ background:rgba(124,58,237,0.08);color:#6d28d9; }
+
+/* ── Knowledge levels ── */
+.nexus-home .nexus-knowledge-levels{
+  display:flex;align-items:stretch;gap:0;
+  overflow-x:auto;padding-bottom:4px;
 }
-.nexus-home .nexus-identity-card.nic-customer .nic-access span{
-  background:rgba(22,163,127,0.10);
-  color:#0e7a5c;
+.nexus-home .nkl-level{
+  flex:1;min-width:130px;background:#ffffff;
+  border:1px solid rgba(15,38,80,0.08);border-top-width:4px;
+  border-radius:14px;padding:16px 14px 14px;
+  display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 2px 8px rgba(15,38,80,0.05);
 }
-.nexus-home .nexus-identity-card.nic-partner .nic-access span{
-  background:rgba(217,119,6,0.09);
-  color:#a35808;
+.nexus-home .nkl-label{
+  font-size:0.76rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;
 }
-.nexus-home .nexus-identity-card.nic-employee .nic-access span{
-  background:rgba(33,77,187,0.09);
-  color:#214dbb;
+.nexus-home .nkl-desc{
+  font-size:0.76rem;color:#5a6880;line-height:1.5;flex:1;
 }
-.nexus-home .nexus-identity-card.nic-training .nic-access span{
-  background:rgba(124,58,237,0.09);
-  color:#6d28d9;
+.nexus-home .nkl-chips{ display:flex;flex-wrap:wrap;gap:4px;margin-top:2px; }
+.nexus-home .nkl-chips span{
+  display:inline-block;font-size:0.67rem;font-weight:600;
+  border-radius:100px;padding:3px 8px;
+  background:rgba(15,38,80,0.06);color:#4a5878;white-space:nowrap;
+}
+.nexus-home .nkl-connector{
+  flex:0 0 auto;align-self:center;
+  font-size:1.4rem;color:#c0cce4;
+  padding:0 4px;line-height:1;user-select:none;
 }
 
-/* ── Platform section responsive overrides ── */
+.nexus-home .nkl-tenant{ border-top-color:#214dbb; }
+.nexus-home .nkl-tenant .nkl-label{ color:#214dbb; }
+.nexus-home .nkl-tenant .nkl-chips span{ background:rgba(33,77,187,0.08);color:#214dbb; }
+.nexus-home .nkl-context{ border-top-color:#16a37f; }
+.nexus-home .nkl-context .nkl-label{ color:#16a37f; }
+.nexus-home .nkl-context .nkl-chips span{ background:rgba(22,163,127,0.08);color:#16a37f; }
+.nexus-home .nkl-subcontext{ border-top-color:#0f8f7a; }
+.nexus-home .nkl-subcontext .nkl-label{ color:#0f8f7a; }
+.nexus-home .nkl-subcontext .nkl-chips span{ background:rgba(15,143,122,0.08);color:#0f8f7a; }
+.nexus-home .nkl-bunit{ border-top-color:#d97706; }
+.nexus-home .nkl-bunit .nkl-label{ color:#d97706; }
+.nexus-home .nkl-bunit .nkl-chips span{ background:rgba(217,119,6,0.08);color:#b45309; }
+.nexus-home .nkl-project{ border-top-color:#7c3aed; }
+.nexus-home .nkl-project .nkl-label{ color:#7c3aed; }
+.nexus-home .nkl-project .nkl-chips span{ background:rgba(124,58,237,0.08);color:#6d28d9; }
+
+/* ── Responsive ── */
 @media (max-width:1100px){
-  .nexus-home .nxp-concept-row{
-    grid-template-columns:1fr;
-  }
-  .nexus-home .nxp-cat-grid{
-    grid-template-columns:repeat(4,1fr);
-  }
+  .nexus-home .nxp-concept-row{ grid-template-columns:1fr; }
+  .nexus-home .nexus-identity-grid{ grid-template-columns:repeat(3,1fr); }
+  .nexus-home .nexus-knowledge-levels{ flex-wrap:wrap; }
+  .nexus-home .nkl-connector{ display:none; }
+  .nexus-home .nkl-level{ flex:0 0 calc(50% - 8px); }
 }
-@media (max-width:720px){
-  .nexus-home .nxp-cat-grid{
-    grid-template-columns:repeat(4,1fr);
-  }
-  .nexus-home .nxp-trait-grid{
-    grid-template-columns:1fr 1fr;
-  }
-  .nexus-home .nxp-subsec-head h3{
-    font-size:1.45rem;
-  }
+@media (max-width:680px){
+  .nexus-home .nexus-identity-grid{ grid-template-columns:1fr 1fr; }
+  .nexus-home .nkl-level{ flex:0 0 100%; }
+  .nexus-home .nxp-subsec-head h3{ font-size:1.4rem; }
 }
 @media (max-width:500px){
-  .nexus-home .nxp-cat-grid{
-    grid-template-columns:repeat(2,1fr);
-  }
-  .nexus-home .nxp-panel{
-    padding:22px 18px 18px;
-  }
+  .nexus-home .nxp-cat-grid{ grid-template-columns:repeat(2,1fr); }
+  .nexus-home .nexus-identity-grid{ grid-template-columns:1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Nexus Apps Section — sky/cyan accent (#0284c7)
+   ═══════════════════════════════════════════════════════════════ */
+.nexus-home .nexus-apps-section{
+  padding:72px 0 20px;
+  background:#f8fbff;
+  position:relative;
+}
+.nexus-home .nexus-apps-section::before{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 45% at 50% 0%, rgba(2,132,199,0.07) 0%, transparent 80%);
+  pointer-events:none;
+}
+/* Tighten vertical gaps between all bottom sections */
+.nexus-home .nexus-apps-section + .nexus-leadership-work-section{
+  padding-top:20px;
+}
+.nexus-home .nexus-leadership-work-section{
+  padding-bottom:40px;
+}
+.nexus-home .nexus-experience-section{
+  padding-top:40px;
+}
+
+/* Section header — sky variant */
+.nexus-home .nxp-apps-head{
+  background:
+    linear-gradient(135deg,rgba(2,132,199,0.16) 0%,rgba(240,249,255,0.95) 68%),
+    #e0f2fe;
+  border-top:4px solid #0284c7;
+  border-color:rgba(2,132,199,0.22);
+}
+.nexus-home .nxp-apps-head .section-kicker{
+  color:#0369a1;
+  background:rgba(2,132,199,0.12);
+  border-color:rgba(2,132,199,0.30);
+}
+
+/* Panel headers — sky tint */
+.nexus-home .nxp-app-panel-hd{
+  background:
+    linear-gradient(135deg,rgba(2,132,199,0.10) 0%,rgba(255,255,255,0) 65%),
+    #f0f9ff;
+  border-bottom-color:rgba(2,132,199,0.13);
+}
+
+/* Icon row in panel header */
+.nexus-home .nxp-app-icon-row{
+  display:flex;align-items:center;gap:14px;margin-bottom:10px;
+}
+.nexus-home .nxp-app-hd-icon{
+  width:52px;height:52px;border-radius:14px;
+  flex:0 0 52px;
+  box-shadow:0 4px 14px rgba(2,132,199,0.20);
+}
+.nexus-home .nxp-app-icon-row > div{ flex:1; }
+.nexus-home .nxp-app-icon-row h3{ margin:0; }
+
+/* Sub-kicker — sky override */
+.nexus-home .nxp-app-kicker{
+  color:#0369a1;
+  background:rgba(2,132,199,0.10);
+  border-color:rgba(2,132,199,0.28);
+}
+
+/* App trait tiles — sky left border */
+.nexus-home .nxp-app-trait{
+  background:#f0f9ff;
+  border:1px solid rgba(2,132,199,0.13);
+  border-left:3px solid #0284c7;
+}
+
+/* App type tile grid */
+.nexus-home .nxp-app-type-grid{
+  grid-template-columns:repeat(4,1fr);
+}
+.nexus-home .nxp-app-tile{
+  background:#f0f9ff;
+  border-color:rgba(2,132,199,0.18);
+}
+.nexus-home .nxp-app-tile:hover{
+  background:#e0f2fe;
+  border-color:rgba(2,132,199,0.36);
+}
+.nexus-home .nxp-app-cat-icon{
+  background:rgba(2,132,199,0.13);
+  color:#0369a1;
+  border-radius:9px;
+}
+
+/* App badge + platform strip */
+.nexus-home .nxp-app-badge{
+  background:rgba(2,132,199,0.08);
+  border-color:rgba(2,132,199,0.18);
+  color:#075985;
+}
+.nexus-home .nxp-app-badge svg{ color:#0369a1; }
+
+.nexus-home .nxp-app-platform-strip{
+  background:rgba(2,132,199,0.07);
+  border-color:rgba(2,132,199,0.16);
+}
+.nexus-home .nxp-app-platform-strip svg{ color:#0369a1; }
+.nexus-home .nxp-app-platform-strip strong{ color:#075985; }
+
+/* App concept panel — sky top border */
+.nexus-home .nxp-app-concept-panel{
+  border-top:3px solid #0284c7;
+}
+.nexus-home .nxp-app-types-panel{
+  border-top:3px solid rgba(2,132,199,0.55);
+}
+
+@media (max-width:900px){
+  .nexus-home .nxp-app-type-grid{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:540px){
+  .nexus-home .nxp-app-icon-row{ flex-direction:column;align-items:flex-start;gap:8px; }
+  .nexus-home .nxp-app-type-grid{ grid-template-columns:repeat(2,1fr); }
+}
+
+/* ── Nexus Support panel ── */
+.nexus-home .nxp-support-panel{
+  margin-top:28px;
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid rgba(2,132,199,0.16);
+  border-top:4px solid #0284c7;
+  box-shadow:0 2px 16px rgba(2,132,199,0.08);
+}
+
+/* Header row */
+.nexus-home .nxp-support-hd{
+  display:flex;align-items:center;gap:32px;
+  padding:22px 28px 18px;
+  background:
+    linear-gradient(135deg,rgba(2,132,199,0.12) 0%,rgba(240,249,255,0.95) 65%),
+    #e0f2fe;
+  border-bottom:1px solid rgba(2,132,199,0.13);
+  flex-wrap:wrap;
+}
+.nexus-home .nxp-support-hd-text{ flex:0 0 auto;max-width:360px; }
+.nexus-home .nxp-support-hd-text h3{ margin:6px 0 6px; }
+.nexus-home .nxp-support-hd-text .nxp-tagline{ margin:0;font-size:0.85rem; }
+
+/* Ticket pipeline strip */
+.nexus-home .nxp-support-pipeline{
+  flex:1;display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap;justify-content:flex-end;
+}
+.nexus-home .nxp-sp-stage{
+  display:flex;align-items:center;gap:6px;
+  font-size:0.75rem;font-weight:600;color:#075985;
+  background:rgba(255,255,255,0.70);
+  border:1px solid rgba(2,132,199,0.18);
+  border-radius:100px;padding:5px 12px;
+  white-space:nowrap;
+}
+.nexus-home .nxp-sp-dot{
+  width:8px;height:8px;border-radius:50%;flex:0 0 8px;
+}
+.nexus-home .nxp-sp-dot--new   { background:#94a3b8; }
+.nexus-home .nxp-sp-dot--ai    { background:#0284c7; }
+.nexus-home .nxp-sp-dot--auto  { background:#16a34a; }
+.nexus-home .nxp-sp-dot--agent { background:#f59e0b; }
+.nexus-home .nxp-sp-dot--closed{ background:#6d28d9; }
+.nexus-home .nxp-sp-arrow{
+  color:rgba(2,132,199,0.45);font-size:1rem;line-height:1;
+}
+
+/* 4-col feature grid */
+.nexus-home .nxp-support-feature-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0;
+  background:#f0f9ff;
+}
+.nexus-home .nxp-sf-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:18px 20px;
+  border-right:1px solid rgba(2,132,199,0.10);
+  border-bottom:1px solid rgba(2,132,199,0.10);
+  background:#ffffff;
+  transition:background 0.18s;
+}
+.nexus-home .nxp-sf-card:hover{ background:#f0f9ff; }
+.nexus-home .nxp-sf-card:nth-child(4n){ border-right:none; }
+.nexus-home .nxp-sf-card:nth-child(n+5){ border-bottom:none; }
+
+.nexus-home .nxp-sf-icon{
+  flex:0 0 36px;width:36px;height:36px;
+  background:rgba(2,132,199,0.10);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:#0369a1;margin-top:1px;
+}
+.nexus-home .nxp-sf-icon svg{ width:17px;height:17px; }
+
+.nexus-home .nxp-sf-body{
+  display:flex;flex-direction:column;gap:3px;
+}
+.nexus-home .nxp-sf-body strong{
+  font-size:0.83rem;font-weight:700;color:#0c4a6e;line-height:1.3;
+}
+.nexus-home .nxp-sf-body span{
+  font-size:0.76rem;color:#64748b;line-height:1.45;
+}
+
+@media (max-width:960px){
+  .nexus-home .nxp-support-feature-grid{ grid-template-columns:repeat(2,1fr); }
+  .nexus-home .nxp-sf-card:nth-child(4n){ border-right:1px solid rgba(2,132,199,0.10); }
+  .nexus-home .nxp-sf-card:nth-child(2n){ border-right:none; }
+  .nexus-home .nxp-sf-card:nth-child(n+7){ border-bottom:none; }
+}
+@media (max-width:600px){
+  .nexus-home .nxp-support-hd{ flex-direction:column;align-items:flex-start;gap:16px; }
+  .nexus-home .nxp-support-pipeline{ justify-content:flex-start; }
+  .nexus-home .nxp-support-feature-grid{ grid-template-columns:1fr; }
+  .nexus-home .nxp-sf-card{ border-right:none; }
+  .nexus-home .nxp-sf-card:last-child{ border-bottom:none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Nexus Footer
+   ═══════════════════════════════════════════════════════════════ */
+/* ── CTA + Footer combined bottom section ─────────────────────── */
+.nexus-home .nexus-cta-footer{
+  background:linear-gradient(160deg,#0c1e42 0%,#0f275a 50%,#0a1a38 100%);
+  padding:56px 0 0;
+  color:#c0d2ec;
+}
+
+/* Product cards strip */
+.nexus-home .ncf-products-strip{
+  display:flex;align-items:stretch;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;overflow:hidden;
+  background:rgba(255,255,255,0.025);
+  margin-bottom:0;
+}
+.nexus-home .ncf-prod-card{
+  flex:1;display:flex;align-items:flex-start;
+  gap:18px;padding:28px 26px;
+  transition:background 0.18s;
+}
+.nexus-home .ncf-prod-card:hover{
+  background:rgba(255,255,255,0.04);
+}
+.nexus-home .ncf-prod-icon{
+  width:60px;height:60px;flex:0 0 60px;
+  border-radius:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  display:block;
+}
+.nexus-home .ncf-prod-icon.ncf-prod-icon-qa{
+  display:flex;align-items:center;justify-content:center;
+}
+.nexus-home .ncf-prod-icon.ncf-prod-icon-qa svg{
+  width:60px;height:60px;border-radius:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.5);
+}
+.nexus-home .ncf-prod-body{
+  display:flex;flex-direction:column;gap:6px;flex:1;
+}
+.nexus-home .ncf-prod-body strong{
+  font-size:1rem;font-weight:700;color:#dde8f8;line-height:1.2;
+}
+.nexus-home .ncf-prod-body span{
+  font-size:0.86rem;color:#94b8d8;line-height:1.65;
+}
+.nexus-home .ncf-prod-tags{
+  display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;
+}
+.nexus-home .ncf-prod-tags span{
+  font-size:0.72rem;font-weight:600;letter-spacing:0.04em;
+  color:#8ec0e8;background:rgba(33,77,187,0.28);
+  border:1px solid rgba(100,160,220,0.28);
+  border-radius:5px;padding:2px 8px;line-height:1.6;
+}
+.nexus-home .ncf-prod-sep{
+  width:1px;background:rgba(255,255,255,0.07);flex:0 0 1px;
+}
+
+/* CTA row: heading left, buttons right */
+.nexus-home .ncf-cta-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:32px;
+  padding:40px 0 44px;
+  border-top:1px solid rgba(255,255,255,0.07);
+  margin-top:32px;
+}
+.nexus-home .ncf-cta-text{
+  flex:1;
+}
+.nexus-home .ncf-cta-text h2{
+  font-size:clamp(1.4rem,2.4vw,2rem);
+  color:#fff;font-weight:800;line-height:1.26;
+  margin:0 0 8px;
+}
+.nexus-home .ncf-cta-text p{
+  font-size:0.96rem;color:#8aaccc;line-height:1.65;margin:0;
+}
+.nexus-home .ncf-actions{
+  display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0;
+}
+
+/* Copyright bar */
+.nexus-home .ncf-bottom-bar{
+  border-top:1px solid rgba(255,255,255,0.06);
+  background:rgba(0,0,0,0.2);
+}
+.nexus-home .ncf-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 0;
+}
+.nexus-home .ncf-copyright{ font-size:0.82rem;color:#334d66; }
+.nexus-home .ncf-powered{ font-size:0.82rem;color:#334d66; }
+.nexus-home .ncf-powered strong{ color:#4e6e8a;font-weight:600; }
+
+@media (max-width:860px){
+  .nexus-home .ncf-products-strip{ flex-direction:column; }
+  .nexus-home .ncf-prod-sep{ width:auto;height:1px;flex:0 0 1px; }
+  .nexus-home .ncf-cta-row{ flex-direction:column;align-items:flex-start;gap:24px; }
+}
+@media (max-width:480px){
+  .nexus-home .ncf-bottom{ flex-direction:column;gap:5px;text-align:center; }
+  .nexus-home .ncf-prod-icon{ width:48px;height:48px;flex:0 0 48px; }
 }
