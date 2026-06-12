@@ -3750,6 +3750,9 @@ body.nexus-qa-modal-open{
   letter-spacing:0.10em;
   text-transform:uppercase;
 }
+.nexus-home .card-label-escalation{
+  color:#b96a0c;
+}
 /* =========================================================
    Enterprise Theme Refinement Overrides
    Add this at the END of digitz_ai_nexus_site.css
@@ -4894,9 +4897,9 @@ section[id="qna-experience"]{
 }
 .nexus-home .nxp-escalation-icon svg{ width:34px;height:34px; }
 .nexus-home .nxp-escalation-kicker{
-  color:#92510a;
-  background:rgba(194,124,16,0.12);
-  border-color:rgba(194,124,16,0.26);
+  color:#ffffff;
+  background:#b96a0c;
+  border-color:#a05c0a;
   display:block;margin-bottom:6px;
 }
 .nexus-home .nxp-escalation-title{
