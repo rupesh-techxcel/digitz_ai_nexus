@@ -25,8 +25,8 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
     def test_tenant_uses_one_enabled_ecosystem(self):
         first = save_ecosystem_configuration({
             "tenant": TEST_TENANT,
-            "ecosystem_name": ECO_NAME,
-            "ecosystem_type": "Production",
+            "configuration_name": ECO_NAME,
+            "configuration_type": "Production",
             "enabled": 1,
             "is_default": 1,
             "default_business_unit": TEST_BU,
@@ -34,8 +34,8 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
 
         second = save_ecosystem_configuration({
             "tenant": TEST_TENANT,
-            "ecosystem_name": "Ignored Second Ecosystem Name",
-            "ecosystem_type": "Internal Platform",
+            "configuration_name": "Ignored Second Ecosystem Name",
+            "configuration_type": "Internal Platform",
             "enabled": 1,
             "default_business_unit": TEST_BU,
         })
@@ -45,17 +45,17 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
         ecosystems = frappe.get_all(
             "Nexus Tenant Configuration",
             filters={"tenant": TEST_TENANT, "enabled": 1},
-            fields=["name", "ecosystem_type", "is_default"],
+            fields=["name", "configuration_type", "is_default"],
         )
 
         self.assertEqual(len(ecosystems), 1)
-        self.assertEqual(ecosystems[0].ecosystem_type, "Internal Platform")
+        self.assertEqual(ecosystems[0].configuration_type, "Internal Platform")
         self.assertEqual(int(ecosystems[0].is_default or 0), 1)
 
     def test_direct_second_enabled_ecosystem_is_rejected(self):
         first = save_ecosystem_configuration({
             "tenant": TEST_TENANT,
-            "ecosystem_name": ECO_NAME,
+            "configuration_name": ECO_NAME,
             "enabled": 1,
             "is_default": 1,
             "default_business_unit": TEST_BU,
@@ -65,8 +65,8 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
 
         doc = frappe.new_doc("Nexus Tenant Configuration")
         doc.tenant = TEST_TENANT
-        doc.ecosystem_name = "Second Enabled Ecosystem"
-        doc.ecosystem_type = "Sandbox"
+        doc.configuration_name = "Second Enabled Ecosystem"
+        doc.configuration_type = "Sandbox"
         doc.enabled = 1
 
         with self.assertRaises(frappe.ValidationError):
@@ -75,8 +75,8 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
     def test_snapshot_uses_single_tenant_configuration(self):
         result = save_ecosystem_configuration({
             "tenant": TEST_TENANT,
-            "ecosystem_name": ECO_NAME,
-            "ecosystem_type": "Production",
+            "configuration_name": ECO_NAME,
+            "configuration_type": "Production",
             "enabled": 1,
             "is_default": 1,
             "default_business_unit": TEST_BU,
@@ -94,7 +94,7 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
     def test_runtime_resolver_rejects_legacy_multiple_enabled_ecosystems(self):
         save_ecosystem_configuration({
             "tenant": TEST_TENANT,
-            "ecosystem_name": ECO_NAME,
+            "configuration_name": ECO_NAME,
             "enabled": 1,
             "is_default": 1,
             "default_business_unit": TEST_BU,
@@ -104,7 +104,7 @@ class TestNexusAdministrationEcosystem(FrappeTestCase):
             """
             insert into `tabNexus Tenant Configuration`
                 (name, owner, creation, modified, modified_by, docstatus, idx,
-                 tenant, ecosystem_name, ecosystem_type, enabled, is_default)
+                 tenant, configuration_name, configuration_type, enabled, is_default)
             values
                 (%s, %s, now(), now(), %s, 0, 0, %s, %s, %s, 1, 0)
             """,

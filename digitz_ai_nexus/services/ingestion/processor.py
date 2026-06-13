@@ -396,6 +396,12 @@ def process_knowledge_source(source_name):
             chat_category=source_doc.get("chat_category"),
             generation_method="LLM",
         )
+
+        # LLM validates each generated question by attempting to answer it from
+        # the chunk. Auto-approves if answerable, auto-rejects if not.
+        from digitz_ai_nexus.services.semantic_index import validate_source_questions_with_llm
+        validate_source_questions_with_llm(source_doc.name)
+
         context_summary_result = refresh_context_summaries_for_chunks(
             created_chunks,
             generation_method="LLM",

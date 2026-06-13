@@ -219,6 +219,16 @@ function bind_nexus_admin_events() {
 
     $('#nexus_active_tenant').on('change', function() {
         nexus_selected_tenant_configuration = null;
+        const t = $(this).val();
+        if (t) {
+            localStorage.setItem('nexus_admin_active_tenant', t);
+            frappe.call({
+                method: 'digitz_ai_nexus.api.nexus_administration.set_active_user_context',
+                args: { tenant: t }
+            });
+        } else {
+            localStorage.removeItem('nexus_admin_active_tenant');
+        }
         load_nexus_admin_snapshot();
     });
 }
@@ -227,10 +237,14 @@ function bind_nexus_admin_events() {
 function load_nexus_admin_snapshot() {
     set_loading_state();
 
+    const tenant = $('#nexus_active_tenant').val()
+        || localStorage.getItem('nexus_admin_active_tenant')
+        || null;
+
     frappe.call({
         method: 'digitz_ai_nexus.api.nexus_administration.get_administration_snapshot',
         args: {
-            tenant: $('#nexus_active_tenant').val() || null
+            tenant: tenant
         },
         callback: function(r) {
             nexus_admin_snapshot = r.message || {};
@@ -261,7 +275,7 @@ function normalize_snapshot_for_tenant_configuration() {
     if (!nexus_selected_tenant_configuration && nexus_admin_snapshot.tenant_configurations.length) {
         nexus_selected_tenant_configuration =
             nexus_admin_snapshot.tenant_configurations[0].name
-            || nexus_admin_snapshot.tenant_configurations[0].ecosystem_name;
+            || nexus_admin_snapshot.tenant_configurations[0].configuration_name;
     }
 }
 
@@ -293,7 +307,9 @@ function populate_selector_options(selectors) {
         function(row) {
             return row.tenant_name || row.tenant_code || row.name;
         },
-        get_snapshot_value('tenant.name') || get_snapshot_value('resolved_context.tenant')
+        localStorage.getItem('nexus_admin_active_tenant')
+            || get_snapshot_value('tenant.name')
+            || get_snapshot_value('resolved_context.tenant')
     );
 
     populate_select(
@@ -384,7 +400,7 @@ function get_selected_tenant_configuration_doc() {
     if (nexus_selected_tenant_configuration) {
         const found = tenant_configurations.find(e => {
             return e.name === nexus_selected_tenant_configuration
-                || e.ecosystem_name === nexus_selected_tenant_configuration;
+                || e.configuration_name === nexus_selected_tenant_configuration;
         });
 
         if (found) return found;
@@ -472,16 +488,16 @@ function save_tenant_configuration() {
     }
 
     const existing = get_selected_tenant_configuration_doc();
-    const configuration_name = (existing ? existing.ecosystem_name || existing.name : null)
+    const configuration_name = (existing ? existing.configuration_name || existing.name : null)
         || `${tenant} Configuration`;
 
     const values = {
         name: existing ? existing.name : null,
         ecosystem: existing ? existing.name : null,
-        ecosystem_name: configuration_name,
+        configuration_name: configuration_name,
         tenant: tenant,
 
-        ecosystem_type: 'Production',
+        configuration_type: 'Production',
         enabled: 1,
         is_default: 1,
         activation_status: 'Configured',
@@ -517,6 +533,15 @@ function save_tenant_configuration() {
                 message: 'Tenant runtime configuration saved.',
                 indicator: 'green'
             });
+
+            const savedTenant = get_active_tenant();
+            if (savedTenant) {
+                localStorage.setItem('nexus_admin_active_tenant', savedTenant);
+                frappe.call({
+                    method: 'digitz_ai_nexus.api.nexus_administration.set_active_user_context',
+                    args: { tenant: savedTenant }
+                });
+            }
 
             nexus_selected_tenant_configuration = existing ? existing.name : configuration_name;
             load_nexus_admin_snapshot();

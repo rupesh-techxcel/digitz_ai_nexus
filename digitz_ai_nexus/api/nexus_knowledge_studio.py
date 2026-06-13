@@ -1884,6 +1884,120 @@ def review_knowledge_index_answer(name: str, action: str, notes: str = None):
 
 
 @frappe.whitelist()
+def bulk_approve_source_answers(source_name: str):
+    """
+    Approve all Pending Review User Question index entries for a knowledge source.
+    Returns counts and updated readiness state.
+    """
+    if not source_name:
+        return {"success": False, "message": "source_name is required."}
+
+    if not frappe.db.exists("Nexus Knowledge Source", source_name):
+        return {"success": False, "message": f"Source not found: {source_name}"}
+
+    source_doc = frappe.get_doc("Nexus Knowledge Source", source_name)
+    if not frappe.has_permission("Nexus Knowledge Source", "write", doc=source_doc):
+        frappe.throw("Not permitted to approve answers for this source.", frappe.PermissionError)
+
+    if not frappe.db.exists("DocType", "Nexus Knowledge Index Entry"):
+        return {"success": False, "message": "Nexus Knowledge Index Entry doctype not found."}
+
+    pending_entries = frappe.get_all(
+        "Nexus Knowledge Index Entry",
+        filters={
+            "knowledge_source": source_name,
+            "entry_type": "User Question",
+            "answer_review_status": "Pending Review",
+        },
+        pluck="name",
+        limit_page_length=10000,
+    )
+
+    if not pending_entries:
+        return {
+            "success": True,
+            "message": "No pending entries to approve.",
+            "approved_count": 0,
+        }
+
+    now = now_datetime()
+    user = frappe.session.user
+    approved_count = 0
+
+    for entry_name in pending_entries:
+        frappe.db.set_value(
+            "Nexus Knowledge Index Entry",
+            entry_name,
+            {
+                "answer_review_status": "Approved",
+                "answer_reviewed_by": user,
+                "answer_reviewed_on": now,
+            },
+            update_modified=False,
+        )
+        approved_count += 1
+
+    frappe.db.commit()
+
+    sync_result = _sync_source_retrieval_ready_from_answer_approvals(source_name)
+    readiness = _build_source_readiness_payload(frappe.get_doc("Nexus Knowledge Source", source_name))
+
+    return {
+        "success": True,
+        "message": f"Approved {approved_count} generated answer(s).",
+        "approved_count": approved_count,
+        "source_name": source_name,
+        "readiness": readiness,
+        **sync_result,
+    }
+
+
+@frappe.whitelist()
+def validate_source_questions_with_llm(source_name: str):
+    """
+    For each Pending Review User Question index entry on this source, the LLM
+    generates a scored answer and decides automatically:
+    - Confidence >= 80 → auto-approved
+    - Confidence 40-79 → stays Pending Review for human decision
+    - Confidence <  40 → auto-rejected (chunk doesn't address the question)
+    Human can still override any decision via the Review panel.
+    """
+    if not source_name:
+        return {"success": False, "message": "source_name is required."}
+
+    if not frappe.db.exists("Nexus Knowledge Source", source_name):
+        return {"success": False, "message": f"Source not found: {source_name}"}
+
+    source_doc = frappe.get_doc("Nexus Knowledge Source", source_name)
+    if not frappe.has_permission("Nexus Knowledge Source", "write", doc=source_doc):
+        frappe.throw("Not permitted to validate questions for this source.", frappe.PermissionError)
+
+    from digitz_ai_nexus.services.semantic_index import validate_source_questions_with_llm as _validate
+
+    counts = _validate(source_name)
+
+    sync_result = _sync_source_retrieval_ready_from_answer_approvals(source_name)
+    readiness = _build_source_readiness_payload(frappe.get_doc("Nexus Knowledge Source", source_name))
+
+    parts = [f"{counts['approved']} auto-approved (≥80% confidence)"]
+    if counts.get("pending"):
+        parts.append(f"{counts['pending']} need human review (40–79%)")
+    if counts.get("rejected"):
+        parts.append(f"{counts['rejected']} auto-rejected (<40%)")
+    if counts.get("errors"):
+        parts.append(f"{counts['errors']} errors")
+
+    return {
+        "success": True,
+        "message": "AI validation complete — " + ", ".join(parts) + ".",
+        "source_name": source_name,
+        "counts": counts,
+        "readiness": readiness,
+        **sync_result,
+    }
+
+
+@frappe.whitelist()
 def get_access_policy_options():
     """
     Return active Nexus Access Policy names for Studio source filtering.
@@ -1932,6 +2046,68 @@ def get_access_policy_options():
         "success": True,
         "access_policies": policies,
     }
+
+@frappe.whitelist()
+def get_access_category_map():
+    """
+    Returns a mapping from access policy name → the minimum (lowest-priority)
+    access category that includes it.  Used by Studio to bucket sources by
+    access tier rather than raw policy names.
+
+    Example result:
+      {
+        "policy_to_category": {
+          "Public-DIGITZ-AI-NEXUS":    "Public Access",
+          "Internal-NEXUS-PLATFORM":   "Internal Access",
+          "Restricted-DIGITZ-AI-NEXUS":"Restricted Access"
+        },
+        "categories": [
+          {"name": "Public-Access-DIGITZ-AI-NEXUS", "category_name": "Public Access",  "priority": 10},
+          {"name": "Internal-Access-DIGITZ-AI-NEXUS","category_name": "Internal Access","priority": 20},
+          ...
+        ]
+      }
+    """
+    if not frappe.db.exists("DocType", "Nexus Access Category"):
+        return {"success": True, "policy_to_category": {}, "categories": []}
+
+    categories = frappe.get_all(
+        "Nexus Access Category",
+        filters={"disabled": 0},
+        fields=["name", "category_name", "title", "priority"],
+        order_by="priority asc",
+        limit_page_length=500,
+    )
+
+    policy_to_category = {}
+
+    for cat in categories:
+        label = (cat.get("category_name") or cat.get("title") or cat.get("name") or "").strip()
+        if not label:
+            continue
+
+        policies = frappe.get_all(
+            "Nexus Access Category Policy",
+            filters={"parent": cat["name"]},
+            fields=["access_policy"],
+            pluck="access_policy",
+            limit_page_length=500,
+        )
+
+        cat["policies"] = [p for p in policies if p]
+
+        for policy in cat["policies"]:
+            # First write wins — categories are sorted by priority asc,
+            # so the first match is the minimum-access category for this policy.
+            if policy not in policy_to_category:
+                policy_to_category[policy] = label
+
+    return {
+        "success": True,
+        "categories": categories,
+        "policy_to_category": policy_to_category,
+    }
+
 
 # -------------------------------------------------------------------------
 # Public API methods - Knowledge Unit / Studio Overview
@@ -1996,11 +2172,21 @@ def get_studio_summary():
         if readiness.get("is_embedded"):
             embedded_units += 1
 
+    tenants = []
+    if frappe.db.exists("DocType", "Nexus Tenant"):
+        tenants = frappe.get_all(
+            "Nexus Tenant",
+            fields=["name", "tenant_name", "tenant_code"],
+            order_by="modified desc",
+            limit_page_length=100,
+        )
+
     return {
         "success": True,
         "active_tenant": active_context.get("tenant"),
         "active_context": active_context,
         "applied_filters": base_filters,
+        "tenants": tenants,
         "summary": {
             "active_tenant": active_context.get("tenant"),
             "active_ecosystem": active_context.get("ecosystem"),

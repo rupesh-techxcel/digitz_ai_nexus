@@ -223,6 +223,7 @@ CHAT RESPONSE RULES:
 4. If the user asks a follow-up, answer in continuation of the conversation.
 5. If approved knowledge is insufficient, answer exactly:
 "{SAFE_FALLBACK_ANSWER}"
+6. When the answer covers multiple distinct points or topics, separate them into short paragraphs with a blank line between each paragraph. Do not write everything as a single block of text.
 """.strip()
 
     qa_response_rules = ""
@@ -235,6 +236,7 @@ Q&A RESPONSE RULES:
 3. Preserve exact named facts from the approved knowledge.
 4. Do not behave like a conversational chat memory agent.
 5. Do not use conversation continuity.
+6. When the answer spans multiple distinct points, separate them into paragraphs with a blank line between each. Do not write everything as a single block of text.
 """.strip()
 
     # Use profile tone/style if configured; fall back to generic response mode values.

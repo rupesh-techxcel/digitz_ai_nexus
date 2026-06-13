@@ -225,13 +225,13 @@ def get_source_chat_reachability(source_name):
             identity_routes = frappe.get_all(
                 "Nexus Category Identity Route",
                 filters={"ai_agent_profile": profile_name, "enabled": 1},
-                fields=["channel", "chat_category", "identity_type"],
+                fields=["channel", "chat_category", "is_public_route"],
             )
             routes = [
                 {
                     "channel": r.get("channel") or "",
                     "chat_category": r.get("chat_category") or "",
-                    "identity_type": r.get("identity_type") or "",
+                    "is_public_route": r.get("is_public_route") or 0,
                 }
                 for r in identity_routes
             ]

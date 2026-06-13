@@ -449,6 +449,180 @@ def generate_index_entries_for_chunks(chunk_names, chat_category=None, generatio
     }
 
 
+
+# Confidence thresholds for LLM auto-decisions
+LLM_CONFIDENCE_AUTO_APPROVE = 80   # >= 80 → auto-approved
+LLM_CONFIDENCE_AUTO_REJECT  = 40   # <  40 → auto-rejected
+                                    # 40–79 → Pending Review (human checks)
+
+
+def build_question_validation_prompt(question, chunk_text):
+    return f"""You are a knowledge quality validator for an enterprise knowledge base.
+
+Given a knowledge chunk and a candidate question, your job is to:
+1. Attempt to answer the question using ONLY the chunk content.
+2. Rate how well the chunk answers the question with a confidence score from 0 to 100.
+
+Return your response as valid JSON with exactly these keys:
+- "answer": the answer text (2–4 sentences from the chunk), or "" if the chunk cannot answer.
+- "confidence": integer 0–100 — how well the chunk answers the question.
+  Use: 80–100 for direct, complete answers; 40–79 for partial or indirect answers; 0–39 if the chunk does not address the question.
+- "reason": one short sentence explaining the confidence score.
+
+Rules:
+- Use only content from the chunk — never add outside knowledge.
+- If the chunk cannot answer, set answer to "" and confidence below 40.
+- Return only the JSON object, no extra text.
+
+Knowledge Chunk:
+{chunk_text}
+
+Question: {question}
+
+JSON Response:""".strip()
+
+
+def _parse_validation_response(response_text):
+    """Parse LLM JSON validation response. Returns (answer, confidence, reason)."""
+    data = parse_llm_json(response_text)
+    if not isinstance(data, dict):
+        return "", 0, "Could not parse LLM response."
+
+    answer = str(data.get("answer") or "").strip()
+    reason = str(data.get("reason") or "").strip()
+    try:
+        confidence = max(0, min(100, int(data.get("confidence") or 0)))
+    except (ValueError, TypeError):
+        confidence = 0
+
+    return answer, confidence, reason
+
+
+def validate_question_with_llm(entry_name):
+    """
+    Uses LLM to generate a scored answer for a User Question index entry.
+
+    Confidence thresholds:
+    - >= 80 → auto-approved (LLM can answer directly from chunk)
+    - 40–79 → Pending Review (partial answer, human decides)
+    -  < 40 → auto-rejected (chunk doesn't address the question)
+
+    Stores the LLM answer and confidence note in the entry.
+    Returns a result dict with status: 'approved' | 'pending' | 'rejected' | 'skipped' | 'error'.
+    """
+    if not has_semantic_index_doctype():
+        return {"status": "skipped", "reason": "DocType not found"}
+
+    doc = frappe.get_doc(INDEX_DOCTYPE, entry_name)
+
+    if doc.entry_type != "User Question":
+        return {"status": "skipped", "reason": "Not a User Question entry"}
+
+    question = doc.get("canonical_text") or ""
+    if not question:
+        return {"status": "skipped", "reason": "No question text"}
+
+    chunk_name = doc.get("knowledge_chunk")
+    if not chunk_name or not frappe.db.exists("Nexus Knowledge Chunk", chunk_name):
+        return {"status": "skipped", "reason": "Associated chunk not found"}
+
+    chunk_doc = frappe.get_doc("Nexus Knowledge Chunk", chunk_name)
+    chunk_text = chunk_doc.get("chunk_text") or ""
+    if not chunk_text:
+        return {"status": "skipped", "reason": "Chunk has no text"}
+
+    try:
+        raw = generate_answer(build_question_validation_prompt(question, chunk_text))
+        raw = (raw or "").strip()
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Nexus Question LLM Validation Failed")
+        return {"status": "error", "reason": "LLM call failed"}
+
+    answer, confidence, reason = _parse_validation_response(raw)
+
+    if confidence >= LLM_CONFIDENCE_AUTO_APPROVE:
+        review_status = "Approved"
+        status = "approved"
+    elif confidence < LLM_CONFIDENCE_AUTO_REJECT:
+        review_status = "Rejected"
+        status = "rejected"
+    else:
+        review_status = "Pending Review"
+        status = "pending"
+
+    confidence_note = f"AI Confidence: {confidence}% — {reason}"
+
+    now = frappe.utils.now_datetime()
+    updates = {
+        "answer_review_status": review_status,
+        "answer_reviewed_by": "System (LLM)",
+        "answer_reviewed_on": now,
+    }
+    if doc.meta.has_field("generated_answer"):
+        updates["generated_answer"] = answer or doc.get("answer_preview") or ""
+    if doc.meta.has_field("answer_review_notes"):
+        updates["answer_review_notes"] = confidence_note
+
+    frappe.db.set_value(INDEX_DOCTYPE, entry_name, updates, update_modified=False)
+
+    return {
+        "status": status,
+        "entry": entry_name,
+        "question": question,
+        "answer": answer,
+        "confidence": confidence,
+        "reason": reason,
+        "review_status": review_status,
+    }
+
+
+def validate_source_questions_with_llm(source_name):
+    """
+    Run LLM confidence-scored validation for all Pending Review User Question
+    entries of a source. Returns counts per outcome.
+    """
+    if not has_semantic_index_doctype():
+        return {"approved": 0, "pending": 0, "rejected": 0, "skipped": 0, "errors": 0}
+
+    pending = frappe.get_all(
+        INDEX_DOCTYPE,
+        filters={
+            "knowledge_source": source_name,
+            "entry_type": "User Question",
+            "answer_review_status": "Pending Review",
+        },
+        pluck="name",
+        limit_page_length=10000,
+    )
+
+    approved = pending_count = rejected = skipped = errors = 0
+
+    for entry_name in pending:
+        result = validate_question_with_llm(entry_name)
+        status = result.get("status")
+        if status == "approved":
+            approved += 1
+        elif status == "pending":
+            pending_count += 1
+        elif status == "rejected":
+            rejected += 1
+        elif status == "error":
+            errors += 1
+        else:
+            skipped += 1
+
+    frappe.db.commit()
+
+    return {
+        "approved": approved,
+        "pending": pending_count,
+        "rejected": rejected,
+        "skipped": skipped,
+        "errors": errors,
+        "total": len(pending),
+    }
+
+
 def get_context_group_key_from_doc(doc):
     return {
         "tenant": doc.get("tenant"),

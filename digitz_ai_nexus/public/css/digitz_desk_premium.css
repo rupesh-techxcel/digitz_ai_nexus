@@ -199,23 +199,23 @@ header.navbar,
 .standard-sidebar,
 .desk-sidebar,
 .layout-main .layout-side-section {
-    background:
-        radial-gradient(circle at 18% 80%, rgba(22,163,127,0.28), transparent 38%),
-        linear-gradient(180deg, #163985 0%, #1d4db0 55%, #16a37f 100%) !important;
-    border: 1px solid rgba(22,163,127,0.35) !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f7ff 100%) !important;
+    border: 1px solid var(--digitz-blue-border) !important;
     border-radius: var(--digitz-radius-lg) !important;
-    box-shadow: 0 4px 18px rgba(17,42,118,0.18) !important;
+    box-shadow: 0 2px 12px rgba(33,77,187,0.07) !important;
 }
 
+/* ── Items ── */
 .standard-sidebar .standard-sidebar-item,
 .layout-side-section .sidebar-item,
 .desk-sidebar .standard-sidebar-item,
 .tree-link,
 .sidebar-item-label,
 .standard-sidebar-label {
-    color: rgba(255,255,255,0.82) !important;
-    font-weight: 500 !important;
-    border-radius: 12px !important;
+    color: #10264f !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
     transition: var(--digitz-transition) !important;
 }
 
@@ -223,38 +223,38 @@ header.navbar,
 .layout-side-section .sidebar-item,
 .tree-link {
     position: relative !important;
-    margin: 3px 8px !important;
-    padding: 10px 12px !important;
-    min-height: 42px !important;
+    margin: 2px 8px !important;
+    padding: 9px 12px !important;
+    min-height: 40px !important;
     display: flex !important;
     align-items: center !important;
-    border-radius: 14px !important;
+    border-radius: 10px !important;
     border: 1px solid transparent !important;
 }
 
+/* ── Hover ── */
 .standard-sidebar .standard-sidebar-item:hover,
 .layout-side-section .sidebar-item:hover,
 .tree-link:hover {
-    background: rgba(255,255,255,0.12) !important;
-    color: #ffffff !important;
-    border-color: rgba(255,255,255,0.20) !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.12) !important;
+    background: rgba(33,77,187,0.07) !important;
+    color: var(--digitz-blue) !important;
+    border-color: var(--digitz-blue-border) !important;
+    box-shadow: none !important;
     transform: translateX(2px) !important;
 }
 
+/* ── Selected / Active ── */
 .standard-sidebar .standard-sidebar-item.selected,
 .standard-sidebar .standard-sidebar-item.active,
 .layout-side-section .sidebar-item.selected,
 .layout-side-section .sidebar-item.active,
 .tree-link.active {
     position: relative !important;
-    background: rgba(22,163,127,0.30) !important;
-    color: #ffffff !important;
+    background: rgba(33,77,187,0.10) !important;
+    color: var(--digitz-blue) !important;
     font-weight: 700 !important;
-    border: 1px solid rgba(22,163,127,0.55) !important;
-    box-shadow:
-        0 6px 14px rgba(0,0,0,0.14),
-        inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    border: 1px solid rgba(33,77,187,0.18) !important;
+    box-shadow: 0 1px 4px rgba(33,77,187,0.10) !important;
 }
 
 .standard-sidebar .standard-sidebar-item.selected::before,
@@ -265,57 +265,149 @@ header.navbar,
     content: "" !important;
     position: absolute !important;
     left: -1px !important;
-    top: 7px !important;
-    bottom: 7px !important;
-    width: 4px !important;
+    top: 6px !important;
+    bottom: 6px !important;
+    width: 3px !important;
     border-radius: 999px !important;
-    background: linear-gradient(180deg, #f4d88f 0%, #16a37f 100%) !important;
+    background: var(--digitz-blue) !important;
 }
 
+/* No ::after accent dot on light theme */
 .standard-sidebar .standard-sidebar-item.selected::after,
 .standard-sidebar .standard-sidebar-item.active::after,
 .layout-side-section .sidebar-item.selected::after,
 .layout-side-section .sidebar-item.active::after,
 .tree-link.active::after {
-    content: "" !important;
-    position: absolute !important;
-    right: 10px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 18px !important;
-    height: 4px !important;
-    border-radius: 999px !important;
-    background: linear-gradient(90deg, #e0a62f 0%, #f0c96a 100%) !important;
-    opacity: 0.9 !important;
+    display: none !important;
 }
 
+/* ── Icons ── */
 .standard-sidebar .icon,
 .layout-side-section .icon,
 .tree-link .icon {
     color: inherit !important;
-    opacity: 0.95;
-    font-size: 16px !important;
+    opacity: 0.80;
+    font-size: 15px !important;
 }
 
+/* ── Section label ("PUBLIC") ── */
 .sidebar-label,
 .standard-sidebar-label,
 .section-head .indicator,
 .indicator-pill,
 .filter-pill {
     border-radius: 999px !important;
-    background: rgba(255,255,255,0.12) !important;
-    color: rgba(255,255,255,0.65) !important;
-    border: 1px solid rgba(255,255,255,0.16) !important;
+    background: rgba(33,77,187,0.07) !important;
+    color: #526887 !important;
+    border: 1px solid var(--digitz-blue-border) !important;
     font-weight: 700 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
     box-shadow: none !important;
 }
 
 .standard-sidebar-label,
 .sidebar-label {
-    margin: 6px 10px 10px !important;
-    padding: 6px 12px !important;
-    letter-spacing: 0.3px !important;
-    font-size: 12px !important;
+    margin: 8px 10px 6px !important;
+    padding: 4px 10px !important;
+}
+
+/* ── Links inside the sidebar ── */
+.standard-sidebar a,
+.layout-side-section a,
+.layout-side-section .list-link,
+.desk-sidebar a,
+.desk-sidebar .list-link {
+    color: #10264f !important;
+    font-weight: 600 !important;
+    transition: color 0.18s ease !important;
+}
+
+.standard-sidebar a:hover,
+.layout-side-section a:hover,
+.layout-side-section .list-link:hover,
+.desk-sidebar a:hover,
+.desk-sidebar .list-link:hover {
+    color: var(--digitz-blue) !important;
+    text-decoration: none !important;
+}
+
+/* ── Hovered/selected child elements stay readable ── */
+.standard-sidebar .standard-sidebar-item:hover a,
+.standard-sidebar .standard-sidebar-item:hover span,
+.layout-side-section .sidebar-item:hover a,
+.layout-side-section .sidebar-item:hover span,
+.desk-sidebar .standard-sidebar-item:hover a,
+.desk-sidebar .standard-sidebar-item:hover span,
+.tree-link:hover a,
+.tree-link:hover span,
+.standard-sidebar .standard-sidebar-item.selected a,
+.standard-sidebar .standard-sidebar-item.active a,
+.standard-sidebar .standard-sidebar-item.selected span,
+.standard-sidebar .standard-sidebar-item.active span,
+.layout-side-section .sidebar-item.selected a,
+.layout-side-section .sidebar-item.active a,
+.layout-side-section .sidebar-item.selected span,
+.layout-side-section .sidebar-item.active span,
+.desk-sidebar .standard-sidebar-item.selected a,
+.desk-sidebar .standard-sidebar-item.active a,
+.tree-link.active a,
+.tree-link.active span {
+    color: var(--digitz-blue) !important;
+}
+
+/* ── Desk sidebar hover/selected (was missing) ── */
+.desk-sidebar .standard-sidebar-item:hover {
+    background: rgba(33,77,187,0.07) !important;
+    color: var(--digitz-blue) !important;
+    border-color: var(--digitz-blue-border) !important;
+    transform: translateX(2px) !important;
+}
+
+.desk-sidebar .standard-sidebar-item.selected,
+.desk-sidebar .standard-sidebar-item.active {
+    background: rgba(33,77,187,0.10) !important;
+    color: var(--digitz-blue) !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(33,77,187,0.18) !important;
+}
+
+/* ─── Form doctype sidebar — inner elements ─── */
+.layout-side-section .sidebar-item .title,
+.layout-side-section .sidebar-item span,
+.layout-side-section .sidebar-item small,
+.layout-side-section .sidebar-stats,
+.layout-side-section .sidebar-stats *,
+.layout-side-section p,
+.layout-side-section small,
+.layout-side-section .text-muted {
+    color: #526887 !important;
+}
+
+/* + action buttons */
+.layout-side-section .sidebar-action-btn,
+.layout-side-section .sidebar-item .btn {
+    color: var(--digitz-blue) !important;
+    background: rgba(33,77,187,0.07) !important;
+    border: 1px solid var(--digitz-blue-border) !important;
+    border-radius: 8px !important;
+}
+
+.layout-side-section .sidebar-action-btn:hover,
+.layout-side-section .sidebar-item .btn:hover {
+    color: #ffffff !important;
+    background: var(--digitz-blue) !important;
+}
+
+/* Filter/search inputs — keep standard styling */
+.layout-side-section .form-control,
+.layout-side-section input,
+.layout-side-section select,
+.layout-side-section textarea {
+    color: var(--digitz-text) !important;
+    background: #ffffff !important;
+    border-color: var(--digitz-blue-border) !important;
 }
 
 /* =========================================================
@@ -503,9 +595,23 @@ header.navbar,
     transition: color 0.22s ease !important, background 0.22s ease !important, box-shadow 0.22s ease !important;
 }
 
-.standard-sidebar a {
-    color: rgba(255,255,255,0.82) !important;
+.standard-sidebar a,
+.layout-side-section a,
+.layout-side-section .list-link,
+.desk-sidebar a,
+.desk-sidebar .list-link {
+    color: #ffffff !important;
+    font-weight: 700 !important;
     transition: color 0.22s ease !important, background 0.22s ease !important;
+}
+
+.standard-sidebar a:hover,
+.layout-side-section a:hover,
+.layout-side-section .list-link:hover,
+.desk-sidebar a:hover,
+.desk-sidebar .list-link:hover {
+    color: #ffffff !important;
+    text-decoration: none !important;
 }
 
 .widget a:hover,
@@ -515,6 +621,59 @@ header.navbar,
 .list-link:hover {
     color: var(--digitz-blue) !important;
     text-decoration: none !important;
+}
+
+/* Child elements inside hovered/selected sidebar items must stay white */
+.standard-sidebar .standard-sidebar-item:hover a,
+.standard-sidebar .standard-sidebar-item:hover .list-link,
+.standard-sidebar .standard-sidebar-item:hover span,
+.layout-side-section .sidebar-item:hover a,
+.layout-side-section .sidebar-item:hover .list-link,
+.layout-side-section .sidebar-item:hover span,
+.desk-sidebar .standard-sidebar-item:hover a,
+.desk-sidebar .standard-sidebar-item:hover .list-link,
+.desk-sidebar .standard-sidebar-item:hover span,
+.tree-link:hover a,
+.tree-link:hover span {
+    color: #ffffff !important;
+}
+
+.standard-sidebar .standard-sidebar-item.selected a,
+.standard-sidebar .standard-sidebar-item.active a,
+.standard-sidebar .standard-sidebar-item.selected span,
+.standard-sidebar .standard-sidebar-item.active span,
+.layout-side-section .sidebar-item.selected a,
+.layout-side-section .sidebar-item.active a,
+.layout-side-section .sidebar-item.selected span,
+.layout-side-section .sidebar-item.active span,
+.desk-sidebar .standard-sidebar-item.selected a,
+.desk-sidebar .standard-sidebar-item.active a,
+.desk-sidebar .standard-sidebar-item.selected span,
+.desk-sidebar .standard-sidebar-item.active span,
+.tree-link.active a,
+.tree-link.active span {
+    color: #ffffff !important;
+}
+
+/* Desk sidebar was missing from hover/selected rules */
+.desk-sidebar .standard-sidebar-item:hover {
+    background: rgba(255,255,255,0.12) !important;
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.20) !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12) !important;
+    transform: translateX(2px) !important;
+}
+
+.desk-sidebar .standard-sidebar-item.selected,
+.desk-sidebar .standard-sidebar-item.active {
+    position: relative !important;
+    background: rgba(22,163,127,0.30) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(22,163,127,0.55) !important;
+    box-shadow:
+        0 6px 14px rgba(0,0,0,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 
 .shortcut-widget-box .link-item,

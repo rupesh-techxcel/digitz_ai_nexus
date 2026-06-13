@@ -2,7 +2,7 @@
  "actions": [],
  "allow_copy": 1,
  "allow_rename": 1,
- "autoname": "field:ecosystem_name",
+ "autoname": "field:configuration_name",
  "creation": "2026-06-06 00:00:00",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -10,8 +10,8 @@
  "field_order": [
   "configuration_identity_section",
   "tenant",
-  "ecosystem_name",
-  "ecosystem_type",
+  "configuration_name",
+  "configuration_type",
   "enabled",
   "is_default",
   "activation_status",
@@ -57,7 +57,7 @@
    "reqd": 1
   },
   {
-   "fieldname": "ecosystem_name",
+   "fieldname": "configuration_name",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Configuration Name",
@@ -66,7 +66,7 @@
   },
   {
    "default": "Sandbox",
-   "fieldname": "ecosystem_type",
+   "fieldname": "configuration_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Configuration Type",

@@ -28,7 +28,7 @@ Or to create the foundation only (no knowledge processing):
 import frappe
 
 from digitz_ai_nexus.setup.access_seed import seed_default_access_governance
-from digitz_ai_nexus.services.knowledge_source_processor import process_knowledge_source
+from digitz_ai_nexus.services.ingestion.processor import process_knowledge_source
 
 
 # ── Identity constants ─────────────────────────────────────────────────────────
@@ -775,12 +775,9 @@ def _ensure_public_route(tenant, channel, category, profile):
 def _ensure_tenant_configuration(tenant, channel, qa_channel):
     meta = frappe.get_meta("Nexus Tenant Configuration")
 
-    # Determine the name field used by this schema version
-    name_field = "configuration_name" if meta.has_field("configuration_name") else "ecosystem_name"
-
     existing = frappe.get_all(
         "Nexus Tenant Configuration",
-        filters={"tenant": tenant, name_field: CONFIG_NAME},
+        filters={"tenant": tenant, "configuration_name": CONFIG_NAME},
         pluck="name",
         limit_page_length=1,
     )
@@ -789,9 +786,9 @@ def _ensure_tenant_configuration(tenant, channel, qa_channel):
     else:
         doc = frappe.new_doc("Nexus Tenant Configuration")
         doc.tenant = tenant
-        doc.set(name_field, CONFIG_NAME)
+        doc.configuration_name = CONFIG_NAME
 
-    doc.ecosystem_type                     = "Production"
+    doc.configuration_type                 = "Production"
     doc.enabled                            = 1
     doc.is_default                         = 1
     doc.activation_status                  = "Configured"
@@ -813,7 +810,7 @@ def _ensure_tenant_configuration(tenant, channel, qa_channel):
     return doc.name
 
 
-def _upsert_knowledge_source(source, tenant):
+def _upsert_knowledge_source(source, tenant, category_name=None, public_policy_name=None):
     title = source["title"]
 
     if frappe.db.exists("Nexus Knowledge Source", title):
@@ -832,8 +829,8 @@ def _upsert_knowledge_source(source, tenant):
     doc.entity_type      = source["entity_type"]
     doc.entity           = source["entity"]
     doc.topic            = source["topic"]
-    doc.access_policy    = "Public"
-    doc.status           = "Published"
+    doc.access_policy    = public_policy_name or "Public"
+    doc.status           = "Draft"
     doc.priority         = source.get("priority", 7)
     doc.processing_status  = "Pending"
     doc.embedding_status   = "Pending"
@@ -841,7 +838,7 @@ def _upsert_knowledge_source(source, tenant):
     doc.retrieval_ready    = 0
 
     if doc.meta.has_field("chat_category"):
-        doc.chat_category = CATEGORY_CODE
+        doc.chat_category = category_name or CATEGORY_CODE
 
     doc.save(ignore_permissions=True)
     return doc
@@ -918,9 +915,24 @@ def seed_nexus_website_knowledge(process_sources=True):
 
     frappe.db.commit()
 
+    # ── Resolve actual doc names for link fields (autoname includes tenant suffix) ──
+    public_policy_name = frappe.db.get_value(
+        "Nexus Access Policy",
+        {"policy_name": "Public", "tenant": tenant},
+        "name",
+    ) or frappe.db.get_value(
+        "Nexus Access Policy",
+        {"policy_name": "Public"},
+        "name",
+    )
+
     # ── 10. Knowledge sources ──────────────────────────────────────────────────
     for source in HOMEPAGE_SOURCES:
-        doc = _upsert_knowledge_source(source, tenant)
+        doc = _upsert_knowledge_source(
+            source, tenant,
+            category_name=category,
+            public_policy_name=public_policy_name,
+        )
         source_entry = {
             "name":          doc.name,
             "title":         doc.title,

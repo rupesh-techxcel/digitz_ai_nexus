@@ -24,8 +24,25 @@ def get_administration_snapshot(tenant=None):
     - selector options
     - readiness summary
     """
+    from digitz_ai_nexus.services.tenant_context import get_user_context
+
     selectors = get_selector_options()
-    tenant = tenant or get_first_tenant_name(selectors.get("tenants"))
+
+    user_ctx = get_user_context()
+    user_context_data = None
+    if user_ctx:
+        user_context_data = {
+            "active_tenant": user_ctx.active_tenant,
+            "active_tenant_configuration": get_tenant_configuration_name(user_ctx.active_tenant),
+            "active_business_unit": user_ctx.active_business_unit,
+            "active_project": user_ctx.active_project,
+            "active_channel": user_ctx.active_channel,
+        }
+
+    if not tenant:
+        saved_tenant = user_ctx.active_tenant if user_ctx else None
+        tenant = saved_tenant or get_first_tenant_name(selectors.get("tenants"))
+
     tenant_doc = get_tenant_summary(tenant)
 
     tenant_configurations = get_tenant_configurations_for_tenant(tenant) if tenant else []
@@ -38,7 +55,7 @@ def get_administration_snapshot(tenant=None):
         "tenant": tenant_doc,
         "tenant_configuration": tenant_configuration,
         "tenant_configurations": tenant_configurations,
-        "user_context": None,
+        "user_context": user_context_data,
         "resolved_context": {
             "tenant": tenant,
             "tenant_configuration": tenant_configuration.get("name") if tenant_configuration else None,
@@ -95,8 +112,8 @@ def build_administration_resolved_context(
         "ecosystem": (
             selected_ecosystem.get("name")
         ),
-        "ecosystem_name": selected_ecosystem.get("ecosystem_name"),
-        "ecosystem_type": selected_ecosystem.get("ecosystem_type"),
+        "configuration_name": selected_ecosystem.get("configuration_name"),
+        "configuration_type": selected_ecosystem.get("configuration_type"),
         "business_unit": (
             base_resolved.get("business_unit")
             or user_context.get("active_business_unit")
@@ -267,8 +284,8 @@ def get_selector_options():
                 [
                     "name",
                     "tenant",
-                    "ecosystem_name",
-                    "ecosystem_type",
+                    "configuration_name",
+                    "configuration_type",
                     "enabled",
                     "is_default",
                 ],
@@ -532,7 +549,7 @@ def save_ecosystem_configuration(values):
     Final model:
         Save selected tenant configuration by:
             1. values.name / values.ecosystem
-            2. tenant + ecosystem_name
+            2. tenant + configuration_name
             3. create new ecosystem
     """
     values = frappe.parse_json(values) if isinstance(values, str) else values
@@ -548,8 +565,8 @@ def save_ecosystem_configuration(values):
 
     allowed_fields = {
         "tenant",
-        "ecosystem_name",
-        "ecosystem_type",
+        "configuration_name",
+        "configuration_type",
         "enabled",
         "is_default",
         "activation_status",
@@ -578,14 +595,14 @@ def save_ecosystem_configuration(values):
         if fieldname in values and has_field("Nexus Tenant Configuration", fieldname):
             doc.set(fieldname, values.get(fieldname))
 
-    if not doc.ecosystem_name:
-        doc.ecosystem_name = make_default_configuration_name(
+    if not doc.configuration_name:
+        doc.configuration_name = make_default_configuration_name(
             tenant=tenant,
-            ecosystem_type=values.get("ecosystem_type"),
+            configuration_type=values.get("configuration_type"),
         )
 
-    if not doc.ecosystem_type:
-        doc.ecosystem_type = "Sandbox"
+    if not doc.configuration_type:
+        doc.configuration_type = "Sandbox"
 
     if doc.enabled is None:
         doc.enabled = 1
@@ -617,7 +634,7 @@ def save_ecosystem_configuration(values):
     return {
         "status": "success",
         "ecosystem": doc.name,
-        "ecosystem_name": doc.ecosystem_name,
+        "configuration_name": doc.configuration_name,
         "tenant": doc.tenant,
     }
 
@@ -635,7 +652,7 @@ def save_tenant_configuration(values):
 
 def get_or_create_tenant_configuration(values):
     """
-    Finds a tenant configuration by docname first, then by tenant + ecosystem_name.
+    Finds a tenant configuration by docname first, then by tenant + configuration_name.
     Creates a new document if none is found.
     """
     docname = values.get("name") or values.get("ecosystem")
@@ -644,14 +661,14 @@ def get_or_create_tenant_configuration(values):
         return frappe.get_doc("Nexus Tenant Configuration", docname)
 
     tenant = values.get("tenant")
-    ecosystem_name = values.get("ecosystem_name")
+    configuration_name = values.get("configuration_name")
 
-    if tenant and ecosystem_name:
+    if tenant and configuration_name:
         existing = frappe.db.get_value(
             "Nexus Tenant Configuration",
             {
                 "tenant": tenant,
-                "ecosystem_name": ecosystem_name,
+                "configuration_name": configuration_name,
             },
             "name",
         )
@@ -736,8 +753,8 @@ def ensure_tenant_configuration(
     tenant,
     business_unit=None,
     project=None,
-    ecosystem_name=None,
-    ecosystem_type=None,
+    configuration_name=None,
+    configuration_type=None,
     is_default=1,
 ):
     """
@@ -749,15 +766,15 @@ def ensure_tenant_configuration(
     if not tenant:
         frappe.throw("Tenant is required.")
 
-    ecosystem_name = ecosystem_name or make_default_configuration_name(
+    configuration_name = configuration_name or make_default_configuration_name(
         tenant=tenant,
-        ecosystem_type=ecosystem_type,
+        configuration_type=configuration_type,
     )
 
     values = {
         "tenant": tenant,
-        "ecosystem_name": ecosystem_name,
-        "ecosystem_type": ecosystem_type or "Sandbox",
+        "configuration_name": configuration_name,
+        "configuration_type": configuration_type or "Sandbox",
         "enabled": 1,
         "is_default": is_default,
         "activation_status": "Configured",
@@ -804,8 +821,8 @@ def create_tenant_onboarding(
     tenant_name,
     tenant_code=None,
     business_unit_name=None,
-    ecosystem_name=None,
-    ecosystem_type=None,
+    configuration_name=None,
+    configuration_type=None,
 ):
     """
     Quick tenant onboarding entry point.
@@ -829,8 +846,8 @@ def create_tenant_onboarding(
     ecosystem = ensure_tenant_configuration(
         tenant=tenant.name,
         business_unit=business_unit_name,
-        ecosystem_name=ecosystem_name,
-        ecosystem_type=ecosystem_type or "Sandbox",
+        configuration_name=configuration_name,
+        configuration_type=configuration_type or "Sandbox",
         is_default=1,
     )
 
@@ -845,7 +862,7 @@ def create_tenant_onboarding(
         "tenant": tenant.name,
         "business_unit": business_unit_name,
         "tenant_configuration": ecosystem.name,
-        "configuration_name": ecosystem.ecosystem_name,
+        "configuration_name": ecosystem.configuration_name,
         "user_context": user_context.get("context"),
     }
 
@@ -1005,7 +1022,7 @@ def get_readiness_summary(tenant=None, ecosystem=None):
     return {
         "tenant": tenant,
         "tenant_configuration": ecosystem.get("name") if ecosystem else None,
-        "configuration_name": ecosystem.get("ecosystem_name") if ecosystem else None,
+        "configuration_name": ecosystem.get("configuration_name") if ecosystem else None,
         "knowledge_count": knowledge_count,
         "chunk_count": chunk_count,
         "channel_count": channel_count,
@@ -1029,7 +1046,7 @@ def get_empty_readiness():
     return {
         "tenant": None,
         "ecosystem": None,
-        "ecosystem_name": None,
+        "configuration_name": None,
         "knowledge_count": 0,
         "chunk_count": 0,
         "channel_count": 0,
@@ -1091,18 +1108,10 @@ def count_registered_identity_routes():
     if has_field(doctype, "enabled"):
         filters["enabled"] = 1
 
-    routes = frappe.get_all(
-        doctype,
-        filters=filters,
-        fields=["identity_type"],
-        limit_page_length=500,
-    )
+    if has_field(doctype, "is_public_route"):
+        filters["is_public_route"] = 0
 
-    return len([
-        route
-        for route in routes
-        if route.get("identity_type") and route.get("identity_type") != "Public"
-    ])
+    return frappe.db.count(doctype, filters)
 
 
 # ---------------------------------------------------------------------
@@ -1142,8 +1151,8 @@ def tenant_config_to_dict(doc):
 def normalize_configuration_row(row):
     row = frappe._dict(row or {})
 
-    if not row.get("ecosystem_name"):
-        row["ecosystem_name"] = row.get("name")
+    if not row.get("configuration_name"):
+        row["configuration_name"] = row.get("name")
 
     if row.get("enabled") is None:
         row["enabled"] = 0
@@ -1151,8 +1160,8 @@ def normalize_configuration_row(row):
     if row.get("is_default") is None:
         row["is_default"] = 0
 
-    if not row.get("ecosystem_type"):
-        row["ecosystem_type"] = "Sandbox"
+    if not row.get("configuration_type"):
+        row["configuration_type"] = "Sandbox"
 
     return dict(row)
 
@@ -1161,8 +1170,8 @@ def get_configuration_field_list():
     return [
         "name",
         "tenant",
-        "ecosystem_name",
-        "ecosystem_type",
+        "configuration_name",
+        "configuration_type",
         "enabled",
         "is_default",
         "activation_status",
@@ -1188,8 +1197,8 @@ def get_configuration_field_list():
     ]
 
 
-def make_default_configuration_name(tenant, ecosystem_type=None):
-    ecosystem_type = ecosystem_type or "Sandbox"
+def make_default_configuration_name(tenant, configuration_type=None):
+    configuration_type = configuration_type or "Sandbox"
 
     tenant_label = frappe.db.get_value(
         "Nexus Tenant",
@@ -1199,7 +1208,7 @@ def make_default_configuration_name(tenant, ecosystem_type=None):
 
     tenant_label = tenant_label or tenant
 
-    return f"{tenant_label} {ecosystem_type} Configuration"
+    return f"{tenant_label} {configuration_type} Configuration"
 
 
 def get_doc_value(doc, fieldname):

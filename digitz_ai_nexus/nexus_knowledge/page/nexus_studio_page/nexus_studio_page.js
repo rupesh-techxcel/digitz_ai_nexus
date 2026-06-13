@@ -23,6 +23,7 @@ class NexusStudioPage {
             clear_review: 'digitz_ai_nexus.api.nexus_knowledge_studio.clear_knowledge_unit_review',
             mark_ready_to_publish: 'digitz_ai_nexus.api.nexus_knowledge_studio.mark_knowledge_unit_ready_to_publish',
             get_access_policies: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_access_policy_options',
+            get_access_category_map: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_access_category_map',
             get_source_summary: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_source_summary',
             get_sources: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_sources',
             process_source: 'digitz_ai_nexus.services.ingestion.processor.process_knowledge_source',
@@ -33,6 +34,8 @@ class NexusStudioPage {
             unpublish_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.unpublish_knowledge_source',
             generate_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.generate_source_test_cases',
             review_index_answer: 'digitz_ai_nexus.api.nexus_knowledge_studio.review_knowledge_index_answer',
+            bulk_approve_source_answers: 'digitz_ai_nexus.api.nexus_knowledge_studio.bulk_approve_source_answers',
+            validate_source_questions_with_llm: 'digitz_ai_nexus.api.nexus_knowledge_studio.validate_source_questions_with_llm',
             run_knowledge_test_case: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_knowledge_test_case',
             run_source_test_cases: 'digitz_ai_nexus.api.nexus_knowledge_studio.run_source_test_cases',
             get_chat_reachability: 'digitz_ai_nexus.nexus_knowledge.doctype.nexus_knowledge_source.nexus_knowledge_source.get_source_chat_reachability',
@@ -74,8 +77,12 @@ class NexusStudioPage {
         this.source_classification_options = {};
         this.active_tenant = '';
         this.active_context = {};
+        this.tenants = [];
+        this.access_category_map = {};       // policy_name → minimum category label
+        this.access_categories_list = [];    // [{name, category_name, priority, policies:[]}]
 
         this.make();
+        this.load_access_category_map();
     }
 
     inject_styles() {
@@ -163,8 +170,7 @@ class NexusStudioPage {
                 gap: 10px;
             }
 
-            .nks-hero-badge,
-            .nks-tenant-pill {
+            .nks-hero-badge {
                 padding: 9px 16px;
                 border-radius: 999px;
                 display: inline-flex;
@@ -178,12 +184,40 @@ class NexusStudioPage {
                 box-shadow: 0 8px 20px rgba(33, 77, 187, 0.08);
             }
 
-            .nks-tenant-pill {
-                max-width: 260px;
-                color: #0b3c91;
-                font-size: 12px;
+            .nks-tenant-selector-wrap {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: #ffffff;
+                border: 1.5px solid rgba(33, 119, 255, 0.24);
+                border-radius: 999px;
+                padding: 6px 14px;
+                box-shadow: 0 8px 20px rgba(33, 77, 187, 0.08);
+            }
+
+            .nks-tenant-selector-label {
+                font-size: 11px;
+                font-weight: 700;
+                color: #6b7a99;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+
+            .nks-tenant-selector {
+                border: none;
+                outline: none;
+                background: transparent;
+                font-size: 13px;
                 font-weight: 900;
-                text-align: right;
+                color: #0b3c91;
+                cursor: pointer;
+                max-width: 200px;
+                padding: 0;
+            }
+
+            .nks-tenant-selector:focus {
+                outline: none;
             }
 
             .nks-context-panel,
@@ -354,18 +388,22 @@ class NexusStudioPage {
             }
 
             .nks-summary-grid {
-                display: grid;
-                grid-template-columns: repeat(4, minmax(160px, 1fr));
-                gap: 12px;
-                margin-bottom: 16px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 14px;
             }
 
             .nks-summary-card {
-                padding: 16px;
-                border-radius: 18px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 14px;
+                border-radius: 12px;
                 background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
                 border: 1.5px solid rgba(33, 119, 255, 0.24);
-                box-shadow: 0 10px 24px rgba(33, 77, 187, 0.06);
+                box-shadow: 0 2px 8px rgba(33, 77, 187, 0.05);
+                flex: 0 0 auto;
             }
 
             .nks-summary-card-good {
@@ -380,17 +418,18 @@ class NexusStudioPage {
 
             .nks-summary-label {
                 color: #526887;
-                font-size: 12px;
-                line-height: 1.25;
-                font-weight: 850;
+                font-size: 11px;
+                line-height: 1.2;
+                font-weight: 700;
+                white-space: nowrap;
             }
 
             .nks-summary-value {
-                margin-top: 5px;
                 color: #071d4f;
-                font-size: 28px;
+                font-size: 18px;
                 line-height: 1;
-                font-weight: 950;
+                font-weight: 900;
+                white-space: nowrap;
             }
 
             .nks-section-panel {
@@ -574,6 +613,12 @@ class NexusStudioPage {
                 background: #eef6ff;
                 color: #0b60d8;
                 border-color: rgba(11, 108, 255, 0.18);
+            }
+
+            .nks-badge-neutral {
+                background: #f1f5f9;
+                color: #475569;
+                border-color: rgba(100, 116, 139, 0.2);
             }
 
             .nks-badge-processed {
@@ -892,10 +937,49 @@ class NexusStudioPage {
 
             .nks-source-classification-panel {
                 margin: 0 20px 14px;
-                padding: 14px;
+                padding: 6px 14px 6px;
                 border-radius: 18px;
                 background: #f8fbff;
                 border: 1.5px solid rgba(33, 119, 255, 0.18);
+            }
+
+            .nks-source-classification-panel[open] {
+                padding-bottom: 14px;
+            }
+
+            .nks-source-classification-panel-header {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                color: #2177ff;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                padding: 6px 2px;
+                list-style: none;
+                user-select: none;
+            }
+
+            .nks-source-classification-panel-header::-webkit-details-marker,
+            .nks-source-classification-panel-header::marker {
+                display: none;
+            }
+
+            .nks-source-classification-panel-header::before {
+                content: '▸';
+                font-size: 10px;
+                transition: transform 0.15s ease;
+                display: inline-block;
+            }
+
+            .nks-source-classification-panel[open] > .nks-source-classification-panel-header::before {
+                transform: rotate(90deg);
+            }
+
+            .nks-source-classification-panel > .nks-source-classification-grid {
+                margin-top: 10px;
             }
 
             .nks-source-classification-grid {
@@ -1040,6 +1124,101 @@ class NexusStudioPage {
                 gap: 6px;
                 justify-content: flex-end;
                 margin-left: auto;
+                align-items: center;
+            }
+
+            .nks-access-details-btn {
+                font-size: 11px;
+                font-weight: 700;
+                padding: 3px 10px;
+                border-radius: 20px;
+                border: 1.5px solid rgba(33, 119, 255, 0.35);
+                background: #fff;
+                color: #2177ff;
+                white-space: nowrap;
+                cursor: pointer;
+                transition: background 0.15s, color 0.15s;
+            }
+
+            .nks-access-details-btn:hover {
+                background: #2177ff;
+                color: #fff;
+                border-color: #2177ff;
+            }
+
+            /* Two-row Access Categories + Policies grouped container */
+            .nks-access-stats-container {
+                display: inline-flex;
+                flex-direction: column;
+                gap: 3px;
+                background: #f8faff;
+                border: 1px solid rgba(33, 119, 255, 0.18);
+                border-radius: 10px;
+                padding: 5px 10px;
+                min-width: 0;
+            }
+
+            .nks-access-row {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                flex-wrap: wrap;
+            }
+
+            .nks-access-row + .nks-access-row {
+                border-top: 1px solid rgba(33, 119, 255, 0.1);
+                padding-top: 3px;
+                margin-top: 1px;
+            }
+
+            .nks-access-row-warn + .nks-access-row,
+            .nks-access-row + .nks-access-row-warn {
+                border-top-color: rgba(224, 166, 47, 0.25);
+            }
+
+            .nks-access-row-label {
+                font-size: 10px;
+                font-weight: 700;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                white-space: nowrap;
+                min-width: 72px;
+                flex-shrink: 0;
+            }
+
+            .nks-access-row-warn .nks-access-row-label {
+                color: #a66d00;
+            }
+
+            /* Legacy standalone group pill (kept for backward compat) */
+            .nks-policy-stats-group {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                border-radius: 20px;
+                padding: 2px 8px 2px 6px;
+            }
+
+            .nks-policy-stats-group-warn {
+                background: #fff7e8;
+                border-color: rgba(224, 166, 47, 0.35);
+            }
+
+            .nks-policy-stats-group-warn .nks-policy-stats-label {
+                color: #a66d00;
+            }
+
+            .nks-policy-stats-label {
+                font-size: 10px;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                white-space: nowrap;
+                margin-right: 2px;
             }
 
             .nks-source-context-body {
@@ -1144,6 +1323,63 @@ class NexusStudioPage {
                 font-size: 10px;
                 padding: 1px 7px;
                 flex-shrink: 0;
+            }
+
+            .nks-classification-info-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                border: 1.5px solid #93c5fd;
+                background: #eff6ff;
+                color: #2563eb;
+                font-size: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                flex-shrink: 0;
+                line-height: 1;
+                padding: 0;
+                vertical-align: middle;
+                transition: background 0.15s;
+            }
+            .nks-classification-info-btn:hover {
+                background: #dbeafe;
+            }
+
+            .nks-classification-popup {
+                position: absolute;
+                z-index: 9999;
+                background: #ffffff;
+                border: 1px solid #bfdbfe;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(37, 99, 235, 0.13);
+                padding: 14px 16px;
+                min-width: 280px;
+                max-width: 360px;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+            .nks-classification-popup-row {
+                display: flex;
+                gap: 8px;
+                padding: 3px 0;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            .nks-classification-popup-row:last-child {
+                border-bottom: none;
+            }
+            .nks-classification-popup-label {
+                color: #64748b;
+                font-weight: 500;
+                min-width: 100px;
+                flex-shrink: 0;
+            }
+            .nks-classification-popup-value {
+                color: #1e293b;
+                font-weight: 400;
+                word-break: break-word;
             }
 
 
@@ -1252,7 +1488,6 @@ class NexusStudioPage {
             }
 
             @media (max-width: 1100px) {
-                .nks-summary-grid,
                 .nks-stage-grid,
                 .nks-dashboard-grid,
                 .nks-source-tenant-grid,
@@ -1396,7 +1631,6 @@ class NexusStudioPage {
                     align-items: flex-start;
                 }
 
-                .nks-summary-grid,
                 .nks-stage-grid,
                 .nks-context-grid,
                 .nks-dashboard-grid,
@@ -1450,8 +1684,11 @@ class NexusStudioPage {
 
                     <div class="nks-hero-side">
                         <div class="nks-hero-badge">Studio</div>
-                        <div class="nks-tenant-pill" id="nks-active-tenant-pill">
-                            Active Tenant: Resolving...
+                        <div class="nks-tenant-selector-wrap" id="nks-active-tenant-pill">
+                            <span class="nks-tenant-selector-label">Tenant</span>
+                            <select class="nks-tenant-selector">
+                                <option value="">Resolving...</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1676,6 +1913,22 @@ class NexusStudioPage {
             this.load_source_summary();
         });
 
+        this.body.on('click', '.nks-access-details-btn', (e) => {
+            e.stopPropagation();
+            const btn      = e.currentTarget;
+            const tenant   = $(btn).data('tenant') || '';
+            const context  = $(btn).data('context') || '';
+            const sources  = (this.sources || []).filter(s => {
+                if (tenant  && s.tenant  !== tenant)  return false;
+                if (context && s.context !== context) return false;
+                return true;
+            });
+            const title = context
+                ? `Access Details — ${context}`
+                : `Access Details — ${tenant}`;
+            this.show_access_details_dialog(sources, title);
+        });
+
         this.body.on('click', '.nks-new-source-btn', () => {
             this.new_knowledge_source();
         });
@@ -1690,10 +1943,65 @@ class NexusStudioPage {
             this.show_source_dashboard($(e.currentTarget).data('name'));
         });
 
+        this.body.on('change', '.nks-tenant-selector', (e) => {
+            const tenant = e.target.value;
+            if (!tenant) return;
+            this.active_tenant = tenant;
+            this.active_context = Object.assign({}, this.active_context, { tenant });
+            frappe.call({
+                method: 'digitz_ai_nexus.api.nexus_administration.set_active_user_context',
+                args: { tenant },
+                callback: () => {
+                    this.load();
+                }
+            });
+        });
+
         this.body.on('click', '.nks-tenant-reachability-detail-btn', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.show_tenant_reachability_dialog($(e.currentTarget).data('tenant'));
+        });
+
+        this.body.on('click', '.nks-inline-review-answers-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const name = $(e.currentTarget).data('name');
+            const $details = this.body.find(`.nks-source-item[data-source="${name}"]`);
+            if ($details.length) {
+                $details.attr('open', true);
+                $details[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        this.body.on('click', '.nks-inline-approve-all-answers-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.bulk_approve_source_answers($(e.currentTarget).data('name'));
+        });
+
+        this.body.on('click', '.nks-inline-validate-questions-llm-btn', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.validate_source_questions_with_llm($(e.currentTarget).data('name'));
+        });
+
+        // Use a capturing listener so we intercept the click before the native
+        // <details>/<summary> toggle fires and before other delegated handlers.
+        this.body[0].addEventListener('click', (e) => {
+            const btn = e.target.closest('.nks-classification-info-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            this.show_classification_popup(btn);
+        }, true /* capture phase */);
+
+        // Close classification popup when clicking elsewhere
+        $(document).on('click.nks-classification', (e) => {
+            if (!$(e.target).closest('.nks-classification-popup, .nks-classification-info-btn').length) {
+                $('.nks-classification-popup').remove();
+            }
         });
 
         this.body.on('click', '.nks-inline-process-source-btn', (e) => {
@@ -1727,20 +2035,17 @@ class NexusStudioPage {
         });
 
         this.body.on('click', '.nks-source-context-head', (e) => {
-            const $group = $(e.currentTarget).closest('.nks-source-context-group');
-
-            if (!$group.prop('open')) {
-                $group
-                    .siblings('.nks-source-context-group')
-                    .removeAttr('open')
-                    .find('.nks-source-item')
-                    .removeAttr('open');
-            }
+            // Context groups are independent — opening one never closes another.
+            // Each context group manages its own open/closed state via native <details>.
         });
 
         this.body.on('click', '.nks-source-item-head', (e) => {
+            // Don't collapse siblings when clicking the classification info button
+            if ($(e.target).closest('.nks-classification-info-btn').length) return;
+
             const $item = $(e.currentTarget).closest('.nks-source-item');
 
+            // Only collapse sibling sources within the same context group
             if (!$item.prop('open')) {
                 $item
                     .siblings('.nks-source-item')
@@ -1812,7 +2117,11 @@ class NexusStudioPage {
                     this.summary || {}
                 );
 
-                this.render_active_tenant();
+                if (r.message.tenants && r.message.tenants.length) {
+                    this.tenants = r.message.tenants;
+                }
+
+                this.render_tenant_selector();
                 this.render_active_context_panel();
                 this.refresh_current_tab_if_needed();
             }
@@ -1986,7 +2295,7 @@ class NexusStudioPage {
 
                     if (p.identity_routes && p.identity_routes.length) {
                         const routeList = p.identity_routes.map(r => {
-                            const parts = [r.channel, r.chat_category, r.identity_type].filter(Boolean);
+                            const parts = [r.channel, r.chat_category, r.is_public_route ? 'Public' : 'Restricted'].filter(Boolean);
                             return frappe.utils.escape_html(parts.join(' / '));
                         }).join('<br>');
                         lines.push(`<span style="color:#2980b9;">&#10003; Category Identity Route</span><br>${routeList}`);
@@ -2060,6 +2369,19 @@ class NexusStudioPage {
         });
     }
 
+    load_access_category_map() {
+        frappe.call({
+            method: this.api.get_access_category_map,
+            freeze: false,
+            callback: (r) => {
+                if (r.message && r.message.policy_to_category) {
+                    this.access_category_map    = r.message.policy_to_category;
+                    this.access_categories_list = r.message.categories || [];
+                }
+            },
+        });
+    }
+
     load_sources() {
         frappe.call({
             method: this.api.get_sources,
@@ -2095,12 +2417,32 @@ class NexusStudioPage {
         });
     }
 
-    render_active_tenant() {
-        const text = this.active_tenant
-            ? `Active Tenant: ${frappe.utils.escape_html(this.active_tenant)}`
-            : 'Active Tenant: User Context';
+    render_tenant_selector() {
+        const $select = this.body.find('.nks-tenant-selector');
+        if (!$select.length) return;
 
-        this.body.find('#nks-active-tenant-pill').html(text);
+        if (!this.tenants || !this.tenants.length) {
+            if (this.active_tenant) {
+                $select.empty().append(
+                    `<option value="${frappe.utils.escape_html(this.active_tenant)}">${frappe.utils.escape_html(this.active_tenant)}</option>`
+                );
+            }
+            return;
+        }
+
+        const currentVal = $select.val();
+        const targetVal = this.active_tenant || currentVal;
+
+        $select.empty();
+        this.tenants.forEach(t => {
+            const label = t.tenant_name || t.tenant_code || t.name;
+            const selected = t.name === targetVal ? ' selected' : '';
+            $select.append(`<option value="${frappe.utils.escape_html(t.name)}"${selected}>${frappe.utils.escape_html(label)}</option>`);
+        });
+    }
+
+    render_active_tenant() {
+        this.render_tenant_selector();
     }
 
     refresh_current_tab_if_needed() {
@@ -2201,8 +2543,8 @@ class NexusStudioPage {
 
         return `
             <div class="nks-summary-card ${type_class}">
-                <div class="nks-summary-label">${frappe.utils.escape_html(label)}</div>
                 <div class="nks-summary-value">${frappe.utils.escape_html(String(value || 0))}</div>
+                <div class="nks-summary-label">${frappe.utils.escape_html(label)}</div>
             </div>
         `;
     }
@@ -2273,7 +2615,10 @@ class NexusStudioPage {
                     </div>
                 </div>
 
-                <div class="nks-source-classification-panel">
+                <details class="nks-source-classification-panel">
+                    <summary class="nks-source-classification-panel-header">
+                        Filters
+                    </summary>
                     <div class="nks-source-classification-grid">
                         ${this.get_source_classification_filter_html('tenant', 'Tenant')}
                         ${this.get_source_classification_filter_html('business_unit', 'Business Unit')}
@@ -2289,7 +2634,7 @@ class NexusStudioPage {
                             Clear Classification Filters
                         </button>
                     </div>
-                </div>
+                </details>
 
                 <div id="nks-knowledge-source-rows" class="nks-source-group-wrap">
                     <div class="text-muted text-center">Loading knowledge sources...</div>
@@ -3469,6 +3814,13 @@ class NexusStudioPage {
                             <span class="nks-badge nks-badge-info">${tenantStats.total} Source${tenantStats.total === 1 ? '' : 's'}</span>
                             <span class="nks-badge nks-badge-good">${tenantStats.retrieval_ready} Ready</span>
                             <span class="nks-badge">${tenantStats.semantic_index_count} Index</span>
+                            ${this.get_access_stats_html(tenantStats)}
+                            <button class="btn btn-xs nks-access-details-btn"
+                                    data-tenant="${frappe.utils.escape_html(tenant)}"
+                                    data-context=""
+                                    title="View access policy breakdown by category">
+                                Access Details
+                            </button>
                         </div>
                     </summary>
 
@@ -3486,13 +3838,26 @@ class NexusStudioPage {
                                                 <div class="nks-source-context-title">${frappe.utils.escape_html(contextName)}</div>
                                                 <div class="nks-source-context-meta">
                                                     ${frappe.utils.escape_html(contextStats.business_units.join(', ') || 'No business unit')}
-                                                    ${contextStats.sub_contexts.length ? ' · ' + frappe.utils.escape_html(contextStats.sub_contexts.join(', ')) : ''}
+                                                    ${(() => {
+                                                        const sc = contextStats.sub_contexts;
+                                                        if (!sc.length) return '';
+                                                        if (sc.length <= 2) return ' · ' + frappe.utils.escape_html(sc.join(', '));
+                                                        return ` · <span class="nks-badge nks-badge-neutral" title="${frappe.utils.escape_html(sc.join(', '))}">${sc.length} Sub-contexts</span>`;
+                                                    })()}
+                                                    ${contextStats.topics.length > 0 ? `· ${contextStats.topics.length} Topic${contextStats.topics.length === 1 ? '' : 's'}` : ''}
                                                 </div>
                                             </div>
                                             <div class="nks-source-context-stats">
                                                 <span class="nks-badge nks-badge-info">${contextStats.total} Source${contextStats.total === 1 ? '' : 's'}</span>
                                                 <span class="nks-badge nks-badge-good">${contextStats.retrieval_ready} Ready</span>
                                                 <span class="nks-badge">${contextStats.context_summary_count} Summar${contextStats.context_summary_count === 1 ? 'y' : 'ies'}</span>
+                                                ${this.get_access_stats_html(contextStats)}
+                                                <button class="btn btn-xs nks-access-details-btn"
+                                                        data-tenant="${frappe.utils.escape_html(tenant)}"
+                                                        data-context="${frappe.utils.escape_html(contextName)}"
+                                                        title="View access policy breakdown by category">
+                                                    Access Details
+                                                </button>
                                                 <span class="nks-badge nks-badge-info nks-context-approved-answer-count" data-context-key="${frappe.utils.escape_html(contextKey)}">
                                                     Answers ${contextStats.answer_approved}/${contextStats.answer_total}
                                                 </span>
@@ -3567,8 +3932,153 @@ class NexusStudioPage {
             entity_types: unique('entity_type'),
             entities: unique('entity'),
             topics: unique('topic'),
-            access_policies: unique('access_policy')
+            access_policies: unique('access_policy'),
+            access_policy_counts: rows.reduce((acc, row) => {
+                const policy = String((row.access_policy || 'Unset')).trim();
+                acc[policy] = (acc[policy] || 0) + 1;
+                return acc;
+            }, {}),
+            ...(() => {
+                const catMap = this.access_category_map || {};
+                const catCounts = {};
+                const uncatCounts = {};
+                for (const row of rows) {
+                    const policy = String((row.access_policy || '')).trim();
+                    if (!policy) continue;
+                    if (catMap[policy]) {
+                        const cat = catMap[policy];
+                        catCounts[cat] = (catCounts[cat] || 0) + 1;
+                    } else {
+                        // Policy exists but is not assigned to any Access Category
+                        const shortName = policy.replace(/-[A-Z0-9][A-Z0-9-]*$/, '').trim() || policy;
+                        uncatCounts[shortName] = (uncatCounts[shortName] || 0) + 1;
+                    }
+                }
+                return { access_category_counts: catCounts, uncat_policy_counts: uncatCounts };
+            })(),
         };
+    }
+
+    get_access_stats_html(stats) {
+        const catRow  = this._access_row_badges(stats.access_category_counts || {}, 'category');
+        const polRow  = this._access_row_badges(stats.access_policy_counts   || {}, 'policy');
+        const uncatEntries = Object.entries(stats.uncat_policy_counts || {}).sort((a, b) => a[0].localeCompare(b[0]));
+
+        if (!catRow && !polRow && !uncatEntries.length) return '';
+
+        const uncatBadges = uncatEntries.map(([policy, count]) =>
+            `<span class="nks-badge nks-badge-compact nks-badge-neutral"
+                   title="${frappe.utils.escape_html(policy + ' — not assigned to any Access Category')}">
+                 ${frappe.utils.escape_html(policy)}: ${count}
+             </span>`
+        ).join('');
+
+        const rows = [
+            catRow  ? `<div class="nks-access-row"><span class="nks-access-row-label">Categories</span>${catRow}</div>` : '',
+            polRow  ? `<div class="nks-access-row"><span class="nks-access-row-label">Policies</span>${polRow}</div>` : '',
+            uncatBadges ? `<div class="nks-access-row nks-access-row-warn">
+                               <span class="nks-access-row-label">Not categorised</span>${uncatBadges}
+                           </div>` : '',
+        ].filter(Boolean).join('');
+
+        return `<div class="nks-access-stats-container">${rows}</div>`;
+    }
+
+    _access_row_badges(counts, mode) {
+        const entries = Object.entries(counts).sort((a, b) => {
+            const tier = (n) => {
+                const l = n.toLowerCase();
+                if (l.includes('public'))                               return 1;
+                if (l.includes('internal'))                             return 2;
+                if (l.includes('restrict') || l.includes('confidential')) return 3;
+                return 4;
+            };
+            return tier(a[0]) - tier(b[0]) || a[0].localeCompare(b[0]);
+        });
+        if (!entries.length) return '';
+
+        return entries.map(([name, count]) => {
+            const lower = name.toLowerCase();
+            const isPublic     = lower.includes('public');
+            const isRestricted = lower.includes('restrict') || lower.includes('confidential');
+            const cls = isPublic ? 'nks-badge-good' : isRestricted ? 'nks-badge-warn' : 'nks-badge-info';
+            // Strip tenant suffix AND " Access" suffix for compact display
+            const short = name
+                .replace(/-[A-Z0-9][A-Z0-9-]*$/, '')   // "-DIGITZ-AI-NEXUS"
+                .replace(/\s+Access$/i, '')              // " Access"
+                .trim() || name;
+            return `<span class="nks-badge nks-badge-compact ${cls}" title="${frappe.utils.escape_html(name)}">${frappe.utils.escape_html(short)}: ${count}</span>`;
+        }).join('');
+    }
+
+    get_access_policy_stats_html(stats) {
+        const counts = stats.access_policy_counts || {};
+        const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        if (!entries.length) return '';
+
+        const badges = entries.map(([policy, count]) => {
+            // Strip tenant-code suffixes like "-DIGITZ-AI-NEXUS" so "Public-DIGITZ-AI-NEXUS" → "Public"
+            const shortName = policy.replace(/-[A-Z0-9][A-Z0-9-]*$/, '').trim() || policy;
+            const lower = policy.toLowerCase();
+            const isPublic = lower.includes('public');
+            const isRestricted = lower.includes('restrict') || lower.includes('private') || lower.includes('confidential');
+            const cls = isPublic ? 'nks-badge-good' : isRestricted ? 'nks-badge-warn' : 'nks-badge-info';
+            return `<span class="nks-badge nks-badge-compact ${cls}" title="${frappe.utils.escape_html(policy)}">${frappe.utils.escape_html(shortName)}: ${count}</span>`;
+        }).join('');
+
+        return `
+            <span class="nks-policy-stats-group">
+                <span class="nks-policy-stats-label">Access Policies</span>
+                ${badges}
+            </span>
+        `;
+    }
+
+    get_access_category_stats_html(stats) {
+        const counts = stats.access_category_counts || {};
+        const tierOf = (name) => {
+            const l = name.toLowerCase();
+            if (l.includes('public'))                                       return 1;
+            if (l.includes('internal'))                                     return 2;
+            if (l.includes('restrict') || l.includes('confidential'))       return 3;
+            return 4;
+        };
+
+        const entries = Object.entries(counts).sort(
+            (a, b) => tierOf(a[0]) - tierOf(b[0]) || a[0].localeCompare(b[0])
+        );
+        const uncatEntries = Object.entries(stats.uncat_policy_counts || {}).sort((a, b) => a[0].localeCompare(b[0]));
+
+        if (!entries.length && !uncatEntries.length) return '';
+
+        const badges = entries.map(([cat, count]) => {
+            const lower = cat.toLowerCase();
+            const isPublic     = lower.includes('public');
+            const isRestricted = lower.includes('restrict') || lower.includes('confidential');
+            const cls = isPublic ? 'nks-badge-good' : isRestricted ? 'nks-badge-warn' : 'nks-badge-info';
+            const shortName = cat.replace(/\s+Access$/i, '').trim() || cat;
+            return `<span class="nks-badge nks-badge-compact ${cls}" title="${frappe.utils.escape_html(cat)}">${frappe.utils.escape_html(shortName)}: ${count}</span>`;
+        }).join('');
+
+        // Policies that exist in sources but belong to no Access Category
+        const uncatBadges = uncatEntries.map(([policy, count]) => {
+            const title = `${policy} — not assigned to any Access Category`;
+            return `<span class="nks-badge nks-badge-compact nks-badge-neutral" title="${frappe.utils.escape_html(title)}">${frappe.utils.escape_html(policy)}: ${count}</span>`;
+        }).join('');
+
+        const uncatGroup = uncatEntries.length
+            ? `<span class="nks-policy-stats-group nks-policy-stats-group-warn">
+                   <span class="nks-policy-stats-label">Policies not participating</span>
+                   ${uncatBadges}
+               </span>`
+            : '';
+
+        return `
+            <span class="nks-policy-stats-group">
+                <span class="nks-policy-stats-label">Access Categories</span>
+                ${badges}
+            </span>${uncatGroup}
+        `;
     }
 
     get_context_answer_review_gap_badge_html(stats) {
@@ -3627,14 +4137,20 @@ class NexusStudioPage {
                         <div class="nks-source-title-path">
                             ${frappe.utils.escape_html(row.context_path || [row.business_unit, row.context, row.sub_context].filter(Boolean).join(' › '))}
                         </div>` : ''}
-                        ${compact_tags.length ? `
                         <div class="nks-source-title-tags">
                             ${compact_tags.map((tag) => `<span class="nks-badge nks-badge-compact">${frappe.utils.escape_html(tag)}</span>`).join('')}
-                        </div>` : ''}
+                            <button class="nks-classification-info-btn" data-source="${frappe.utils.escape_html(row.name || '')}" title="View full classification">ⓘ</button>
+                        </div>
                     </div>
                     <div class="nks-source-item-head-footer">
                         ${access_policy ? `<span class="nks-badge nks-badge-info">${frappe.utils.escape_html(access_policy)}</span>` : ''}
-                        <span class="nks-badge ${status === 'Published' ? 'nks-badge-published' : status === 'Processed' ? 'nks-badge-processed' : status === 'Validated' ? 'nks-badge-validated' : ''}">${frappe.utils.escape_html(status)}</span>
+                        <span class="nks-badge ${
+                            status === 'Published' || row.readiness_status === 'published' ? 'nks-badge-published' :
+                            row.readiness_status === 'ready_to_publish' ? 'nks-badge-validated' :
+                            row.readiness_status === 'ready_for_validation' ? 'nks-badge-processed' :
+                            row.readiness_status === 'needs_answer_approval' ? 'nks-badge-warn' :
+                            ''
+                        }">${frappe.utils.escape_html(row.readiness_label || status)}</span>
                         ${disabled_badge}
                         <span class="nks-source-inline-actions" data-source="${frappe.utils.escape_html(row.name)}">
                             ${this.get_source_inline_actions_html(row)}
@@ -3698,6 +4214,20 @@ class NexusStudioPage {
             buttons.push(`
                 <button class="btn btn-xs btn-primary nks-inline-process-source-btn" data-name="${name}">
                     Process
+                </button>
+            `);
+        }
+
+        if (row.readiness_status === 'needs_answer_approval') {
+            buttons.push(`
+                <button class="btn btn-xs btn-primary nks-inline-validate-questions-llm-btn" data-name="${name}">
+                    Validate with AI
+                </button>
+                <button class="btn btn-xs btn-warning nks-inline-review-answers-btn" data-name="${name}">
+                    Review
+                </button>
+                <button class="btn btn-xs btn-success nks-inline-approve-all-answers-btn" data-name="${name}">
+                    Approve All
                 </button>
             `);
         }
@@ -3797,23 +4327,39 @@ class NexusStudioPage {
         return `
             <ol class="nks-source-index-review-list">
                 ${entries.map((entry) => {
-                    const text = entry.canonical_text || entry.display_summary || entry.answer_preview || entry.name || '';
-                    const answer = entry.generated_answer || entry.answer_preview || '';
+                    const question = entry.canonical_text || entry.display_summary || entry.name || '';
+                    const answer = entry.generated_answer || '';
                     const reviewStatus = entry.answer_review_status || 'Pending Review';
+                    const confidenceNote = entry.answer_review_notes || '';
+                    const isAiDecision = (entry.answer_reviewed_by || '').startsWith('System');
+
+                    // Confidence badge colour
+                    const confidenceMatch = confidenceNote.match(/(\d+)%/);
+                    const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : null;
+                    const confidenceColor = confidence === null ? '#888'
+                        : confidence >= 80 ? '#16a34a'
+                        : confidence >= 40 ? '#d97706'
+                        : '#dc2626';
+
+                    const statusColor = reviewStatus === 'Approved' ? '#16a34a'
+                        : reviewStatus === 'Rejected' ? '#dc2626'
+                        : '#d97706';
 
                     return `
                         <li class="nks-source-index-review-entry" data-entry-name="${frappe.utils.escape_html(entry.name || '')}" data-source="${frappe.utils.escape_html(sourceName || '')}">
-                            ${frappe.utils.escape_html(text)}
+                            <div style="font-weight:500;">${frappe.utils.escape_html(question)}</div>
                             ${
                                 includeAnswerReview
                                     ? `
-                                        <div class="nks-source-index-answer">
-                                            <strong>Generated Answer:</strong><br>
-                                            ${frappe.utils.escape_html(answer || 'No generated answer available.')}
-                                        </div>
-                                        <div class="nks-row-sub nks-index-answer-review-status">
-                                            Review: ${frappe.utils.escape_html(reviewStatus)}
-                                            ${entry.answer_reviewed_by ? ' by ' + frappe.utils.escape_html(entry.answer_reviewed_by) : ''}
+                                        ${answer ? `
+                                        <div class="nks-source-index-answer" style="margin-top:4px;">
+                                            <strong>AI Answer:</strong><br>
+                                            ${frappe.utils.escape_html(answer)}
+                                        </div>` : ''}
+                                        <div class="nks-row-sub nks-index-answer-review-status" style="margin-top:4px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                            <span style="color:${statusColor}; font-weight:500;">${frappe.utils.escape_html(reviewStatus)}</span>
+                                            ${confidenceNote ? `<span style="color:${confidenceColor}; font-size:11px;">${frappe.utils.escape_html(confidenceNote)}</span>` : ''}
+                                            ${isAiDecision ? '<span style="font-size:10px; color:#6b7280; background:#f3f4f6; padding:1px 6px; border-radius:10px;">AI</span>' : ''}
                                         </div>
                                         <div class="nks-source-index-actions">
                                             ${this.get_index_answer_review_actions_html(entry.name, reviewStatus)}
@@ -3821,7 +4367,6 @@ class NexusStudioPage {
                                     `
                                     : ''
                             }
-                            ${entry.embedding_status ? `<div class="nks-row-sub">Embedding: ${frappe.utils.escape_html(entry.embedding_status)}</div>` : ''}
                         </li>
                     `;
                 }).join('')}
@@ -3922,6 +4467,83 @@ class NexusStudioPage {
                 });
             }
         });
+    }
+
+    validate_source_questions_with_llm(source_name) {
+        if (!source_name) return;
+
+        frappe.confirm(
+            `AI will score each question by attempting to answer it from the source content only.<br><br>
+            <b>≥ 80% confidence</b> → auto-approved with generated answer<br>
+            <b>40–79%</b> → kept for your review (partial match)<br>
+            <b>&lt; 40%</b> → auto-rejected (question not answerable from this source)<br><br>
+            You can override any decision in the Review panel. Proceed?`,
+            () => {
+                frappe.call({
+                    method: this.api.validate_source_questions_with_llm,
+                    args: { source_name },
+                    freeze: true,
+                    freeze_message: 'AI is validating questions — this may take a moment...',
+                    callback: (r) => {
+                        const result = r.message || {};
+                        if (!result.success) {
+                            frappe.msgprint({
+                                title: 'Validation Failed',
+                                indicator: 'orange',
+                                message: frappe.utils.escape_html(result.message || 'Unable to run AI validation.'),
+                            });
+                            return;
+                        }
+                        const c = result.counts || {};
+                        const needsReview = c.pending || 0;
+                        frappe.msgprint({
+                            title: 'AI Validation Complete',
+                            indicator: needsReview ? 'orange' : 'green',
+                            message: `
+                                <b>Auto-approved</b> (≥80%): ${c.approved || 0}<br>
+                                <b>Needs your review</b> (40–79%): ${needsReview}<br>
+                                <b>Auto-rejected</b> (&lt;40%): ${c.rejected || 0}<br>
+                                ${c.errors ? `<b>Errors:</b> ${c.errors}<br>` : ''}
+                                ${needsReview ? '<br>Open the <b>Review</b> panel to handle the borderline questions.' : ''}
+                            `,
+                        });
+                        this.load();
+                    },
+                });
+            }
+        );
+    }
+
+    bulk_approve_source_answers(source_name) {
+        if (!source_name) return;
+
+        frappe.confirm(
+            `Approve all pending generated answers for this source?`,
+            () => {
+                frappe.call({
+                    method: this.api.bulk_approve_source_answers,
+                    args: { source_name },
+                    freeze: true,
+                    freeze_message: 'Approving all answers...',
+                    callback: (r) => {
+                        const result = r.message || {};
+                        if (!result.success) {
+                            frappe.msgprint({
+                                title: 'Approve All Failed',
+                                indicator: 'orange',
+                                message: frappe.utils.escape_html(result.message || 'Unable to approve answers.'),
+                            });
+                            return;
+                        }
+                        frappe.show_alert({
+                            message: result.message || 'All answers approved.',
+                            indicator: 'green',
+                        });
+                        this.load();
+                    },
+                });
+            }
+        );
     }
 
     apply_index_answer_review_result(name, result, $button) {
@@ -4057,6 +4679,173 @@ class NexusStudioPage {
             .find('.nks-source-inline-actions')
             .filter((index, element) => String($(element).data('source') || '') === String(sourceName))
             .html(this.get_source_inline_actions_html(source));
+    }
+
+    show_access_details_dialog(sources, title) {
+        // Sort categories by priority (from actual Nexus Access Category records)
+        const catList = (this.access_categories_list || [])
+            .slice()
+            .sort((a, b) => (a.priority || 0) - (b.priority || 0));
+
+        // Count sources per access_policy (real values from Nexus Knowledge Source)
+        const policyCounts = {};
+        for (const s of sources) {
+            const p = (s.access_policy || '').trim();
+            if (p) policyCounts[p] = (policyCounts[p] || 0) + 1;
+        }
+
+        // Collect all policies that appear in at least one category's actual allowed_policies
+        const allCategorisedPolicies = new Set(
+            catList.flatMap(cat => cat.policies || [])
+        );
+
+        // Policies used in these sources but not assigned to ANY category
+        const uncatPolicies = Object.keys(policyCounts)
+            .filter(p => !allCategorisedPolicies.has(p))
+            .sort();
+
+        const tierColour = (name) => {
+            const l = (name || '').toLowerCase();
+            if (l.includes('public'))                                   return { bg: '#ecfffb', border: '#00b894', text: '#006e59' };
+            if (l.includes('restrict') || l.includes('confidential'))   return { bg: '#fff7e8', border: '#e0a62f', text: '#a66d00' };
+            return                                                             { bg: '#eef6ff', border: '#2177ff', text: '#0b47b8' };
+        };
+
+        const policyBar = (policy, count, colour) => {
+            const bar  = Math.round((count / (sources.length || 1)) * 100);
+            const full = policy;                                              // full name e.g. "Public-DIGITZ-AI-NEXUS"
+            const short = policy.replace(/-[A-Z0-9][A-Z0-9-]*$/, '').trim() || policy;
+            return `
+                <div class="nks-ad-policy-row">
+                    <div class="nks-ad-policy-name" title="${frappe.utils.escape_html(full)}">${frappe.utils.escape_html(short)}</div>
+                    <div class="nks-ad-policy-bar-wrap">
+                        <div class="nks-ad-policy-bar" style="width:${bar}%; background:${colour};"></div>
+                    </div>
+                    <div class="nks-ad-policy-count">${count} source${count === 1 ? '' : 's'}</div>
+                </div>`;
+        };
+
+        // One card per category — using cat.policies (actual allowed_policies assignments)
+        let cardsHtml = catList.map(cat => {
+            // cat.policies = real policy names from Nexus Access Category Policy child table
+            const assignedPolicies = (cat.policies || []).filter(p => policyCounts[p]);
+            if (!assignedPolicies.length) return ''; // nothing in this scope
+
+            const label      = (cat.category_name || cat.title || cat.name || '').trim();
+            const shortLabel = label.replace(/\s+Access$/i, '').trim() || label;
+            const colour     = tierColour(label);
+            const totalCount = assignedPolicies.reduce((s, p) => s + policyCounts[p], 0);
+
+            const rows = assignedPolicies.map(p => policyBar(p, policyCounts[p], colour.border)).join('');
+
+            return `
+                <div class="nks-ad-cat-card" style="border-color:${colour.border}; background:${colour.bg};">
+                    <div class="nks-ad-cat-header">
+                        <span class="nks-ad-cat-label" style="color:${colour.text};">${frappe.utils.escape_html(shortLabel)}</span>
+                        <span class="nks-ad-priority">Priority ${cat.priority || '—'}</span>
+                        <span class="nks-ad-cat-total" style="color:${colour.text};">${totalCount} source${totalCount === 1 ? '' : 's'}</span>
+                    </div>
+                    <div class="nks-ad-policy-list">${rows}</div>
+                </div>`;
+        }).filter(Boolean).join('');
+
+        // Policies used in sources but not in ANY category's allowed_policies
+        if (uncatPolicies.length) {
+            const rows = uncatPolicies.map(p => policyBar(p, policyCounts[p], '#94a3b8')).join('');
+            const total = uncatPolicies.reduce((s, p) => s + policyCounts[p], 0);
+            cardsHtml += `
+                <div class="nks-ad-cat-card" style="border-color:#cbd5e1; background:#f8fafc;">
+                    <div class="nks-ad-cat-header">
+                        <span class="nks-ad-cat-label" style="color:#475569;">Not categorised</span>
+                        <span class="nks-ad-cat-subtitle">These policies are not assigned to any Access Category</span>
+                        <span class="nks-ad-cat-total" style="color:#475569;">${total} source${total === 1 ? '' : 's'}</span>
+                    </div>
+                    <div class="nks-ad-policy-list">${rows}</div>
+                </div>`;
+        }
+
+        if (!cardsHtml) {
+            cardsHtml = '<div class="text-muted" style="padding:16px;">No access policy data available for this scope.</div>';
+        }
+
+        const html = `
+            <style>
+                .nks-ad-wrap { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
+                .nks-ad-cat-card { border: 1.5px solid; border-radius: 12px; padding: 12px 16px; }
+                .nks-ad-cat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+                .nks-ad-cat-label { font-size: 13px; font-weight: 800; letter-spacing: 0.03em; flex: 1; }
+                .nks-ad-priority { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; }
+                .nks-ad-cat-subtitle { font-size: 11px; color: #94a3b8; font-style: italic; }
+                .nks-ad-cat-total { font-size: 11px; font-weight: 700; margin-left: auto; white-space: nowrap; }
+                .nks-ad-policy-list { display: flex; flex-direction: column; gap: 6px; }
+                .nks-ad-policy-row { display: grid; grid-template-columns: 110px 1fr 70px; align-items: center; gap: 10px; }
+                .nks-ad-policy-name { font-size: 12px; font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .nks-ad-policy-bar-wrap { height: 6px; background: rgba(0,0,0,0.07); border-radius: 3px; overflow: hidden; }
+                .nks-ad-policy-bar { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+                .nks-ad-policy-count { font-size: 11px; color: #64748b; text-align: right; white-space: nowrap; }
+            </style>
+            <div class="nks-ad-wrap">${cardsHtml}</div>`;
+
+        const dialog = new frappe.ui.Dialog({
+            title,
+            size: 'large',
+            fields: [{ fieldtype: 'HTML', fieldname: 'content' }],
+        });
+        dialog.fields_dict.content.$wrapper.html(html);
+        dialog.show();
+    }
+
+    show_classification_popup(triggerEl) {
+        const sourceName = $(triggerEl).data('source');
+
+        // Toggle: if this button's popup is already open, close it
+        const $existing = $('.nks-classification-popup');
+        if ($existing.length && $existing.data('source') === sourceName) {
+            $existing.remove();
+            return;
+        }
+        $existing.remove();
+        const row = (this.sources || []).find(s => s.name === sourceName);
+        if (!row) return;
+
+        const fields = [
+            { label: 'Tenant',        value: row.tenant },
+            { label: 'Business Unit', value: row.business_unit },
+            { label: 'Context',       value: row.context },
+            { label: 'Sub-context',   value: row.sub_context },
+            { label: 'Entity Type',   value: row.entity_type },
+            { label: 'Entity',        value: row.entity },
+            { label: 'Topic',         value: row.topic },
+            { label: 'Chat Category', value: row.chat_category },
+            { label: 'Access Policy', value: row.access_policy },
+            { label: 'Priority',      value: row.priority != null ? String(row.priority) : null },
+        ].filter(f => f.value);
+
+        const rows = fields.map(f => `
+            <div class="nks-classification-popup-row">
+                <span class="nks-classification-popup-label">${frappe.utils.escape_html(f.label)}</span>
+                <span class="nks-classification-popup-value">${frappe.utils.escape_html(f.value)}</span>
+            </div>
+        `).join('');
+
+        const $popup = $(`<div class="nks-classification-popup">${rows || '<em>No classification set.</em>'}</div>`).data('source', sourceName);
+        $(document.body).append($popup);
+
+        // Position below the trigger button
+        const rect = triggerEl.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+        let top = rect.bottom + scrollTop + 6;
+        let left = rect.left + scrollLeft;
+
+        // Keep within viewport
+        const popupWidth = 340;
+        if (left + popupWidth > window.innerWidth + scrollLeft - 12) {
+            left = window.innerWidth + scrollLeft - popupWidth - 12;
+        }
+
+        $popup.css({ top, left, position: 'absolute' });
     }
 
     render_sources_error() {
@@ -4291,7 +5080,7 @@ class NexusStudioPage {
 
             if (p.identity_routes && p.identity_routes.length) {
                 const routeList = p.identity_routes.map(r => {
-                    const parts = [r.channel, r.chat_category, r.identity_type].filter(Boolean);
+                    const parts = [r.channel, r.chat_category, r.is_public_route ? 'Public' : 'Restricted'].filter(Boolean);
                     return frappe.utils.escape_html(parts.join(' / '));
                 }).join(', ');
                 lines.push(`<span style="color:#2980b9;">&#10003; Category Identity Route</span> — ${routeList}`);
@@ -4399,6 +5188,18 @@ class NexusStudioPage {
                     <div class="nks-dashboard-full-row">
                         ${this.get_source_context_summary_dashboard_html(row)}
                     </div>
+
+                    ${row.readiness_status === 'needs_answer_approval' ? `
+                    <div class="nks-dashboard-full-row">
+                        <div class="nks-dashboard-card" style="width:100%; border-left: 4px solid #f59e0b;">
+                            <h5 style="color: #92400e;">Answer Approval Required</h5>
+                            <p style="color: #78350f; font-size: 12px; margin-bottom: 12px;">
+                                Review and approve the generated questions and answers below before this source can proceed to Validation.
+                            </p>
+                            ${this.get_source_index_review_html(row)}
+                        </div>
+                    </div>
+                    ` : ''}
 
                     <div class="nks-dashboard-full-row">
                         ${this.get_source_semantic_index_dashboard_html(row)}
@@ -4509,6 +5310,34 @@ class NexusStudioPage {
             dialog.hide();
         });
 
+        dialog.$wrapper.find('.nks-dashboard-review-answers-scroll-btn').on('click', () => {
+            dialog.hide();
+            const $details = this.body.find(`.nks-source-item[data-source="${row.name}"]`);
+            if ($details.length) {
+                $details.attr('open', true);
+                $details[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        dialog.$wrapper.find('.nks-dashboard-approve-all-answers-btn').on('click', () => {
+            dialog.hide();
+            this.bulk_approve_source_answers(row.name);
+        });
+
+        dialog.$wrapper.find('.nks-dashboard-validate-questions-llm-btn').on('click', () => {
+            dialog.hide();
+            this.validate_source_questions_with_llm(row.name);
+        });
+
+        dialog.$wrapper.on('click', '.nks-index-answer-review-btn', (e) => {
+            const $btn = $(e.currentTarget);
+            this.review_index_answer(
+                $btn.data('name'),
+                $btn.data('action'),
+                $btn
+            );
+        });
+
         dialog.$wrapper.find('.nks-dashboard-process-source-btn').on('click', () => {
             this.process_source_from_dashboard(row.name, dialog);
         });
@@ -4590,6 +5419,20 @@ class NexusStudioPage {
             buttons.push(`
                 <button class="btn btn-sm btn-primary nks-dashboard-process-source-btn">
                     Process Source
+                </button>
+            `);
+        }
+
+        if (row.readiness_status === 'needs_answer_approval') {
+            buttons.push(`
+                <button class="btn btn-sm btn-primary nks-dashboard-validate-questions-llm-btn">
+                    Validate with AI
+                </button>
+                <button class="btn btn-sm btn-warning nks-dashboard-review-answers-scroll-btn">
+                    Review Questions
+                </button>
+                <button class="btn btn-sm btn-success nks-dashboard-approve-all-answers-btn">
+                    Approve All
                 </button>
             `);
         }

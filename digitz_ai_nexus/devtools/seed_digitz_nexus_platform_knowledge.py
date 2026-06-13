@@ -30,7 +30,7 @@ To skip embedding generation:
 import frappe
 
 from digitz_ai_nexus.setup.access_seed import seed_default_access_governance
-from digitz_ai_nexus.services.knowledge_source_processor import process_knowledge_source
+from digitz_ai_nexus.services.ingestion.processor import process_knowledge_source
 
 
 # ── Identity constants ─────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ When creating knowledge sources for a new domain, always include: what the topic
         "sub_context": "Knowledge Management",
         "entity_type": "Knowledge Management",
         "entity": "Nexus Knowledge Source",
-        "topic": "Processing Pipeline, Status Fields, and Retrieval Readiness",
+        "topic": "Processing Pipeline and Retrieval Readiness",
         "access_policy": "Internal",
         "priority": 10,
         "manual_content": """
@@ -457,16 +457,16 @@ Route planning principle: Design routes from most specific to least specific. Hi
         "sub_context": "Tenant Configuration",
         "entity_type": "Platform Configuration",
         "entity": "Nexus Tenant Configuration",
-        "topic": "Configuration Fields, Activation, and Go-Live Settings",
+        "topic": "Configuration and Go-Live Settings",
         "access_policy": "Internal",
         "priority": 9,
         "manual_content": """
 Nexus Tenant Configuration is the master control record for a tenant's operational environment. Every tenant must have exactly one enabled, default configuration to operate. This record controls knowledge retrieval behaviour, chat and Q&A enablement, widget defaults, and governance certification.
 
 Configuration identity fields:
-- configuration_name (or ecosystem_name on older schema): Required. Instance identifier. Example: Default Live, DIGITZ AI Nexus Website.
+- configuration_name: Required. Instance identifier. Example: Default Live, DIGITZ AI Nexus Website.
 - tenant: Required. Parent tenant.
-- ecosystem_type: Production, Sandbox, Synthetic Validation, or Internal Platform. Use Production for live deployments. Use Sandbox for development and testing.
+- configuration_type: Production, Sandbox, Synthetic Validation, or Internal Platform. Use Production for live deployments. Use Sandbox for development and testing.
 - enabled: 1 to activate.
 - is_default: 1 to mark as the tenant's primary configuration. Only one configuration per tenant can be default. The platform enforces this constraint.
 - activation_status: Workflow state — Draft, Configured, Testing, Certified, Active, Suspended. The platform checks this during runtime routing.
@@ -693,7 +693,7 @@ Escalation status values on Nexus Live Escalation: Pending (waiting for agent pi
         "sub_context": "Agent Operations",
         "entity_type": "Escalation Management",
         "entity": "Nexus User Profile Assignment",
-        "topic": "Live Agent Configuration and Escalation Permissions",
+        "topic": "Agent Configuration and Escalation Permissions",
         "access_policy": "Internal",
         "priority": 9,
         "manual_content": """
@@ -1107,7 +1107,7 @@ def _ensure_internal_route(tenant, channel, category, profile):
     return doc.name
 
 
-def _upsert_knowledge_source(source, tenant):
+def _upsert_knowledge_source(source, tenant, category_name=None, policy_map=None):
     title = source["title"]
 
     if frappe.db.exists("Nexus Knowledge Source", title):
@@ -1115,6 +1115,10 @@ def _upsert_knowledge_source(source, tenant):
     else:
         doc = frappe.new_doc("Nexus Knowledge Source")
         doc.title = title
+
+    # Resolve access_policy to its actual doc name via policy_map
+    raw_policy = source["access_policy"]
+    resolved_policy = (policy_map or {}).get(raw_policy, raw_policy)
 
     doc.source_type      = "Manual"
     doc.manual_content   = source["manual_content"].strip()
@@ -1126,8 +1130,8 @@ def _upsert_knowledge_source(source, tenant):
     doc.entity_type      = source["entity_type"]
     doc.entity           = source["entity"]
     doc.topic            = source["topic"]
-    doc.access_policy    = source["access_policy"]
-    doc.status           = "Published"
+    doc.access_policy    = resolved_policy
+    doc.status           = "Draft"
     doc.priority         = source.get("priority", 7)
     doc.processing_status  = "Pending"
     doc.embedding_status   = "Pending"
@@ -1135,7 +1139,7 @@ def _upsert_knowledge_source(source, tenant):
     doc.retrieval_ready    = 0
 
     if doc.meta.has_field("chat_category"):
-        doc.chat_category = CATEGORY_CODE
+        doc.chat_category = category_name or CATEGORY_CODE
 
     doc.save(ignore_permissions=True)
     return doc
@@ -1211,9 +1215,27 @@ def seed_nexus_platform_knowledge(process_sources=True):
 
     frappe.db.commit()
 
+    # ── Resolve actual doc names for link fields (autoname includes tenant suffix) ──
+    def _resolve_policy(policy_name):
+        return (
+            frappe.db.get_value("Nexus Access Policy", {"policy_name": policy_name, "tenant": tenant}, "name")
+            or frappe.db.get_value("Nexus Access Policy", {"policy_name": policy_name}, "name")
+            or policy_name
+        )
+
+    policy_map = {
+        "Internal":   _resolve_policy("Internal"),
+        "Restricted": _resolve_policy("Restricted"),
+        "Public":     _resolve_policy("Public"),
+    }
+
     # ── 9. Knowledge sources ───────────────────────────────────────────────────
     for source in PLATFORM_SOURCES:
-        doc = _upsert_knowledge_source(source, tenant)
+        doc = _upsert_knowledge_source(
+            source, tenant,
+            category_name=category,
+            policy_map=policy_map,
+        )
         source_entry = {
             "name":          doc.name,
             "title":         doc.title,
