@@ -126,7 +126,7 @@ footer.web-footer{
 }
 
 .digitz-website .nav-wrap{
-  min-height:94px;
+  min-height:68px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -140,12 +140,12 @@ footer.web-footer{
 }
 
 .nexus-home .nexus-logo-wrap{
-  min-height:74px;
-  padding:4px 0;
+  min-height:52px;
+  padding:0;
 }
 
 .nexus-home .nexus-logo-img{
-  height:103px;
+  height:48px;
   width:auto;
   max-width:none;
   object-fit:contain;
@@ -1844,7 +1844,7 @@ footer.web-footer{
   }
 
   .nexus-home .nexus-logo-img{
-    height:103px;
+    height:44px;
   }
 
   .nexus-home .nexus-hero-copy h1{
@@ -1942,7 +1942,7 @@ footer.web-footer{
   }
 
   .nexus-home .nexus-logo-img{
-    height:77px;
+    height:40px;
   }
 
   .nexus-home .nexus-hero-grid{
@@ -2115,7 +2115,7 @@ footer.web-footer{
 
 @media (max-width: 560px){
   .nexus-home .nexus-logo-img{
-    height:62px;
+    height:34px;
   }
 
   .nexus-home .nexus-hero-copy h1{

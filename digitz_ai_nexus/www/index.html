@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIGITZ AI Nexus</title>
+  <title>Nexus AI</title>
   <link rel="stylesheet" href="/assets/digitz_ai_nexus/css/digitz_ai_nexus_site.css">
 </head>
 <body>
@@ -12,10 +12,10 @@
 
   <header class="site-header">
     <div class="container nav-wrap">
-      <a href="#" class="logo nexus-logo-wrap" aria-label="DIGITZ AI Nexus Home">
+      <a href="#" class="logo nexus-logo-wrap" aria-label="Nexus AI Home">
         <img
-          src="/assets/digitz_ai_nexus/images/digitz-ai-nexus-logo.png"
-          alt="DIGITZ AI Nexus"
+          src="/assets/digitz_ai_nexus/images/nexus-ai.png"
+          alt="Nexus AI"
           class="nexus-logo-img"
         />
       </a>
@@ -26,7 +26,7 @@
         <a href="#platform-workspaces">Platform</a>
         <a href="#apps-experience">Apps</a>
         <a href="#commercial">Solutions</a>
-        <a href="#contact" class="nav-cta">Request Demo</a>
+        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </nav>
     </div>
   </header>
@@ -37,7 +37,7 @@
 
         <div class="hero-copy nexus-hero-copy">
           <p class="eyebrow">
-            <span class="gold">DIGITZ AI</span> NEXUS
+            NEXUS <span class="gold">AI</span>
           </p>
 
           <h1>
@@ -46,13 +46,17 @@
           </h1>
 
           <p class="hero-lead">
-            DIGITZ AI Nexus turns approved business knowledge into governed AI experiences
+            Nexus AI turns approved business knowledge into governed AI experiences
             for websites, customers, employees, support teams, training, SOP guidance,
             and ERP-aware business operations.
           </p>
 
           <div class="hero-actions nexus-hero-actions">
             <a href="#commercial-value" class="btn btn-primary">Explore Value</a>
+            <a href="#" class="btn btn-secondary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15" style="margin-right:5px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
+              Chat with Us
+            </a>
           </div>
         </div>
 
@@ -61,8 +65,8 @@
 
             <div class="nexus-core">
               <img
-                src="/assets/digitz_ai_nexus/images/digitz-ai-nexus-logo.png"
-                alt="DIGITZ AI Nexus"
+                src="/assets/digitz_ai_nexus/images/nexus-ai.png"
+                alt="Nexus AI"
                 class="nexus-core-logo"
               />
             </div>
@@ -208,10 +212,6 @@
           <h2>AI Chat Bots &amp; Q&amp;A</h2>
           <p>Multi-tenant &nbsp;·&nbsp; Category-aware &nbsp;·&nbsp; Identity-driven &nbsp;·&nbsp; Knowledge-governed</p>
         </div>
-        <a href="#" class="nxp-launch-btn">
-          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M8 7l5 3-5 3V7Z" fill="currentColor"/></svg>
-          Launch Q&amp;A
-        </a>
       </div>
 
       <!-- ── Row 1: Designated Bot ←→ Multi-Purpose Chat Categories ── -->
@@ -769,9 +769,9 @@
     <div class="container">
       <div class="section-head-highlight">
         <span class="section-kicker">Platform Value</span>
-        <h2>How DIGITZ AI Nexus creates practical value</h2>
+        <h2>How Nexus AI creates practical value</h2>
         <p>
-          DIGITZ AI Nexus combines public website communication, verified customer support, internal knowledge,
+          Nexus AI combines public website communication, verified customer support, internal knowledge,
           ERP-aware automation, and training enablement in one business-ready platform.
         </p>
       </div>
@@ -868,7 +868,7 @@
         <span class="section-kicker commercial-kicker">Deploy Nexus AI</span>
         <h2>One governed platform. Chat Bots, Q&amp;A, and Apps — all in one.</h2>
         <p>
-          DIGITZ AI Nexus powers your public website chat, verified Q&amp;A experiences, workflow apps,
+          Nexus AI powers your public website chat, verified Q&amp;A experiences, workflow apps,
           and intelligent human escalation — all governed by the same identity, knowledge, and access layer.
         </p>
       </div>
@@ -931,8 +931,10 @@
           <p>One platform. Three powerful AI experiences. Governed by identity, knowledge, and access from day one.</p>
         </div>
         <div class="ncf-actions">
-          <a href="#" class="btn btn-primary">Request Demo</a>
-          <a href="#" class="btn btn-secondary">Talk to Us</a>
+          <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="margin-right:6px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
+            Chat with Us
+          </a>
         </div>
       </div>
 
@@ -941,7 +943,7 @@
       <div class="container">
         <div class="ncf-bottom">
           <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
-          <span class="ncf-powered">Powered by <strong>DIGITZ AI Nexus</strong></span>
+          <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>
       </div>
     </div>
@@ -1033,7 +1035,7 @@
   }
 
   function answerFor(intent, question){
-    const safeQuestion = question && question.trim() ? question.trim() : 'What can DIGITZ AI Nexus explain?';
+    const safeQuestion = question && question.trim() ? question.trim() : 'What can Nexus AI explain?';
     const answers = {
       pricing: 'Pricing-related answers can be explained based on approved commercial context such as selected modules, package scope, user count, implementation requirements, support level, and any business-specific configuration. The Q&A experience can guide the user with the right factors before a formal proposal is confirmed.',
       availability: 'Availability-related answers can be provided based on approved product, service, deployment, or fulfilment context. The response can clarify what is generally available, what may depend on configuration or location, and what information is required for final confirmation.',
@@ -1043,7 +1045,7 @@
       erp: 'ERP AI integration can connect Nexus agents with approved database and API tools so users can request reports, prepare transactions, automate routine tasks, and complete governed business actions. Sensitive ERP operations can be controlled through permissions, approval steps, logging, and human confirmation.',
       training: 'Nexus can work as a powerful training platform by turning SOPs, onboarding material, product knowledge, policies, and process manuals into conversational guidance. Employees can ask role-specific questions, follow learning paths, and get consistent answers from approved internal knowledge.',
       implementation: 'Implementation questions can be answered by explaining the expected process, business inputs required, customization possibilities, workflow alignment, training needs, and how the solution can be shaped around actual operations.',
-      default: 'DIGITZ AI Nexus Q&A provides detailed, structured answers from approved business knowledge. It can explain products, services, pricing context, verified access, support information, ERP assistance, SOPs, onboarding, training, implementation scope, and business suitability in a clear answer-first format.'
+      default: 'Nexus AI Q&A provides detailed, structured answers from approved business knowledge. It can explain products, services, pricing context, verified access, support information, ERP assistance, SOPs, onboarding, training, implementation scope, and business suitability in a clear answer-first format.'
     };
     return {
       title: safeQuestion,
@@ -1077,7 +1079,7 @@
   }
 
   function submitQuestion(){
-    const question = modalQuestion.value.trim() || 'What can DIGITZ AI Nexus explain?';
+    const question = modalQuestion.value.trim() || 'What can Nexus AI explain?';
     const intent = detectIntent(question);
     const answer = answerFor(intent, question);
 
@@ -1122,6 +1124,19 @@
 
 })();
 </script>
+
+<!-- ── Nexus AI Chat Widget ── -->
+<script>
+    window.NexusChatConfig = {};
+    window.dev_server    = 1;
+    window.socketio_port = 9512;
+    window.frappe = window.frappe || {};
+    frappe.boot = { sitename: 'digitz_ai_nexus_live_test.site', socketio_port: 9512 };
+    frappe.ready_events = [];
+    frappe.ready = function(fn){ frappe.ready_events.push(fn); };
+</script>
+<script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
+<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.PPKTIULN.js"></script>
 
 </body>
 </html>

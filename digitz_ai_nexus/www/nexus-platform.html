@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nexus Platform — DIGITZ AI Nexus</title>
+  <title>Nexus Platform — Nexus AI</title>
   <link rel="stylesheet" href="/assets/digitz_ai_nexus/css/digitz_ai_nexus_site.css">
 </head>
 <body>
@@ -12,15 +12,15 @@
 
   <header class="site-header">
     <div class="container nav-wrap">
-      <a href="/" class="logo nexus-logo-wrap" aria-label="DIGITZ AI Nexus Home">
-        <img src="/assets/digitz_ai_nexus/images/digitz-ai-nexus-logo.png" alt="DIGITZ AI Nexus" class="nexus-logo-img"/>
+      <a href="/" class="logo nexus-logo-wrap" aria-label="Nexus AI Home">
+        <img src="/assets/digitz_ai_nexus/images/nexus-ai.png" alt="Nexus AI" class="nexus-logo-img"/>
       </a>
       <nav class="nav" aria-label="Primary Navigation">
         <a href="/">Home</a>
         <a href="/#platform-workspaces" class="nav-active">Platform</a>
         <a href="/#apps-experience">Apps</a>
         <a href="/#commercial">Solutions</a>
-        <a href="/#contact" class="nav-cta">Request Demo</a>
+        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </nav>
     </div>
   </header>
@@ -40,7 +40,10 @@
           <h1 class="nxpl-hero-h1">Build. Govern.<br>Operate.<br><span class="nxpl-hero-em">AI Your Business Controls.</span></h1>
           <p class="nxpl-hero-sub">Most AI tools give you a product. Nexus gives you a platform — three purpose-built workspaces that put your business team in complete control, from the first knowledge upload to the last compliance report.</p>
           <div class="nxpl-hero-actions">
-            <a href="/#contact" class="btn btn-primary">Request a Demo</a>
+            <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15" style="margin-right:5px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
+              Chat with Us
+            </a>
             <a href="#nexus-live" class="nxpl-hero-scroll-link">
               Explore Workspaces
               <svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -325,7 +328,7 @@
 
       <div class="nxpl-ws-cta">
         <p>Nexus Live gives your operations team the situational awareness and tools to run AI-powered communication at enterprise scale — confidently, transparently, and in real time.</p>
-        <a href="/#contact" class="btn btn-primary">Request a Live Demo</a>
+        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </div>
 
     </div>
@@ -485,7 +488,7 @@
 
       <div class="nxpl-ws-cta nxpl-cta-studio">
         <p>Nexus Studio puts your business team in control of every AI experience — from the first knowledge upload to the final deployment, without a single line of code.</p>
-        <a href="/#contact" class="btn btn-primary">See Studio in Action</a>
+        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </div>
 
     </div>
@@ -630,7 +633,7 @@
 
       <div class="nxpl-ws-cta nxpl-cta-admin">
         <p>Nexus Administration gives your IT, compliance, and operations leadership the platform control and governance evidence they need to deploy AI safely at scale.</p>
-        <a href="/#contact" class="btn btn-primary">Talk to Our Platform Team</a>
+        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </div>
 
     </div>
@@ -684,8 +687,10 @@
           <p>One platform. Three powerful AI experiences. Governed by identity, knowledge, and access from day one.</p>
         </div>
         <div class="ncf-actions">
-          <a href="#" class="btn btn-primary">Request Demo</a>
-          <a href="#" class="btn btn-secondary">Talk to Us</a>
+          <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="margin-right:6px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
+            Chat with Us
+          </a>
         </div>
       </div>
 
@@ -694,12 +699,26 @@
       <div class="container">
         <div class="ncf-bottom">
           <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
-          <span class="ncf-powered">Powered by <strong>DIGITZ AI Nexus</strong></span>
+          <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>
       </div>
     </div>
   </section>
 
 </div>
+
+<!-- ── Nexus AI Chat Widget ── -->
+<script>
+    window.NexusChatConfig = {};
+    window.dev_server    = 1;
+    window.socketio_port = 9512;
+    window.frappe = window.frappe || {};
+    frappe.boot = { sitename: 'digitz_ai_nexus_live_test.site', socketio_port: 9512 };
+    frappe.ready_events = [];
+    frappe.ready = function(fn){ frappe.ready_events.push(fn); };
+</script>
+<script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
+<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.PPKTIULN.js"></script>
+
 </body>
 </html>
