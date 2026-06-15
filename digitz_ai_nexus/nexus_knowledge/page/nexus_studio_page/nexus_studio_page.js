@@ -65,8 +65,7 @@ class NexusStudioPage {
             sub_context: '',
             entity_type: '',
             entity: '',
-            topic: '',
-            chat_category: ''
+            topic: ''
         };
 
         this.summary = {};
@@ -1903,8 +1902,7 @@ class NexusStudioPage {
                 'sub_context',
                 'entity_type',
                 'entity',
-                'topic',
-                'chat_category'
+                'topic'
             ].forEach((fieldname) => {
                 this.source_filters[fieldname] = '';
             });
@@ -2627,7 +2625,6 @@ class NexusStudioPage {
                         ${this.get_source_classification_filter_html('entity_type', 'Entity Type')}
                         ${this.get_source_classification_filter_html('entity', 'Entity')}
                         ${this.get_source_classification_filter_html('topic', 'Topic')}
-                        ${this.get_source_classification_filter_html('chat_category', 'Chat Category')}
                     </div>
                     <div class="nks-inline-actions" style="margin-top: 10px;">
                         <button class="btn btn-default btn-xs nks-source-clear-classification-btn">
@@ -4131,7 +4128,6 @@ class NexusStudioPage {
                         <div class="nks-source-title-text">${frappe.utils.escape_html(row.source_title || row.name)}</div>
                         <div class="nks-source-title-sub">
                             <span>${frappe.utils.escape_html(source_type)}</span>
-                            ${row.chat_category ? `<span class="nks-source-head-sep">·</span><span>${frappe.utils.escape_html(row.chat_category)}</span>` : ''}
                         </div>
                         ${(row.context_path || row.context) ? `
                         <div class="nks-source-title-path">
@@ -4816,7 +4812,6 @@ class NexusStudioPage {
             { label: 'Entity Type',   value: row.entity_type },
             { label: 'Entity',        value: row.entity },
             { label: 'Topic',         value: row.topic },
-            { label: 'Chat Category', value: row.chat_category },
             { label: 'Access Policy', value: row.access_policy },
             { label: 'Priority',      value: row.priority != null ? String(row.priority) : null },
         ].filter(f => f.value);

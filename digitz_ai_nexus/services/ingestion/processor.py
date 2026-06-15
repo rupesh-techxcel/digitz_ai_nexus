@@ -393,7 +393,6 @@ def process_knowledge_source(source_name):
         critical_count = chunk_result["critical_count"]
         index_result = generate_index_entries_for_chunks(
             created_chunks,
-            chat_category=source_doc.get("chat_category"),
             generation_method="LLM",
         )
 

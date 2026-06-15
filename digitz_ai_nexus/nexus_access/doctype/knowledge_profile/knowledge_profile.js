@@ -6,6 +6,12 @@ frappe.ui.form.on('Knowledge Profile', {
         frm.set_query('tenant', () => ({
             filters: { disabled: 0 },
         }));
+
+        frm.set_query('access_category', 'access_categories', () => {
+            const filters = { disabled: 0 };
+            if (frm.doc.tenant) filters.tenant = frm.doc.tenant;
+            return { filters };
+        });
     },
 });
 

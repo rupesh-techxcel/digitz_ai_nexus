@@ -232,7 +232,7 @@ Approved Knowledge Chunk:
 """.strip()
 
 
-def make_llm_payloads(chunk_doc, chat_category=None):
+def make_llm_payloads(chunk_doc):
     response = generate_answer(build_llm_prompt(chunk_doc))
     data = parse_llm_json(response)
 
@@ -261,7 +261,6 @@ def make_llm_payloads(chunk_doc, chat_category=None):
             })
 
     for payload in payloads:
-        payload["chat_category"] = chat_category
         payload["generation_method"] = "LLM"
 
     return payloads
@@ -305,10 +304,10 @@ def archive_existing_index_entries(source_name):
     return len(names)
 
 
-def build_index_payloads(chunk_doc, chat_category=None, generation_method="Heuristic"):
+def build_index_payloads(chunk_doc, generation_method="Heuristic"):
     if generation_method == "LLM":
         try:
-            payloads = make_llm_payloads(chunk_doc, chat_category=chat_category)
+            payloads = make_llm_payloads(chunk_doc)
             if payloads:
                 return payloads
         except Exception:
@@ -332,7 +331,6 @@ def build_index_payloads(chunk_doc, chat_category=None, generation_method="Heuri
         })
 
     for payload in payloads:
-        payload["chat_category"] = chat_category
         payload["generation_method"] = generation_method
 
     return payloads
@@ -360,7 +358,6 @@ def create_index_entry(chunk_doc, payload):
     doc.knowledge_source = chunk_doc.get("knowledge_source")
     doc.knowledge_unit = chunk_doc.get("knowledge_unit")
     doc.knowledge_chunk = chunk_doc.name
-    doc.chat_category = payload.get("chat_category")
 
     for fieldname in [
         "tenant",
@@ -414,7 +411,7 @@ def create_index_entry(chunk_doc, payload):
     return doc.name
 
 
-def generate_index_entries_for_chunks(chunk_names, chat_category=None, generation_method="Heuristic"):
+def generate_index_entries_for_chunks(chunk_names, generation_method="Heuristic"):
     if not chunk_names or not has_semantic_index_doctype():
         return {
             "created": [],
@@ -430,7 +427,6 @@ def generate_index_entries_for_chunks(chunk_names, chat_category=None, generatio
             chunk_doc = frappe.get_doc("Nexus Knowledge Chunk", chunk_name)
             for payload in build_index_payloads(
                 chunk_doc,
-                chat_category=chat_category,
                 generation_method=generation_method,
             ):
                 name = create_index_entry(chunk_doc, payload)

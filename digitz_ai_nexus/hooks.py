@@ -35,7 +35,6 @@ web_include_css = [
 ]
 
 web_include_js = [
-    "/assets/digitz_ai_nexus/js/nexus_chat_widget.js",
     "/assets/digitz_ai_nexus/js/nexus_experience_hub.js"
 ]
 # web_include_js = "/assets/digitz_ai_nexus/js/digitz_ai_nexus.js"

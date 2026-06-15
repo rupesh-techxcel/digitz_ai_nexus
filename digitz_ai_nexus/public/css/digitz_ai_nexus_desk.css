@@ -368,6 +368,24 @@
     background: linear-gradient(90deg, #00b894, #4dc8ff);
 }
 
+.nexus-card-orange::before {
+    background: linear-gradient(90deg, #f59e0b, #fb923c);
+}
+
+.nexus-card-icon-orange {
+    color: #c2410c;
+    background: #fff7ed;
+}
+
+.nexus-card-indigo::before {
+    background: linear-gradient(90deg, #4338ca, #6366f1);
+}
+
+.nexus-card-icon-indigo {
+    color: #4338ca;
+    background: #eef2ff;
+}
+
 .nexus-card-teal-bg {
     background: linear-gradient(180deg, #ffffff 0%, #f1fffb 100%);
     border-color: rgba(0, 184, 148, 0.32);

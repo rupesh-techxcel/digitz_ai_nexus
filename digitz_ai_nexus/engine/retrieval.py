@@ -68,7 +68,6 @@ INDEX_ENTRY_FIELDS = [
     "knowledge_source",
     "knowledge_unit",
     "knowledge_chunk",
-    "chat_category",
     "tenant",
     "business_unit",
     "project",
@@ -385,7 +384,6 @@ def build_semantic_index_filters(query_contract, entry_types=None):
         "entity_type",
         "entity",
         "topic",
-        "chat_category",
     ]:
         if query_contract.get(field):
             filters[field] = query_contract.get(field)

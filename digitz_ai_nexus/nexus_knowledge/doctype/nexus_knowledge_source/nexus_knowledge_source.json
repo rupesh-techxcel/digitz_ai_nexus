@@ -18,7 +18,6 @@
   "entity_type",
   "entity",
   "topic",
-  "chat_category",
   "governance_section",
   "access_policy",
   "priority",
@@ -127,12 +126,6 @@
    "fieldname": "topic",
    "fieldtype": "Data",
    "label": "Topic"
-  },
-  {
-   "fieldname": "chat_category",
-   "fieldtype": "Link",
-   "label": "Chat Category",
-   "options": "Nexus Chat Category"
   },
   {
    "fieldname": "governance_section",

@@ -449,7 +449,6 @@ def _get_knowledge_source_fields():
         "source_reference_name",
         "manual_content",
         "extracted_text",
-        "chat_category",
         "context",
         "sub_context",
         "entity_type",
@@ -819,7 +818,6 @@ def _build_source_classification_stats(rows):
         "entity_type": [],
         "entity": [],
         "topic": [],
-        "chat_category": [],
     }
     option_sets = {key: set() for key in classification_options}
 
@@ -831,7 +829,6 @@ def _build_source_classification_stats(rows):
         entity_type = _get_source_group_label(row, "entity_type")
         entity = _get_source_group_label(row, "entity")
         topic = _get_source_group_label(row, "topic")
-        chat_category = _get_source_group_label(row, "chat_category")
 
         if tenant not in tenant_stats:
             tenant_stats[tenant] = {
@@ -867,7 +864,6 @@ def _build_source_classification_stats(rows):
             ("entity_type", entity_type),
             ("entity", entity),
             ("topic", topic),
-            ("chat_category", chat_category),
         ]:
             if value and value != "Unclassified":
                 option_sets[fieldname].add(value)
@@ -1688,7 +1684,6 @@ def get_knowledge_sources(filters=None):
         "entity_type",
         "entity",
         "topic",
-        "chat_category",
     ]:
         if filters.get(fieldname) and meta.has_field(fieldname):
             db_filters[fieldname] = filters.get(fieldname)
@@ -1740,7 +1735,6 @@ def get_knowledge_sources(filters=None):
             "business_unit": row.get("business_unit"),
             "project": row.get("project"),
             "channel": row.get("channel"),
-            "chat_category": row.get("chat_category"),
             "context": row.get("context"),
             "sub_context": row.get("sub_context"),
             "entity_type": row.get("entity_type"),

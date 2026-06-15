@@ -63,7 +63,6 @@ class NexusKnowledgeSource(Document):
             "entity_type",
             "entity",
             "topic",
-            "chat_category",
             "access_policy",
         ]
 

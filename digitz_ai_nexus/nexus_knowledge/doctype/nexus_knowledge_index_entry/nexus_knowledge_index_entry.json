@@ -22,7 +22,6 @@
   "knowledge_source",
   "knowledge_unit",
   "knowledge_chunk",
-  "chat_category",
   "classification_section",
   "tenant",
   "business_unit",
@@ -154,13 +153,6 @@
    "in_standard_filter": 1,
    "label": "Knowledge Chunk",
    "options": "Nexus Knowledge Chunk"
-  },
-  {
-   "fieldname": "chat_category",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Chat Category",
-   "options": "Nexus Chat Category"
   },
   {
    "fieldname": "classification_section",
