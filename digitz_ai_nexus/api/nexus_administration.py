@@ -961,13 +961,6 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         },
     )
 
-    profile_access_count = count_records_safely(
-        doctype="Nexus AI Agent Profile Access Category",
-        extra_filters={
-            "enabled": 1,
-        },
-    )
-
     registered_identity_route_count = count_registered_identity_routes()
     identity_registry_count = count_records_safely(
         doctype="Nexus Identity Registry",
@@ -1001,7 +994,6 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         and ecosystem.get("default_chat_channel")
         and ai_agent_count > 0
         and category_route_count > 0
-        and profile_access_count > 0
         and identity_safeguard_ready
     )
 
@@ -1028,7 +1020,6 @@ def get_readiness_summary(tenant=None, ecosystem=None):
         "channel_count": channel_count,
         "ai_agent_count": ai_agent_count,
         "category_route_count": category_route_count,
-        "profile_access_count": profile_access_count,
         "registered_identity_route_count": registered_identity_route_count,
         "identity_registry_count": identity_registry_count,
         "identity_safeguard_count": identity_safeguard_count,
@@ -1052,7 +1043,6 @@ def get_empty_readiness():
         "channel_count": 0,
         "ai_agent_count": 0,
         "category_route_count": 0,
-        "profile_access_count": 0,
         "registered_identity_route_count": 0,
         "identity_registry_count": 0,
         "identity_safeguard_count": 0,

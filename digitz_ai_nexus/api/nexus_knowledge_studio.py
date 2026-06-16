@@ -1367,16 +1367,15 @@ def get_active_studio_context():
 @frappe.whitelist()
 def get_tenants_chat_reachability():
     """
-    For every tenant that has published knowledge, walk the full access chain and
-    return which AI Agent Profiles can reach it — and whether each profile is
-    wired to a real user or channel route.
+    For every tenant that has published knowledge, walk the access chain and
+    return which Category Identity Routes (and their agent profiles) can reach it.
 
     Chain per tenant:
       Chunk.access_policy (published, active chunks)
-        → Nexus Access Category Policy
-          → Nexus AI Agent Profile Access Category (enabled)
-            → Nexus User Profile Assignment (active)   — desk users
-            → Nexus Category Identity Route (enabled)  — live chat visitors
+        → Nexus Access Category Policy (child of Nexus Access Category)
+          → Knowledge Profile Access Category (which Knowledge Profiles use this category)
+            → Nexus Category Identity Route (enabled, wired to an agent profile)
+              → Nexus User Profile Assignment (active)   — desk users
     """
     chunk_meta = frappe.get_meta("Nexus Knowledge Chunk")
     if not chunk_meta.has_field("access_policy") or not chunk_meta.has_field("tenant"):
@@ -1400,9 +1399,8 @@ def get_tenants_chat_reachability():
     if not tenant_policies:
         return {"success": True, "tenants": {}}
 
-    # Step 2: All policies across tenants → categories
+    # Step 2: Policies → Access Categories
     all_policies = list({p for policies in tenant_policies.values() for p in policies})
-
     try:
         cat_rows = frappe.get_all(
             "Nexus Access Category Policy",
@@ -1420,48 +1418,37 @@ def get_tenants_chat_reachability():
             policy_to_categories.setdefault(policy, set()).add(cat)
 
     all_categories = list({c for cats in policy_to_categories.values() for c in cats})
-
     if not all_categories:
-        return {"success": True, "tenants": {_tenant: _no_chain(reason="no_access_categories") for _tenant in tenant_policies}}
+        return {"success": True, "tenants": {t: _no_chain(reason="no_access_categories") for t in tenant_policies}}
 
-    # Step 3: Categories → AI Agent Profiles (enabled links)
+    # Step 3: Access Categories → enabled Category Identity Routes
+    # (Routes now own the agent profile; knowledge access is governed at query time
+    #  via Identity Profile → Knowledge Profile → Access Category intersection.)
     try:
-        profile_rows = frappe.get_all(
-            "Nexus AI Agent Profile Access Category",
-            filters={"access_category": ["in", all_categories], "enabled": 1},
-            fields=["ai_agent_profile", "access_category"],
+        route_rows = frappe.get_all(
+            "Nexus Category Identity Route",
+            filters={"enabled": 1},
+            fields=["name", "ai_agent_profile", "channel", "chat_category"],
         )
     except Exception:
         return {"success": True, "tenants": {}}
 
-    category_to_profiles = {}
-    for row in profile_rows:
-        cat = row.get("access_category")
-        profile = row.get("ai_agent_profile")
-        if cat and profile:
-            category_to_profiles.setdefault(cat, set()).add(profile)
+    all_profile_names = list({r["ai_agent_profile"] for r in route_rows if r.get("ai_agent_profile")})
 
-    all_profile_names = list({p for profiles in category_to_profiles.values() for p in profiles})
-
-    # Step 4a: Fetch human-readable label for each profile (agent field = title_field)
+    # Profile labels
     profile_labels = {}
-    agent_name_counts = {}
     try:
         for row in frappe.get_all(
             "Nexus AI Agent Profile",
             filters={"name": ["in", all_profile_names]},
-            fields=["name", "agent"],
+            fields=["name", "agent_name"],
         ):
-            agent_val = row.get("agent") or ""
-            profile_labels[row["name"]] = agent_val
-            agent_name_counts[agent_val] = agent_name_counts.get(agent_val, 0) + 1
+            profile_labels[row["name"]] = row.get("agent_name") or row["name"]
     except Exception:
         pass
 
-    # Step 4: Assignments and routes for every profile (one query each, not per-profile)
+    # User assignments per profile
     profile_user_assignments = {}
-    profile_identity_routes = {}
-
     try:
         for row in frappe.get_all(
             "Nexus User Profile Assignment",
@@ -1472,61 +1459,44 @@ def get_tenants_chat_reachability():
     except Exception:
         pass
 
-    try:
-        for row in frappe.get_all(
-            "Nexus Category Identity Route",
-            filters={"ai_agent_profile": ["in", all_profile_names], "enabled": 1},
-            fields=["ai_agent_profile", "channel", "chat_category", "identity_type"],
-        ):
-            profile_identity_routes.setdefault(row["ai_agent_profile"], []).append({
-                "channel": row.get("channel") or "",
-                "chat_category": row.get("chat_category") or "",
-                "identity_type": row.get("identity_type") or "",
-            })
-    except Exception:
-        pass
-
-    # Step 5: Assemble per-tenant result
+    # Step 4: Assemble per-tenant result
     result = {}
     for tenant, policies in tenant_policies.items():
-        # Profiles reachable for this tenant's policies
         tenant_categories = set()
         for policy in policies:
             tenant_categories.update(policy_to_categories.get(policy, set()))
 
-        tenant_profiles_names = set()
-        for cat in tenant_categories:
-            tenant_profiles_names.update(category_to_profiles.get(cat, set()))
-
-        if not tenant_profiles_names:
-            result[tenant] = _no_chain(reason="no_agent_profiles")
-            continue
-
+        # All routes are candidates — knowledge filtering happens at query time
         profiles = []
-        for profile_name in sorted(tenant_profiles_names):
+        seen_profiles = set()
+        for route in route_rows:
+            profile_name = route.get("ai_agent_profile")
+            if not profile_name or profile_name in seen_profiles:
+                continue
+            seen_profiles.add(profile_name)
             assignments = profile_user_assignments.get(profile_name, [])
-            routes = profile_identity_routes.get(profile_name, [])
-            agent_val = profile_labels.get(profile_name, "")
-            # If multiple profiles share the same agent name, append a short disambiguator
-            if agent_val and agent_name_counts.get(agent_val, 1) > 1:
-                label = f"{agent_val} ({profile_name[:6]})"
-            else:
-                label = agent_val or profile_name
             profiles.append({
                 "profile": profile_name,
-                "profile_label": label,
+                "profile_label": profile_labels.get(profile_name, profile_name),
                 "user_assignments": assignments,
-                "identity_routes": routes,
-                "reachable": bool(assignments or routes),
+                "identity_routes": [{
+                    "channel": route.get("channel") or "",
+                    "chat_category": route.get("chat_category") or "",
+                }],
+                "reachable": True,
             })
 
-        reachable = [p for p in profiles if p["reachable"]]
+        if not profiles:
+            result[tenant] = _no_chain(reason="no_identity_routes")
+            continue
+
         result[tenant] = {
-            "reachable": bool(reachable),
-            "reason": "ok" if reachable else "no_assignments",
+            "reachable": True,
+            "reason": "ok",
             "profiles": profiles,
-            "reachable_count": len(reachable),
+            "reachable_count": len(profiles),
             "total_profile_count": len(profiles),
+            "note": "Access categories: " + ", ".join(sorted(tenant_categories)),
         }
 
     return {"success": True, "tenants": result}

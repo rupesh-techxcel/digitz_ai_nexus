@@ -1802,7 +1802,6 @@ class NexusStudioPage {
                 <div class="nks-context-grid">
                     ${this.get_context_item_html('User', resolved_context.user)}
                     ${this.get_context_item_html('Tenant', resolved_context.tenant, true)}
-                    ${this.get_context_item_html('Ecosystem', resolved_context.ecosystem)}
                     ${this.get_context_item_html('Business Unit', resolved_context.business_unit, true)}
                     ${this.get_context_item_html('Project', resolved_context.project)}
                     ${this.get_context_item_html('Channel', resolved_context.channel)}

@@ -218,19 +218,8 @@ Key fields on Nexus Access Category:
 
 Example: An Internal Operations Access Category might include policies Internal and Restricted. Any agent assigned this category can retrieve knowledge tagged with either policy.
 
-Layer 3 — Nexus AI Agent Profile Access Category:
-This record bridges an AI Agent Profile to an Access Category. It declares that a specific agent profile is permitted to retrieve knowledge governed by the policies in that category.
-
-Key fields:
-- ai_agent_profile: Link to the profile.
-- access_category: Link to the category.
-- enabled: 1 by default.
-- priority: Int. Ordering when resolving multiple categories.
-
-A single AI Agent Profile can have multiple Access Category links, giving it access to different policy ranges.
-
-Layer 4 — Runtime Resolution:
-When a conversation starts, the platform resolves the visitor's identity type, finds the matching Category Identity Route, gets the AI Agent Profile for that route, then collects all enabled Access Categories linked to that profile, expands each category into its policies, and uses the resulting policy list as the retrieval filter. A Knowledge Chunk is only returned if its access_policy appears in this list.
+Layer 3 — Runtime Resolution:
+When a conversation starts, the platform resolves the visitor's identity via their Identity Profile, maps it to a Knowledge Profile through Identity Mappings, then collects all Access Categories linked to that Knowledge Profile, expands each category into its policies, and uses the resulting policy list as the retrieval filter. A Knowledge Chunk is only returned if its access_policy appears in this list.
 
 For desk users accessing Q&A, the Nexus User Profile Assignment maps the user to an AI Agent Profile, and the same chain applies.
 
@@ -1049,25 +1038,6 @@ def _ensure_internal_agent_profile(tenant, channel):
     return doc.name
 
 
-def _ensure_profile_access_category(profile, access_category):
-    existing = frappe.get_all(
-        "Nexus AI Agent Profile Access Category",
-        filters={"ai_agent_profile": profile, "access_category": access_category},
-        pluck="name",
-        limit_page_length=1,
-    )
-    if existing:
-        doc = frappe.get_doc("Nexus AI Agent Profile Access Category", existing[0])
-    else:
-        doc = frappe.new_doc("Nexus AI Agent Profile Access Category")
-        doc.ai_agent_profile = profile
-        doc.access_category  = access_category
-
-    doc.enabled     = 1
-    doc.priority    = 10
-    doc.description = f"{access_category} linked to {profile}."
-    doc.save(ignore_permissions=True)
-    return doc.name
 
 
 def _ensure_internal_route(tenant, channel, category, profile):
@@ -1197,15 +1167,6 @@ def seed_nexus_platform_knowledge(process_sources=True):
     result["foundation"]["internal_agent_profile"] = profile
 
     # ── 7. Wire profile → Internal Access + Restricted Access categories ───────
-    for cat_name in ("Internal Access", "Restricted Access"):
-        access_cat = frappe.db.get_value(
-            "Nexus Access Category",
-            {"category_name": cat_name, "tenant": tenant},
-            "name",
-        )
-        if access_cat:
-            _ensure_profile_access_category(profile, access_cat)
-
     result["foundation"]["access_categories_wired"] = True
 
     # ── 8. Internal route ──────────────────────────────────────────────────────

@@ -80,9 +80,25 @@ footer.web-footer{
   margin:0;
   padding:0;
   overflow-x:hidden;
-  font-family:Inter, "Segoe UI", Arial, sans-serif;
+  font-family:'Inter', "Segoe UI", Arial, sans-serif;
   color:var(--text);
   background:linear-gradient(180deg,#ffffff 0%,#f6f8ff 45%,#f7f8fd 100%);
+}
+
+/* Headings and nav use Exo 2 — matches the logo's geometric bold character */
+.digitz-website h1,
+.digitz-website h2,
+.digitz-website h3,
+.digitz-website h4,
+.digitz-website h5,
+.digitz-website h6,
+.digitz-website .nav a,
+.digitz-website .nav-cta,
+.digitz-website .eyebrow,
+.digitz-website .section-kicker,
+.digitz-website .nexus-sub-kicker,
+.nxp-page .nxpl-hero-h1{
+  font-family:'Exo 2', Inter, "Segoe UI", Arial, sans-serif;
 }
 
 .digitz-website a{
@@ -242,10 +258,10 @@ footer.web-footer{
 
 .nexus-home .nexus-hero-copy h1{
   max-width:640px;
-  font-size:3.02rem;
-  line-height:1.03;
-  font-weight:800;
-  letter-spacing:-1.1px;
+  font-size:3.1rem;
+  line-height:1.06;
+  font-weight:900;
+  letter-spacing:-0.5px;
   color:#fff;
 }
 
@@ -5575,7 +5591,7 @@ section[id="qna-experience"]{
 .nxp-page .nxpl-hero-badge svg{ width:13px;height:13px; }
 .nxp-page .nxpl-hero-h1{
   font-size:clamp(2rem,3.6vw,3.4rem);
-  color:#fff;font-weight:900;line-height:1.12;
+  color:#fff;font-weight:900;line-height:1.08;letter-spacing:-0.3px;
   margin:0 0 20px;max-width:none;
 }
 .nxp-page .nxpl-hero-em{

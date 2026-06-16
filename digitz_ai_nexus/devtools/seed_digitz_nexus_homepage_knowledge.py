@@ -712,25 +712,6 @@ def _ensure_ai_agent_profile(tenant, channel):
     return doc.name
 
 
-def _ensure_profile_access_category(profile, access_category):
-    existing = frappe.get_all(
-        "Nexus AI Agent Profile Access Category",
-        filters={"ai_agent_profile": profile, "access_category": access_category},
-        pluck="name",
-        limit_page_length=1,
-    )
-    if existing:
-        doc = frappe.get_doc("Nexus AI Agent Profile Access Category", existing[0])
-    else:
-        doc = frappe.new_doc("Nexus AI Agent Profile Access Category")
-        doc.ai_agent_profile = profile
-        doc.access_category  = access_category
-
-    doc.enabled     = 1
-    doc.priority    = 10
-    doc.description = "Public access category for the DIGITZ AI Nexus website assistant."
-    doc.save(ignore_permissions=True)
-    return doc.name
 
 
 def _ensure_public_route(tenant, channel, category, profile):
@@ -895,16 +876,6 @@ def seed_nexus_website_knowledge(process_sources=True):
     result["foundation"]["ai_agent_profile"] = profile
 
     # ── 7. Wire profile → Public Access category ───────────────────────────────
-    public_access_cat = frappe.db.get_value(
-        "Nexus Access Category",
-        {"category_name": "Public Access", "tenant": tenant},
-        "name",
-    )
-    if public_access_cat:
-        result["foundation"]["profile_access_category"] = _ensure_profile_access_category(
-            profile, public_access_cat
-        )
-
     # ── 8. Public visitor route ────────────────────────────────────────────────
     result["foundation"]["public_route"] = _ensure_public_route(tenant, channel, category, profile)
 
