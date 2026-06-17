@@ -26,9 +26,9 @@
       <nav class="nav" aria-label="Primary Navigation">
         <a href="#home">Home</a>
         <a href="#live-experience">Experience</a>
-        <a href="#platform-workspaces">Platform</a>
+        <a href="/nexus-platform">Nexus Platform</a>
         <a href="#apps-experience">Apps</a>
-        <a href="#commercial">Solutions</a>
+        <a href="/how-nexus-works">Nexus Architecture</a>
         <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </nav>
     </div>
@@ -61,6 +61,11 @@
               Chat with Us
             </a>
           </div>
+          <a href="/how-nexus-works" style="display:inline-flex;align-items:center;margin-top:14px;font-size:13.5px;font-weight:600;color:#a5b8ff;text-decoration:none;white-space:nowrap;opacity:0.9;letter-spacing:0.01em;" onmouseover="this.style.color='#c8d8ff';this.style.textDecoration='underline';" onmouseout="this.style.color='#a5b8ff';this.style.textDecoration='none';">
+            <svg viewBox="0 0 18 18" fill="none" width="14" height="14" style="margin-right:5px;flex-shrink:0;"><rect x="2" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h8M5 9h6M5 12h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            How Nexus AI Platform Works
+            <svg viewBox="0 0 14 14" fill="none" width="12" height="12" style="margin-left:5px;flex-shrink:0;"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
         </div>
 
         <div class="hero-visual nexus-hero-visual" aria-hidden="true">
@@ -116,7 +121,1329 @@
     </div>
   </section>
 
-  <section class="section nexus-coverage-section" id="commercial-value">
+  <!-- Nexus AI Governance Story Section -->
+  <section id="nexus-commercial-flow" class="nxcom-section" data-stage="0" aria-label="Nexus AI governed delivery visual story">
+    <style>
+      #nexus-commercial-flow,
+      #nexus-commercial-flow * { box-sizing: border-box; }
+
+      #nexus-commercial-flow {
+        --nx-navy: #102b67;
+        --nx-blue: #214dbb;
+        --nx-teal: #16A37F;
+        --nx-gold: #e5a200;
+        --nx-amber: #f59e0b;
+        --nx-bg-start: #f0f5ff;
+        --nx-bg-end: #ffffff;
+        --nx-border: #d9e2f2;
+        --nx-muted: #53688f;
+        --nx-heading: "Exo 2", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --nx-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        padding: 20px 0 clamp(72px, 7vw, 122px);
+        background:
+          radial-gradient(circle at 12% 18%, rgba(33, 77, 187, .14), transparent 30%),
+          radial-gradient(circle at 82% 16%, rgba(22, 163, 127, .10), transparent 28%),
+          radial-gradient(circle at 78% 82%, rgba(229, 162, 0, .12), transparent 30%),
+          linear-gradient(180deg, var(--nx-bg-start) 0%, var(--nx-bg-end) 100%);
+        color: var(--nx-navy);
+        font-family: var(--nx-body);
+      }
+
+      #nexus-commercial-flow::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background-image:
+          linear-gradient(rgba(16, 43, 103, .045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(16, 43, 103, .045) 1px, transparent 1px);
+        background-size: 54px 54px;
+        mask-image: linear-gradient(180deg, transparent 0%, #000 15%, #000 84%, transparent 100%);
+      }
+
+      #nexus-commercial-flow .nxcom-container {
+        width: min(1660px, calc(100% - 48px));
+        margin: 0 auto;
+      }
+
+      #nexus-commercial-flow .nxcom-story-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 42px;
+        border: 1px solid rgba(217, 226, 242, .85);
+        background:
+          radial-gradient(circle at 42% 45%, rgba(71, 115, 255, .28), transparent 34%),
+          radial-gradient(circle at 75% 35%, rgba(22, 163, 127, .16), transparent 26%),
+          linear-gradient(130deg, #071c52 0%, #102b67 44%, #214dbb 100%);
+        box-shadow: 0 34px 90px rgba(16, 43, 103, .22);
+        color: #ffffff;
+      }
+
+      #nexus-commercial-flow .nxcom-story-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+        background-size: 44px 44px;
+        opacity: .72;
+      }
+
+      #nexus-commercial-flow .nxcom-story-top {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: minmax(260px, .58fr) minmax(0, 1fr);
+        gap: 20px;
+        align-items: center;
+        padding: 30px 30px 0;
+      }
+
+      #nexus-commercial-flow .nxcom-stage-title { min-height: 78px; }
+
+      #nexus-commercial-flow .nxcom-stage-title strong {
+        display: block;
+        margin-bottom: 7px;
+        color: #ffffff;
+        font-family: var(--nx-heading);
+        font-size: clamp(22px, 1.75vw, 31px);
+        line-height: 1.1;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-stage-title span {
+        color: rgba(255,255,255,.72);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      #nexus-commercial-flow .nxcom-stage-pills {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+      }
+
+      #nexus-commercial-flow .nxcom-stage-pill {
+        position: relative;
+        min-height: 70px;
+        padding: 14px 14px 12px 16px;
+        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 18px;
+        background: rgba(255,255,255,.08);
+        color: rgba(255,255,255,.66);
+        cursor: pointer;
+        transition: background .35s ease, transform .35s ease, border-color .35s ease, color .35s ease;
+        text-align: left;
+        font-family: var(--nx-body);
+      }
+
+      #nexus-commercial-flow .nxcom-stage-pill b {
+        display: block;
+        margin-bottom: 4px;
+        font-family: var(--nx-heading);
+        font-size: 13px;
+        line-height: 1.14;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-stage-pill span {
+        display: block;
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      #nexus-commercial-flow[data-stage="0"] .nxcom-stage-pill[data-step="0"],
+      #nexus-commercial-flow[data-stage="1"] .nxcom-stage-pill[data-step="1"],
+      #nexus-commercial-flow[data-stage="2"] .nxcom-stage-pill[data-step="2"],
+      #nexus-commercial-flow[data-stage="3"] .nxcom-stage-pill[data-step="3"],
+      #nexus-commercial-flow[data-stage="4"] .nxcom-stage-pill[data-step="4"] {
+        transform: translateY(-4px);
+        border-color: rgba(229, 162, 0, .65);
+        background: rgba(255,255,255,.16);
+        color: #ffffff;
+        box-shadow: 0 16px 36px rgba(0,0,0,.12);
+      }
+
+      #nexus-commercial-flow .nxcom-canvas {
+        position: relative;
+        z-index: 2;
+        min-height: 940px;
+        margin-top: 12px;
+      }
+
+      #nexus-commercial-flow .nxcom-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      #nexus-commercial-flow .nxcom-path {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        opacity: .22;
+        stroke-dasharray: 900;
+        stroke-dashoffset: 900;
+        transition: stroke-dashoffset .9s ease, opacity .45s ease, filter .45s ease;
+      }
+
+      #nexus-commercial-flow .nxcom-path-persist  { stroke: #e5a200; }
+      #nexus-commercial-flow .nxcom-path-profile  { stroke: #ffffff; }
+      #nexus-commercial-flow .nxcom-path-identity { stroke: #16A37F; }
+      #nexus-commercial-flow .nxcom-path-deliver  { stroke: #e5a200; }
+      #nexus-commercial-flow .nxcom-path-benefits { stroke: #ffffff; }
+      #nexus-commercial-flow .nxcom-path-escalate { stroke: #f59e0b; }
+
+      #nexus-commercial-flow.nxcom-visible[data-stage="0"] .nxcom-path-persist,
+      #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-path-profile,
+      #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-path-identity,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-path-deliver,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-path-benefits,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-path-deliver,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-path-benefits,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-path-escalate {
+        opacity: .88;
+        stroke-dashoffset: 0;
+        filter: drop-shadow(0 0 14px rgba(229, 162, 0, .45));
+      }
+
+      #nexus-commercial-flow .nxcom-node,
+      #nexus-commercial-flow .nxcom-source-card,
+      #nexus-commercial-flow .nxcom-benefit-card {
+        opacity: 0;
+        transform: translateY(26px);
+      }
+
+      #nexus-commercial-flow.nxcom-visible .nxcom-node,
+      #nexus-commercial-flow.nxcom-visible .nxcom-source-card,
+      #nexus-commercial-flow.nxcom-visible .nxcom-benefit-card {
+        animation: nxcomFadeUp .68s cubic-bezier(.22,1,.36,1) forwards;
+        animation-delay: var(--d, .1s);
+      }
+
+      #nexus-commercial-flow .nxcom-source-stack {
+        position: absolute;
+        z-index: 3;
+        left: 36px;
+        top: 118px;
+        width: 245px;
+        display: grid;
+        gap: 12px;
+      }
+
+      #nexus-commercial-flow .nxcom-source-card {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 15px 16px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 18px;
+        background: rgba(255,255,255,.11);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 18px 40px rgba(0,0,0,.14);
+      }
+
+      #nexus-commercial-flow .nxcom-source-icon {
+        flex: 0 0 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: rgba(255,255,255,.92);
+        color: var(--nx-blue);
+        font-family: var(--nx-heading);
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-source-card strong {
+        display: block;
+        font-family: var(--nx-heading);
+        font-size: 13px;
+        line-height: 1.1;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-source-card span {
+        display: block;
+        margin-top: 4px;
+        color: rgba(255,255,255,.66);
+        font-size: 11px;
+        line-height: 1.25;
+      }
+
+      /* TEMP */ #nexus-commercial-flow .nxcom-tenant-layer { display: none !important; }
+      #nexus-commercial-flow .nxcom-tenant-layers {
+        position: absolute;
+        z-index: 3;
+        left: 320px;
+        top: 70px;
+        width: 370px;
+        height: 318px;
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      #nexus-commercial-flow.nxcom-visible .nxcom-tenant-layers {
+        animation: nxcomFadeUp .68s cubic-bezier(.22,1,.36,1) .72s forwards;
+      }
+
+      #nexus-commercial-flow .nxcom-tenant-title {
+        position: relative;
+        z-index: 4;
+        width: fit-content;
+        margin: 0 auto 12px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.94);
+        color: var(--nx-blue);
+        box-shadow: 0 16px 32px rgba(0,0,0,.13);
+        font-family: var(--nx-heading);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .2px;
+      }
+
+      #nexus-commercial-flow .nxcom-tenant-layer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        min-height: 78px;
+        padding: 15px 18px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 20px;
+        background: rgba(255,255,255,.12);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 20px 44px rgba(0,0,0,.16);
+        opacity: 0;
+        transform: translateY(20px) scale(.96);
+      }
+
+      #nexus-commercial-flow .nxcom-tenant-layer:nth-child(2) { top: 46px; left: 0; right: 44px; }
+      #nexus-commercial-flow .nxcom-tenant-layer:nth-child(3) { top: 138px; left: 0; right: 44px; }
+      #nexus-commercial-flow .nxcom-tenant-layer:nth-child(4) { top: 230px; left: 0; right: 44px; }
+
+      #nexus-commercial-flow.nxcom-visible[data-stage="0"] .nxcom-tenant-layer,
+      #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-tenant-layer,
+      #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-tenant-layer,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-tenant-layer,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-tenant-layer {
+        animation: nxcomLayerIn .48s ease forwards;
+        animation-delay: var(--td, 1s);
+      }
+
+      #nexus-commercial-flow .nxcom-tenant-layer b {
+        display: block;
+        color: #ffffff;
+        font-family: var(--nx-heading);
+        font-size: 13px;
+        line-height: 1.12;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-tenant-layer span {
+        display: block;
+        margin-top: 5px;
+        color: rgba(255,255,255,.67);
+        font-size: 11px;
+        line-height: 1.28;
+      }
+
+      #nexus-commercial-flow .nxcom-knowledge-core {
+        position: absolute;
+        z-index: 4;
+        left: 50%;
+        top: 274px;
+        width: 280px;
+        height: 280px;
+        transform: translate(-50%, -50%) translateY(26px);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255,255,255,.20);
+        background: radial-gradient(circle at 38% 30%, rgba(255,255,255,.30), rgba(255,255,255,.13) 58%, rgba(255,255,255,.07));
+        box-shadow: 0 32px 85px rgba(0,0,0,.22), 0 0 0 72px rgba(255,255,255,.035), 0 0 0 142px rgba(255,255,255,.018);
+      }
+
+      #nexus-commercial-flow.nxcom-visible .nxcom-knowledge-core {
+        animation: nxcomCoreIn .86s cubic-bezier(.22,1,.36,1) .85s forwards;
+      }
+
+      #nexus-commercial-flow .nxcom-core-inner {
+        width: 168px;
+        height: 168px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff, #edf4ff);
+        color: var(--nx-blue);
+        box-shadow: inset 0 -15px 35px rgba(33,77,187,.12), 0 22px 46px rgba(0,0,0,.18);
+        text-align: center;
+        font-family: var(--nx-heading);
+        font-size: 22px;
+        line-height: 1.04;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-core-inner small {
+        display: block;
+        margin-top: 8px;
+        color: var(--nx-muted);
+        font-family: var(--nx-body);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      #nexus-commercial-flow .nxcom-core-chip {
+        position: absolute;
+        z-index: 5;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 108px;
+        justify-content: center;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.95);
+        color: var(--nx-blue);
+        box-shadow: 0 16px 32px rgba(0,0,0,.15);
+        border: 1px solid rgba(255,255,255,.60);
+        font-family: var(--nx-heading);
+        font-size: 12px;
+        font-weight: 900;
+        opacity: 0;
+        transform: scale(.7) translateY(10px);
+      }
+
+      #nexus-commercial-flow .nxcom-chip-1 { top: -26px; left: 50%; transform: translateX(-50%) scale(.7) translateY(10px); }
+      #nexus-commercial-flow .nxcom-chip-2 { top: 64px; right: -72px; }
+      #nexus-commercial-flow .nxcom-chip-3 { bottom: 50px; right: -82px; color: #8a5b00; }
+      #nexus-commercial-flow .nxcom-chip-4 { bottom: -22px; left: 50%; transform: translateX(-50%) scale(.7) translateY(10px); }
+      #nexus-commercial-flow .nxcom-chip-5 { bottom: 52px; left: -84px; }
+      #nexus-commercial-flow .nxcom-chip-6 { top: 64px; left: -78px; color: #0b735d; }
+
+      #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-core-chip,
+      #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-core-chip,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-core-chip,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-core-chip {
+        animation: nxcomChipPop .44s cubic-bezier(.18,1.35,.5,1) forwards;
+        animation-delay: var(--cd, 0s);
+      }
+
+      #nexus-commercial-flow .nxcom-access-ring {
+        position: absolute;
+        inset: -24px;
+        border-radius: 50%;
+        border: 2px dashed rgba(229,162,0,.36);
+        opacity: 0;
+        transform: scale(.92);
+        transition: opacity .55s ease, transform .55s ease;
+      }
+
+      #nexus-commercial-flow[data-stage="1"] .nxcom-access-ring,
+      #nexus-commercial-flow[data-stage="2"] .nxcom-access-ring,
+      #nexus-commercial-flow[data-stage="3"] .nxcom-access-ring,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-access-ring { opacity: 1; transform: scale(1); }
+
+      #nexus-commercial-flow .nxcom-identity-zone {
+        position: absolute;
+        z-index: 4;
+        right: 74px;
+        top: 112px;
+        width: 320px;
+        min-height: 278px;
+        padding: 24px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 30px;
+        background: rgba(255,255,255,.11);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 24px 58px rgba(0,0,0,.18);
+      }
+
+      #nexus-commercial-flow .nxcom-identity-zone h3,
+      #nexus-commercial-flow .nxcom-route-hub h3,
+      #nexus-commercial-flow .nxcom-response-orb h3 {
+        margin: 0 0 8px;
+        color: #ffffff;
+        font-family: var(--nx-heading);
+        font-size: 22px;
+        line-height: 1.08;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-identity-zone p,
+      #nexus-commercial-flow .nxcom-route-hub p,
+      #nexus-commercial-flow .nxcom-response-orb p {
+        margin: 0;
+        color: rgba(255,255,255,.70);
+        font-size: 13px;
+        line-height: 1.48;
+      }
+
+      #nexus-commercial-flow .nxcom-identity-badges { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+
+      #nexus-commercial-flow .nxcom-id-badge {
+        padding: 9px 11px;
+        border-radius: 999px;
+        background: rgba(22,163,127,.16);
+        border: 1px solid rgba(22,163,127,.34);
+        color: #eafff7;
+        font-family: var(--nx-heading);
+        font-size: 11px;
+        font-weight: 900;
+        opacity: 0;
+        transform: translateY(10px) scale(.9);
+      }
+
+      #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-id-badge,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-id-badge,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-id-badge {
+        animation: nxcomBadgeIn .38s ease forwards;
+        animation-delay: var(--bd, 0s);
+      }
+
+      #nexus-commercial-flow .nxcom-verification {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(245,158,11,.16);
+        border: 1px solid rgba(245,158,11,.36);
+        color: #fff3d6;
+        font-family: var(--nx-heading);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-verification i {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--nx-amber);
+        box-shadow: 0 0 0 0 rgba(245,158,11,.44);
+        animation: nxcomEventPulse 1.55s ease-out infinite;
+      }
+
+      #nexus-commercial-flow .nxcom-route-hub {
+        position: absolute;
+        z-index: 6;
+        left: 72px;
+        top: 452px;
+        width: 312px;
+        min-height: 188px;
+        padding: 24px;
+        border-radius: 30px;
+        border: 1px solid rgba(229,162,0,.38);
+        background:
+          radial-gradient(circle at 50% 0%, rgba(229,162,0,.26), transparent 45%),
+          rgba(16,43,103,.86);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 30px 72px rgba(0,0,0,.24);
+      }
+
+      #nexus-commercial-flow[data-stage="3"] .nxcom-route-hub,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-route-hub { animation: nxcomRouteGlow 3s ease-in-out infinite; }
+
+      #nexus-commercial-flow .nxcom-route-pieces { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 16px 0 0; }
+
+      #nexus-commercial-flow .nxcom-route-piece {
+        padding: 8px 9px;
+        border-radius: 13px;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.12);
+        color: rgba(255,255,255,.82);
+        font-family: var(--nx-heading);
+        font-size: 11px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      #nexus-commercial-flow .nxcom-response-orb {
+        position: absolute;
+        z-index: 5;
+        right: 72px;
+        top: 448px;
+        width: 190px;
+        height: 190px;
+        display: grid;
+        place-items: center;
+        padding: 22px;
+        text-align: center;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.42);
+        background: linear-gradient(180deg, #ffffff, #eef5ff);
+        color: var(--nx-blue);
+        box-shadow: 0 30px 75px rgba(0,0,0,.24), 0 0 0 48px rgba(255,255,255,.035);
+      }
+
+      #nexus-commercial-flow .nxcom-response-orb h3 { color: var(--nx-blue); font-size: 20px; }
+      #nexus-commercial-flow .nxcom-response-orb p  { color: var(--nx-muted); font-size: 12px; }
+
+      #nexus-commercial-flow .nxcom-behaviour-card {
+        position: absolute;
+        z-index: 5;
+        left: 418px;
+        top: 452px;
+        width: 322px;
+        min-height: 160px;
+        padding: 20px;
+        border-radius: 26px;
+        border: 1px solid rgba(255,255,255,.18);
+        background: rgba(255,255,255,.12);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 24px 58px rgba(0,0,0,.18);
+      }
+
+      #nexus-commercial-flow .nxcom-behaviour-card h3,
+      #nexus-commercial-flow .nxcom-human-panel h3 {
+        margin: 0 0 8px;
+        color: #ffffff;
+        font-family: var(--nx-heading);
+        font-size: 20px;
+        line-height: 1.08;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-behaviour-card p,
+      #nexus-commercial-flow .nxcom-human-panel p {
+        margin: 0;
+        color: rgba(255,255,255,.70);
+        font-size: 12px;
+        line-height: 1.48;
+      }
+
+      #nexus-commercial-flow .nxcom-behaviour-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+
+      #nexus-commercial-flow .nxcom-behaviour-pill {
+        padding: 7px 9px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.13);
+        color: rgba(255,255,255,.84);
+        font-family: var(--nx-heading);
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow[data-stage="3"] .nxcom-behaviour-card,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-behaviour-card {
+        border-color: rgba(229,162,0,.42);
+        box-shadow: 0 24px 64px rgba(0,0,0,.20), 0 0 0 8px rgba(229,162,0,.06);
+      }
+
+      #nexus-commercial-flow .nxcom-human-panel {
+        position: absolute;
+        z-index: 6;
+        left: auto;
+        right: 58px;
+        top: 650px;
+        width: 420px;
+        min-height: 158px;
+        padding: 20px 22px;
+        border-radius: 26px;
+        border: 1px solid rgba(245,158,11,.38);
+        background:
+          radial-gradient(circle at 15% 20%, rgba(245,158,11,.26), transparent 40%),
+          rgba(16,43,103,.82);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 26px 68px rgba(0,0,0,.24);
+      }
+
+      #nexus-commercial-flow[data-stage="4"] .nxcom-human-panel { animation: nxcomHumanGlow 2.6s ease-in-out infinite; }
+
+      #nexus-commercial-flow .nxcom-human-panel::before {
+        content: "Human handoff";
+        position: absolute;
+        right: 18px;
+        top: -16px;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.94);
+        color: #9a5a00;
+        box-shadow: 0 14px 30px rgba(0,0,0,.16);
+        font-family: var(--nx-heading);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: .2px;
+      }
+
+      #nexus-commercial-flow .nxcom-human-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 8px 11px;
+        border-radius: 999px;
+        background: rgba(245,158,11,.18);
+        border: 1px solid rgba(245,158,11,.38);
+        color: #fff2d4;
+        font-family: var(--nx-heading);
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-human-badge i {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--nx-amber);
+        box-shadow: 0 0 0 0 rgba(245,158,11,.42);
+        animation: nxcomEventPulse 1.55s ease-out infinite;
+      }
+
+      #nexus-commercial-flow .nxcom-benefits {
+        position: absolute;
+        z-index: 4;
+        left: 36px;
+        right: 36px;
+        bottom: 34px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+
+      #nexus-commercial-flow .nxcom-benefit-card {
+        min-height: 116px;
+        padding: 18px;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,.16);
+        background: rgba(255,255,255,.10);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 18px 44px rgba(0,0,0,.14);
+      }
+
+      #nexus-commercial-flow .nxcom-benefit-card b {
+        display: block;
+        margin-bottom: 8px;
+        color: #ffffff;
+        font-family: var(--nx-heading);
+        font-size: 15px;
+        line-height: 1.12;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-benefit-card span {
+        display: block;
+        color: rgba(255,255,255,.68);
+        font-size: 12px;
+        line-height: 1.44;
+      }
+
+      #nexus-commercial-flow[data-stage="3"] .nxcom-benefit-card,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-benefit-card {
+        border-color: rgba(229,162,0,.35);
+        background: rgba(255,255,255,.14);
+      }
+
+      #nexus-commercial-flow .nxcom-value-strip {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      #nexus-commercial-flow .nxcom-value-item {
+        padding: 22px;
+        border: 1px solid var(--nx-border);
+        border-radius: 24px;
+        background: rgba(255,255,255,.86);
+        box-shadow: 0 18px 40px rgba(16,43,103,.07);
+      }
+
+      #nexus-commercial-flow .nxcom-value-item b {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--nx-navy);
+        font-family: var(--nx-heading);
+        font-size: 17px;
+        line-height: 1.15;
+        font-weight: 900;
+      }
+
+      #nexus-commercial-flow .nxcom-value-item span {
+        display: block;
+        color: var(--nx-muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      #nexus-commercial-flow .nxcom-stage-copy[data-step] { display: none; }
+      #nexus-commercial-flow[data-stage="0"] .nxcom-stage-copy[data-step="0"],
+      #nexus-commercial-flow[data-stage="1"] .nxcom-stage-copy[data-step="1"],
+      #nexus-commercial-flow[data-stage="2"] .nxcom-stage-copy[data-step="2"],
+      #nexus-commercial-flow[data-stage="3"] .nxcom-stage-copy[data-step="3"],
+      #nexus-commercial-flow[data-stage="4"] .nxcom-stage-copy[data-step="4"] { display: block; }
+
+      @keyframes nxcomFadeUp { to { opacity: 1; transform: translateY(0); } }
+      @keyframes nxcomCoreIn { to { opacity: 1; transform: translate(-50%, -50%) translateY(0); } }
+      @keyframes nxcomChipPop {
+        0%   { opacity: 0; transform: scale(.7) translateY(10px); }
+        72%  { opacity: 1; transform: scale(1.07) translateY(0); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      #nexus-commercial-flow .nxcom-chip-1,
+      #nexus-commercial-flow .nxcom-chip-4 { transform: translateX(-50%) scale(.7) translateY(10px); }
+
+      #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-chip-1,
+      #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-chip-1,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-chip-1,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-chip-1,
+      #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-chip-4,
+      #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-chip-4,
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-chip-4,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-chip-4 { animation-name: nxcomCenteredChipPop; }
+
+      @keyframes nxcomCenteredChipPop {
+        0%   { opacity: 0; transform: translateX(-50%) scale(.7) translateY(10px); }
+        72%  { opacity: 1; transform: translateX(-50%) scale(1.07) translateY(0); }
+        100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+      }
+
+      @keyframes nxcomBadgeIn  { to { opacity: 1; transform: translateY(0) scale(1); } }
+      @keyframes nxcomLayerIn  { to { opacity: 1; transform: translateY(0) scale(1); } }
+
+      @keyframes nxcomEventPulse {
+        0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.44); transform: scale(1); }
+        70%  { box-shadow: 0 0 0 12px rgba(245,158,11,0); transform: scale(1.08); }
+        100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); transform: scale(1); }
+      }
+
+      @keyframes nxcomRouteGlow {
+        0%, 100% { box-shadow: 0 30px 72px rgba(0,0,0,.24), 0 0 0 0 rgba(229,162,0,0); }
+        50%       { box-shadow: 0 30px 80px rgba(0,0,0,.26), 0 0 0 10px rgba(229,162,0,.11), 0 0 42px rgba(229,162,0,.22); }
+      }
+
+      @keyframes nxcomHumanGlow {
+        0%, 100% { box-shadow: 0 26px 68px rgba(0,0,0,.24), 0 0 0 0 rgba(245,158,11,0); }
+        50%       { box-shadow: 0 26px 78px rgba(0,0,0,.28), 0 0 0 10px rgba(245,158,11,.11), 0 0 38px rgba(245,158,11,.24); }
+      }
+
+      @media (max-width: 1280px) {
+        #nexus-commercial-flow .nxcom-story-top { grid-template-columns: 1fr; }
+        #nexus-commercial-flow .nxcom-stage-pills,
+        #nexus-commercial-flow .nxcom-value-strip { grid-template-columns: repeat(2, 1fr); }
+        #nexus-commercial-flow .nxcom-canvas { min-height: 1060px; }
+        #nexus-commercial-flow .nxcom-knowledge-core { left: 45%; top: 320px; }
+        #nexus-commercial-flow .nxcom-identity-zone { top: 80px; right: 34px; }
+        #nexus-commercial-flow .nxcom-route-hub { left: 34px; top: 590px; }
+        #nexus-commercial-flow .nxcom-response-orb { right: 72px; top: 606px; }
+      }
+
+      @media (max-width: 900px) {
+        #nexus-commercial-flow { padding: 64px 0; }
+        #nexus-commercial-flow .nxcom-container { width: min(100% - 28px, 760px); }
+        #nexus-commercial-flow .nxcom-story-card { border-radius: 28px; }
+        #nexus-commercial-flow .nxcom-story-top { padding: 22px 18px 0; }
+        #nexus-commercial-flow .nxcom-stage-pills,
+        #nexus-commercial-flow .nxcom-value-strip,
+        #nexus-commercial-flow .nxcom-benefits { grid-template-columns: 1fr; }
+        #nexus-commercial-flow .nxcom-canvas { display: grid; gap: 18px; min-height: auto; padding: 20px 18px 24px; }
+        #nexus-commercial-flow .nxcom-lines { display: none; }
+        #nexus-commercial-flow .nxcom-source-stack,
+        #nexus-commercial-flow .nxcom-tenant-layers,
+        #nexus-commercial-flow .nxcom-knowledge-core,
+        #nexus-commercial-flow .nxcom-identity-zone,
+        #nexus-commercial-flow .nxcom-route-hub,
+        #nexus-commercial-flow .nxcom-behaviour-card,
+        #nexus-commercial-flow .nxcom-response-orb,
+        #nexus-commercial-flow .nxcom-human-panel,
+        #nexus-commercial-flow .nxcom-benefits {
+          position: relative; inset: auto; left: auto; right: auto; top: auto; bottom: auto;
+          width: 100%; min-height: auto; transform: none;
+        }
+        #nexus-commercial-flow .nxcom-source-stack { display: grid; grid-template-columns: 1fr; }
+        #nexus-commercial-flow .nxcom-tenant-layers { height: 334px; width: 100%; margin: 8px 0 20px; }
+        #nexus-commercial-flow .nxcom-tenant-layer:nth-child(2) { left: 12px; right: 12px; top: 48px; }
+        #nexus-commercial-flow .nxcom-tenant-layer:nth-child(3) { left: 12px; right: 12px; top: 142px; }
+        #nexus-commercial-flow .nxcom-tenant-layer:nth-child(4) { left: 12px; right: 12px; top: 236px; }
+        #nexus-commercial-flow .nxcom-knowledge-core { width: min(310px, 100%); height: 310px; margin: 20px auto 44px; }
+        #nexus-commercial-flow.nxcom-visible .nxcom-knowledge-core { animation: nxcomFadeUp .68s cubic-bezier(.22,1,.36,1) .85s forwards; }
+        #nexus-commercial-flow .nxcom-core-chip { position: static; transform: scale(.7) translateY(10px); margin: 6px 5px 0 0; }
+        #nexus-commercial-flow .nxcom-chip-1, #nexus-commercial-flow .nxcom-chip-4 { transform: scale(.7) translateY(10px); }
+        #nexus-commercial-flow .nxcom-chip-1, #nexus-commercial-flow .nxcom-chip-2, #nexus-commercial-flow .nxcom-chip-3,
+        #nexus-commercial-flow .nxcom-chip-4, #nexus-commercial-flow .nxcom-chip-5, #nexus-commercial-flow .nxcom-chip-6 {
+          left: auto; right: auto; top: auto; bottom: auto;
+        }
+        #nexus-commercial-flow .nxcom-mobile-chip-wrap {
+          position: absolute; left: 18px; right: 18px; bottom: -52px; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px;
+        }
+        #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-chip-1,
+        #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-chip-1,
+        #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-chip-1,
+        #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-chip-1,
+        #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-chip-4,
+        #nexus-commercial-flow.nxcom-visible[data-stage="2"] .nxcom-chip-4,
+        #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-chip-4,
+        #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-chip-4 { animation-name: nxcomChipPop; }
+        #nexus-commercial-flow .nxcom-route-hub, #nexus-commercial-flow .nxcom-identity-zone,
+        #nexus-commercial-flow .nxcom-response-orb, #nexus-commercial-flow .nxcom-benefit-card,
+        #nexus-commercial-flow .nxcom-source-card { backdrop-filter: blur(14px); }
+        #nexus-commercial-flow .nxcom-response-orb { height: auto; border-radius: 28px; display: block; text-align: left; padding: 24px; }
+        #nexus-commercial-flow .nxcom-benefits { display: grid; gap: 12px; }
+        #nexus-commercial-flow .nxcom-human-panel::before { display: none; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #nexus-commercial-flow *, #nexus-commercial-flow *::before, #nexus-commercial-flow *::after {
+          animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
+        }
+      }
+
+      /* ===  Site design alignment overrides  === */
+      #nexus-commercial-flow .nxcom-container { width: min(1280px, calc(100% - 40px)); }
+      #nexus-commercial-flow { padding: 80px 0; background: transparent; }
+      #nexus-commercial-flow::before { display: none; }
+
+      /* ===  Light theme  === */
+      #nexus-commercial-flow .nxcom-story-card {
+        border-radius: 24px;
+        background: radial-gradient(circle at 42% 45%, rgba(33,77,187,.06), transparent 34%),
+          radial-gradient(circle at 75% 35%, rgba(22,163,127,.04), transparent 26%),
+          linear-gradient(130deg, #ffffff 0%, #f4f8ff 50%, #eef4ff 100%);
+        border: 1px solid rgba(33,77,187,0.14); color: #1d2756; box-shadow: 0 18px 50px rgba(16,43,103,0.16);
+      }
+      #nexus-commercial-flow .nxcom-story-card::before { display: none; }
+      #nexus-commercial-flow .nxcom-stage-title strong { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-stage-title span   { color: #53688f; }
+      #nexus-commercial-flow .nxcom-stage-pill { border-color: rgba(33,77,187,.14); background: rgba(33,77,187,.04); color: #53688f; }
+      #nexus-commercial-flow[data-stage="0"] .nxcom-stage-pill[data-step="0"],
+      #nexus-commercial-flow[data-stage="1"] .nxcom-stage-pill[data-step="1"],
+      #nexus-commercial-flow[data-stage="2"] .nxcom-stage-pill[data-step="2"],
+      #nexus-commercial-flow[data-stage="3"] .nxcom-stage-pill[data-step="3"],
+      #nexus-commercial-flow[data-stage="4"] .nxcom-stage-pill[data-step="4"] {
+        border-color: rgba(224,166,47,.7); background: rgba(33,77,187,.09); color: #1d2756; box-shadow: 0 8px 20px rgba(33,77,187,.10);
+      }
+      #nexus-commercial-flow .nxcom-source-card { background: rgba(255,255,255,.94); border: 1px solid rgba(33,77,187,.12); box-shadow: 0 10px 24px rgba(33,77,187,.08); }
+      #nexus-commercial-flow .nxcom-source-icon { background: #eef4ff; color: #214dbb; }
+      #nexus-commercial-flow .nxcom-source-card strong { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-source-card > span > span { color: #53688f; }
+      #nexus-commercial-flow .nxcom-tenant-title { background: #214dbb; color: #ffffff; box-shadow: 0 8px 20px rgba(33,77,187,.18); }
+      #nexus-commercial-flow .nxcom-tenant-layer { background: rgba(255,255,255,.88); border: 1px solid rgba(33,77,187,.12); box-shadow: 0 12px 28px rgba(33,77,187,.08); }
+      #nexus-commercial-flow .nxcom-tenant-layer b    { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-tenant-layer span { color: #53688f; }
+      #nexus-commercial-flow .nxcom-knowledge-core {
+        background: radial-gradient(circle at 38% 30%, rgba(33,77,187,.20), rgba(33,77,187,.09) 58%, rgba(33,77,187,.04));
+        border: 1px solid rgba(33,77,187,.22);
+        box-shadow: 0 24px 60px rgba(33,77,187,.12), 0 0 0 44px rgba(33,77,187,.04), 0 0 0 88px rgba(33,77,187,.02);
+      }
+      #nexus-commercial-flow .nxcom-path-profile  { stroke: #214dbb; }
+      #nexus-commercial-flow .nxcom-path-benefits { stroke: #214dbb; }
+      #nexus-commercial-flow.nxcom-visible[data-stage="1"] .nxcom-path-profile { filter: drop-shadow(0 0 10px rgba(33,77,187,.35)); }
+      #nexus-commercial-flow.nxcom-visible[data-stage="3"] .nxcom-path-benefits,
+      #nexus-commercial-flow.nxcom-visible[data-stage="4"] .nxcom-path-benefits { filter: drop-shadow(0 0 10px rgba(33,77,187,.30)); }
+      #nexus-commercial-flow .nxcom-core-chip { background: #ffffff; border-color: rgba(33,77,187,.18); box-shadow: 0 8px 20px rgba(33,77,187,.12); }
+      #nexus-commercial-flow .nxcom-identity-zone { background: rgba(255,255,255,.90); border: 1px solid rgba(33,77,187,.13); box-shadow: 0 16px 40px rgba(33,77,187,.10); }
+      #nexus-commercial-flow .nxcom-identity-zone h3 { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-identity-zone p  { color: #53688f; }
+      #nexus-commercial-flow .nxcom-id-badge      { background: rgba(22,163,127,.08); border: 1px solid rgba(22,163,127,.28); color: #0b6e5a; }
+      #nexus-commercial-flow .nxcom-verification  { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.28); color: #7a4f00; }
+      #nexus-commercial-flow .nxcom-route-hub {
+        background: radial-gradient(circle at 50% 0%, rgba(224,166,47,.08), transparent 42%), rgba(255,255,255,.92);
+        border: 1px solid rgba(224,166,47,.38); box-shadow: 0 18px 48px rgba(33,77,187,.10);
+      }
+      #nexus-commercial-flow .nxcom-route-hub h3 { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-route-hub p   { color: #53688f; }
+      #nexus-commercial-flow .nxcom-route-piece   { background: rgba(33,77,187,.07); border: 1px solid rgba(33,77,187,.14); color: #214dbb; }
+      #nexus-commercial-flow[data-stage="3"] .nxcom-route-hub,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-route-hub { animation: nxcomRouteGlowLight 3s ease-in-out infinite; }
+      @keyframes nxcomRouteGlowLight {
+        0%, 100% { box-shadow: 0 18px 48px rgba(33,77,187,.10), 0 0 0 0 rgba(224,166,47,0); }
+        50%       { box-shadow: 0 20px 56px rgba(33,77,187,.14), 0 0 0 8px rgba(224,166,47,.08), 0 0 28px rgba(224,166,47,.16); }
+      }
+      #nexus-commercial-flow .nxcom-response-orb {
+        background: linear-gradient(180deg, #214dbb 0%, #1a3d9e 100%);
+        border: 1px solid rgba(33,77,187,.3); box-shadow: 0 24px 60px rgba(33,77,187,.22), 0 0 0 32px rgba(33,77,187,.04);
+      }
+      #nexus-commercial-flow .nxcom-response-orb h3 { color: #ffffff; }
+      #nexus-commercial-flow .nxcom-response-orb p  { color: rgba(255,255,255,.80); }
+      #nexus-commercial-flow .nxcom-behaviour-card { background: rgba(255,255,255,.90); border: 1px solid rgba(33,77,187,.13); box-shadow: 0 16px 40px rgba(33,77,187,.10); }
+      #nexus-commercial-flow .nxcom-behaviour-card h3 { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-behaviour-card p  { color: #53688f; }
+      #nexus-commercial-flow[data-stage="3"] .nxcom-behaviour-card,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-behaviour-card { border-color: rgba(224,166,47,.35); box-shadow: 0 24px 56px rgba(33,77,187,.12), 0 0 0 6px rgba(224,166,47,.06); }
+      #nexus-commercial-flow .nxcom-behaviour-pill { background: rgba(33,77,187,.07); border: 1px solid rgba(33,77,187,.14); color: #214dbb; }
+      #nexus-commercial-flow .nxcom-human-panel {
+        background: radial-gradient(circle at 15% 20%, rgba(245,158,11,.06), transparent 40%), rgba(255,255,255,.92);
+        border: 1px solid rgba(245,158,11,.35); box-shadow: 0 18px 48px rgba(33,77,187,.10);
+      }
+      #nexus-commercial-flow .nxcom-human-panel h3 { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-human-panel p  { color: #53688f; }
+      #nexus-commercial-flow .nxcom-human-panel::before { background: rgba(255,255,255,.96); color: #7a4f00; box-shadow: 0 8px 20px rgba(33,77,187,.10); }
+      #nexus-commercial-flow .nxcom-human-badge { background: rgba(245,158,11,.10); border: 1px solid rgba(245,158,11,.30); color: #7a4f00; }
+      #nexus-commercial-flow[data-stage="4"] .nxcom-human-panel { animation: nxcomHumanGlowLight 2.6s ease-in-out infinite; }
+      @keyframes nxcomHumanGlowLight {
+        0%, 100% { box-shadow: 0 18px 48px rgba(33,77,187,.10), 0 0 0 0 rgba(245,158,11,0); }
+        50%       { box-shadow: 0 20px 56px rgba(33,77,187,.12), 0 0 0 8px rgba(245,158,11,.07), 0 0 28px rgba(245,158,11,.14); }
+      }
+      #nexus-commercial-flow .nxcom-benefit-card { background: rgba(255,255,255,.90); border: 1px solid rgba(33,77,187,.12); box-shadow: 0 10px 24px rgba(33,77,187,.08); }
+      #nexus-commercial-flow .nxcom-benefit-card b    { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-benefit-card span { color: #53688f; }
+      #nexus-commercial-flow[data-stage="3"] .nxcom-benefit-card,
+      #nexus-commercial-flow[data-stage="4"] .nxcom-benefit-card { border-color: rgba(224,166,47,.28); background: rgba(255,255,255,.96); }
+
+      /* ===  Value strip — site card style + 5 colour accents  === */
+      #nexus-commercial-flow .nxcom-value-strip { margin-top: 22px; }
+      #nexus-commercial-flow .nxcom-value-item { padding: 22px 20px; border-radius: 18px; border: 1px solid #e4e9f7; background: #ffffff; box-shadow: 0 10px 30px rgba(31,72,169,0.10); }
+      #nexus-commercial-flow .nxcom-value-item b    { color: #1d2756; font-size: 0.98rem; font-family: 'Exo 2', Inter, "Segoe UI", Arial, sans-serif; }
+      #nexus-commercial-flow .nxcom-value-item span { color: #6d7696; font-size: 0.92rem; }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(1) { border-top: 4px solid #214dbb; background: linear-gradient(180deg, #eef4ff 0%, #ffffff 100%); }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(1) b { color: #214dbb; }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(2) { border-top: 4px solid #0f8f7a; background: linear-gradient(180deg, #e8fbf7 0%, #ffffff 100%); }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(2) b { color: #0b6e5a; }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(3) { border-top: 4px solid #c27c10; background: linear-gradient(180deg, #fffbf0 0%, #ffffff 100%); }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(3) b { color: #8a5b00; }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(4) { border-top: 4px solid #0f2f7f; background: linear-gradient(180deg, #eef0ff 0%, #ffffff 100%); }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(4) b { color: #0f2f7f; }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(5) { border-top: 4px solid #b45309; background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%); }
+      #nexus-commercial-flow .nxcom-value-item:nth-child(5) b { color: #92400e; }
+
+    /* === Enhanced header — product strip === */
+    #nexus-commercial-flow .nxcom-header-enhanced {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(33,77,187,.26) 0%, transparent 52%),
+        radial-gradient(ellipse at 85% 0%, rgba(22,163,127,.20) 0%, transparent 48%),
+        radial-gradient(ellipse at 50% 120%, rgba(224,166,47,.12) 0%, transparent 55%),
+        linear-gradient(160deg, #d4e2ff 0%, #dff3ed 38%, #e8f0ff 65%, #fdf6e3 100%) !important;
+      border-top: none !important;
+      border: 1px solid rgba(33,77,187,.20) !important;
+      box-shadow: 0 12px 40px rgba(33,77,187,.14), 0 2px 10px rgba(33,77,187,.08), inset 0 1px 0 rgba(255,255,255,.80) !important;
+      padding-top: 32px !important;
+      overflow: hidden;
+      position: relative;
+    }
+    #nexus-commercial-flow .nxcom-header-enhanced::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      border-radius: 0;
+      background: linear-gradient(90deg, #1a3fa8 0%, #214dbb 20%, #16A37F 52%, #e0a62f 80%, #c8860a 100%);
+      box-shadow: 0 1px 8px rgba(33,77,187,.30);
+    }
+    #nexus-commercial-flow .nxcom-header-enhanced .nxp-platform-head-text {
+      text-align: center;
+    }
+    #nexus-commercial-flow .nxcom-header-enhanced .nxp-platform-head-text h2 { color: #0a1e45; }
+    #nexus-commercial-flow .nxcom-header-enhanced .nxp-platform-head-text h2 .em {
+      color: #214dbb;
+      background: linear-gradient(90deg, #214dbb, #16A37F);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #nexus-commercial-flow .nxcom-header-enhanced .nxp-platform-head-text p { color: #3d5275; }
+    #nexus-commercial-flow .nxcom-header-products {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      margin-top: 22px;
+      padding: 18px 4px 10px;
+      border-top: 1px solid rgba(33,77,187,.13);
+      background: rgba(255,255,255,.40);
+      border-radius: 0 0 16px 16px;
+    }
+    #nexus-commercial-flow .nxcom-hprod {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 0 18px;
+    }
+    #nexus-commercial-flow .nxcom-hprod:first-child { padding-left: 0; }
+    #nexus-commercial-flow .nxcom-hprod-icon-wrap {
+      flex-shrink: 0;
+      width: 46px !important;
+      height: 46px !important;
+      border-radius: 13px;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+    #nexus-commercial-flow .nxcom-hprod-icon-wrap img {
+      width: 46px !important;
+      height: 46px !important;
+      max-width: 46px !important;
+      max-height: 46px !important;
+      display: block;
+      object-fit: contain;
+    }
+    #nexus-commercial-flow .nxcom-hprod-icon-wrap svg {
+      width: 46px !important;
+      height: 46px !important;
+      display: block;
+    }
+    #nexus-commercial-flow .nxcom-hprod strong {
+      display: block;
+      color: #1d2756;
+      font-family: 'Exo 2', Inter, "Segoe UI", sans-serif;
+      font-size: 13.5px;
+      font-weight: 900;
+      line-height: 1.12;
+    }
+    #nexus-commercial-flow .nxcom-hprod > div > span {
+      display: block;
+      color: #53688f;
+      font-size: 11px;
+      line-height: 1.38;
+      margin-top: 3px;
+    }
+    #nexus-commercial-flow .nxcom-hprod-sep {
+      width: 1px; height: 40px;
+      background: rgba(33,77,187,.12);
+      flex-shrink: 0;
+    }
+    @media (max-width: 700px) {
+      #nexus-commercial-flow .nxcom-header-products { grid-template-columns: 1fr; gap: 12px; }
+      #nexus-commercial-flow .nxcom-hprod-sep { display: none; }
+      #nexus-commercial-flow .nxcom-hprod { padding: 0; }
+    }
+    </style>
+
+    <div class="nxcom-container">
+      <div class="nxp-platform-head nxp-coverage-head nxcom-header-enhanced">
+        <div class="nxp-platform-head-text">
+          <span class="section-kicker">How Nexus AI Works</span>
+          <h2>Layered knowledge. Governed delivery. <span class="em">One AI platform.</span></h2>
+          <p>Each tenant’s knowledge is separated, access-controlled, identity-qualified, and delivered through the right channel — with human escalation when AI should not continue alone.</p>
+        </div>
+        <div class="nxcom-header-products">
+          <div class="nxcom-hprod">
+            <div class="nxcom-hprod-icon-wrap">
+              <img src="/assets/digitz_ai_nexus/images/nexus-chat-agent-icon.svg" alt="AI Chat Bot" />
+            </div>
+            <div>
+              <strong>AI Chat Bot</strong>
+              <span>Identity-governed conversational AI</span>
+            </div>
+          </div>
+          <div class="nxcom-hprod-sep" aria-hidden="true"></div>
+          <div class="nxcom-hprod">
+            <div class="nxcom-hprod-icon-wrap">
+              <svg viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect width="46" height="46" rx="13" fill="url(#nxcom-qa-g)"/>
+                <circle cx="23" cy="20.5" r="9.5" stroke="white" stroke-width="2.2"/>
+                <path d="M20 18c0-1.66 1.34-3 3-3s3 1.34 3 3c0 1.7-3 2.8-3 4" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <circle cx="23" cy="26" r="1.3" fill="white"/>
+                <path d="M16.5 35h13" stroke="rgba(255,255,255,0.28)" stroke-width="1.4" stroke-linecap="round"/>
+                <defs><linearGradient id="nxcom-qa-g" x1="0" y1="0" x2="46" y2="46" gradientUnits="userSpaceOnUse"><stop stop-color="#214DBB"/><stop offset="1" stop-color="#16A37F"/></linearGradient></defs>
+              </svg>
+            </div>
+            <div>
+              <strong>Q&amp;A</strong>
+              <span>Knowledge-sourced structured answers</span>
+            </div>
+          </div>
+          <div class="nxcom-hprod-sep" aria-hidden="true"></div>
+          <div class="nxcom-hprod">
+            <div class="nxcom-hprod-icon-wrap">
+              <img src="/assets/digitz_ai_nexus/images/nexus-apps-icon.svg" alt="Workflow Apps" />
+            </div>
+            <div>
+              <strong>Workflow Apps</strong>
+              <span>Purpose-built AI business workflows</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nxcom-story-card">
+        <div class="nxcom-story-top">
+          <div class="nxcom-stage-title" aria-live="polite">
+            <div class="nxcom-stage-copy" data-step="0">
+              <strong>First, each tenant gets a persistent knowledge layer.</strong>
+              <span>Business content becomes a governed knowledge system \u2014 separated by tenant, reusable across channels, and ready for AI delivery.</span>
+            </div>
+            <div class="nxcom-stage-copy" data-step="1">
+              <strong>Then, access control becomes part of the knowledge.</strong>
+              <span>Knowledge Profiles expose only the safe, approved surface for each business situation.</span>
+            </div>
+            <div class="nxcom-stage-copy" data-step="2">
+              <strong>Next, the visitor becomes an identity profile.</strong>
+              <span>Public, customer, employee, partner, or training identities are resolved before delivery.</span>
+            </div>
+            <div class="nxcom-stage-copy" data-step="3">
+              <strong>Then, the chatbot follows its behaviour profile.</strong>
+              <span>Persona, tone, fallback rules, confidence threshold, and escalation policy guide the AI response.</span>
+            </div>
+            <div class="nxcom-stage-copy" data-step="4">
+              <strong>When needed, AI escalates to a human.</strong>
+              <span>The handoff keeps tenant, identity, channel, and knowledge context so the human team can continue safely.</span>
+            </div>
+          </div>
+
+          <div class="nxcom-stage-pills" role="tablist" aria-label="Governance story stages">
+            <button class="nxcom-stage-pill" type="button" data-step="0"><b>Persist</b><span>Layered tenant knowledge</span></button>
+            <button class="nxcom-stage-pill" type="button" data-step="1"><b>Protect</b><span>Profiled knowledge access</span></button>
+            <button class="nxcom-stage-pill" type="button" data-step="2"><b>Qualify</b><span>Identity-aware delivery</span></button>
+            <button class="nxcom-stage-pill" type="button" data-step="3"><b>Behaviour</b><span>Agent tone, fallback, escalation rules</span></button>
+            <button class="nxcom-stage-pill" type="button" data-step="4"><b>Escalate</b><span>AI to human when needed</span></button>
+          </div>
+        </div>
+
+        <div class="nxcom-canvas" aria-label="Animated governance visual">
+          <svg class="nxcom-lines" viewBox="0 0 1600 940" preserveAspectRatio="none" aria-hidden="true">
+            <path class="nxcom-path nxcom-path-persist"  d="M 622 90 C 700 100, 780 210, 800 260" />
+            <path class="nxcom-path nxcom-path-profile"  d="M 760 284 C 696 358, 548 438, 388 540" />
+            <path class="nxcom-path nxcom-path-identity" d="M 1290 240 C 1188 358, 930 454, 388 540" />
+            <path class="nxcom-path nxcom-path-deliver"  d="M 570 537 C 800 522, 1070 522, 1338 542" />
+            <path class="nxcom-path nxcom-path-benefits" d="M 1436 614 C 1210 814, 790 836, 184 806" />
+            <path class="nxcom-path nxcom-path-escalate" d="M 1432 590 C 1400 630, 1340 680, 1240 720" />
+          </svg>
+
+          <div class="nxcom-source-stack" aria-label="Business knowledge sources">
+            <div class="nxcom-source-card" style="--d: .25s;"><span class="nxcom-source-icon">SOP</span><span><strong>Approved SOPs</strong><span>Process knowledge</span></span></div>
+            <div class="nxcom-source-card" style="--d: .42s;"><span class="nxcom-source-icon">FAQ</span><span><strong>Business FAQs</strong><span>Customer-facing answers</span></span></div>
+            <div class="nxcom-source-card" style="--d: .59s;"><span class="nxcom-source-icon">ERP</span><span><strong>ERP Context</strong><span>Operational guidance</span></span></div>
+            <div class="nxcom-source-card" style="--d: .76s;"><span class="nxcom-source-icon">DOC</span><span><strong>Manuals &amp; Policies</strong><span>Controlled reference</span></span></div>
+          </div>
+
+          <div class="nxcom-tenant-layers" aria-label="Multiple tenants as layered knowledge systems">
+            <div class="nxcom-tenant-title">Multiple Tenant Knowledge Layers</div>
+            <div class="nxcom-tenant-layer" style="--td: .95s;"><b>Tenant A Knowledge System</b><span>Customer FAQs, product context, support rules.</span></div>
+            <div class="nxcom-tenant-layer" style="--td: 1.10s;"><b>Tenant B Knowledge System</b><span>Internal SOPs, project guidance, ERP operations.</span></div>
+            <div class="nxcom-tenant-layer" style="--td: 1.25s;"><b>Tenant C Knowledge System</b><span>Partner onboarding, training, controlled content.</span></div>
+          </div>
+
+          <div class="nxcom-knowledge-core nxcom-node" style="--d: .90s;" aria-label="Persistent knowledge core">
+            <span class="nxcom-access-ring" aria-hidden="true"></span>
+            <div class="nxcom-core-inner">
+              <span>Persistent<br />Knowledge Core</span>
+              <small>approved, classified, reusable</small>
+            </div>
+            <div class="nxcom-mobile-chip-wrap">
+              <span class="nxcom-core-chip nxcom-chip-1" style="--cd: .15s;">Context</span>
+              <span class="nxcom-core-chip nxcom-chip-2" style="--cd: .28s;">Project Scope</span>
+              <span class="nxcom-core-chip nxcom-chip-3" style="--cd: .41s;">Sensitivity</span>
+              <span class="nxcom-core-chip nxcom-chip-4" style="--cd: .54s;">Knowledge Profile</span>
+              <span class="nxcom-core-chip nxcom-chip-5" style="--cd: .67s;">Access Rules</span>
+              <span class="nxcom-core-chip nxcom-chip-6" style="--cd: .80s;">Business Unit</span>
+            </div>
+          </div>
+
+          <div class="nxcom-identity-zone nxcom-node" style="--d: 1.18s;" aria-label="Identity profile based delivery">
+            <h3>Identity Profile</h3>
+            <p>The same knowledge behaves differently based on who is asking and how their identity is verified.</p>
+            <div class="nxcom-identity-badges">
+              <span class="nxcom-id-badge" style="--bd: .12s;">Public Visitor</span>
+              <span class="nxcom-id-badge" style="--bd: .24s;">Verified Customer</span>
+              <span class="nxcom-id-badge" style="--bd: .36s;">Internal Employee</span>
+              <span class="nxcom-id-badge" style="--bd: .48s;">Business Partner</span>
+              <span class="nxcom-id-badge" style="--bd: .60s;">Training User</span>
+              <span class="nxcom-id-badge" style="--bd: .72s;">Vendor / Supplier</span>
+              <span class="nxcom-id-badge" style="--bd: .84s;">Management Role</span>
+            </div>
+            <span class="nxcom-verification"><i></i> OTP / registered email verification</span>
+          </div>
+
+          <div class="nxcom-route-hub nxcom-node" style="--d: 1.42s;" aria-label="Category identity route">
+            <h3>Governance Route</h3>
+            <p>The route brings channel, category, identity, behaviour, and governed knowledge together into one delivery decision.</p>
+            <div class="nxcom-route-pieces">
+              <span class="nxcom-route-piece">Agent Profile</span>
+              <span class="nxcom-route-piece">Chat Category</span>
+              <span class="nxcom-route-piece">Channel</span>
+              <span class="nxcom-route-piece">Identity Profile</span>
+              <span class="nxcom-route-piece">Behaviour Profile</span>
+              <span class="nxcom-route-piece">Escalation Rule</span>
+            </div>
+          </div>
+
+          <div class="nxcom-behaviour-card nxcom-node" style="--d: 1.55s;" aria-label="AI chat bot behaviour profile">
+            <h3>AI Chat Bot Behaviour Profile</h3>
+            <p>The AI is not just connected to knowledge. It follows a configured behaviour profile before answering.</p>
+            <div class="nxcom-behaviour-pills">
+              <span class="nxcom-behaviour-pill">Persona</span>
+              <span class="nxcom-behaviour-pill">Tone</span>
+              <span class="nxcom-behaviour-pill">Fallback</span>
+              <span class="nxcom-behaviour-pill">Confidence</span>
+              <span class="nxcom-behaviour-pill">Escalation Policy</span>
+            </div>
+          </div>
+
+          <div class="nxcom-response-orb nxcom-node" style="--d: 1.66s;" aria-label="Governed AI response">
+            <div>
+              <h3>Governed AI Response</h3>
+              <p>One answer, scoped to the right person, context, and channel.</p>
+            </div>
+          </div>
+
+          <div class="nxcom-human-panel nxcom-node" style="--d: 1.78s;" aria-label="Human escalation">
+            <span class="nxcom-human-badge"><i></i> Human escalation event</span>
+            <h3>AI escalates when human help is required.</h3>
+            <p>Low confidence, sensitive requests, exception cases, or sales/support handoff move from AI to the right human team with governed context preserved.</p>
+          </div>
+
+          <div class="nxcom-benefits" aria-label="Who benefits from governed AI delivery">
+            <div class="nxcom-benefit-card" style="--d: 1.84s;"><b>Public Visitor Identity</b><span>Receives only public knowledge from the correct tenant layer.</span></div>
+            <div class="nxcom-benefit-card" style="--d: 1.98s;"><b>Verified Customer Identity</b><span>Receives customer-relevant guidance after OTP or registered email verification.</span></div>
+            <div class="nxcom-benefit-card" style="--d: 2.12s;"><b>Internal Employee Identity</b><span>Receives SOP and ERP-aware help through internal approved channels.</span></div>
+            <div class="nxcom-benefit-card" style="--d: 2.26s;"><b>Partner / Training Identity</b><span>Receives controlled onboarding, learning, and partner-specific guidance.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nxcom-value-strip" aria-label="Commercial value points">
+        <div class="nxcom-value-item"><b>Layered tenant knowledge</b><span>Each tenant keeps its own persistent knowledge system while sharing the same governed AI delivery platform.</span></div>
+        <div class="nxcom-value-item"><b>Access-controlled intelligence</b><span>Knowledge is exposed through profiles, not opened blindly to every visitor or user.</span></div>
+        <div class="nxcom-value-item"><b>Identity-type delivery</b><span>Public visitors, verified customers, employees, partners, vendors, and training users receive different scopes.</span></div>
+        <div class="nxcom-value-item"><b>One platform, many channels</b><span>The same governed engine can serve website chat, customer portals, internal tools, apps, and ERP workflows.</span></div>
+        <div class="nxcom-value-item"><b>Human escalation ready</b><span>When AI should not continue alone, it hands over to the right human team with context preserved.</span></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var section = document.getElementById('nexus-commercial-flow');
+        if (!section) return;
+        var pills = Array.from(section.querySelectorAll('.nxcom-stage-pill'));
+        var stage = 0;
+        var timer = null;
+        var totalStages = 5;
+        function setStage(nextStage) {
+          stage = Number(nextStage) % totalStages;
+          section.setAttribute('data-stage', String(stage));
+          pills.forEach(function (pill) {
+            pill.setAttribute('aria-selected', pill.getAttribute('data-step') === String(stage) ? 'true' : 'false');
+          });
+        }
+        function startStory() {
+          section.classList.add('nxcom-visible');
+          setStage(0);
+          window.clearInterval(timer);
+          timer = window.setInterval(function () { setStage(stage + 1); }, 3400);
+        }
+        pills.forEach(function (pill) {
+          pill.addEventListener('click', function () {
+            setStage(pill.getAttribute('data-step'));
+            window.clearInterval(timer);
+            timer = window.setInterval(function () { setStage(stage + 1); }, 4200);
+          });
+        });
+        if (!('IntersectionObserver' in window)) { startStory(); return; }
+        var observer = new IntersectionObserver(function (entries, obs) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { startStory(); obs.unobserve(section); }
+          });
+        }, { threshold: 0.22, rootMargin: '0px 0px -8% 0px' });
+        observer.observe(section);
+      })();
+    </script>
+  </section>
+  <!-- End Nexus AI Governance Story Section -->
+
+
+  <section class="section nexus-coverage-section" id="commercial-value" style="display:none">
     <div class="container">
 
       <div class="nxp-platform-head nxp-coverage-head">
@@ -206,7 +1533,7 @@
     </div>
   </section>
 
-  <section class="section nexus-platform-section" id="live-experience">
+  <section class="section nexus-platform-section" id="live-experience" style="display:none">
     <div class="container">
 
       <div class="nxp-platform-head">
@@ -495,7 +1822,7 @@
     </div>
   </section>
 
-<section class="section nexus-workspaces-section" id="platform-workspaces">
+<section class="section nexus-workspaces-section" id="platform-workspaces" style="display:none">
   <div class="container">
 
     <div class="nxw-head section-head-highlight">
@@ -578,7 +1905,7 @@
   </div>
 </section>
 
-<section class="section nexus-apps-section" id="apps-experience">
+<section class="section nexus-apps-section" id="apps-experience" style="display:none">
   <div class="container">
 
     <div class="nxp-platform-head nxp-apps-head">
@@ -678,7 +2005,7 @@
   </div>
 </section>
 
-<section class="section nexus-leadership-work-section" id="co-founder-co-worker">
+<section class="section nexus-leadership-work-section" id="co-founder-co-worker" style="display:none">
   <div class="container">
     <div class="nexus-split-experience-grid">
       <article class="card card-showcase nexus-split-experience-card nexus-co-founder-card">
@@ -768,7 +2095,7 @@
   </div>
 </section>
 
-  <section class="section nexus-experience-section" id="platform-benefit">
+  <section class="section nexus-experience-section" id="platform-benefit" style="display:none">
     <div class="container">
       <div class="section-head-highlight">
         <span class="section-kicker">Platform Value</span>
@@ -863,7 +2190,7 @@
     </div>
   </section>
 
-<section class="section nexus-commercial-strip" id="commercial">
+<section class="section nexus-commercial-strip" id="commercial" style="display:none">
   <div class="container">
     <div class="nexus-commercial-panel">
 
@@ -888,6 +2215,44 @@
     </div>
   </div>
 </section>
+  <!-- Know More Banner — two blocks side by side, original design pattern -->
+  <div style="background:#f4f7ff;border-top:1px solid rgba(33,77,187,.10);padding:40px 0;">
+    <div style="max-width:1280px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:0;">
+
+      <!-- Block 1: Platform Documentation → how-nexus-works -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding-right:44px;">
+        <div>
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#16A37F;margin-bottom:8px;">Platform Documentation</div>
+          <h3 style="font-family:'Exo 2',sans-serif;font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#0f1f4a;margin:0 0 8px;line-height:1.2;">Eager to know how the Nexus AI Platform really works?</h3>
+          <p style="font-size:14px;color:#5a6a85;margin:0;line-height:1.6;max-width:420px;">Walk through every layer — from how knowledge is ingested and governed, to how identity qualifies each response, to how human agents take over when AI shouldn't continue alone.</p>
+        </div>
+        <a href="/how-nexus-works" style="display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#214dbb,#1a3fa8);color:#fff;font-family:'Exo 2',sans-serif;font-size:13.5px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(33,77,187,.22);flex-shrink:0;" onmouseover="this.style.boxShadow='0 12px 32px rgba(33,77,187,.32)';" onmouseout="this.style.boxShadow='0 8px 24px rgba(33,77,187,.22)';">
+          <svg viewBox="0 0 18 18" fill="none" width="15" height="15"><rect x="2" y="2" width="14" height="14" rx="3" stroke="white" stroke-width="1.5"/><path d="M5 6h8M5 9h6M5 12h4" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Nexus Architecture
+          <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <!-- Vertical divider -->
+      <div style="width:1px;min-height:90px;align-self:stretch;background:linear-gradient(180deg,transparent,rgba(33,77,187,.14) 30%,rgba(33,77,187,.14) 70%,transparent);flex-shrink:0;"></div>
+
+      <!-- Block 2: Nexus Platform → nexus-platform -->
+      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding-left:44px;">
+        <div>
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#214dbb;margin-bottom:8px;">Nexus Platform</div>
+          <h3 style="font-family:'Exo 2',sans-serif;font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#0f1f4a;margin:0 0 8px;line-height:1.2;">Three workspaces. Complete control of your AI platform.</h3>
+          <p style="font-size:14px;color:#5a6a85;margin:0;line-height:1.6;max-width:420px;">Explore Nexus Studio, Nexus Live, and Nexus Admin — the three purpose-built workspaces that let your business build, operate, and govern AI without writing a line of code.</p>
+        </div>
+        <a href="/nexus-platform" style="display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#214dbb,#1a3fa8);color:#fff;font-family:'Exo 2',sans-serif;font-size:13.5px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(33,77,187,.22);flex-shrink:0;" onmouseover="this.style.boxShadow='0 12px 32px rgba(33,77,187,.32)';" onmouseout="this.style.boxShadow='0 8px 24px rgba(33,77,187,.22)';">
+          <svg viewBox="0 0 18 18" fill="none" width="15" height="15"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/></svg>
+          Nexus Platform
+          <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
   <section class="nexus-cta-footer" id="contact">
     <div class="container">
 
@@ -946,6 +2311,10 @@
       <div class="container">
         <div class="ncf-bottom">
           <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
+          <nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Platform</a>
+            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Architecture</a>
+          </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>
       </div>
@@ -1139,7 +2508,7 @@
     frappe.ready = function(fn){ frappe.ready_events.push(fn); };
 </script>
 <script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
-<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.PPKTIULN.js"></script>
+<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.DN5UMGH2.js"></script>
 
 </body>
 </html>

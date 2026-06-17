@@ -8,6 +8,225 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/digitz_ai_nexus/css/digitz_ai_nexus_site.css">
+  <style>
+    /* ── Platform workspace orbit visual — mirrors home page ring visual ── */
+    .nxpl-hero-visual {
+      position: relative; height: 450px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nxpl-visual-wrap {
+      position: relative; width: 400px; height: 400px;
+    }
+    .nxpl-visual-wrap::before {
+      content: ""; position: absolute; top: 50%; left: 50%;
+      width: 350px; height: 350px; transform: translate(-50%,-50%);
+      border-radius: 50%; border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 0 50px rgba(138,177,255,.12); pointer-events: none;
+    }
+    .nxpl-visual-wrap::after {
+      content: ""; position: absolute; inset: 78px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.10) 0%, rgba(255,255,255,.00) 72%);
+      filter: blur(12px); pointer-events: none;
+    }
+    /* Center hub */
+    .nxpl-core {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 136px; height: 136px; border-radius: 50%;
+      background: radial-gradient(circle, #ffffff 0%, #eef4ff 70%, #dce7ff 100%);
+      box-shadow:
+        0 0 36px rgba(255,255,255,.42),
+        0 0 90px rgba(33,77,187,.38),
+        inset 0 0 22px rgba(255,255,255,.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3;
+    }
+    .nxpl-core-logo { width: 92px; height: auto; }
+    /* Orbit ring */
+    .nxpl-ring {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 292px; height: 292px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.20);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 0 40px rgba(255,255,255,.08);
+      animation: nxpl-ring-spin 14s linear infinite;
+    }
+    @keyframes nxpl-ring-spin {
+      from { transform: translate(-50%,-50%) rotate(0deg); }
+      to   { transform: translate(-50%,-50%) rotate(360deg); }
+    }
+    /* Workspace product nodes */
+    .nxpl-pnode {
+      position: absolute; display: flex; flex-direction: column;
+      align-items: center; gap: 8px; text-decoration: none; z-index: 5;
+    }
+    .nxpl-pn-icon {
+      width: 76px; height: 76px; border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px solid rgba(255,255,255,.18);
+      transition: transform .28s ease, box-shadow .28s ease;
+    }
+    .nxpl-pnode:hover .nxpl-pn-icon { transform: scale(1.10) translateY(-4px); }
+    .nxpl-pn-icon svg { width: 36px; height: 36px; }
+    .nxpl-pn-label {
+      display: inline-block; font-size: .68rem; font-weight: 800;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(255,255,255,.94); background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.24); border-radius: 999px;
+      padding: 3px 11px; white-space: nowrap; backdrop-filter: blur(6px);
+    }
+    .nxpl-pn-sub {
+      font-size: .60rem; font-weight: 700; letter-spacing: .04em;
+      color: rgba(255,255,255,.72); white-space: nowrap; text-align: center;
+    }
+    /* Positions: 120° intervals on 146px radius. Container 400×400, center (200,200).
+       chat(0°): center(200,54)  → top:16  left:162
+       qa(120°): center(326,273) → top:235 left:288
+       apps(240°):center(74,273) → top:235 left:36  */
+    .nxpl-pn-studio { top: 6px;   left: 162px; animation: nxpl-float1 4.8s ease-in-out infinite; }
+    .nxpl-pn-live   { top: 235px; left: 288px; animation: nxpl-float2 4.2s ease-in-out 1s infinite; }
+    .nxpl-pn-admin  { top: 235px; left: 36px;  animation: nxpl-float3 5.4s ease-in-out 2s infinite; }
+    /* Icon colored backgrounds */
+    .nxpl-pn-studio .nxpl-pn-icon {
+      background: linear-gradient(145deg, #2a5cd8 0%, #1a3fa8 100%);
+      box-shadow: 0 16px 40px rgba(0,0,0,.42), 0 0 0 2px rgba(255,255,255,.16), 0 0 38px rgba(33,77,187,.72);
+    }
+    .nxpl-pn-live .nxpl-pn-icon {
+      background: linear-gradient(145deg, #1ec49a 0%, #0d8a6a 100%);
+      box-shadow: 0 16px 40px rgba(0,0,0,.32), 0 0 0 2px rgba(255,255,255,.16), 0 0 38px rgba(22,163,127,.68);
+    }
+    .nxpl-pn-admin .nxpl-pn-icon {
+      background: linear-gradient(145deg, #e0a62f 0%, #a06a00 100%);
+      box-shadow: 0 16px 40px rgba(0,0,0,.40), 0 0 0 2px rgba(255,255,255,.16), 0 0 38px rgba(200,134,10,.60);
+    }
+    @keyframes nxpl-float1 { 0%,100% { transform:translateY(0); }  50% { transform:translateY(-8px); } }
+    @keyframes nxpl-float2 { 0%,100% { transform:translateY(0); }  50% { transform:translateY(-8px); } }
+    @keyframes nxpl-float3 { 0%,100% { transform:translateY(0); }  50% { transform:translateY(-8px); } }
+    @media (prefers-reduced-motion: reduce) { .nxpl-pnode, .nxpl-ring { animation: none; } }
+
+    /* ── Richer hero background (overrides site CSS) ── */
+    .nxp-page .nxpl-hero-banner {
+      background:
+        radial-gradient(circle at 88% 18%, rgba(138,177,255,.28) 0%, transparent 36%),
+        radial-gradient(circle at 93% 10%, rgba(255,255,255,.12) 0%, transparent 22%),
+        radial-gradient(ellipse 68% 72% at 75% 58%, rgba(22,163,127,.18) 0%, transparent 58%),
+        radial-gradient(ellipse 56% 52% at 15% 22%, rgba(33,77,187,.45) 0%, transparent 52%),
+        radial-gradient(ellipse 38% 38% at 50% 108%, rgba(30,70,180,.14) 0%, transparent 55%),
+        linear-gradient(135deg, #081f5d 0%, #0f2d70 28%, #193f99 60%, #0c2356 100%);
+    }
+    /* Tighter dot-grid overlay */
+    .nxp-page .nxpl-hero-banner::before {
+      background:
+        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: .22;
+    }
+    /* Rainbow accent bar at very bottom of hero */
+    .nxp-page .nxpl-hero-banner::after {
+      content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #214dbb 0%, #1a3fa8 20%, #16A37F 52%, #e0a62f 80%, #c8860a 100%);
+      z-index: 5;
+    }
+    /* ── Hero footer strip ── */
+    .nxpl-hero-foot {
+      background: rgba(4, 10, 32, 0.44);
+      border-top: 1px solid rgba(255,255,255,.10);
+      position: relative; z-index: 2;
+      padding: 20px 0 24px;
+    }
+    .nxpl-hero-foot-row {
+      display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+    }
+    .nxpl-hero-foot-actions {
+      display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+    }
+    .nxpl-hero-foot-divider {
+      width: 1px; align-self: stretch; min-height: 36px; flex-shrink: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.18) 40%, rgba(255,255,255,.18) 60%, transparent 100%);
+    }
+    .nxpl-hero-foot-stats {
+      display: flex; align-items: center; gap: 0; flex: 1;
+    }
+    /* Compact stat styling for footer */
+    .nxpl-hero-foot .nxpl-stat strong {
+      font-size: 1rem; font-weight: 800; color: #fff; display: block; line-height: 1.1;
+    }
+    .nxpl-hero-foot .nxpl-stat span {
+      font-size: .67rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: rgba(255,255,255,.44); line-height: 1;
+    }
+    .nxpl-hero-foot .nxpl-stat-sep {
+      width: 1px; height: 32px; margin: 0 22px; flex-shrink: 0;
+      background: linear-gradient(180deg, transparent, rgba(255,255,255,.14), transparent);
+    }
+    /* Compact CTA link inside footer */
+    .nxpl-hero-foot .nxpl-hero-scroll-link {
+      font-size: .84rem;
+    }
+
+    /* ── Workspace cards band — match how-nexus-works neutral bg ── */
+    .nxp-page .nxpl-hero-ws-band {
+      background: #f8faff;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+    }
+    /* Band intro header */
+    .nxpl-ws-band-intro {
+      text-align: center; margin-bottom: 52px;
+    }
+    .nxpl-ws-band-kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .72rem; font-weight: 800; letter-spacing: .10em;
+      text-transform: uppercase; color: #214dbb;
+      background: rgba(33,77,187,.08); border: 1px solid rgba(33,77,187,.16);
+      border-radius: 50px; padding: 5px 14px; margin-bottom: 18px;
+    }
+    .nxpl-ws-band-title {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1.6rem, 2.5vw, 2.3rem); font-weight: 900;
+      color: #0e1f3a; margin: 0 0 14px; line-height: 1.12; letter-spacing: -.2px;
+    }
+    .nxpl-ws-band-lead {
+      font-size: .96rem; color: #4a5e72; max-width: 580px; margin: 0 auto; line-height: 1.72;
+    }
+    /* Colored top stripe + per-card hover glow */
+    .nxp-page .nxpl-ws-card-live   { border-top: 3px solid #0f8f7a; }
+    .nxp-page .nxpl-ws-card-studio { border-top: 3px solid #214dbb; }
+    .nxp-page .nxpl-ws-card-admin  { border-top: 3px solid #c27c10; }
+    .nxp-page .nxpl-ws-card-live:hover   { box-shadow: 0 14px 40px rgba(15,143,122,.16); }
+    .nxp-page .nxpl-ws-card-studio:hover { box-shadow: 0 14px 40px rgba(33,77,187,.16); }
+    .nxp-page .nxpl-ws-card-admin:hover  { box-shadow: 0 14px 40px rgba(194,124,16,.16); }
+    /* Workspace card borders — blue-tinted like how-nexus-works */
+    .nxp-page .nxpl-ws-card { border-color: rgba(33,77,187,.12); }
+    .nxp-page .nxpl-ws-card-hd { border-bottom-color: rgba(33,77,187,.09); }
+    .nxp-page .nxpl-ws-card-link { border-top-color: rgba(33,77,187,.09); }
+
+    /* ── Content section backgrounds — match how-nexus-works neutral theme ── */
+    /* Live: white (alt)  |  Studio: #f8faff (default)  |  Admin: white (alt) */
+    .nxp-page .nxpl-section-live {
+      background: #fff;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+    }
+    .nxp-page .nxpl-section-studio {
+      background: #f8faff;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+    }
+    .nxp-page .nxpl-section-admin {
+      background: #fff;
+    }
+    /* Feature block borders — blue-tinted like how-nexus-works card borders */
+    .nxp-page .nxpl-feat-block {
+      border-color: rgba(33,77,187,.11);
+      box-shadow: 0 2px 12px rgba(33,77,187,.06);
+    }
+    .nxp-page .nxpl-feat-block:hover {
+      box-shadow: 0 6px 24px rgba(33,77,187,.11);
+    }
+    /* Workspace section heading h2 — match how-nexus-works --nx-navy */
+    .nxp-page .nxpl-ws-head-copy h2 { color: #0f2650; }
+    /* Workspace head internal border — blue-tinted */
+    .nxp-page .nxpl-ws-head { border-bottom-color: rgba(33,77,187,.10); }
+  </style>
 </head>
 <body>
 
@@ -20,9 +239,10 @@
       </a>
       <nav class="nav" aria-label="Primary Navigation">
         <a href="/">Home</a>
-        <a href="/#platform-workspaces" class="nav-active">Platform</a>
+        <a href="/#live-experience">Experience</a>
+        <a href="/nexus-platform" class="nav-active">Nexus Platform</a>
         <a href="/#apps-experience">Apps</a>
-        <a href="/#commercial">Solutions</a>
+        <a href="/how-nexus-works">Nexus Architecture</a>
         <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </nav>
     </div>
@@ -40,95 +260,117 @@
             <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/></svg>
             The Nexus Platform
           </span>
-          <h1 class="nxpl-hero-h1">Build. Govern.<br>Operate.<br><span class="nxpl-hero-em">AI Your Business Controls.</span></h1>
+          <h1 class="nxpl-hero-h1">Build. Govern. Operate.<br><span class="nxpl-hero-em">AI Your Business Controls.</span></h1>
           <p class="nxpl-hero-sub">Most AI tools give you a product. Nexus gives you a platform — three purpose-built workspaces that put your business team in complete control, from the first knowledge upload to the last compliance report.</p>
-          <div class="nxpl-hero-actions">
-            <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
-              <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15" style="margin-right:5px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
-              Chat with Us
-            </a>
-            <a href="#nexus-live" class="nxpl-hero-scroll-link">
-              Explore Workspaces
-              <svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
-          </div>
-          <div class="nxpl-hero-stats">
-            <div class="nxpl-stat"><strong>3</strong><span>Platform Workspaces</span></div>
-            <div class="nxpl-stat-sep"></div>
-            <div class="nxpl-stat"><strong>100%</strong><span>No-Code Configuration</span></div>
-            <div class="nxpl-stat-sep"></div>
-            <div class="nxpl-stat"><strong>Multi-tenant</strong><span>Isolated by Design</span></div>
-          </div>
         </div>
 
-        <!-- Right: workspace visual panel -->
+        <!-- Right: workspace orbit visual (mirrors home page ring visual) -->
         <div class="nxpl-hero-right">
-          <div class="nxpl-ws-visual">
+          <div class="nxpl-hero-visual" aria-hidden="true">
+            <div class="nxpl-visual-wrap">
 
-            <a href="#nexus-live" class="nxpl-wsv-node nxpl-wsv-live">
-              <div class="nxpl-wsv-icon">
-                <svg viewBox="0 0 36 36" fill="none"><polyline points="4,26 11,16 16,21 23,10 32,16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="9" r="3.5" stroke="currentColor" stroke-width="2.2"/><circle cx="32" cy="9" r="7" stroke="currentColor" stroke-width="1.2" opacity="0.3"/></svg>
+              <!-- Center Nexus AI hub -->
+              <div class="nxpl-core">
+                <img src="/assets/digitz_ai_nexus/images/nexus-ai.png" alt="Nexus AI" class="nxpl-core-logo"/>
               </div>
-              <div class="nxpl-wsv-body">
-                <strong>Nexus Live</strong>
-                <span>Real-time operations &amp; escalation console</span>
-                <div class="nxpl-wsv-pills">
-                  <span>Live Monitor</span><span>Agent Console</span><span>Dashboards</span>
+
+              <!-- Orbit ring -->
+              <div class="nxpl-ring"></div>
+
+              <!-- Studio — top (0°): author, build, configure -->
+              <a href="#nexus-studio" class="nxpl-pnode nxpl-pn-studio">
+                <div class="nxpl-pn-icon">
+                  <svg viewBox="0 0 36 36" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 26l5-1.4 12-12-3.6-3.6L6 22l-1.2 4 1.2.2Z"/>
+                    <path d="M21 9.5l3.6 3.6"/>
+                    <path d="M25 6l3 1.8 2 2-2 3"/>
+                    <path d="M13 30h17"/>
+                  </svg>
                 </div>
-              </div>
-              <span class="nxpl-wsv-num">01</span>
-            </a>
+                <span class="nxpl-pn-label">Nexus Studio</span>
+                <span class="nxpl-pn-sub">Build &amp; Configure</span>
+              </a>
 
-            <div class="nxpl-wsv-connector">
-              <div class="nxpl-wsv-line"></div>
-              <span class="nxpl-wsv-flow-label">feeds into</span>
-              <div class="nxpl-wsv-line"></div>
+              <!-- Live — bottom-right (120°): monitor, operate -->
+              <a href="#nexus-live" class="nxpl-pnode nxpl-pn-live">
+                <div class="nxpl-pn-icon">
+                  <svg viewBox="0 0 36 36" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="4,22 10,14 15,18 21,9 28,15"/>
+                    <circle cx="29" cy="8" r="3" stroke-width="1.8"/>
+                    <circle cx="29" cy="8" r="6.5" stroke-width="1" opacity=".35"/>
+                    <path d="M4 29h28" stroke-width="1.4" opacity=".4"/>
+                  </svg>
+                </div>
+                <span class="nxpl-pn-label">Nexus Live</span>
+                <span class="nxpl-pn-sub">Operate &amp; Monitor</span>
+              </a>
+
+              <!-- Admin — bottom-left (240°): govern, comply -->
+              <a href="#nexus-administration" class="nxpl-pnode nxpl-pn-admin">
+                <div class="nxpl-pn-icon">
+                  <svg viewBox="0 0 36 36" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 4l12 4.5v10c0 7-5 12-12 14.5C11 30.5 6 25.5 6 18.5v-10L18 4z"/>
+                    <polyline points="12,18 16.5,22.5 24,15"/>
+                  </svg>
+                </div>
+                <span class="nxpl-pn-label">Nexus Admin</span>
+                <span class="nxpl-pn-sub">Govern &amp; Comply</span>
+              </a>
+
             </div>
-
-            <a href="#nexus-studio" class="nxpl-wsv-node nxpl-wsv-studio">
-              <div class="nxpl-wsv-icon">
-                <svg viewBox="0 0 36 36" fill="none"><path d="M7 28l5-1.5 13-13-3.5-3.5L8 24l-1 4Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M22 11l3.5 3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M25.5 7.5l2.5 1.5 2.5 2.5-1.5 2.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-              <div class="nxpl-wsv-body">
-                <strong>Nexus Studio</strong>
-                <span>Design, configure &amp; publish every AI experience</span>
-                <div class="nxpl-wsv-pills">
-                  <span>Bot Builder</span><span>Knowledge</span><span>App Config</span>
-                </div>
-              </div>
-              <span class="nxpl-wsv-num">02</span>
-            </a>
-
-            <div class="nxpl-wsv-connector">
-              <div class="nxpl-wsv-line"></div>
-              <span class="nxpl-wsv-flow-label">governed by</span>
-              <div class="nxpl-wsv-line"></div>
-            </div>
-
-            <a href="#nexus-administration" class="nxpl-wsv-node nxpl-wsv-admin">
-              <div class="nxpl-wsv-icon">
-                <svg viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="5" stroke="currentColor" stroke-width="2.4"/><path d="M18 5v4M18 27v4M5 18h4M27 18h4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M9 9l2.8 2.8M24.2 24.2l2.8 2.8M9 27l2.8-2.8M24.2 11.8l2.8-2.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-              </div>
-              <div class="nxpl-wsv-body">
-                <strong>Nexus Administration</strong>
-                <span>Govern tenants, users, knowledge &amp; compliance</span>
-                <div class="nxpl-wsv-pills">
-                  <span>Tenants</span><span>Audit Trail</span><span>Governance</span>
-                </div>
-              </div>
-              <span class="nxpl-wsv-num">03</span>
-            </a>
-
           </div>
         </div>
 
       </div>
       </div><!-- /.container -->
-    </div>
+
+      <!-- Hero footer strip — CTAs + stats with dark glass theme -->
+      <div class="nxpl-hero-foot">
+        <div class="container">
+          <div class="nxpl-hero-foot-row">
+
+            <!-- CTAs -->
+            <div class="nxpl-hero-foot-actions">
+              <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15" style="margin-right:5px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
+                Chat with Us
+              </a>
+              <a href="#nexus-live" class="nxpl-hero-scroll-link">
+                Explore Workspaces
+                <svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            </div>
+
+            <div class="nxpl-hero-foot-divider"></div>
+
+            <!-- Stats -->
+            <div class="nxpl-hero-foot-stats">
+              <div class="nxpl-stat"><strong>3</strong><span>Platform Workspaces</span></div>
+              <div class="nxpl-stat-sep"></div>
+              <div class="nxpl-stat"><strong>100%</strong><span>No-Code Configuration</span></div>
+              <div class="nxpl-stat-sep"></div>
+              <div class="nxpl-stat"><strong>Multi-tenant</strong><span>Isolated by Design</span></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.nxpl-hero-banner -->
 
     <!-- Workspace highlight cards — the broad highlights -->
     <div class="nxpl-hero-ws-band">
       <div class="container">
+
+        <div class="nxpl-ws-band-intro">
+          <span class="nxpl-ws-band-kicker">
+            <svg viewBox="0 0 16 16" fill="none" width="12" height="12"><rect x="2" y="2" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.2" stroke="currentColor" stroke-width="1.5"/></svg>
+            Platform Workspaces
+          </span>
+          <h2 class="nxpl-ws-band-title">Three workspaces.<br>Every layer of your AI platform.</h2>
+          <p class="nxpl-ws-band-lead">From authoring your first bot to governing a multi-tenant deployment at scale — Nexus covers the complete lifecycle in purpose-built workspaces your business team can own.</p>
+        </div>
+
         <div class="nxpl-hero-ws-grid">
 
           <a href="#nexus-live" class="nxpl-ws-card nxpl-ws-card-live">
@@ -367,6 +609,10 @@
             <p>Design and configure multi-purpose chat bots without writing a single line of code. Define the bot's purpose, personality, greeting behaviour, response style, and knowledge scope. Each bot is independently configured and can serve a different audience, channel, or business function — all within the same tenant.</p>
             <ul class="nxpl-feat-pts">
               <li>Bot name, persona, greeting message, and fallback response</li>
+              <li>System instructions — define how the AI presents itself and the exact boundaries of what it will and will not discuss</li>
+              <li>Do-not-answer rules — explicit topic restrictions the AI must refuse regardless of knowledge availability</li>
+              <li>Confidence threshold — set the minimum retrieval confidence score below which the AI falls back rather than guesses</li>
+              <li>Memory mode — configure whether the AI retains context within a session, across conversations, or not at all</li>
               <li>Audience assignment — Public Visitor, Verified Customer, Internal Employee, or custom</li>
               <li>Channel binding — website widget, customer portal, internal intranet, or embedded iframe</li>
               <li>Response tone: formal, conversational, technical, or custom</li>
@@ -388,6 +634,8 @@
               <li>URL-based ingestion — scrape and index approved web pages</li>
               <li>Manual content entry for structured Q&amp;A pairs, FAQs, and SOPs</li>
               <li>Content tagging by topic, sub-context, business unit, and project</li>
+              <li>Knowledge readiness lifecycle — Draft → Processing → Testing → Validated → Published; failed content returns to Draft for revision</li>
+              <li>Backward testing — the platform automatically generates synthetic questions from your content and tests whether the AI produces accurate, useful answers before a single real user can query it</li>
               <li>Approval workflow — content staged, reviewed, and published by authorised users</li>
               <li>Version control — previous content versions retained and restorable</li>
               <li>Content expiry and scheduled review dates</li>
@@ -404,12 +652,13 @@
             <h3>Identity Rules &amp; User Category Configuration</h3>
             <p>Nexus Studio lets you define exactly who each user is, how they are identified, and what they are allowed to access. Identity rules are applied at the conversation level — the bot checks who is asking before it decides what to share. This is not role-based access control bolted on after the fact. It is built into the knowledge retrieval model.</p>
             <ul class="nxpl-feat-pts">
-              <li>User categories: Public Visitor, Verified Customer, Business Partner, Internal Employee, Training Participant — and custom categories</li>
-              <li>Identity resolution rules: session token, login state, domain, IP, or explicit verification</li>
-              <li>Per-category knowledge scope — define which content each category can access</li>
-              <li>Per-category response behaviour — what the bot can say and what it must decline</li>
-              <li>Verified access prompts — bot can ask users to verify before proceeding</li>
-              <li>Identity fallback — default behaviour when identity cannot be confirmed</li>
+              <li>Identity types: Public Visitor, Verified Customer, Internal Employee, Business Partner, Training Participant — and custom types with their own verification mode</li>
+              <li>Access Categories per Identity Type — a Public Visitor and a Verified Customer on the same channel receive different knowledge scopes; the category set assigned to the identity type determines exactly what the AI can retrieve for that person</li>
+              <li>Identity Registry SafeGuard — a hard ceiling defined per identity type that caps what any holder of that identity can access, regardless of what the AI Agent Profile allows; the narrower set always wins</li>
+              <li>Category Identity Route — maps Channel + Chat Category + Identity Type to a specific AI Agent Profile, enabling different AI behaviour, tone, and knowledge scope for different users on the same channel without any code changes</li>
+              <li>Verification modes per Chat Category: None, Email OTP, Registered Email OTP — each category can require a different level of verification before the AI responds</li>
+              <li>Identity Registry — register known individuals with email verification, link them to business records (Customer, Contact, Lead), and assign multiple identity profiles with date-ranged validity</li>
+              <li>Identity fallback — define the default behaviour and knowledge scope when identity cannot be confirmed</li>
             </ul>
           </div>
         </div>
@@ -458,10 +707,10 @@
             <h3>Escalation Trigger Design</h3>
             <p>Studio is where escalation behaviour is defined. You configure exactly which conditions cause the AI to stop handling a conversation and route it to a human agent — and you control what information is passed with that handover. Escalation is not a failure state. It is a designed handoff point built into the platform from the start.</p>
             <ul class="nxpl-feat-pts">
-              <li>Trigger types: Complex Query, Approval Required, Policy Exception, Identity Verification, Sensitive Topic, Tool Limitation, Customer Frustration, Out of Scope</li>
-              <li>Trigger sensitivity controls — how aggressively the AI escalates per trigger</li>
-              <li>Routing rules — which agent team or queue receives each trigger type</li>
-              <li>Context package — what AI summary and conversation data is sent to the agent</li>
+              <li>Trigger types: Low Confidence, No Approved Knowledge, User Requested Human, Sales Lead, Support Required, Restricted Topic, Repeated Fallback, Other</li>
+              <li>Escalation is opt-in per Chat Category — enable or disable human escalation independently for each conversation channel, so support channels escalate while information-only channels do not</li>
+              <li>Category-scoped agents — each human agent is assigned to specific chat categories; they only see and claim escalations from their assigned categories</li>
+              <li>Context package — full AI summary, conversation history, identity type, and retrieval sources are passed to the human agent at handover</li>
               <li>Escalation message — what the user sees when the handover happens</li>
               <li>Re-escalation rules — what happens if the agent queue is unavailable</li>
             </ul>
@@ -702,6 +951,10 @@
       <div class="container">
         <div class="ncf-bottom">
           <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
+          <nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Platform</a>
+            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Architecture</a>
+          </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>
       </div>
@@ -721,7 +974,7 @@
     frappe.ready = function(fn){ frappe.ready_events.push(fn); };
 </script>
 <script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
-<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.PPKTIULN.js"></script>
+<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.DN5UMGH2.js"></script>
 
 </body>
 </html>

@@ -303,6 +303,24 @@ footer.web-footer{
   padding:14px 22px;
 }
 
+.nexus-home .nexus-hero-docs-link{
+  display:inline-flex;
+  align-items:center;
+  margin-top:14px;
+  font-size:13.5px;
+  font-weight:600;
+  color:#3258db;
+  text-decoration:none;
+  opacity:0.85;
+  transition:opacity 0.18s ease, color 0.18s ease;
+  letter-spacing:0.01em;
+}
+.nexus-home .nexus-hero-docs-link:hover{
+  opacity:1;
+  color:#214dbb;
+  text-decoration:underline;
+}
+
 .digitz-website .btn-primary{
   background:linear-gradient(135deg,var(--gold) 0%, #f4bf4e 100%);
   color:#fff;
