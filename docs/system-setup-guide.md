@@ -10,13 +10,14 @@ The system must be configured in this order. Each phase depends on the previous 
 
 ```
 Phase 1 — Core Settings       API key, LLM, embedding model
-Phase 2 — Seed Defaults        Run once to create base records
+Phase 2 — Seed Defaults        Run once to create base records (core + live + agentic)
 Phase 3 — Tenant               Tenant + Tenant Configuration
 Phase 4 — Access Governance    Policies → Categories → AI Agent Profile
 Phase 5 — Live Infrastructure  Channel → Chat Category → Identity Route → Agent
 Phase 6 — Desk User Access     Profile Assignment for internal users
 Phase 7 — Knowledge            Source → Chunks → Embeddings → Publish
 Phase 8 — Verify               Workflow Tester → Live Console Chat
+Phase 9 — Agentic Runtime      (optional) Nexy agent candidate + capability packs
 ```
 
 ---
@@ -47,12 +48,15 @@ Save.
 
 ## Phase 2 — Seed Defaults
 
-Run the seed command once. It creates all base records (tenant, access policies, categories, channel, chat category, identity types, agent, and profile) idempotently.
+Run the seed commands once. Each is idempotent — safe to re-run.
 
 ```bash
 bench --site digitz_ai_nexus.site execute digitz_ai_nexus.setup.install.seed_defaults
 bench --site digitz_ai_nexus.site execute digitz_ai_nexus_live.setup.install.seed_defaults
+bench --site digitz_ai_nexus.site execute digitz_ai_nexus_agentic.setup.install.after_install
 ```
+
+The third command seeds the agentic runtime: Nexy agent candidate, default safety profile (9 do-not-do rules), Sales capability pack, 18 goal types, and 27 registered tools. Skip this if `digitz_ai_nexus_agentic` is not installed.
 
 **What gets created:**
 
@@ -380,6 +384,49 @@ If it fails, check:
 | "No profile assignment" | Create Nexus User Profile Assignment for the logged-in user |
 | Answer is fallback only | No Published knowledge with matching access policy; check Nexus Knowledge Source: status=Published, retrieval_ready=1, chunks have embedding_status=Completed |
 | Typing indicator stuck | Background worker not running — run `bench worker --queue short` |
+
+---
+
+## Phase 9 — Agentic Runtime (optional)
+
+Only needed if `digitz_ai_nexus_agentic` is installed.
+
+### 9.1 Install the app
+
+```bash
+# If not already installed
+/home/rupesh/frappe-bench/env/bin/pip install -e apps/digitz_ai_nexus_agentic --quiet
+bench --site digitz_ai_nexus.site install-app digitz_ai_nexus_agentic
+```
+
+### 9.2 Verify seeded records
+
+The `after_install` hook seeds all base records automatically. Verify in the desk:
+
+| Record | DocType | Name |
+|---|---|---|
+| Nexy agent candidate | Nexus Agent Candidate | `CAND-NEXY` |
+| Default safety profile | Nexus Agent Safety Profile | `NEXY-DEFAULT` |
+| Sales capability pack | Nexus Capability Pack | `CAP-SALES` |
+| Sales pack assignment | Nexus Capability Pack Assignment | enabled, priority 1 |
+| Goal types | Nexus Agent Goal Type | 18 records |
+| Tool registry | Nexus Agent Tool | 27 records |
+
+### 9.3 Capability packs
+
+`CAP-SALES` is enabled by default and handles all outreach/lead/suppression goal types.
+
+`CAP-PURCHASE_COORDINATION` is seeded but **disabled** — enable it only when purchase coordination workflows are ready.
+
+### 9.4 Safety constraints
+
+All Nexy actions are governed by the safety profile. Do-not-do rules are enforced before any action executes:
+
+- No customer/vendor-facing actions without an approved `Nexus Agent Approval Request`
+- No direct database writes — all writes go through registered tools
+- No direct LLM-to-external-API calls — all communication goes through channel adapters
+
+See `apps/digitz_ai_nexus_agentic/docs/AGENTIC_ARCHITECTURE.md` for the full runtime architecture.
 
 ---
 

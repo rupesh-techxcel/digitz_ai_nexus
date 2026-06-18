@@ -3032,7 +3032,7 @@ footer.web-footer {
 
 .nexus-home .nexus-hero-grid{
   min-height:600px;
-  padding:58px 0 74px;
+  padding:58px 0 0;
 }
 
 .nexus-home .nexus-hero-copy h1{
@@ -3365,7 +3365,7 @@ footer.web-footer {
 
   .nexus-home .nexus-hero-grid{
     min-height:auto;
-    padding:42px 0 54px;
+    padding:42px 0 0;
   }
 
   .nexus-home .nexus-hero-visual{

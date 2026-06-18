@@ -1,18 +1,25 @@
 # DIGITZ AI Nexus — Complete Implementation Architecture
 
-> Last updated: 2026-06-17. Source of truth for all three Nexus apps.
+> Last updated: 2026-06-17. Source of truth for all five Nexus apps.
 
 ---
 
 ## 1. App Family
 
 ```
-digitz_ai_nexus          → AI Core (governed knowledge, retrieval, access, answer engine)
-digitz_ai_nexus_live     → Live Runtime (chat sessions, routing, escalation, human handover)
+digitz_ai_nexus           → AI Core (governed knowledge, retrieval, access, answer engine)
+digitz_ai_nexus_live      → Live Runtime (chat sessions, routing, escalation, human handover)
+digitz_ai_nexus_nexy      → Role-Based AI Operator (outbound engagement: prospects, campaigns, messages)
 digitz_ai_nexus_experience → Validation (test cases, governance smoke tests)
+digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purchase capability packs)
 ```
 
-**Key rule:** `digitz_ai_nexus_live` calls into `digitz_ai_nexus` services. It never duplicates retrieval, access resolution, or prompt building. `digitz_ai_nexus_experience` is read-only testing.
+**Key rules:**
+- `digitz_ai_nexus_live` calls into `digitz_ai_nexus` services — never duplicates retrieval, access resolution, or prompt building.
+- `digitz_ai_nexus_nexy` is a thin operator layer over `digitz_ai_nexus` and `digitz_ai_nexus_live` — never reimplements identity resolution, access governance, or retrieval.
+- `digitz_ai_nexus_agentic` consumes `digitz_ai_nexus` knowledge/access infrastructure for context resolution — never reimplements it.
+- `digitz_ai_nexus_experience` is read-only testing.
+- No agent in `digitz_ai_nexus_agentic` writes to the database or calls external APIs directly — all actions go through registered tools and the approval engine.
 
 ---
 
@@ -305,7 +312,166 @@ engine/
 
 ---
 
-## 4. App: `digitz_ai_nexus_experience` — Validation
+## 4. App: `digitz_ai_nexus_agentic` — Agentic Runtime
+
+**Root path:** `apps/digitz_ai_nexus_agentic/digitz_ai_nexus_agentic/`  
+**Full reference:** `apps/digitz_ai_nexus_agentic/docs/AGENTIC_ARCHITECTURE.md`
+
+### 4.1 Modules
+
+| Module | Purpose |
+|---|---|
+| `nexus_agentic_core` | Generic runtime: candidates, capability packs, goals, tools, runs, approvals, memory, decision logs |
+| `nexus_agentic_business` | Cross-capability services: capability resolution, channel adapters, context building |
+| `nexus_agentic_sales` | Sales Outreach capability: campaigns, outreach drafts, reply classification, suppression |
+| `nexus_agentic_purchase` | Purchase Coordination capability: supplier follow-up, RFQ drafting, vendor message drafts |
+
+### 4.2 Core DocTypes (Nexus Agentic Core — 16 DocTypes)
+
+| DocType | Autoname | Purpose |
+|---|---|---|
+| `Nexus Agent Candidate` | `CAND-{code}` | Agent identity (Nexy = `CAND-NEXY`), type, approval policy |
+| `Nexus Agent Candidate Profile` | `CANDPROF-{#####}` | Behaviour prompt, strategy prompt, do-not-do rules |
+| `Nexus Agent Capability Pack` | `CAP-{code}` | Domain-scoped bundle of goals, tools, workflows, approval rules |
+| `Nexus Candidate Capability Assignment` | `CCA-{#####}` | Links candidate to capability pack with priority and goal routing |
+| `Nexus Capability Goal Type` | `CGT-{#####}` | Supported goal type within a pack with risk and approval flag |
+| `Nexus Capability Tool Assignment` | `CTA-{#####}` | Tool registered to a capability pack |
+| `Nexus Capability Workflow` | `CWF-{#####}` | State transition rules for goals |
+| `Nexus Capability Approval Rule` | `CAR-{#####}` | Per-action approval configuration with approver role/user |
+| `Nexus Capability Memory Rule` | `CMR-{#####}` | Memory type retention and sensitivity rules per pack |
+| `Nexus Agent Goal` | `GOAL-{#####}` | A single goal instance submitted to an agent |
+| `Nexus Agent Tool` | `TOOL-{code}` | Registry of all executable tools with handler module |
+| `Nexus Agent Run` | `RUN-{#####}` | One execution session: status, timing, input/output |
+| `Nexus Agent Approval Request` | `APR-{#####}` | Human sign-off gate — `Pending → Approved/Rejected/Expired` |
+| `Nexus Agent Tool Call` | `TCL-{#####}` | Audit record for every tool invocation |
+| `Nexus Agent Memory` | `MEM-{#####}` | Persistent key-value memory per candidate/pack/tenant |
+| `Nexus Agent Decision Log` | `DEC-{#####}` | Structured reasoning log with outcome |
+
+### 4.3 Seeded Data (installed via `after_install`)
+
+| Entity | Count | Details |
+|---|---|---|
+| Candidates | 1 | Nexy (`CAND-NEXY`) — Business Operator |
+| Candidate Profiles | 1 | Nexy Default Profile — includes 9 do-not-do rules |
+| Capability Packs | 2 | `CAP-SALES` (enabled), `CAP-PURCHASE_COORDINATION` (disabled) |
+| Capability Assignments | 2 | Nexy → Sales (priority 10), Nexy → Purchase (priority 20) |
+| Goal Types | 18 | 9 per pack |
+| Agent Tools | 27 | 15 Sales + 12 Purchase |
+
+### 4.4 Sales DocTypes (13 DocTypes)
+
+`Nexus Sales Strategy`, `Nexus Sales Campaign`, `Nexus Sales Audience Segment`, `Nexus Sales Lead Source`, `Nexus Sales Lead Score`, `Nexus Sales Outreach Draft`, `Nexus Sales Outreach Event`, `Nexus Sales Follow Up Rule`, `Nexus Sales Reply Classification`, `Nexus Sales Objection Library`, `Nexus Sales Playbook`, `Nexus Sales Notification Rule`, `Nexus Sales Suppression List`
+
+### 4.5 Purchase DocTypes (6 DocTypes)
+
+`Nexus Purchase Coordination Strategy`, `Nexus Purchase Coordination Task`, `Nexus Purchase Vendor Message Draft`, `Nexus Purchase Coordination Event`, `Nexus Purchase Reply Classification`, `Nexus Purchase Follow Up Rule`
+
+### 4.6 Safety Constraints
+
+- No direct LLM → database writes — all state changes through registered `Nexus Agent Tool` records
+- No direct LLM → external API calls — customer/vendor-facing tools raise `NotImplementedError` until called through an `Approved` `Nexus Agent Approval Request`
+- All outreach drafts created with `approval_status = Draft` — sending requires explicit human approval
+- Suppression list checked before any outreach attempt
+
+---
+
+## 5. App: `digitz_ai_nexus_nexy` — Role-Based AI Operator
+
+**Root path:** `apps/digitz_ai_nexus_nexy/digitz_ai_nexus_nexy/`  
+**Full reference:** `apps/digitz_ai_nexus_nexy/docs/NEXY_MVP_DESIGN.md`
+
+### 5.1 Modules
+
+| Module | Purpose |
+|---|---|
+| `nexus_nexy` | Generic interface layer — DocTypes that apply to every role |
+| `nexus_nexy_sales` | Sales role implementation (MVP) |
+
+### 5.2 Generic DocTypes (9 DocTypes, `nexus_nexy` module)
+
+| DocType | Autoname | Purpose |
+|---|---|---|
+| `Nexy Role Profile` | `{profile_name}-{tenant}` | Behaviour contract for any role (tone, CTA style, do/dont rules, escalation policy) |
+| `Nexy Engagement Persona` | `{persona_name}-{tenant}` | Target profile for any role (industry, org size, known needs) |
+| `Nexy Engagement Target` | `NTARGET-.YYYY.-.#####` | Identity + lifecycle + consent for any target — links to role extension via Dynamic Link |
+| `Nexy Persona Match` | `NPMATCH-.YYYY.-.#####` | LLM-generated match result: score, level, detected needs, recommended strategy |
+| `Nexy Engagement Campaign` | `NCAMPAIGN-.YYYY.-.#####` | Campaign: links role profile, persona, knowledge profile, channel, approval mode |
+| `Nexy Engagement Message` | `NMSG-.YYYY.-.#####` | Generated outreach message with chat invitation token, approval status, lifecycle |
+| `Nexy Engagement Event` | `NEVT-.YYYY.-.#####` | Append-only audit timeline for any campaign/target/message |
+| `Nexy Engagement Feedback` | `NFEEDBACK-.YYYY.-.#####` | Role-neutral classified response: sentiment, intent, engagement level, escalation flag |
+| `Nexy Conversation Link` | `NCONVLINK-.YYYY.-.#####` | Links a Nexus Live Conversation back to a campaign/target/message |
+
+### 5.3 Sales Role DocTypes (Phase 2, `nexus_nexy_sales` module)
+
+| DocType | Extends | Key additional fields |
+|---|---|---|
+| `Nexy Prospect` | `Nexy Engagement Target` | company_name, contact_person, industry, deal_stage, estimated_value |
+| `Nexy Customer Persona` | `Nexy Engagement Persona` | pain_points, buying_triggers, budget_indicators, objection_patterns |
+| `Nexy Sales Profile Extension` | `Nexy Role Profile` | selling_style, persuasion_style, objection_handling_style, pricing_policy |
+| `Nexy Sales Feedback` | `Nexy Engagement Feedback` | asked_pricing, asked_demo, buying_signal, recommended_sales_action |
+
+### 5.4 Services Layer
+
+```
+services/
+├── nexy_identity_service.py       Thin adapter over identity_resolver + access_resolver
+├── nexy_context_service.py        Builds context dicts for LLM (generic + role extension)
+├── nexy_knowledge_service.py      Calls run_retrieval_pipeline (no new retrieval code)
+├── nexy_persona_match_service.py  Dispatcher → role persona_handler
+├── nexy_message_generation_service.py Dispatcher → role message_handler
+├── nexy_guardrail_service.py      Validates messages against role_profile rules
+├── nexy_engagement_service.py     Token/invitation lifecycle, event recording
+├── nexy_chat_activation_service.py Token resolution → live_chat_service hook
+├── nexy_live_response_service.py  Context enrichment hook in _process_ai_response
+├── nexy_feedback_service.py       Dispatcher → role feedback_handler
+├── nexy_import_service.py         Creates generic + role extension records from CSV/data
+└── roles/
+    ├── default/                   Fallback handlers for unknown role types
+    └── sales/                     Sales role handlers (MVP): context_builder, persona_handler,
+                                   message_handler, feedback_handler
+```
+
+### 5.5 Extension Pattern
+
+Every role-specific DocType follows the same FK pattern:
+
+```
+Nexy Engagement Target (generic)
+  └── role_extension_doctype = "Nexy Prospect"
+  └── role_extension_name = "NPROSPECT-2026-00001"
+
+Nexy Prospect (sales extension)
+  └── engagement_target = Link → Nexy Engagement Target
+```
+
+Adding a new role = 4 DocTypes + 4 handler files + 1 line in `_load_handler()` dispatcher.
+
+### 5.6 Key Governance Rules
+
+- `do_not_contact = 1` on any target → blocks all Nexy processing, no exceptions
+- Final knowledge scope = identity scope ∩ campaign scope. Empty = fail closed.
+- LLM cannot see or modify `allowed_access_policies`
+- `requires_grounding = 1` → every claim must have a retrieved source
+- `requires_human_approval_for_outbound = 1` → message waits for human before chat link is generated
+
+### 5.7 Implementation Status (as of 2026-06-17)
+
+| Phase | Scope | Status |
+|---|---|---|
+| Phase 1 | App scaffold + 9 generic DocTypes + `nexy_identity_service.py` | ✅ Complete |
+| Phase 2 | Sales role DocTypes (Prospect, CustomerPersona, SalesProfileExt, SalesFeedback) | Planned |
+| Phase 3 | Persona matching (context_service, knowledge_service, persona_match_service, sales persona_handler) | Planned |
+| Phase 4 | Message generation + guardrails | Planned |
+| Phase 5 | Chat invitation + activation | Planned |
+| Phase 6 | Live response enrichment (live_chat_service hook) | Planned |
+| Phase 7 | Feedback + status updates | Planned |
+| Phase 8 | Import + dashboard | Planned |
+
+**Installed on:** `digitz_ai_nexus_live_test.site` (port 8512)
+
+---
+
+## 6. App: `digitz_ai_nexus_experience` — Validation
 
 **Root path:** `apps/digitz_ai_nexus_experience/digitz_ai_nexus_experience/`
 
@@ -319,7 +485,7 @@ engine/
 
 ---
 
-## 5. Public Website (`www/`)
+## 7. Public Website (`www/`)
 
 All pages are in `apps/digitz_ai_nexus/digitz_ai_nexus/www/` — no bench build needed for inline `<style>` changes.
 
@@ -333,7 +499,7 @@ Nav links: `Home | Experience | Nexus Platform | Apps | Nexus Architecture | Cha
 
 ---
 
-## 6. Frappe Roles
+## 8. Frappe Roles
 
 | Role | Purpose |
 |---|---|
@@ -344,7 +510,7 @@ Nav links: `Home | Experience | Nexus Platform | Apps | Nexus Architecture | Cha
 
 ---
 
-## 7. Realtime Events (Redis → Socket.IO)
+## 9. Realtime Events (Redis → Socket.IO)
 
 | Event | Publisher | Subscriber | Payload |
 |---|---|---|---|
@@ -359,7 +525,7 @@ Nav links: `Home | Experience | Nexus Platform | Apps | Nexus Architecture | Cha
 
 ---
 
-## 8. Core Data Flow — Visitor Chat
+## 10. Core Data Flow — Visitor Chat
 
 ```
 Visitor opens widget
@@ -392,7 +558,7 @@ Background job (_process_ai_response)
 
 ---
 
-## 9. Core Data Flow — Human Escalation
+## 11. Core Data Flow — Human Escalation
 
 ```
 Escalation triggered (Low Confidence / User Requested / etc.)
@@ -434,7 +600,7 @@ Agent resolves → agent_console.resolve_escalation()
 
 ---
 
-## 10. Core Data Flow — Desk User Chat
+## 12. Core Data Flow — Desk User Chat
 
 ```
 Desk user (logged in) triggers NexusChatWidget.open()
@@ -458,7 +624,7 @@ Note: Desk User conversations are EXCLUDED from the Live Console
 
 ---
 
-## 11. Identity Resolution Chain
+## 13. Identity Resolution Chain
 
 ```
 Chat Category (identity_verification_mode)
@@ -486,7 +652,7 @@ Identity Registry Safeguard:
 
 ---
 
-## 12. Tenant Isolation Rules
+## 14. Tenant Isolation Rules
 
 | DocType | Isolation |
 |---|---|
@@ -503,7 +669,7 @@ Identity Registry Safeguard:
 
 ---
 
-## 13. Build & Deployment Notes
+## 15. Build & Deployment Notes
 
 | Action | Command |
 |---|---|
@@ -515,7 +681,7 @@ Identity Registry Safeguard:
 
 ---
 
-## 14. File Map Quick Reference
+## 16. File Map Quick Reference
 
 ```
 digitz_ai_nexus/
@@ -548,4 +714,35 @@ digitz_ai_nexus_live/
 digitz_ai_nexus_experience/
 └── digitz_ai_nexus_experience/
     └── nexus_testing/doctype/            NexusTestCase
+
+digitz_ai_nexus_nexy/
+├── docs/NEXY_MVP_DESIGN.md               ← full Nexy reference (canonical)
+└── digitz_ai_nexus_nexy/
+    ├── nexus_nexy/doctype/               9 generic DocTypes: RoleProfile, EngagementPersona,
+    │                                     EngagementTarget, PersonaMatch, EngagementCampaign,
+    │                                     EngagementMessage, EngagementEvent, EngagementFeedback,
+    │                                     ConversationLink
+    ├── nexus_nexy_sales/doctype/         4 sales DocTypes: Prospect, CustomerPersona,
+    │                                     SalesProfileExtension, SalesFeedback
+    ├── nexus_nexy/workspace/             Nexus Nexy workspace (Frappe v15 desk visibility)
+    └── services/
+        ├── nexy_identity_service.py      Identity resolution adapter (Phase 1 — complete)
+        └── roles/                        Role handler modules (sales/, default/)
+
+digitz_ai_nexus_agentic/
+├── docs/AGENTIC_ARCHITECTURE.md          ← full agentic reference (canonical)
+└── digitz_ai_nexus_agentic/
+    ├── nexus_agentic_core/doctype/       16 DocTypes: Candidate, CapabilityPack, Goal, Tool,
+    │                                     Run, ApprovalRequest, ToolCall, Memory, DecisionLog, ...
+    ├── nexus_agentic_business/           capability_service, communication_service,
+    │                                     business_context_service, tools
+    ├── nexus_agentic_sales/doctype/      13 DocTypes: Strategy, Campaign, Segment, OutreachDraft,
+    │                                     OutreachEvent, ReplyClassification, Suppression, ...
+    ├── nexus_agentic_sales/              strategy_service, lead_service, outreach_service,
+    │                                     reply_service, suppression_service, notification_service
+    ├── nexus_agentic_purchase/doctype/   6 DocTypes: CoordinationStrategy, CoordinationTask,
+    │                                     VendorMessageDraft, CoordinationEvent, ReplyClassification
+    ├── nexus_agentic_purchase/           strategy_service, supplier_service, document_service,
+    │                                     message_service, reply_service, notification_service
+    └── setup/install.py                  Seeds Nexy + 2 packs + 18 goal types + 27 tools
 ```

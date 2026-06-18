@@ -62,3 +62,15 @@ Remove after validation:
 - Synthetic Live channels, agents, knowledge, and test data
 
 Implementation note: older code still stores tenant configuration in the existing `Nexus Ecosystem` DocType for compatibility. Treat that DocType as internal storage until a dedicated schema migration moves these fields onto a tenant configuration DocType or the tenant itself.
+
+## Agentic App Tenant Isolation
+
+All runtime DocTypes in `digitz_ai_nexus_agentic` carry a `tenant` Link field. This includes:
+
+- `Nexus Agent Goal Run` — every goal execution is scoped to a tenant
+- `Nexus Agent Decision Log` — decisions are tenant-scoped
+- `Nexus Agent Memory` — memory entries are tenant-scoped
+- `Nexus Agent Approval Request` — approval lifecycle is tenant-scoped
+- All sales and purchase context DocTypes (`Nexus Lead Context`, `Nexus Contact Suppression`, etc.)
+
+The agent candidate (`Nexus Agent Candidate`) and capability configuration DocTypes (`Nexus Capability Pack`, `Nexus Agent Tool`, `Nexus Agent Goal Type`) are intentionally **global** — they define what Nexy can do, not which tenant's data it operates on. Runtime operations always carry the tenant through the goal run context.

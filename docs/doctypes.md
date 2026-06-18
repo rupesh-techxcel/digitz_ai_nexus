@@ -2,6 +2,8 @@
 
 All DocTypes in `digitz_ai_nexus`, grouped by module. Each entry lists key fields and their purpose.
 
+> **Scope:** This file covers `digitz_ai_nexus` only (AI core, knowledge, access governance, retrieval). For `digitz_ai_nexus_live` (conversations, escalation, agents) and `digitz_ai_nexus_agentic` (agentic runtime, Nexy, capability packs), see `apps/digitz_ai_nexus_agentic/docs/AGENTIC_ARCHITECTURE.md` and `apps/digitz_ai_nexus/docs/NEXUS_COMPLETE_ARCHITECTURE.md`.
+
 ---
 
 ## nexus_core

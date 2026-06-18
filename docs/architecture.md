@@ -1,28 +1,30 @@
 # Architecture Overview
 
-DIGITZ AI Nexus is a governed AI platform built on Frappe Framework. It is the core intelligence engine for the DIGITZ AI suite — not a standalone chatbot, but a multi-tenant, access-aware knowledge management and retrieval system that can power Q&A, live chat, and future agentic capabilities.
+DIGITZ AI Nexus is a governed AI platform built on Frappe Framework. It is the core intelligence engine for the DIGITZ AI suite — not a standalone chatbot, but a multi-tenant, access-aware knowledge management and retrieval system that powers Q&A, live chat, and autonomous agentic operations.
 
 ---
 
 ## App Family
 
-The platform is deliberately split across three apps. Each app has a single, bounded responsibility. Do not mix these responsibilities or create a fourth app without an explicit reason.
+The platform is split across four apps. Each app has a single, bounded responsibility.
 
 | App | Role |
 |---|---|
 | `digitz_ai_nexus` | AI core: knowledge, access governance, retrieval, answer engine |
 | `digitz_ai_nexus_live` | Live conversation runtime: chat sessions, escalation, human handover |
-| `digitz_ai_experience` | User-facing layer: website widgets, public chat UI, embed scripts |
+| `digitz_ai_nexus_agentic` | Agentic runtime: autonomous agents, Nexy, capability packs (Sales, Purchase) |
+| `digitz_ai_nexus_experience` | Validation layer: test cases, governance, experience widgets |
 
 **Mental model:**
 
 ```
-digitz_ai_nexus        = governed AI brain
-digitz_ai_nexus_live   = live conversation runtime
-digitz_ai_experience   = website/customer experience layer
+digitz_ai_nexus           = governed AI brain
+digitz_ai_nexus_live      = live conversation runtime
+digitz_ai_nexus_agentic   = autonomous agent runtime (Nexy + capability packs)
+digitz_ai_nexus_experience = validation & governance layer
 ```
 
-The live and experience apps call into `digitz_ai_nexus` services. They must not duplicate retrieval logic, access resolution, or prompt building.
+The live, agentic, and experience apps call into `digitz_ai_nexus` services. They must not duplicate retrieval logic, access resolution, or prompt building.
 
 ---
 
@@ -208,4 +210,4 @@ See [Tenant and Tenant Configuration](tenant-ecosystem.md) for the admin page ma
 7. **Question-first is guarded** — likely user questions can narrow retrieval to linked chunks, but no/low-confidence narrowed results retry broader chunk search before fallback.
 8. **Prompt evidence boundary** — the LLM is told that possible questions, intellectual summaries, context summaries, scores, and routing metadata are search signals only.
 9. **Configurable, not hard-coded** — only `Public` is a primitive policy. All others are user-defined. Chunk size, scoring weights, and model choices are settings.
-10. **App isolation** — retrieval logic, access resolution, and prompt building live only in this app. The live and experience apps call these services; they do not reimplement them.
+10. **App isolation** — retrieval logic, access resolution, and prompt building live only in this app. The live, agentic, and experience apps call these services; they do not reimplement them.

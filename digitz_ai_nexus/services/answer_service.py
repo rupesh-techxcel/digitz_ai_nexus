@@ -20,6 +20,20 @@ def _is_chat_mode(response_mode_key):
     return str(response_mode_key or "").lower() in ("chat", "live chat")
 
 
+def _resolve_chat_mode(payload):
+    """
+    Return the chat_mode for this request: "rag" (default) or "agent_loop".
+
+    Set chat_mode in the query payload or in ai_profile to activate the agent loop.
+    The right place to configure this is in the AI Agent Profile or session config.
+    """
+    return (
+        payload.get("chat_mode")
+        or (payload.get("ai_profile") or {}).get("chat_mode")
+        or "rag"
+    )
+
+
 def route_intent(payload, llm_provider=None):
     """
     Combined router + conversational responder for chat mode.
@@ -61,11 +75,103 @@ def route_intent(payload, llm_provider=None):
     return {"action": "conversational", "answer": response}
 
 
+def run_retrieval_pipeline(
+    payload,
+    retrieval_fn=None,
+    embedding_provider=None,
+    query_embedding=None,
+):
+    """
+    Run the full retrieval pipeline with all governance rules applied.
+
+    This is the shared retrieval core used by both the RAG pipeline (answer_query)
+    and the agent loop's search_knowledge tool. Both paths must go through the same
+    rules — access enforcement, restricted access handling, question-first retry,
+    and confidence threshold checks.
+
+    Returns: (chunks, retrieval_result, confidence, access_status)
+
+    access_status values:
+      "allowed"       — chunks found above confidence threshold, safe to use
+      "restricted"    — knowledge exists but caller cannot access it
+      "no_context"    — no relevant knowledge found
+      "low_confidence"— knowledge found but below minimum confidence threshold
+    """
+    retrieval_fn = retrieval_fn or retrieve_allowed_chunks
+
+    retrieval_result = retrieval_fn(
+        payload,
+        query_embedding=query_embedding,
+        embedding_provider=embedding_provider,
+    )
+
+    chunks = retrieval_result.get("results") or []
+    denied = retrieval_result.get("denied") or []
+
+    # Restricted: relevant knowledge exists but caller cannot access it.
+    # Never convert this to no_context — keep the distinction.
+    if retrieval_result.get("access_status") == "restricted" or denied:
+        return [], retrieval_result, 0.0, "restricted"
+
+    # No results but question-first narrowing was applied — retry with broader search
+    if not chunks and (retrieval_result.get("question_first") or {}).get("applied"):
+        retry_result = retry_without_question_first(
+            payload,
+            retrieval_fn=retrieval_fn,
+            embedding_provider=embedding_provider,
+            query_embedding=query_embedding,
+            reason="question_first_no_context",
+        )
+        retry_chunks = retry_result.get("results") or []
+        retry_denied = retry_result.get("denied") or []
+
+        if retry_result.get("access_status") == "restricted" or retry_denied:
+            return [], retry_result, 0.0, "restricted"
+
+        if retry_chunks:
+            retrieval_result = retry_result
+            chunks = retry_chunks
+        else:
+            return [], retry_result, 0.0, "no_context"
+
+    if not chunks:
+        return [], retrieval_result, 0.0, "no_context"
+
+    confidence = calculate_confidence(chunks)
+    minimum_confidence = get_minimum_confidence()
+
+    if confidence < minimum_confidence:
+        # If question-first was applied, retry with broader search before giving up
+        if (retrieval_result.get("question_first") or {}).get("applied"):
+            retry_result = retry_without_question_first(
+                payload,
+                retrieval_fn=retrieval_fn,
+                embedding_provider=embedding_provider,
+                query_embedding=query_embedding,
+            )
+            retry_chunks = retry_result.get("results") or []
+            retry_denied = retry_result.get("denied") or []
+            retry_confidence = calculate_confidence(retry_chunks)
+
+            if retry_result.get("access_status") == "restricted" or retry_denied:
+                return [], retry_result, 0.0, "restricted"
+
+            if retry_chunks and retry_confidence >= minimum_confidence:
+                return retry_chunks, retry_result, retry_confidence, "allowed"
+
+            best_confidence = max(confidence, retry_confidence)
+            best_result = retry_result if retry_chunks else retrieval_result
+            return [], best_result, best_confidence, "low_confidence"
+
+        return [], retrieval_result, confidence, "low_confidence"
+
+    return chunks, retrieval_result, confidence, "allowed"
+
+
 def handle_host_fallback(payload, llm_provider=None):
     """
-    Direct fallback for chat mode when RAG finds no usable knowledge.
-    Uses the profile's configured fallback_message if set; otherwise a safe default.
-    No LLM call — avoids the model generating clarifying questions when it has no knowledge.
+    Fallback for chat mode when retrieval finds no usable knowledge.
+    Uses the profile's configured fallback_message if set.
     fallback_used=1 is preserved so the escalation signal still fires.
     """
     ai_profile = payload.get("ai_profile") or {}
@@ -127,11 +233,16 @@ def answer_query(
     is_chat = _is_chat_mode(response_mode_key)
 
     if is_chat:
-        # 1. Length guard — nudge user to shorten before any processing
+        # 1. Length guard
         if len(query.strip()) > MAX_QUERY_CHARS:
             return handle_query_too_long(payload, llm_provider=llm_provider)
 
-        # 2. Intent router — special cases, conversational, or knowledge-seeking
+        # 2. Agent loop mode — LLM drives retrieval strategy
+        if _resolve_chat_mode(payload) == "agent_loop":
+            from digitz_ai_nexus.engine.chat_agent_loop import run_chat_agent_loop
+            return run_chat_agent_loop(payload, retrieval_fn=retrieval_fn)
+
+        # 3. Intent router — special cases, conversational, or knowledge-seeking
         route = route_intent(payload, llm_provider=llm_provider)
         action = route.get("action")
 
@@ -173,135 +284,42 @@ def answer_query(
                 "retrieval_result": {},
                 "fallback_used": 0,
             }
-        # action == "knowledge_seeking" — fall through to RAG pipeline
+        # action == "knowledge_seeking" — fall through to retrieval pipeline
 
-    # Guard: if allowed_access_policies was resolved but came back empty,
-    # deny retrieval — fail closed, never treat empty as "allow all".
+    # Guard: empty allowed_access_policies means access resolution failed — deny
     allowed_policies = payload.get("allowed_access_policies")
     if allowed_policies is not None and len(allowed_policies) == 0:
         frappe.throw("Access policy resolution failed. Retrieval cannot proceed.")
 
-    retrieval_fn = retrieval_fn or retrieve_allowed_chunks
-
-    retrieval_result = retrieval_fn(
+    chunks, retrieval_result, confidence, access_status = run_retrieval_pipeline(
         payload,
-        query_embedding=query_embedding,
+        retrieval_fn=retrieval_fn,
         embedding_provider=embedding_provider,
+        query_embedding=query_embedding,
     )
 
-    chunks = retrieval_result.get("results") or []
-    denied = retrieval_result.get("denied") or []
-
-    # IMPORTANT:
-    # If retrieval found denied/restricted knowledge, return restricted.
-    # Do not convert this case into no_context.
-    if retrieval_result.get("access_status") == "restricted" or denied:
+    if access_status == "restricted":
         return build_restricted_response(
             retrieval_result=retrieval_result,
-            denied=denied,
+            denied=retrieval_result.get("denied") or [],
         )
 
-    if not chunks and (retrieval_result.get("question_first") or {}).get("applied"):
-        retry_result = retry_without_question_first(
-            payload,
-            retrieval_fn=retrieval_fn,
-            embedding_provider=embedding_provider,
-            query_embedding=query_embedding,
-            reason="question_first_no_context",
-        )
-        retry_chunks = retry_result.get("results") or []
-        retry_denied = retry_result.get("denied") or []
-
-        if retry_result.get("access_status") == "restricted" or retry_denied:
-            return build_restricted_response(
-                retrieval_result=retry_result,
-                denied=retry_denied,
-            )
-
-        if retry_chunks:
-            retrieval_result = retry_result
-            chunks = retry_chunks
-            denied = retry_denied
-        else:
-            return _fallback(
-                is_chat, payload, llm_provider,
-                retrieval_result=retry_result,
-                denied=retry_denied or denied,
-            )
-
-    if not chunks:
+    if access_status in ("no_context", "low_confidence") or not chunks:
         return _fallback(
             is_chat, payload, llm_provider,
             retrieval_result=retrieval_result,
-            denied=denied,
-        )
-
-    confidence = calculate_confidence(chunks)
-    minimum_confidence = get_minimum_confidence()
-
-    if confidence < minimum_confidence:
-        if (retrieval_result.get("question_first") or {}).get("applied"):
-            retry_result = retry_without_question_first(
-                payload,
-                retrieval_fn=retrieval_fn,
-                embedding_provider=embedding_provider,
-                query_embedding=query_embedding,
-            )
-            retry_chunks = retry_result.get("results") or []
-            retry_denied = retry_result.get("denied") or []
-            retry_confidence = calculate_confidence(retry_chunks)
-
-            if retry_result.get("access_status") == "restricted" or retry_denied:
-                return build_restricted_response(
-                    retrieval_result=retry_result,
-                    denied=retry_denied,
-                )
-
-            if retry_chunks and retry_confidence >= minimum_confidence:
-                retrieval_result = retry_result
-                chunks = retry_chunks
-                confidence = retry_confidence
-            else:
-                return _fallback(
-                    is_chat, payload, llm_provider,
-                    retrieval_result=retry_result or retrieval_result,
-                    denied=retry_result.get("denied") if retry_result else denied,
-                    confidence=max(confidence, retry_confidence),
-                )
-
-        else:
-            return _fallback(
-                is_chat, payload, llm_provider,
-                retrieval_result=retrieval_result,
-                denied=denied,
-                confidence=confidence,
-            )
-
-    if not chunks:
-        return _fallback(
-            is_chat, payload, llm_provider,
-            retrieval_result=retrieval_result,
-            denied=denied,
-        )
-
-    prompt = build_prompt(payload, chunks)
-
-    answer = generate_answer(prompt, provider=llm_provider)
-    answer = (answer or "").strip()
-
-    if not answer:
-        return _fallback(
-            is_chat, payload, llm_provider,
-            retrieval_result=retrieval_result,
-            denied=denied,
+            denied=retrieval_result.get("denied") or [],
             confidence=confidence,
         )
 
-    if is_fallback_answer(answer):
+    prompt = build_prompt(payload, chunks)
+    answer = (generate_answer(prompt, provider=llm_provider) or "").strip()
+
+    if not answer or is_fallback_answer(answer):
         return _fallback(
             is_chat, payload, llm_provider,
             retrieval_result=retrieval_result,
-            denied=denied,
+            denied=retrieval_result.get("denied") or [],
             confidence=confidence,
         )
 
@@ -320,10 +338,7 @@ def answer_query(
 
 
 def _fallback(is_chat, payload, llm_provider, retrieval_result=None, denied=None, confidence=0.0):
-    """
-    Route fallback to the LLM Host (chat mode) or the hard string (Q&A mode).
-    Single point of control — all fallback paths go through here.
-    """
+    """Single point of control for all fallback paths."""
     if is_chat:
         return handle_host_fallback(payload, llm_provider=llm_provider)
     return build_safe_fallback(
@@ -353,7 +368,8 @@ def retry_without_question_first(
         "used_broader_content_search": True,
     }
     return retry_result
-        
+
+
 def build_sources(chunks):
     sources = []
     seen = set()
@@ -392,7 +408,6 @@ def build_sources(chunks):
             "scope_type": row.get("scope_type"),
             "sensitivity": row.get("sensitivity"),
             "chunk_preview": row.get("chunk_preview") or (row.get("chunk_text") or "")[:300],
-
             "score": row.get("score"),
             "vector_score": row.get("vector_score"),
             "keyword_score": row.get("keyword_score"),
@@ -441,6 +456,7 @@ def build_citation_summary(sources):
         })
 
     return citation_summary
+
 
 def calculate_confidence(chunks):
     if not chunks:

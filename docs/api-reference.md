@@ -249,3 +249,20 @@ if not query_contract.get("allowed_access_policies"):
 ```
 
 An empty list means access resolution found no permitted policies. Never treat this as "allow all".
+
+---
+
+## Agentic Runtime
+
+`digitz_ai_nexus_agentic` has no whitelisted Frappe API endpoints today. All agentic operations are invoked internally via Python service calls:
+
+| Service | Module | Purpose |
+|---|---|---|
+| `capability_service` | `nexus_agentic_business` | Resolve capability pack, check approval requirements |
+| `communication_service` | `nexus_agentic_business` | Dispatch approved messages via channel adapters |
+| `tools` | `nexus_agentic_business` | Create approval requests, log decisions, store/get memory |
+| `suppression_service` | `nexus_agentic_sales` | Check, add, remove contact suppression |
+| `tools` | `nexus_agentic_sales` | 15 sales tools (read-only, draft, customer-facing stubs) |
+| `tools` | `nexus_agentic_purchase` | 12 purchase tools (read-only, draft, vendor-facing stubs) |
+
+All tool calls go through the registered `Nexus Agent Tool` registry and the approval policy engine. No tool writes to the database or calls external APIs directly.

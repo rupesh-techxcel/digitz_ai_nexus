@@ -55,7 +55,7 @@
           </p>
 
           <div class="hero-actions nexus-hero-actions">
-            <a href="#commercial-value" class="btn btn-primary">Explore Value</a>
+            
             <a href="#" class="btn btn-secondary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
               <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15" style="margin-right:5px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
               Chat with Us
@@ -142,10 +142,9 @@
         position: relative;
         isolation: isolate;
         overflow: hidden;
-        padding: 20px 0 clamp(72px, 7vw, 122px);
+        padding: 5px 0 clamp(72px, 7vw, 122px);
         background:
           radial-gradient(circle at 12% 18%, rgba(33, 77, 187, .14), transparent 30%),
-          radial-gradient(circle at 82% 16%, rgba(22, 163, 127, .10), transparent 28%),
           radial-gradient(circle at 78% 82%, rgba(229, 162, 0, .12), transparent 30%),
           linear-gradient(180deg, var(--nx-bg-start) 0%, var(--nx-bg-end) 100%);
         color: var(--nx-navy);
@@ -176,7 +175,6 @@
         border: 1px solid rgba(217, 226, 242, .85);
         background:
           radial-gradient(circle at 42% 45%, rgba(71, 115, 255, .28), transparent 34%),
-          radial-gradient(circle at 75% 35%, rgba(22, 163, 127, .16), transparent 26%),
           linear-gradient(130deg, #071c52 0%, #102b67 44%, #214dbb 100%);
         box-shadow: 0 34px 90px rgba(16, 43, 103, .22);
         color: #ffffff;
@@ -1001,7 +999,7 @@
 
       /* ===  Site design alignment overrides  === */
       #nexus-commercial-flow .nxcom-container { width: min(1280px, calc(100% - 40px)); }
-      #nexus-commercial-flow { padding: 80px 0; background: transparent; }
+      #nexus-commercial-flow { padding: 32px 0 80px; background: transparent; }
       #nexus-commercial-flow::before { display: none; }
 
       /* ===  Light theme  === */
@@ -2508,7 +2506,7 @@
     frappe.ready = function(fn){ frappe.ready_events.push(fn); };
 </script>
 <script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
-<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.DN5UMGH2.js"></script>
+<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.65KPD3GR.js"></script>
 
 </body>
 </html>
