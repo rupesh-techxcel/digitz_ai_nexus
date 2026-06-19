@@ -31,7 +31,8 @@
   "enable_reranking",
   "enable_retrieval_debug",
   "section_live_chat",
-  "chat_idle_timeout_minutes"
+  "chat_idle_timeout_minutes",
+  "show_correlated_on_desk"
  ],
  "fields": [
   {
@@ -194,6 +195,12 @@
    "fieldname": "chat_idle_timeout_minutes",
    "fieldtype": "Int",
    "label": "Chat Idle Timeout (Minutes)"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_correlated_on_desk",
+   "fieldtype": "Check",
+   "label": "Show Correlated Questions on Desk"
   }
  ],
  "index_web_pages_for_search": 1,
