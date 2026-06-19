@@ -1256,12 +1256,18 @@
       #nexus-commercial-flow .nxcom-story-top {
         position: relative;
         z-index: 4;
-        display: grid;
-        grid-template-columns: minmax(260px, .52fr) minmax(0, 1fr);
-        gap: 24px;
-        align-items: stretch;
-        padding: 24px 24px 24px;
+        padding: 20px 20px 20px;
         border-bottom: 1px solid rgba(33,77,187,.10);
+      }
+      #nexus-commercial-flow .nxcom-panels {
+        display: grid;
+        grid-template-columns: minmax(260px, .46fr) minmax(0, 1fr);
+        gap: 0;
+        align-items: stretch;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 34px rgba(30,70,176,.13);
+        border: 1px solid rgba(30,70,176,.14);
       }
 
       #nexus-commercial-flow .nxcom-stage-title { min-height: 78px; }
@@ -2322,28 +2328,16 @@
     /* === Title panel — dark navy theme === */
     #nexus-commercial-flow .nxcom-stage-title {
       min-height: 160px;
-      background:
-        radial-gradient(ellipse at 88% 88%, rgba(22,163,127,.20) 0%, transparent 44%),
-        radial-gradient(ellipse at 0% 0%, rgba(120,160,255,.18) 0%, transparent 48%),
-        linear-gradient(145deg, #1e46b0 0%, #2655cc 52%, #1f48b8 100%);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 20px;
-      padding: 26px 26px 26px 26px;
-      box-shadow: 0 14px 36px rgba(30,70,176,.22), inset 0 1px 0 rgba(255,255,255,.10);
+      background: #f8faff;
+      border: none;
+      border-right: 1px solid rgba(33,77,187,.10);
+      border-radius: 0;
+      padding: 28px 28px 28px 28px;
+      box-shadow: none;
       position: relative;
       overflow: hidden;
     }
-    #nexus-commercial-flow .nxcom-stage-title::before {
-      content: "";
-      position: absolute;
-      right: -32px;
-      bottom: -32px;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(90,216,190,.08), transparent 68%);
-      pointer-events: none;
-    }
+    #nexus-commercial-flow .nxcom-stage-title::before { display: none; }
     #nexus-commercial-flow .nxcom-stage-title::after {
       content: "";
       position: absolute;
@@ -2351,8 +2345,8 @@
       left: 0;
       bottom: 0;
       width: 4px;
-      background: linear-gradient(180deg, #e5a200 0%, #16A37F 100%);
-      border-radius: 4px 0 0 4px;
+      background: linear-gradient(180deg, #214dbb 0%, #16A37F 100%);
+      border-radius: 0;
     }
 
     /* === Title panel — inner text colours === */
@@ -2369,13 +2363,13 @@
       width: 36px;
       height: 36px;
       border-radius: 11px;
-      background: linear-gradient(135deg, #16A37F 0%, #0e8567 100%);
+      background: linear-gradient(135deg, #214dbb 0%, #1a3fa8 100%);
       color: #fff;
       font-family: 'Exo 2', Inter, sans-serif;
       font-size: 15px;
       font-weight: 950;
       letter-spacing: -.02em;
-      box-shadow: 0 6px 18px rgba(22,163,127,.40);
+      box-shadow: 0 6px 18px rgba(33,77,187,.25);
       flex: 0 0 auto;
     }
     #nexus-commercial-flow .nxcom-step-word {
@@ -2384,17 +2378,17 @@
       font-weight: 800;
       letter-spacing: .15em;
       text-transform: uppercase;
-      color: #5ad8be;
+      color: #214dbb;
     }
     #nexus-commercial-flow .nxcom-step-of {
       font-size: 11px;
       font-weight: 600;
-      color: rgba(255,255,255,.28);
+      color: #a0adc5;
     }
     #nexus-commercial-flow .nxcom-stage-title strong {
       display: block;
       margin-bottom: 12px;
-      color: #ffffff !important;
+      color: #0e1e42 !important;
       font-family: 'Exo 2', Inter, sans-serif !important;
       font-size: clamp(24px, 2.2vw, 38px) !important;
       line-height: 1.06 !important;
@@ -2403,7 +2397,7 @@
     }
     #nexus-commercial-flow .nxcom-stage-title span {
       display: block;
-      color: rgba(160,190,240,.82) !important;
+      color: #53688f !important;
       font-size: 14px !important;
       line-height: 1.65 !important;
     }
@@ -2411,11 +2405,10 @@
     /* === Detail panel — clean teal-accented white === */
     #nexus-commercial-flow .nxcom-detail-panel {
       background: #ffffff;
-      border: 1px solid rgba(22,163,127,.22);
-      border-top: 4px solid #16A37F;
-      border-radius: 20px;
+      border: none;
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: 0 12px 32px rgba(22,163,127,.08), 0 2px 8px rgba(33,77,187,.06);
+      box-shadow: none;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -2471,6 +2464,7 @@
         </div>
 
         <div class="nxcom-story-top">
+          <div class="nxcom-panels">
           <div class="nxcom-stage-title" aria-live="polite">
             <div class="nxcom-stage-copy" data-step="0">
               <div class="nxcom-step-kicker">
@@ -2531,6 +2525,7 @@
               <button class="nxcom-stage-pill" type="button" data-step="3"><b>Behaviour</b><span>Agent tone, fallback, escalation rules</span></button>
               <button class="nxcom-stage-pill" type="button" data-step="4"><b>Escalate</b><span>AI to human when needed</span></button>
             </div>
+          </div>
           </div>
         </div>
 
