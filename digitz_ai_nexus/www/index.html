@@ -1145,13 +1145,13 @@
 				</div>
 
 				<div class="nx-agentic-candidates-connector">
-					<div class="nx-agentic-candidates-badge">Candidates</div>
+					<div class="nx-agentic-candidates-badge">AI Candidates</div>
 				</div>
 
 				<div class="nx-candidates-panel nx-panel-card">
 					<div class="nx-candidates-layout">
 						<div class="nx-candidates-head">
-							<h4>Purpose-built Candidates</h4>
+							<h4>Purpose-built AI Candidates</h4>
 						</div>
 
 						<div class="nx-candidates-grid">
@@ -1289,38 +1289,50 @@
       }
 
       #nexus-commercial-flow .nxcom-stage-pills {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 10px;
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+      }
+
+      #nexus-commercial-flow .nxcom-pill-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 26px;
+        color: rgba(255,255,255,.28);
+        pointer-events: none;
       }
 
       #nexus-commercial-flow .nxcom-stage-pill {
         position: relative;
-        min-height: 70px;
-        padding: 14px 14px 12px 16px;
+        flex: 1;
+        min-width: 0;
+        min-height: 96px;
+        padding: 20px 16px 16px 18px;
         border: 1px solid rgba(255,255,255,.14);
         border-radius: 18px;
         background: rgba(255,255,255,.08);
         color: rgba(255,255,255,.66);
         cursor: pointer;
-        transition: background .35s ease, transform .35s ease, border-color .35s ease, color .35s ease;
+        transition: background .35s ease, transform .35s ease, border-color .35s ease, color .35s ease, box-shadow .35s ease;
         text-align: left;
         font-family: var(--nx-body);
       }
 
       #nexus-commercial-flow .nxcom-stage-pill b {
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         font-family: var(--nx-heading);
-        font-size: 13px;
+        font-size: 16px;
         line-height: 1.14;
         font-weight: 900;
       }
 
       #nexus-commercial-flow .nxcom-stage-pill span {
         display: block;
-        font-size: 11px;
-        line-height: 1.25;
+        font-size: 12px;
+        line-height: 1.30;
       }
 
       #nexus-commercial-flow[data-stage="0"] .nxcom-stage-pill[data-step="0"],
@@ -2067,28 +2079,47 @@
       }
 
       /* ===  Site design alignment overrides  === */
-      #nexus-commercial-flow .nxcom-container { width: min(1280px, calc(100% - 40px)); }
-      #nexus-commercial-flow { padding: 32px 0 80px; background: transparent; }
+      #nexus-commercial-flow .nxcom-container { width: min(1320px, calc(100% - 40px)); }
+      #nexus-commercial-flow { padding: 32px 0 56px; background: #eef4ff; }
       #nexus-commercial-flow::before { display: none; }
 
       /* ===  Light theme  === */
       #nexus-commercial-flow .nxcom-story-card {
         border-radius: 24px;
-        background: radial-gradient(circle at 42% 45%, rgba(33,77,187,.06), transparent 34%),
-          radial-gradient(circle at 75% 35%, rgba(22,163,127,.04), transparent 26%),
-          linear-gradient(130deg, #ffffff 0%, #f4f8ff 50%, #eef4ff 100%);
+        background: transparent;
+        overflow: visible;
         border: 1px solid rgba(33,77,187,0.14); color: #1d2756; box-shadow: 0 18px 50px rgba(16,43,103,0.16);
       }
       #nexus-commercial-flow .nxcom-story-card::before { display: none; }
       #nexus-commercial-flow .nxcom-stage-title strong { color: #1d2756; }
       #nexus-commercial-flow .nxcom-stage-title span   { color: #53688f; }
-      #nexus-commercial-flow .nxcom-stage-pill { border-color: rgba(33,77,187,.14); background: rgba(33,77,187,.04); color: #53688f; }
+      #nexus-commercial-flow .nxcom-stage-pill {
+        background: #ffffff;
+        border-color: rgba(33,77,187,.20);
+        color: #53688f;
+        box-shadow: 0 4px 18px rgba(33,77,187,.10);
+      }
+      #nexus-commercial-flow .nxcom-stage-pill b { color: #1d2756; }
+      #nexus-commercial-flow .nxcom-stage-pill::before {
+        content: ""; position: absolute;
+        top: 0; left: 14px; right: 14px; height: 3px;
+        border-radius: 0 0 99px 99px;
+      }
+      #nexus-commercial-flow .nxcom-stage-pill[data-step="0"]::before { background: #214dbb; }
+      #nexus-commercial-flow .nxcom-stage-pill[data-step="1"]::before { background: #16A37F; }
+      #nexus-commercial-flow .nxcom-stage-pill[data-step="2"]::before { background: #7c3aed; }
+      #nexus-commercial-flow .nxcom-stage-pill[data-step="3"]::before { background: #f4a024; }
+      #nexus-commercial-flow .nxcom-stage-pill[data-step="4"]::before { background: #ef4444; }
+      #nexus-commercial-flow .nxcom-pill-arrow { color: rgba(33,77,187,.28); }
       #nexus-commercial-flow[data-stage="0"] .nxcom-stage-pill[data-step="0"],
       #nexus-commercial-flow[data-stage="1"] .nxcom-stage-pill[data-step="1"],
       #nexus-commercial-flow[data-stage="2"] .nxcom-stage-pill[data-step="2"],
       #nexus-commercial-flow[data-stage="3"] .nxcom-stage-pill[data-step="3"],
       #nexus-commercial-flow[data-stage="4"] .nxcom-stage-pill[data-step="4"] {
-        border-color: rgba(224,166,47,.7); background: rgba(33,77,187,.09); color: #1d2756; box-shadow: 0 8px 20px rgba(33,77,187,.10);
+        border-color: rgba(224,166,47,.65);
+        background: linear-gradient(135deg, rgba(33,77,187,.07) 0%, rgba(22,163,127,.04) 100%);
+        color: #1d2756;
+        box-shadow: 0 10px 28px rgba(33,77,187,.14), 0 0 0 3px rgba(224,166,47,.18);
       }
       #nexus-commercial-flow .nxcom-source-card { background: rgba(255,255,255,.94); border: 1px solid rgba(33,77,187,.12); box-shadow: 0 10px 24px rgba(33,77,187,.08); }
       #nexus-commercial-flow .nxcom-source-icon { background: #eef4ff; color: #214dbb; }
@@ -2159,7 +2190,7 @@
       #nexus-commercial-flow[data-stage="4"] .nxcom-benefit-card { border-color: rgba(224,166,47,.28); background: rgba(255,255,255,.96); }
 
       /* ===  Value strip — site card style + 5 colour accents  === */
-      #nexus-commercial-flow .nxcom-value-strip { margin-top: 22px; }
+      #nexus-commercial-flow .nxcom-value-strip { margin-top: 22px; padding: 0 22px; }
       #nexus-commercial-flow .nxcom-value-item { padding: 22px 20px; border-radius: 18px; border: 1px solid #e4e9f7; background: #ffffff; box-shadow: 0 10px 30px rgba(31,72,169,0.10); }
       #nexus-commercial-flow .nxcom-value-item b    { color: #1d2756; font-size: 0.98rem; font-family: 'Exo 2', Inter, "Segoe UI", Arial, sans-serif; }
       #nexus-commercial-flow .nxcom-value-item span { color: #6d7696; font-size: 0.92rem; }
@@ -2449,9 +2480,9 @@
       position: relative;
       z-index: 1;
       flex: 1;
-      align-content: center;
-      padding: 14px;
-      gap: 10px;
+      align-items: stretch;
+      padding: 22px 18px;
+      gap: 0;
     }
     </style>
 
@@ -2520,9 +2551,13 @@
             </div>
             <div class="nxcom-stage-pills" role="tablist" aria-label="Governance story stages">
               <button class="nxcom-stage-pill" type="button" data-step="0"><b>Persist</b><span>Layered tenant knowledge</span></button>
+              <span class="nxcom-pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M4 8h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <button class="nxcom-stage-pill" type="button" data-step="1"><b>Protect</b><span>Profiled knowledge access</span></button>
+              <span class="nxcom-pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M4 8h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <button class="nxcom-stage-pill" type="button" data-step="2"><b>Qualify</b><span>Identity-aware delivery</span></button>
+              <span class="nxcom-pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M4 8h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <button class="nxcom-stage-pill" type="button" data-step="3"><b>Behaviour</b><span>Agent tone, fallback, escalation rules</span></button>
+              <span class="nxcom-pill-arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M4 8h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 5l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <button class="nxcom-stage-pill" type="button" data-step="4"><b>Escalate</b><span>AI to human when needed</span></button>
             </div>
           </div>
@@ -2629,7 +2664,6 @@
             <div class="nxcom-benefit-card" style="--d: 2.26s;"><b>Partner / Training Identity</b><span>Receives controlled onboarding, learning, and partner-specific guidance.</span></div>
           </div>
         </div>
-      </div>
 
       <div class="nxcom-value-strip" aria-label="Commercial value points">
         <div class="nxcom-value-item"><b>Layered tenant knowledge</b><span>Each tenant keeps its own persistent knowledge system while sharing the same governed AI delivery platform.</span></div>
@@ -2637,6 +2671,42 @@
         <div class="nxcom-value-item"><b>Identity-type delivery</b><span>Public visitors, verified customers, employees, partners, vendors, and training users receive different scopes.</span></div>
         <div class="nxcom-value-item"><b>One platform, many channels</b><span>The same governed engine can serve website chat, customer portals, internal tools, apps, and ERP workflows.</span></div>
         <div class="nxcom-value-item"><b>Human escalation ready</b><span>When AI should not continue alone, it hands over to the right human team with context preserved.</span></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:0;padding:36px 28px 44px;border-top:1px solid rgba(33,77,187,.10);margin-top:8px;">
+
+        <!-- Block 1: Platform Documentation → how-nexus-works -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding-right:44px;">
+          <div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#16A37F;margin-bottom:8px;">Platform Documentation</div>
+            <h3 style="font-family:'Exo 2',sans-serif;font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#0f1f4a;margin:0 0 8px;line-height:1.2;">Eager to know how the Nexus AI Platform really works?</h3>
+            <p style="font-size:14px;color:#5a6a85;margin:0;line-height:1.6;max-width:420px;">Walk through every layer — from how knowledge is ingested and governed, to how identity qualifies each response, to how human agents take over when AI shouldn't continue alone.</p>
+          </div>
+          <a href="/how-nexus-works" style="display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#214dbb,#1a3fa8);color:#fff;font-family:'Exo 2',sans-serif;font-size:13.5px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(33,77,187,.22);flex-shrink:0;" onmouseover="this.style.boxShadow='0 12px 32px rgba(33,77,187,.32)';" onmouseout="this.style.boxShadow='0 8px 24px rgba(33,77,187,.22)';">
+            <svg viewBox="0 0 18 18" fill="none" width="15" height="15"><rect x="2" y="2" width="14" height="14" rx="3" stroke="white" stroke-width="1.5"/><path d="M5 6h8M5 9h6M5 12h4" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Nexus Architecture
+            <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+
+        <!-- Vertical divider -->
+        <div style="width:1px;min-height:90px;align-self:stretch;background:linear-gradient(180deg,transparent,rgba(33,77,187,.14) 30%,rgba(33,77,187,.14) 70%,transparent);flex-shrink:0;"></div>
+
+        <!-- Block 2: Nexus Platform → nexus-platform -->
+        <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding-left:44px;">
+          <div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#214dbb;margin-bottom:8px;">Nexus Platform</div>
+            <h3 style="font-family:'Exo 2',sans-serif;font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#0f1f4a;margin:0 0 8px;line-height:1.2;">Three workspaces. Complete control of your AI platform.</h3>
+            <p style="font-size:14px;color:#5a6a85;margin:0;line-height:1.6;max-width:420px;">Explore Nexus Studio, Nexus Live, and Nexus Admin — the three purpose-built workspaces that let your business build, operate, and govern AI without writing a line of code.</p>
+          </div>
+          <a href="/nexus-platform" style="display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#214dbb,#1a3fa8);color:#fff;font-family:'Exo 2',sans-serif;font-size:13.5px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(33,77,187,.22);flex-shrink:0;" onmouseover="this.style.boxShadow='0 12px 32px rgba(33,77,187,.32)';" onmouseout="this.style.boxShadow='0 8px 24px rgba(33,77,187,.22)';">
+            <svg viewBox="0 0 18 18" fill="none" width="15" height="15"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/></svg>
+            Nexus Platform
+            <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+
+      </div>
       </div>
     </div>
 
@@ -3453,43 +3523,6 @@
     </div>
   </div>
 </section>
-  <!-- Know More Banner — two blocks side by side, original design pattern -->
-  <div style="background:#f4f7ff;border-top:1px solid rgba(33,77,187,.10);padding:40px 0;">
-    <div style="max-width:1280px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:0;">
-
-      <!-- Block 1: Platform Documentation → how-nexus-works -->
-      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding-right:44px;">
-        <div>
-          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#16A37F;margin-bottom:8px;">Platform Documentation</div>
-          <h3 style="font-family:'Exo 2',sans-serif;font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#0f1f4a;margin:0 0 8px;line-height:1.2;">Eager to know how the Nexus AI Platform really works?</h3>
-          <p style="font-size:14px;color:#5a6a85;margin:0;line-height:1.6;max-width:420px;">Walk through every layer — from how knowledge is ingested and governed, to how identity qualifies each response, to how human agents take over when AI shouldn't continue alone.</p>
-        </div>
-        <a href="/how-nexus-works" style="display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#214dbb,#1a3fa8);color:#fff;font-family:'Exo 2',sans-serif;font-size:13.5px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(33,77,187,.22);flex-shrink:0;" onmouseover="this.style.boxShadow='0 12px 32px rgba(33,77,187,.32)';" onmouseout="this.style.boxShadow='0 8px 24px rgba(33,77,187,.22)';">
-          <svg viewBox="0 0 18 18" fill="none" width="15" height="15"><rect x="2" y="2" width="14" height="14" rx="3" stroke="white" stroke-width="1.5"/><path d="M5 6h8M5 9h6M5 12h4" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
-          Nexus Architecture
-          <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      </div>
-
-      <!-- Vertical divider -->
-      <div style="width:1px;min-height:90px;align-self:stretch;background:linear-gradient(180deg,transparent,rgba(33,77,187,.14) 30%,rgba(33,77,187,.14) 70%,transparent);flex-shrink:0;"></div>
-
-      <!-- Block 2: Nexus Platform → nexus-platform -->
-      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:28px;padding-left:44px;">
-        <div>
-          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.10em;color:#214dbb;margin-bottom:8px;">Nexus Platform</div>
-          <h3 style="font-family:'Exo 2',sans-serif;font-size:clamp(16px,1.6vw,22px);font-weight:900;color:#0f1f4a;margin:0 0 8px;line-height:1.2;">Three workspaces. Complete control of your AI platform.</h3>
-          <p style="font-size:14px;color:#5a6a85;margin:0;line-height:1.6;max-width:420px;">Explore Nexus Studio, Nexus Live, and Nexus Admin — the three purpose-built workspaces that let your business build, operate, and govern AI without writing a line of code.</p>
-        </div>
-        <a href="/nexus-platform" style="display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#214dbb,#1a3fa8);color:#fff;font-family:'Exo 2',sans-serif;font-size:13.5px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 8px 24px rgba(33,77,187,.22);flex-shrink:0;" onmouseover="this.style.boxShadow='0 12px 32px rgba(33,77,187,.32)';" onmouseout="this.style.boxShadow='0 8px 24px rgba(33,77,187,.22)';">
-          <svg viewBox="0 0 18 18" fill="none" width="15" height="15"><rect x="2" y="2" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="10" y="2" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="2" y="10" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/><rect x="10" y="10" width="6" height="6" rx="1.5" stroke="white" stroke-width="1.5"/></svg>
-          Nexus Platform
-          <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      </div>
-
-    </div>
-  </div>
 
   <section class="nexus-cta-footer" id="contact">
     <div class="container">
