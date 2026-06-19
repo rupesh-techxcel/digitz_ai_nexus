@@ -825,6 +825,84 @@
 			50% { transform: translate3d(18px, -16px, 0); }
 		}
 
+		.nx-platform-wrap {
+			position: relative;
+			background:
+				radial-gradient(ellipse at 18% 0%, rgba(18,63,153,0.09) 0%, transparent 52%),
+				radial-gradient(ellipse at 82% 100%, rgba(244,160,36,0.07) 0%, transparent 48%),
+				linear-gradient(160deg, #dce8ff 0%, #eef4ff 38%, #e4f2ee 100%);
+			border: 1.5px solid rgba(18,63,153,0.15);
+			border-radius: 40px;
+			padding: 0 28px 36px;
+			box-shadow:
+				0 8px 40px rgba(18,63,153,0.10),
+				0 2px 8px rgba(18,63,153,0.06),
+				inset 0 1px 0 rgba(255,255,255,0.90);
+			overflow: hidden;
+		}
+
+		.nx-platform-wrap::before {
+			content: "";
+			position: absolute;
+			top: 0; left: 0; right: 0;
+			height: 4px;
+			background: linear-gradient(90deg, var(--nx-blue-dark) 0%, var(--nx-blue) 40%, var(--nx-green) 72%, var(--nx-orange) 100%);
+			border-radius: 40px 40px 0 0;
+		}
+
+		.nx-platform-caption {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+			padding: 28px 4px 26px;
+		}
+
+		.nx-platform-caption-label {
+			display: inline-flex;
+			align-items: center;
+			gap: 12px;
+			padding: 12px 24px 12px 18px;
+			border-radius: 999px;
+			background: linear-gradient(135deg, var(--nx-blue-dark) 0%, var(--nx-blue) 100%);
+			border: 1px solid rgba(18,63,153,0.30);
+			color: #ffffff;
+			font-size: 13px;
+			font-weight: 950;
+			letter-spacing: 0.20em;
+			text-transform: uppercase;
+			box-shadow:
+				0 12px 28px rgba(18,63,153,0.28),
+				inset 0 1px 0 rgba(255,255,255,0.18);
+			white-space: nowrap;
+		}
+
+		.nx-platform-caption-label::before {
+			content: "";
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 35% 35%, #ffd38a, var(--nx-orange) 70%);
+			box-shadow:
+				0 0 0 4px rgba(244,160,36,0.25),
+				0 0 14px rgba(244,160,36,0.50);
+			flex: 0 0 auto;
+		}
+
+		.nx-platform-caption-rule {
+			flex: 1;
+			height: 1.5px;
+			background: linear-gradient(90deg, rgba(18,63,153,0.30), rgba(18,63,153,0.06) 60%, transparent);
+		}
+
+		.nx-platform-caption-meta {
+			font-size: 11px;
+			font-weight: 700;
+			color: var(--nx-muted);
+			letter-spacing: 0.06em;
+			white-space: nowrap;
+			opacity: 0.7;
+		}
+
 		@media (max-width: 1150px) {
 			.nx-main-layout {
 				grid-template-columns: 1fr;
@@ -984,6 +1062,12 @@
 	<div class="nx-bg-orb two"></div>
 
 	<div class="nx-eco-wrap">
+		<div class="nx-platform-wrap">
+			<div class="nx-platform-caption">
+				<span class="nx-platform-caption-label">Nexus Platform</span>
+				<span class="nx-platform-caption-rule"></span>
+				<span class="nx-platform-caption-meta">Orbit · Agentic · Candidates</span>
+			</div>
 		<div class="nx-main-layout">
 
 			<div class="nx-orbit-layer nx-panel-card">
@@ -1095,6 +1179,7 @@
 				</div>
 
 		</div>
+		</div><!-- /nx-platform-wrap -->
 	</div>
   </section>
 
