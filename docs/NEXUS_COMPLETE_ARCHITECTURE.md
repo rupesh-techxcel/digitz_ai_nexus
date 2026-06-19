@@ -9,7 +9,7 @@
 ```
 digitz_ai_nexus           → AI Core (governed knowledge, retrieval, access, answer engine)
 digitz_ai_nexus_live      → Live Runtime (chat sessions, routing, escalation, human handover)
-digitz_ai_nexus_nexy      → Role-Based AI Operator (outbound engagement: prospects, campaigns, messages)
+digitz_ai_nexus_nexy      → Role-Based AI Operator (outbound campaigns + inbound Sales Companion live chat)
 digitz_ai_nexus_experience → Validation (test cases, governance smoke tests)
 digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purchase capability packs)
 ```
@@ -174,8 +174,8 @@ engine/
 
 | DocType | Key Fields | Purpose |
 |---|---|---|
-| `Nexus Live Channel` | `channel_code`, `tenant`, `channel_name`, `channel_type`, `enabled`, `default_agent`, `public_access`, `requires_visitor_email` | Entry point — website, mobile, desk, API |
-| `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `faq_questions` | Topics/services available on a channel; controls identity and escalation rules |
+| `Nexus Live Channel` | `channel_code`, `tenant`, `channel_name`, `channel_type`, `enabled`, `default_agent`, `public_access`, `requires_visitor_email` | Logical entry point/context — website chat, mobile, desk, API, campaign, support surface |
+| `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `faq_questions` | Visitor-facing topic/service. Belongs to one channel, so selecting the category implies the channel. |
 | `Nexus Chat Category FAQ` | (child) `question`, `answer` | Pre-built FAQ answers for a category |
 | `Nexus Identity Type` | `type_code`, `type_label`, `description` | Named identity classes (e.g. Employee, Customer, Partner) — intentionally global, not tenant-scoped |
 | `Nexus Identity Registry` | `registry_name`, `description`, `enabled` | Registry of verified identities — intentionally global |
@@ -186,10 +186,10 @@ engine/
 | `Nexus Identity Knowledge Rule` | `identity_type`, `knowledge_profile`, `rule_label` | Directly links identity type to knowledge profile |
 | `Nexus Identity Safe Guard Access Category` | (child) `access_category` | Access categories allowed for an identity type as a safety cap |
 | `Nexus Identity Type Safe Guard Category` | (child) `access_category` | Second child for safe guard limits |
-| `Nexus Category Identity Route` | `route_code`, `channel`, `chat_category`, `identity_type`, `knowledge_profile`, `enabled` | Routes a channel+category+identity_type combination to a Knowledge Profile |
+| `Nexus Category Identity Route` | `channel`, `chat_category`, `ai_agent_profile`, `identity_profiles`, `enabled`, `published`, `priority` | Routes a selected chat category and visitor identity context to the AI behavior profile and identity/knowledge access chain. Channel is derived from the category context and retained for filtering/reporting. |
 | `Nexus Route Identity Profile` | (child) `identity_type`, `identity_profile` | Per-identity profiles within a route |
 | `Nexus Identity Verification Challenge` | `conversation`, `challenge_type`, `status`, `challenge_sent_at` | Active identity challenge in progress |
-| `Nexus Website Widget` | `widget_name`, `channel`, `tenant`, `position`, `primary_color` | Embeddable chat widget configuration |
+| `Nexus Website Widget` | `widget_name`, `tenant`, `position`, `primary_color` | Embeddable chat widget configuration. The widget may load all published External/Both categories under enabled Website Chat channels for the tenant; visitors select categories, not channels. |
 
 #### nexus_live_conversations
 
@@ -387,7 +387,7 @@ engine/
 | `nexus_nexy` | Generic interface layer — DocTypes that apply to every role |
 | `nexus_nexy_sales` | Sales role implementation (MVP) |
 
-### 5.2 Generic DocTypes (9 DocTypes, `nexus_nexy` module)
+### 5.2 Generic DocTypes (10 DocTypes, `nexus_nexy` module)
 
 | DocType | Autoname | Purpose |
 |---|---|---|
@@ -400,6 +400,7 @@ engine/
 | `Nexy Engagement Event` | `NEVT-.YYYY.-.#####` | Append-only audit timeline for any campaign/target/message |
 | `Nexy Engagement Feedback` | `NFEEDBACK-.YYYY.-.#####` | Role-neutral classified response: sentiment, intent, engagement level, escalation flag |
 | `Nexy Conversation Link` | `NCONVLINK-.YYYY.-.#####` | Links a Nexus Live Conversation back to a campaign/target/message |
+| `Nexy Companion Assignment` | `NCA-{chat_category}` | Maps a Nexus Chat Category → Nexy Role Profile; enables Sales Companion mode for inbound live chat |
 
 ### 5.3 Sales Role DocTypes (Phase 2, `nexus_nexy_sales` module)
 
@@ -422,7 +423,8 @@ services/
 ├── nexy_guardrail_service.py      Validates messages against role_profile rules
 ├── nexy_engagement_service.py     Token/invitation lifecycle, event recording
 ├── nexy_chat_activation_service.py Token resolution → live_chat_service hook
-├── nexy_live_response_service.py  Context enrichment hook in _process_ai_response
+├── nexy_companion_service.py      Builds 7-layer Sales Companion system prompt (Phase SC-1)
+├── nexy_live_response_service.py  Companion enrichment + campaign context hook in _process_ai_response
 ├── nexy_feedback_service.py       Dispatcher → role feedback_handler
 ├── nexy_import_service.py         Creates generic + role extension records from CSV/data
 └── roles/
@@ -454,7 +456,9 @@ Adding a new role = 4 DocTypes + 4 handler files + 1 line in `_load_handler()` d
 - `requires_grounding = 1` → every claim must have a retrieved source
 - `requires_human_approval_for_outbound = 1` → message waits for human before chat link is generated
 
-### 5.7 Implementation Status (as of 2026-06-17)
+### 5.7 Implementation Status (as of 2026-06-18)
+
+**Outbound Campaign Track:**
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -463,11 +467,22 @@ Adding a new role = 4 DocTypes + 4 handler files + 1 line in `_load_handler()` d
 | Phase 3 | Persona matching (context_service, knowledge_service, persona_match_service, sales persona_handler) | Planned |
 | Phase 4 | Message generation + guardrails | Planned |
 | Phase 5 | Chat invitation + activation | Planned |
-| Phase 6 | Live response enrichment (live_chat_service hook) | Planned |
+| Phase 6 | Live response enrichment (campaign context path) | Planned |
 | Phase 7 | Feedback + status updates | Planned |
 | Phase 8 | Import + dashboard | Planned |
 
-**Installed on:** `digitz_ai_nexus_live_test.site` (port 8512)
+**Sales Companion Track:**
+
+| Phase | Scope | Status |
+|---|---|---|
+| Phase SC-1 | `Nexy Companion Assignment` DocType, `nexy_companion_service.py`, companion path in `nexy_live_response_service.py`, 3-line hook in `live_chat_service._process_ai_response()` | ✅ Complete |
+| Phase SC-2 | `Nexy Conversation Link` creation for companion conversations | ✅ Complete |
+| Phase SC-3 | Buy-signal feedback classification per response turn | Planned |
+| Phase SC-4 | Visitor identity resolution during companion conversation | Planned |
+
+**Installed on:** `digitz_ai_nexus.site`  
+**Note:** `digitz_ai_nexus_nexy` must appear in `sites/apps.txt` for Frappe's module
+map to include `nexus_nexy` and `nexus_nexy_sales` — confirmed required and fixed (2026-06-18).
 
 ---
 
@@ -531,13 +546,15 @@ Nav links: `Home | Experience | Nexus Platform | Apps | Nexus Architecture | Cha
 Visitor opens widget
     │
     ▼
-GET get_channel_categories(channel)
-    → returns published Nexus Chat Categories for channel
+GET widget categories for tenant
+    → find enabled Nexus Live Channels where channel_type = Website Chat
+    → return published External/Both Nexus Chat Categories from those channels
     │
     ▼
 Visitor selects category → POST start_chat(payload)
+    → selected category implies channel via Nexus Chat Category.channel
     → Creates Nexus Live Conversation (status: Open)
-    → Resolves: Channel → Chat Category → Identity Type → Category Identity Route → Knowledge Profile
+    → Resolves: Chat Category → implied Channel → Identity Type → Category Identity Route → AI Profile → Knowledge Profile
     → Launches background job: _process_ai_response()
     │
     ▼
@@ -637,10 +654,10 @@ Chat Category (identity_verification_mode)
 Resolved Identity Type
     │
     ▼
-Nexus Category Identity Route (channel + category + identity_type)
+Nexus Category Identity Route (chat category + implied channel + identity context)
     │
     ▼
-Knowledge Profile (via route OR via Nexus Identity Knowledge Rule)
+AI Agent Profile + Knowledge Profile access chain
     │
     ▼
 Access Categories → Access Policies → Knowledge Chunks

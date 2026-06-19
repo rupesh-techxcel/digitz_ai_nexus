@@ -162,7 +162,7 @@ The visitor selects a `Nexus Chat Category`. Runtime resolves a `Nexus Category 
 ```
 Route lookup
     ↓
-is_public_route = 1?
+open_to_all? (derived: not bool(identity_profiles))
     YES → force_public_only: knowledge_profile_names = []
               → allowed_access_policies = ["Public"]
 
@@ -172,6 +172,9 @@ is_public_route = 1?
               → collect knowledge_profile for matching identity_type rows
               → union → knowledge_profile_names
 ```
+
+Note: `open_to_all` is derived at runtime from whether `identity_profiles` is empty.
+There is no stored `is_public_route` field on `Nexus Category Identity Route`.
 
 The route's `ai_agent_profile` provides behavior (prompts, tone, escalation). It has no
 bearing on what knowledge the person may access.

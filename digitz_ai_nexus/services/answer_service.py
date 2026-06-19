@@ -9,6 +9,7 @@ from digitz_ai_nexus.engine.prompt import (
     ROUTE_TO_KNOWLEDGE_TOKEN,
 )
 from digitz_ai_nexus.engine.llm import generate_answer
+from digitz_ai_nexus.services.question_correlation import get_correlated_questions_for_answer
 
 
 RESTRICTED_ANSWER = "You do not have permission to access this information."
@@ -324,6 +325,7 @@ def answer_query(
         )
 
     sources = build_sources(chunks)
+    correlated_questions = get_correlated_questions_for_answer(payload, chunks)
 
     return {
         "status": "success",
@@ -332,6 +334,7 @@ def answer_query(
         "confidence": confidence,
         "sources": sources,
         "citations": build_citation_summary(sources),
+        "correlated_questions": correlated_questions,
         "retrieval_result": retrieval_result,
         "fallback_used": 0,
     }

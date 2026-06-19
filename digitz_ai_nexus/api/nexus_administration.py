@@ -1086,22 +1086,32 @@ def count_records_safely(doctype, tenant=None, extra_filters=None):
 def count_registered_identity_routes():
     """
     Count enabled category routes that depend on a registered/non-public identity.
-    Public routes do not require an Identity Registry Safe Guard.
+    A route is "registered" when it has at least one Nexus Route Identity Profile child row.
+    Public routes (no identity_profiles) do not require an Identity Registry Safe Guard.
     """
     doctype = "Nexus Category Identity Route"
 
     if not frappe.db.exists("DocType", doctype):
         return 0
 
-    filters = {}
-
-    if has_field(doctype, "enabled"):
-        filters["enabled"] = 1
-
-    if has_field(doctype, "is_public_route"):
-        filters["is_public_route"] = 0
-
-    return frappe.db.count(doctype, filters)
+    try:
+        all_route_names = frappe.get_all(
+            doctype,
+            filters={"enabled": 1},
+            pluck="name",
+        )
+        if not all_route_names:
+            return 0
+        routes_with_profiles = set(
+            frappe.get_all(
+                "Nexus Route Identity Profile",
+                filters={"parent": ["in", all_route_names]},
+                pluck="parent",
+            )
+        )
+        return len(routes_with_profiles)
+    except Exception:
+        return 0
 
 
 # ---------------------------------------------------------------------

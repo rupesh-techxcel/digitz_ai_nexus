@@ -13,7 +13,7 @@ Phase 1 — Core Settings       API key, LLM, embedding model
 Phase 2 — Seed Defaults        Run once to create base records (core + live + agentic)
 Phase 3 — Tenant               Tenant + Tenant Configuration
 Phase 4 — Access Governance    Policies → Categories → AI Agent Profile
-Phase 5 — Live Infrastructure  Channel → Chat Category → Identity Route → Agent
+Phase 5 — Live Infrastructure  Website Chat Channel(s) → Chat Categories → Identity Routes → Agent
 Phase 6 — Desk User Access     Profile Assignment for internal users
 Phase 7 — Knowledge            Source → Chunks → Embeddings → Publish
 Phase 8 — Verify               Workflow Tester → Live Console Chat
@@ -171,12 +171,15 @@ Save.
 
 Navigate to: **Nexus Live Channel** list → confirm `WEBSITE-CHAT` exists.
 
+Channels are logical backend contexts. For a public website widget, the visitor does not select a channel directly. The widget can show all published external chat categories that belong to enabled Website Chat channels for the active tenant.
+
 Key fields:
 
 | Field | Value |
 |---|---|
 | Channel Code | `WEBSITE-CHAT` |
 | Channel Name | `Website Chat` |
+| Channel Type | `Website Chat` |
 | Enabled | ✓ |
 | Public Access | ✓ |
 
@@ -193,6 +196,8 @@ Navigate to: **Nexus Chat Category** list → confirm `GENERAL-SUPPORT` exists.
 | Requires Authentication | unchecked (for public) |
 | Identity Verification Mode | `None` |
 
+The category belongs to one channel. Selecting the category in the widget implies the channel behind the scenes.
+
 ### 5.3 Category Identity Route
 
 Navigate to: **Nexus Category Identity Route** list.
@@ -207,7 +212,9 @@ Verify or create this route:
 | AI Agent Profile | *(the seeded profile linked to PUBLIC-AI-ASSISTANT)* |
 | Enabled | ✓ |
 
-This maps: **anonymous visitor on WEBSITE-CHAT selecting GENERAL-SUPPORT → PUBLIC-AI-ASSISTANT profile**.
+This maps: **anonymous visitor selecting GENERAL-SUPPORT under its Website Chat channel → PUBLIC-AI-ASSISTANT profile**.
+
+The route should not be used to move a category to a different channel. The category establishes the channel; the route establishes which identity/profile/knowledge path handles that category.
 
 ### 5.4 Live Agent
 
@@ -380,7 +387,7 @@ If it fails, check:
 |---|---|
 | "Tenant is required" | No active tenant in user context — ensure Nexus Tenant Configuration exists and `get_administration_snapshot` returns a tenant |
 | "No approved idle AI agent" | Check Nexus Live Agent: enabled=1, status=Idle, agent_type=AI; check Nexus Agent Onboarding: onboarding_status=Approved |
-| "No active AI Agent Profile route" | Missing Nexus Category Identity Route for the channel+category+identity combination |
+| "No active AI Agent Profile route" | Missing Nexus Category Identity Route for the selected category and identity context |
 | "No profile assignment" | Create Nexus User Profile Assignment for the logged-in user |
 | Answer is fallback only | No Published knowledge with matching access policy; check Nexus Knowledge Source: status=Published, retrieval_ready=1, chunks have embedding_status=Completed |
 | Typing indicator stuck | Background worker not running — run `bench worker --queue short` |
@@ -442,7 +449,7 @@ See `apps/digitz_ai_nexus_agentic/docs/AGENTIC_ARCHITECTURE.md` for the full run
 [ ] Nexus AI Agent Profile — linked to agent, Public Access category assigned
 [ ] Nexus Live Channel — WEBSITE-CHAT enabled
 [ ] Nexus Chat Category — GENERAL-SUPPORT enabled, channel=WEBSITE-CHAT
-[ ] Nexus Category Identity Route — WEBSITE-CHAT+GENERAL-SUPPORT+Public → profile, enabled
+[ ] Nexus Category Identity Route — GENERAL-SUPPORT + Public identity context → profile, enabled
 [ ] Nexus Live Agent — PUBLIC-AI-ASSISTANT, type=AI, status=Idle, enabled=1
 [ ] Nexus Agent Onboarding — PUBLIC-AI-ASSISTANT, status=Approved
 [ ] Nexus User Profile Assignment — for each desk user who needs internal chat

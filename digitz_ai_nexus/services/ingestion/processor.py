@@ -13,6 +13,9 @@ from digitz_ai_nexus.services.semantic_index import (
     generate_index_entries_for_chunks,
     refresh_context_summaries_for_chunks,
 )
+from digitz_ai_nexus.services.question_correlation import (
+    build_question_correlations_for_source,
+)
 
 
 def set_if_field(doc, fieldname, value):
@@ -401,6 +404,8 @@ def process_knowledge_source(source_name):
         from digitz_ai_nexus.services.semantic_index import validate_source_questions_with_llm
         validate_source_questions_with_llm(source_doc.name)
 
+        question_correlation_result = build_question_correlations_for_source(source_doc.name)
+
         context_summary_result = refresh_context_summaries_for_chunks(
             created_chunks,
             generation_method="LLM",
@@ -452,6 +457,7 @@ def process_knowledge_source(source_name):
             f"Processed successfully. Created Knowledge Unit {unit_doc.name} "
             f"and {len(created_chunks)} chunks. Created "
             f"{len(index_result.get('created') or [])} semantic index entries. "
+            f"Created {question_correlation_result.get('created') or 0} question correlations. "
             f"Updated {len(context_summary_result.get('updated') or [])} grouped context summaries. "
             f"Archived {archived_index_count} old semantic index entries. "
             f"Version {next_version}."

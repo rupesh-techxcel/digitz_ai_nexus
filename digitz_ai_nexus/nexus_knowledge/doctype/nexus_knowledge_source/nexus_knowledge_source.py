@@ -191,6 +191,19 @@ def get_source_chat_reachability(source_name):
 
     profile_names = list({r["ai_agent_profile"] for r in route_rows if r.get("ai_agent_profile")})
 
+    # Determine which routes have identity_profiles children (those are "registered/restricted" routes)
+    route_names = [r["name"] for r in route_rows]
+    routes_with_profiles = set()
+    try:
+        for row in frappe.get_all(
+            "Nexus Route Identity Profile",
+            filters={"parent": ["in", route_names]},
+            fields=["parent"],
+        ):
+            routes_with_profiles.add(row["parent"])
+    except Exception:
+        pass
+
     # Labels
     profile_labels = {}
     try:
@@ -223,6 +236,7 @@ def get_source_chat_reachability(source_name):
             profile_routes.setdefault(pn, []).append({
                 "channel": r.get("channel") or "",
                 "chat_category": r.get("chat_category") or "",
+                "open_to_all": r["name"] not in routes_with_profiles,
             })
 
     profiles = []

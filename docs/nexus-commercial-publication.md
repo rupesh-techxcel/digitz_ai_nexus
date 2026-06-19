@@ -584,7 +584,7 @@ Before commercial knowledge is published:
 1. Confirm every commercial source uses the Public access policy.
 2. Confirm every commercial source uses the website public context.
 3. Confirm public chat routes to a public AI Agent Profile.
-4. Confirm the public route is configured as `is_public_route = 1` — it will return only Public access policies by design.
+4. Confirm the public route has no `identity_profiles` configured (empty child table = `open_to_all = True`) — it will return only Public access policies by design.
 5. Process the sources into knowledge units and chunks.
 6. Confirm chunk embeddings are completed.
 7. Run public website chat validation test cases.

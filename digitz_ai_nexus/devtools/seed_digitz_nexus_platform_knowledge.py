@@ -408,33 +408,36 @@ Troubleshooting access that is too wide: Check whether the Agent Profile's Acces
         "access_policy": "Internal",
         "priority": 9,
         "manual_content": """
-The Category Identity Route is the central routing decision record in the Nexus Live platform. It determines which AI Agent Profile handles a conversation given the visitor's channel, chat category selection, and resolved identity type.
+The Category Identity Route is the central routing decision record in the Nexus Live platform. It determines which AI Agent Profile handles a conversation given the visitor's chat category selection and resolved identity type. The channel is derived automatically from the selected chat category — each Nexus Chat Category belongs to exactly one channel, so selecting the category implies the channel.
 
 How a route is selected at conversation start:
-The platform evaluates all enabled routes for the given channel and chat category. It selects the best-matching route by finding routes where channel and chat_category match, checking whether the visitor's resolved_identity_type is permitted by the route (either via is_public_route equal to 1 which accepts all unverified public visitors, or via the route's identity_profiles child table which lists explicitly permitted identity types), sorting by priority (lower number wins), and selecting the first matching enabled route.
+The platform derives the channel from the chat category's channel field. It then evaluates all enabled routes for the given channel and chat category. It selects the best-matching route by checking whether the visitor's identity profiles are permitted by the route (either the identity_profiles child table is empty which accepts all visitors as public, or the visitor's assigned Identity Profiles intersect with the route's identity_profiles child table), sorting by priority (lower number wins), and selecting the first matching enabled route.
 
 Nexus Category Identity Route fields:
-- channel: Required. Link to Nexus Live Channel.
-- chat_category: Required. Link to Nexus Chat Category.
+- chat_category: Required. Link to Nexus Chat Category. The category owns the channel — selecting a category implies the channel.
+- channel: Read-only. Link to Nexus Live Channel. Automatically derived from chat_category.channel via fetch_from. Cannot be set manually. Retained for filtering and reporting.
 - ai_agent_profile: Required. The AI Agent Profile that handles conversations matching this route.
 - enabled: 1 to activate the route.
-- is_public_route: Checkbox. When 1, this route accepts ALL visitors without identity matching. Knowledge access is limited to the Public access policy regardless of agent profile settings when is_public_route is active.
-- identity_profiles: Child table of Nexus Route Identity Profile rows. Each row contains identity_type (Link). Only visitors with these identity types will match this route when is_public_route is 0.
+- published: 1 to make the route active for identity-based routing. Uncheck to draft or suspend a route without deleting it.
+- identity_profiles: Child table of Nexus Route Identity Profile rows. When empty, the route is open to all visitors (public route). When populated, only visitors whose Identity Profiles intersect this list will match.
 - priority: Int. Lower means higher priority. Routes with lower numbers are checked first.
 - description: Admin notes.
 
+Public vs registered routes:
+A route with an empty identity_profiles child table is a public route — it accepts all visitors without identity matching. Knowledge access is limited to the Public access policy. A route with identity_profiles rows is a registered route — only visitors whose assigned profiles match the permitted list can use it. There is no is_public_route checkbox; the distinction is entirely determined by whether identity_profiles has any rows.
+
 Common routing configurations:
 A single channel and category pair can have multiple routes at different priorities. Example setup for three visitor tiers:
-- Priority 5: Route for identity_type Internal maps to Internal AI Agent Profile with full internal access.
-- Priority 10: Route for identity_type Customer maps to Customer AI Agent Profile with customer access.
-- Priority 20: Public route where is_public_route equals 1 maps to Public AI Agent Profile as fallback for unidentified visitors.
+- Priority 5: Route with identity_profiles containing Internal Profile maps to Internal AI Agent Profile with full internal access.
+- Priority 10: Route with identity_profiles containing Customer Profile maps to Customer AI Agent Profile with customer access.
+- Priority 20: Public route with empty identity_profiles maps to Public AI Agent Profile as fallback for unidentified visitors.
 
 A visitor identified as Customer matches the priority 10 route. A visitor who cannot be identified matches the priority 20 public route. A visitor identified as Internal matches the priority 5 route.
 
 Troubleshooting route resolution failures:
-If a conversation is not routing correctly: Check that the route's enabled equals 1. Verify the channel and chat_category match exactly — these are Links and are case-sensitive. For non-public routes, confirm the visitor's identity was resolved correctly by checking resolved_identity_type on the conversation record. Check priority ordering — a higher-priority route (lower number) may be matching before the intended one. Use the Nexus Chat Workflow Tester page at nexus_chat_workflow_tester to simulate the routing decision for a given channel, category, and identity type. Use the Category Profile Routes page at nexus_category_profile_routes to visualise all routes for a channel.
+If a conversation is not routing correctly: Check that the route's enabled equals 1. Verify the chat_category matches exactly — it is a Link and is case-sensitive. The channel on the route is derived from the category and does not need to be set manually. For registered routes, confirm the visitor's identity was resolved correctly by checking resolved_identity_type on the conversation record. Check priority ordering — a higher-priority route (lower number) may be matching before the intended one. Use the Nexus Chat Workflow Tester page at nexus_chat_workflow_tester to simulate the routing decision for a given category and identity. Use the Category Profile Routes page at nexus_category_profile_routes to visualise all routes for a category.
 
-When no route matches: The conversation fails to resolve an agent profile and the platform returns an error or a default fallback response. Ensure at least one is_public_route equal to 1 route exists for every live channel and category pair to guarantee all visitors can reach an agent even when identity resolution fails.
+When no route matches: The conversation fails to resolve an agent profile and the platform returns an error or a default fallback response. Ensure at least one route with an empty identity_profiles child table (public route) exists for every live category to guarantee all visitors can reach an agent even when identity resolution fails.
 
 Route planning principle: Design routes from most specific to least specific. Higher-privilege identity types (Internal, Admin) should have lower priority numbers (checked first). The public fallback route should always be last with the highest priority number. This ensures that more privileged visitors get their appropriate agent while all others fall through to the public route gracefully.
 """,
@@ -538,17 +541,20 @@ Key fields:
 - channel: Required. Link to the parent Nexus Live Channel.
 - tenant: Tenant scope.
 - enabled: 1 to make the category visible in the widget.
-- requires_authentication: Checkbox. When 1, only authenticated users can select this category.
+- visibility: Select. External shows only in public chat widget. Internal shows only in desk chat. Both shows in both interfaces.
 - identity_verification_mode: None, Email OTP, or Registered Email OTP. Controls the mid-conversation verification challenge. Email OTP sends a one-time code to the visitor's email for identity confirmation. Registered Email OTP only accepts verification if the email is already in the Identity Registry.
 - allow_public_fallback: Checkbox. When identity_verification_mode is Registered Email OTP, this allows unregistered visitors to proceed with Public-level access if they fail verification.
 - display_order: Int. Default 10. Lower numbers appear first in the category selection widget.
+- published: Checkbox. When checked, category appears in the chat widget picker. Uncheck to hide from visitors without disabling it.
 - description: Internal notes.
 - enable_escalation: Checkbox. When 1, escalation is permitted for conversations in this category.
 
-Configuration checklist for a new channel:
+Important design rule: Each Nexus Chat Category belongs to exactly one Nexus Live Channel via its channel field. This means selecting a category automatically implies the channel. The Nexus Category Identity Route's channel field is read-only and derived from the category — it does not need to be set manually on the route.
+
+Configuration checklist for a new channel and category:
 1. Create the Nexus Live Channel with the correct channel_type.
-2. Create at least one Nexus Chat Category linked to that channel with a clear visitor-facing label.
-3. Create at least one Nexus Category Identity Route for the channel and category pair with is_public_route equal to 1 as a minimum.
+2. Create at least one Nexus Chat Category linked to that channel via the channel field with a clear visitor-facing label.
+3. Create at least one Nexus Category Identity Route for the category with an empty identity_profiles child table as the public fallback minimum.
 4. Link the route to an AI Agent Profile with a configured behavior_prompt and access categories.
 5. Ensure the AI Agent Profile has at least one Access Category linked.
 6. Ensure at least one Knowledge Source is Published and retrieval_ready for the policies in that Access Category.
@@ -806,7 +812,7 @@ Complete go-live checklist in order:
 6. Chat Categories created and linked to channels with correct labels and display_order.
 7. AI Agent Profiles created with behavior_prompt, tone, response_style, welcome_message, fallback_message, and confidence_threshold set.
 8. AI Agent Profile Access Categories linked — the Profile to Category to Policy chain must be complete.
-9. Category Identity Routes created — at minimum one public route (is_public_route equals 1) per channel and category pair.
+9. Category Identity Routes created — at minimum one public route (identity_profiles child table left empty) per category. Channel is derived automatically from the category.
 10. Identity Types enabled — Public minimum required.
 11. Knowledge Sources created, published, and confirmed retrieval_ready equals 1.
 12. If escalation is needed: Escalation Rules created per agent_role, Agent Queues created and enabled, Queue Assignments configured, User Profile Assignments set up for desk agents with can_handle_escalations equal to 1.
@@ -974,7 +980,6 @@ def _ensure_internal_category(tenant, channel):
     doc.category_label             = CATEGORY_LABEL
     doc.channel                    = channel
     doc.enabled                    = 1
-    doc.requires_authentication    = 1
     doc.identity_verification_mode = "None"
     doc.allow_public_fallback      = 0
     doc.display_order              = 10
@@ -1041,17 +1046,9 @@ def _ensure_internal_agent_profile(tenant, channel):
 
 
 def _ensure_internal_route(tenant, channel, category, profile):
-    meta = frappe.get_meta("Nexus Category Identity Route")
-    filters = {"channel": channel, "chat_category": category}
-
-    if meta.has_field("identity_type"):
-        filters["identity_type"] = "Internal"
-    elif meta.has_field("is_public_route"):
-        filters["is_public_route"] = 0
-
     existing = frappe.get_all(
         "Nexus Category Identity Route",
-        filters=filters,
+        filters={"chat_category": category},
         pluck="name",
         limit_page_length=1,
     )
@@ -1059,19 +1056,12 @@ def _ensure_internal_route(tenant, channel, category, profile):
         doc = frappe.get_doc("Nexus Category Identity Route", existing[0])
     else:
         doc = frappe.new_doc("Nexus Category Identity Route")
-        doc.channel       = channel
         doc.chat_category = category
-        if doc.meta.has_field("tenant"):
-            doc.tenant = tenant
 
     doc.ai_agent_profile = profile
     doc.enabled          = 1
     doc.priority         = 5
-    doc.is_public_route  = 0
     doc.description      = "Internal route for platform admin and operator knowledge access."
-
-    if meta.has_field("identity_type"):
-        doc.identity_type = "Internal"
 
     doc.save(ignore_permissions=True)
     return doc.name

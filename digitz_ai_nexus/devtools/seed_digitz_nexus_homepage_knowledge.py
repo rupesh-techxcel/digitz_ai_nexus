@@ -650,7 +650,6 @@ def _ensure_chat_category(tenant, channel):
     doc.category_label             = CATEGORY_LABEL
     doc.channel                    = channel
     doc.enabled                    = 1
-    doc.requires_authentication    = 0
     doc.identity_verification_mode = "None"
     doc.allow_public_fallback      = 0
     doc.display_order              = 10
@@ -715,18 +714,9 @@ def _ensure_ai_agent_profile(tenant, channel):
 
 
 def _ensure_public_route(tenant, channel, category, profile):
-    filters = {"channel": channel, "chat_category": category}
-
-    # Support both identity_type and is_public_route field patterns
-    meta = frappe.get_meta("Nexus Category Identity Route")
-    if meta.has_field("identity_type"):
-        filters["identity_type"] = "Public"
-    elif meta.has_field("is_public_route"):
-        filters["is_public_route"] = 1
-
     existing = frappe.get_all(
         "Nexus Category Identity Route",
-        filters=filters,
+        filters={"chat_category": category},
         pluck="name",
         limit_page_length=1,
     )
@@ -734,20 +724,12 @@ def _ensure_public_route(tenant, channel, category, profile):
         doc = frappe.get_doc("Nexus Category Identity Route", existing[0])
     else:
         doc = frappe.new_doc("Nexus Category Identity Route")
-        doc.channel       = channel
         doc.chat_category = category
-        if doc.meta.has_field("tenant"):
-            doc.tenant = tenant
 
     doc.ai_agent_profile = profile
     doc.enabled          = 1
     doc.priority         = 10
     doc.description      = "Public visitor route for DIGITZ AI Nexus website chat."
-
-    if meta.has_field("identity_type"):
-        doc.identity_type = "Public"
-    if meta.has_field("is_public_route"):
-        doc.is_public_route = 1
 
     doc.save(ignore_permissions=True)
     return doc.name

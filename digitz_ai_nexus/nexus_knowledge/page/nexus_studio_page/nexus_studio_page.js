@@ -2292,7 +2292,7 @@ class NexusStudioPage {
 
                     if (p.identity_routes && p.identity_routes.length) {
                         const routeList = p.identity_routes.map(r => {
-                            const parts = [r.channel, r.chat_category, r.is_public_route ? 'Public' : 'Restricted'].filter(Boolean);
+                            const parts = [r.channel, r.chat_category, r.open_to_all ? 'Public' : 'Restricted'].filter(Boolean);
                             return frappe.utils.escape_html(parts.join(' / '));
                         }).join('<br>');
                         lines.push(`<span style="color:#2980b9;">&#10003; Category Identity Route</span><br>${routeList}`);
@@ -5074,7 +5074,7 @@ class NexusStudioPage {
 
             if (p.identity_routes && p.identity_routes.length) {
                 const routeList = p.identity_routes.map(r => {
-                    const parts = [r.channel, r.chat_category, r.is_public_route ? 'Public' : 'Restricted'].filter(Boolean);
+                    const parts = [r.channel, r.chat_category, r.open_to_all ? 'Public' : 'Restricted'].filter(Boolean);
                     return frappe.utils.escape_html(parts.join(' / '));
                 }).join(', ');
                 lines.push(`<span style="color:#2980b9;">&#10003; Category Identity Route</span> — ${routeList}`);
