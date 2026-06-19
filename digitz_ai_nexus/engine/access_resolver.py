@@ -85,10 +85,10 @@ def resolve_all_policy_names():
     )
 
 
-def resolve_identity_policy_cap(identity_type):
+def resolve_identity_policy_cap(identity_type, tenant=None):
     """Return the hard policy cap imposed by identity type, if any."""
     if identity_type == "Public":
-        return {"Public"}
+        return set(resolve_primitive_public_policies(tenant=tenant))
     return None
 
 
@@ -110,12 +110,31 @@ def _intersect_caps(*caps):
     return effective
 
 
+def resolve_primitive_public_policies(tenant=None):
+    """
+    Return all Access Policy document names that are marked is_primitive=1.
+
+    Each tenant has its own primitive Public policy (e.g. "Public-NEXUS-AI").
+    Knowledge sources store the document name as their access_policy, so the
+    retrieval filter must include the tenant-specific name, not just "Public".
+    The bare "Public" name is included for backward compatibility with any
+    knowledge sources that were created before tenant-specific policies existed.
+    """
+    filters = {"is_primitive": 1, "disabled": 0}
+    if tenant:
+        filters["tenant"] = tenant
+
+    names = frappe.get_all("Nexus Access Policy", filters=filters, pluck="name")
+    return list(set(names) | {"Public"})
+
+
 def resolve_allowed_policies(query_contract):
     """
     Calculate final allowed access policy names for retrieval.
 
     Public endpoints (force_public_only=True or is_public=True):
-        Returns ["Public"] only. Cannot be overridden.
+        Returns all primitive Public policies for the tenant (e.g. "Public-NEXUS-AI")
+        plus the bare "Public" name for backward compatibility. Cannot be overridden.
 
     System Manager session:
         Returns all enabled policies — unrestricted.
@@ -135,12 +154,14 @@ def resolve_allowed_policies(query_contract):
     )
 
     if force_public_only:
+        tenant = query_contract.get("tenant") or ai_profile.get("tenant")
+        public_policies = resolve_primitive_public_policies(tenant=tenant)
         return {
-            "allowed_access_policies": ["Public"],
+            "allowed_access_policies": public_policies,
             "force_public_only": True,
             "profile_policy_names": [],
             "safeguard_policy_names": [],
-            "identity_policy_names": ["Public"],
+            "identity_policy_names": public_policies,
             "access_cap_applied": "force_public_only",
         }
 
@@ -173,10 +194,12 @@ def resolve_allowed_policies(query_contract):
         if single_kp:
             knowledge_profile_names = [single_kp]
 
+    tenant = query_contract.get("tenant") or ai_profile.get("tenant")
+
     if knowledge_profile_names:
         profile_policies = resolve_knowledge_profiles_policy_names(knowledge_profile_names)
         safeguard_policies = resolve_access_categories_policy_names(safeguard_access_categories)
-        identity_policies = resolve_identity_policy_cap(identity_type)
+        identity_policies = resolve_identity_policy_cap(identity_type, tenant=tenant)
         effective_cap = _intersect_caps(safeguard_policies, identity_policies)
         allowed_policies = profile_policies
         if effective_cap is not None:
@@ -198,10 +221,10 @@ def resolve_allowed_policies(query_contract):
         }
 
     # No knowledge profiles resolved.
-    # For Public identity, the cap itself is ["Public"] — allow that minimal access.
+    # For Public identity, the cap itself is primitive public policies — allow minimal access.
     # For all other identity types, fail closed (no profiles = no access).
     identity_type = query_contract.get("identity_type") or ai_profile.get("identity_type")
-    identity_cap = resolve_identity_policy_cap(identity_type)
+    identity_cap = resolve_identity_policy_cap(identity_type, tenant=tenant)
     if identity_cap:
         return {
             "allowed_access_policies": list(identity_cap),
