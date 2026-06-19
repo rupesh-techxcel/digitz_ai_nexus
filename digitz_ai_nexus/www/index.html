@@ -198,7 +198,7 @@
 			display: grid;
 			grid-template-columns: minmax(0, 1.12fr) 120px minmax(0, 0.92fr);
 			gap: 18px;
-			align-items: center;
+			align-items: start;
 		}
 
 		.nx-panel-card {
@@ -488,10 +488,9 @@
 
 		.nx-agentic-column {
 			display: grid;
-			grid-template-rows: minmax(0, 1fr) 88px minmax(0, 0.78fr);
+			grid-template-rows: auto 88px auto;
 			gap: 0;
-			align-self: stretch;
-			height: 690px;
+			align-self: start;
 		}
 
 		.nx-agentic-layer {
@@ -670,7 +669,7 @@
 
 		.nx-candidates-grid {
 			display: grid;
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: 1fr;
 			gap: 14px;
 		}
 
