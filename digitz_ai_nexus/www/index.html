@@ -121,6 +121,978 @@
     </div>
   </section>
 
+  <section class="nexus-ecosystem-section">
+	<style>
+		.nexus-ecosystem-section {
+			--nx-blue: #123f99;
+			--nx-blue-dark: #0b2b72;
+			--nx-orange: #f4a024;
+			--nx-green: #19b89b;
+			--nx-text: #17213a;
+			--nx-muted: #69758f;
+			--nx-panel: rgba(255,255,255,0.90);
+
+			position: relative;
+			padding: 42px 18px 56px;
+			background:
+				radial-gradient(circle at 10% 10%, rgba(46,112,255,0.10), transparent 28%),
+				radial-gradient(circle at 92% 18%, rgba(244,160,36,0.10), transparent 24%),
+				linear-gradient(180deg, #eff5ff 0%, #f8fbff 42%, #eef4ff 100%);
+			font-family: Inter, Arial, sans-serif;
+			overflow: hidden;
+		}
+
+		.nexus-ecosystem-section * { box-sizing: border-box; }
+
+		.nx-bg-orb {
+			position: absolute;
+			border-radius: 50%;
+			background: rgba(18,63,153,0.05);
+			filter: blur(2px);
+			animation: nxDrift 10s ease-in-out infinite;
+			z-index: 1;
+		}
+		.nx-bg-orb.one { width: 180px; height: 180px; left: -50px; top: 80px; }
+		.nx-bg-orb.two { width: 260px; height: 260px; right: -110px; bottom: 40px; animation-delay: -3s; }
+
+		.nx-eco-wrap {
+			position: relative;
+			z-index: 2;
+			max-width: 1320px;
+			margin: 0 auto;
+		}
+
+		.nx-brand-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			padding: 11px 18px;
+			border-radius: 18px;
+			background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 55%, #e7f0ff 100%);
+			border: 1px solid rgba(18,63,153,0.16);
+			box-shadow:
+				0 16px 30px rgba(18,63,153,0.10),
+				inset 0 1px 0 rgba(255,255,255,0.90);
+			color: var(--nx-blue-dark);
+			font-size: 15px;
+			font-weight: 950;
+			letter-spacing: 0.14em;
+			text-transform: uppercase;
+			line-height: 1;
+			white-space: nowrap;
+		}
+
+		.nx-brand-badge::before {
+			content: "";
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
+			box-shadow:
+				0 0 0 6px rgba(244,160,36,0.12),
+				0 0 22px rgba(244,160,36,0.38);
+			flex: 0 0 auto;
+		}
+
+		.nx-main-layout {
+			display: grid;
+			grid-template-columns: minmax(0, 1.12fr) 120px minmax(0, 0.92fr);
+			gap: 18px;
+			align-items: center;
+		}
+
+		.nx-panel-card {
+			position: relative;
+			border-radius: 30px;
+			overflow: hidden;
+			border: 1px solid rgba(18,63,153,0.14);
+			box-shadow:
+				0 28px 60px rgba(15,48,110,0.12),
+				0 8px 18px rgba(18,63,153,0.06);
+			backdrop-filter: blur(14px);
+		}
+
+		.nx-orbit-layer {
+			background: var(--nx-panel);
+			min-height: 690px;
+			padding: 24px;
+		}
+
+		.nx-orbit-layer::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background:
+				linear-gradient(90deg, rgba(18,63,153,0.035) 1px, transparent 1px),
+				linear-gradient(180deg, rgba(18,63,153,0.035) 1px, transparent 1px);
+			background-size: 34px 34px;
+			mask-image: linear-gradient(180deg, rgba(0,0,0,0.95), transparent 94%);
+			pointer-events: none;
+		}
+
+		.nx-orbit-brand {
+			position: absolute;
+			top: 22px;
+			left: 22px;
+			z-index: 6;
+		}
+
+		.nx-orbit-layout {
+			position: relative;
+			z-index: 2;
+			display: grid;
+			grid-template-rows: 1fr auto;
+			min-height: 642px;
+			padding-top: 68px;
+		}
+
+		.nx-orbit-visual-wrap {
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 450px;
+		}
+
+		.nx-orbit-visual {
+			position: relative;
+			width: min(500px, 100%);
+			height: 470px;
+		}
+
+		.nx-orbit-ring {
+			position: absolute;
+			inset: 50%;
+			transform: translate(-50%, -50%);
+			border-radius: 50%;
+			border: 1px solid rgba(18,63,153,0.14);
+		}
+
+		.nx-orbit-ring.r1 {
+			width: 88%;
+			height: 88%;
+			border-style: dashed;
+			animation: nxRotate 30s linear infinite;
+		}
+		.nx-orbit-ring.r2 {
+			width: 69%;
+			height: 69%;
+			border-color: rgba(244,160,36,0.24);
+			animation: nxRotateReverse 34s linear infinite;
+		}
+		.nx-orbit-ring.r3 {
+			width: 50%;
+			height: 50%;
+			border-color: rgba(25,184,155,0.25);
+		}
+
+		.nx-orbit-halo {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 56%;
+			height: 56%;
+			transform: translate(-50%, -50%);
+			border-radius: 50%;
+			background: radial-gradient(circle, rgba(18,63,153,0.06), rgba(18,63,153,0.02) 55%, transparent 72%);
+		}
+
+		.nx-orbit-core {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 182px;
+			height: 182px;
+			transform: translate(-50%, -50%);
+			border-radius: 50%;
+			background:
+				radial-gradient(circle at 28% 24%, #5b83d8 0%, #2b57b8 42%, #163f9d 72%, #0b2b72 100%);
+			border: 1px solid rgba(18,63,153,0.18);
+			box-shadow:
+				0 26px 70px rgba(18,63,153,0.22),
+				inset 0 2px 10px rgba(255,255,255,0.20),
+				0 0 0 18px rgba(18,63,153,0.05),
+				0 0 0 34px rgba(18,63,153,0.03);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			z-index: 4;
+			animation: nxPulseCore 3.6s ease-in-out infinite;
+			padding: 18px;
+		}
+
+		.nx-orbit-core-content small {
+			display: block;
+			color: rgba(231,240,255,0.90);
+			font-size: 10px;
+			font-weight: 950;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			margin-bottom: 7px;
+		}
+
+		.nx-orbit-core-content strong {
+			display: block;
+			color: #ffffff;
+			font-size: 35px;
+			line-height: 0.94;
+			font-weight: 950;
+			letter-spacing: -0.05em;
+			text-shadow: 0 3px 12px rgba(6,18,52,0.34);
+		}
+
+		.nx-orbit-core-content span {
+			display: block;
+			margin-top: 10px;
+			color: rgba(255,255,255,0.98);
+			font-size: 13px;
+			font-weight: 850;
+			line-height: 1.2;
+			text-shadow: 0 2px 8px rgba(20,44,95,0.16);
+		}
+
+		.nx-orbit-node {
+			position: absolute;
+			z-index: 6;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 12px 15px;
+			border-radius: 999px;
+			background: rgba(255,255,255,0.98);
+			border: 1px solid rgba(18,63,153,0.14);
+			box-shadow: 0 14px 34px rgba(15,48,110,0.12);
+			color: var(--nx-text);
+			font-size: 13px;
+			font-weight: 900;
+			white-space: nowrap;
+			animation: nxFloat 4.6s ease-in-out infinite;
+		}
+
+		.nx-orbit-node i {
+			width: 28px;
+			height: 28px;
+			border-radius: 50%;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-style: normal;
+			font-size: 13px;
+			font-weight: 950;
+			color: #ffffff;
+			box-shadow: 0 0 0 6px rgba(18,63,153,0.08);
+		}
+
+		.nx-orbit-node.knowledge i { background: var(--nx-orange); }
+		.nx-orbit-node.retrieval i, .nx-orbit-node.chat i { background: var(--nx-blue); }
+		.nx-orbit-node.governance i, .nx-orbit-node.escalation i { background: var(--nx-green); }
+
+		.nx-orbit-node.knowledge { top: 6%; left: 50%; transform: translateX(-50%); animation-name: nxFloatKnowledge; }
+		.nx-orbit-node.retrieval { top: 31%; right: 0; animation-delay: -0.7s; }
+		.nx-orbit-node.chat { bottom: 19%; right: 4%; animation-delay: -1.4s; }
+		.nx-orbit-node.governance { bottom: 19%; left: 4%; animation-delay: -2.1s; }
+		.nx-orbit-node.escalation { top: 31%; left: 0; animation-delay: -2.8s; }
+
+		.nx-orbit-caption {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 12px;
+			margin-top: 10px;
+		}
+
+		.nx-mini-cap {
+			padding: 16px;
+			border-radius: 18px;
+			background: rgba(246,249,255,0.92);
+			border: 1px solid rgba(18,63,153,0.11);
+			min-height: 106px;
+		}
+
+		.nx-mini-cap strong {
+			display: block;
+			color: var(--nx-text);
+			font-size: 16px;
+			font-weight: 950;
+			margin-bottom: 7px;
+		}
+
+		.nx-mini-cap span {
+			display: block;
+			color: var(--nx-muted);
+			font-size: 13px;
+			line-height: 1.45;
+		}
+
+		.nx-middle-connector {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 100%;
+			min-height: 450px;
+		}
+
+		.nx-middle-connector-inner {
+			position: relative;
+			width: 100%;
+			height: 170px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.nx-middle-line {
+			position: relative;
+			width: 100%;
+			height: 2px;
+			background: linear-gradient(90deg, rgba(18,63,153,0.18), rgba(18,63,153,0.68), rgba(244,160,36,0.94));
+			box-shadow: 0 0 22px rgba(18,63,153,0.12);
+			overflow: hidden;
+		}
+
+		.nx-middle-line::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: -35%;
+			width: 35%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, #ffffff, transparent);
+			animation: nxFlow 2.2s linear infinite;
+		}
+
+		.nx-middle-arrow {
+			position: absolute;
+			right: -1px;
+			width: 14px;
+			height: 14px;
+			border-top: 2px solid var(--nx-orange);
+			border-right: 2px solid var(--nx-orange);
+			transform: rotate(45deg);
+		}
+
+		.nx-middle-badge {
+			position: absolute;
+			top: 42px;
+			padding: 9px 13px;
+			border-radius: 999px;
+			background: var(--nx-blue);
+			color: #ffffff;
+			font-size: 10px;
+			font-weight: 950;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			box-shadow: 0 14px 30px rgba(18,63,153,0.22);
+			white-space: nowrap;
+		}
+
+		.nx-agentic-column {
+			display: grid;
+			grid-template-rows: minmax(0, 1fr) 88px minmax(0, 0.78fr);
+			gap: 0;
+			align-self: stretch;
+			height: 690px;
+		}
+
+		.nx-agentic-layer {
+			background: linear-gradient(135deg, var(--nx-blue-dark), var(--nx-blue));
+			min-height: 0;
+			height: 100%;
+			padding: 24px;
+			color: #ffffff;
+		}
+
+		.nx-agentic-layer::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background:
+				radial-gradient(circle at 8% 20%, rgba(255,255,255,0.12), transparent 24%),
+				radial-gradient(circle at 86% 0%, rgba(255,255,255,0.10), transparent 26%),
+				linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+				linear-gradient(180deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+			background-size: auto, auto, 36px 36px, 36px 36px;
+			pointer-events: none;
+		}
+
+		.nx-agentic-brand {
+			position: absolute;
+			top: 22px;
+			left: 22px;
+			z-index: 6;
+		}
+
+		.nx-agentic-layout {
+			position: relative;
+			z-index: 2;
+			display: grid;
+			grid-template-rows: auto auto;
+			align-content: start;
+			min-height: 100%;
+			padding-top: 68px;
+			gap: 18px;
+		}
+
+		.nx-agentic-title h3 {
+			margin: 0;
+			font-size: clamp(30px, 3vw, 44px);
+			line-height: 0.98;
+			letter-spacing: -0.045em;
+			font-weight: 950;
+			max-width: 420px;
+		}
+
+		.nx-agentic-title p {
+			margin: 12px 0 0;
+			color: rgba(255,255,255,0.80);
+			font-size: 14px;
+			line-height: 1.6;
+			max-width: 460px;
+		}
+
+		.nx-agentic-loop {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 10px;
+		}
+
+		.nx-loop-pill {
+			position: relative;
+			padding: 14px 14px;
+			border-radius: 16px;
+			background: rgba(255,255,255,0.10);
+			border: 1px solid rgba(255,255,255,0.13);
+			color: rgba(255,255,255,0.94);
+			font-size: 12px;
+			font-weight: 900;
+			letter-spacing: -0.01em;
+			overflow: hidden;
+		}
+
+		.nx-loop-pill::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: -60%;
+			width: 40%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
+			animation: nxShine 4s ease-in-out infinite;
+		}
+
+		.nx-agentic-candidates-connector {
+			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.nx-agentic-candidates-connector::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			width: 2px;
+			height: 58px;
+			background: linear-gradient(180deg, rgba(18,63,153,0.72), rgba(244,160,36,0.92));
+			box-shadow: 0 0 18px rgba(18,63,153,0.12);
+		}
+
+		.nx-agentic-candidates-connector::after {
+			content: "";
+			position: absolute;
+			top: 52px;
+			width: 12px;
+			height: 12px;
+			border-right: 2px solid var(--nx-orange);
+			border-bottom: 2px solid var(--nx-orange);
+			transform: rotate(45deg);
+		}
+
+		.nx-agentic-candidates-badge {
+			position: absolute;
+			top: 58px;
+			padding: 9px 14px;
+			border-radius: 999px;
+			background: var(--nx-blue);
+			color: #ffffff;
+			font-size: 10px;
+			font-weight: 950;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			box-shadow: 0 14px 30px rgba(18,63,153,0.18);
+			white-space: nowrap;
+			z-index: 2;
+		}
+
+		.nx-candidates-panel {
+			background: rgba(255,255,255,0.92);
+			padding: 22px;
+		}
+
+		.nx-candidates-panel::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background:
+				radial-gradient(circle at 90% 14%, rgba(244,160,36,0.08), transparent 22%),
+				linear-gradient(90deg, rgba(18,63,153,0.03) 1px, transparent 1px),
+				linear-gradient(180deg, rgba(18,63,153,0.03) 1px, transparent 1px);
+			background-size: auto, 34px 34px, 34px 34px;
+			mask-image: linear-gradient(180deg, rgba(0,0,0,0.95), transparent 94%);
+			pointer-events: none;
+		}
+
+		.nx-candidates-layout {
+			position: relative;
+			z-index: 2;
+		}
+
+		.nx-candidates-head {
+			margin-bottom: 18px;
+		}
+
+		.nx-candidates-head h4 {
+			margin: 0;
+			color: var(--nx-blue-dark);
+			font-size: 30px;
+			line-height: 0.98;
+			letter-spacing: -0.04em;
+			font-weight: 950;
+		}
+
+		.nx-candidates-head p {
+			margin: 8px 0 0;
+			color: var(--nx-muted);
+			font-size: 13px;
+			line-height: 1.55;
+			max-width: 460px;
+		}
+
+		.nx-candidates-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 14px;
+		}
+
+		.nx-candidate-power {
+			position: relative;
+			display: grid;
+			grid-template-columns: 64px 1fr;
+			align-items: start;
+			gap: 18px;
+			padding: 22px;
+			border-radius: 22px;
+			background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+			border: 1px solid rgba(18,63,153,0.14);
+			box-shadow: 0 20px 36px rgba(15,48,110,0.10);
+			overflow: hidden;
+		}
+
+		.nx-candidate-power::before {
+			content: "";
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			width: 4px;
+			background: linear-gradient(180deg, var(--nx-orange), #f7c56b);
+		}
+
+		.nx-candidate-power::after {
+			content: "";
+			position: absolute;
+			right: -40px;
+			top: -40px;
+			width: 120px;
+			height: 120px;
+			border-radius: 50%;
+			background: rgba(18,63,153,0.05);
+		}
+
+		.nx-candidate-power.more::before {
+			background: linear-gradient(180deg, var(--nx-blue), #6b9aff);
+		}
+
+		.nx-candidate-power .icon {
+			width: 64px;
+			height: 64px;
+			border-radius: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: rgba(18,63,153,0.08);
+			color: var(--nx-blue);
+			font-size: 22px;
+			font-weight: 950;
+			box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+		}
+
+		.nx-candidate-power.more .icon {
+			background: rgba(244,160,36,0.12);
+			color: #c47707;
+		}
+
+		.nx-candidate-power strong {
+			display: block;
+			color: var(--nx-text);
+			font-size: 24px;
+			font-weight: 950;
+			line-height: 0.98;
+			margin-bottom: 7px;
+		}
+
+		.nx-candidate-power .subtitle {
+			display: inline-block;
+			margin-bottom: 8px;
+			color: var(--nx-blue);
+			font-size: 11px;
+			font-weight: 950;
+			letter-spacing: 0.10em;
+			text-transform: uppercase;
+		}
+
+		.nx-candidate-power p {
+			margin: 0;
+			color: var(--nx-muted);
+			font-size: 13px;
+			line-height: 1.6;
+			max-width: 360px;
+		}
+
+		.nx-candidate-power .chip {
+			padding: 8px 12px;
+			border-radius: 999px;
+			background: rgba(25,184,155,0.10);
+			color: #0e917b;
+			font-size: 10px;
+			font-weight: 950;
+			letter-spacing: 0.05em;
+			white-space: nowrap;
+			grid-column: 2;
+			width: fit-content;
+			margin-top: 6px;
+		}
+
+		@keyframes nxRotate {
+			from { transform: translate(-50%, -50%) rotate(0deg); }
+			to { transform: translate(-50%, -50%) rotate(360deg); }
+		}
+
+		@keyframes nxRotateReverse {
+			from { transform: translate(-50%, -50%) rotate(360deg); }
+			to { transform: translate(-50%, -50%) rotate(0deg); }
+		}
+
+		@keyframes nxPulseCore {
+			0%, 100% {
+				box-shadow:
+					0 26px 70px rgba(18,63,153,0.22),
+					inset 0 2px 10px rgba(255,255,255,0.20),
+					0 0 0 18px rgba(18,63,153,0.05),
+					0 0 0 34px rgba(18,63,153,0.03);
+			}
+			50% {
+				box-shadow:
+					0 34px 84px rgba(18,63,153,0.28),
+					inset 0 2px 10px rgba(255,255,255,0.24),
+					0 0 0 24px rgba(18,63,153,0.06),
+					0 0 0 46px rgba(18,63,153,0.04);
+			}
+		}
+
+		@keyframes nxFloat {
+			0%, 100% { transform: translateY(0); }
+			50% { transform: translateY(-8px); }
+		}
+
+		@keyframes nxFloatKnowledge {
+			0%, 100% { transform: translateX(-50%) translateY(0); }
+			50% { transform: translateX(-50%) translateY(-8px); }
+		}
+
+		@keyframes nxFlow {
+			from { left: -35%; }
+			to { left: 100%; }
+		}
+
+		@keyframes nxShine {
+			0%, 55% { left: -60%; }
+			100% { left: 120%; }
+		}
+
+		@keyframes nxDrift {
+			0%, 100% { transform: translate3d(0, 0, 0); }
+			50% { transform: translate3d(18px, -16px, 0); }
+		}
+
+		@media (max-width: 1150px) {
+			.nx-main-layout {
+				grid-template-columns: 1fr;
+				gap: 16px;
+			}
+
+			.nx-middle-connector {
+				min-height: auto;
+				height: 88px;
+			}
+
+			.nx-middle-connector-inner {
+				width: 100%;
+				height: 88px;
+			}
+
+			.nx-middle-line {
+				width: 2px;
+				height: 72px;
+				background: linear-gradient(180deg, rgba(18,63,153,0.18), rgba(18,63,153,0.68), rgba(244,160,36,0.94));
+			}
+
+			.nx-middle-line::before {
+				top: -40%;
+				left: 0;
+				width: 100%;
+				height: 40%;
+				background: linear-gradient(180deg, transparent, #ffffff, transparent);
+				animation: nxFlowVertical 2.2s linear infinite;
+			}
+
+			.nx-middle-arrow {
+				right: auto;
+				bottom: 7px;
+				border-top: none;
+				border-right: 2px solid var(--nx-orange);
+				border-bottom: 2px solid var(--nx-orange);
+				transform: rotate(45deg);
+			}
+
+			.nx-middle-badge {
+				top: 36px;
+			}
+
+			.nx-agentic-column {
+				grid-template-rows: auto 88px auto;
+				height: auto;
+			}
+		}
+
+		@keyframes nxFlowVertical {
+			from { top: -40%; }
+			to { top: 100%; }
+		}
+
+		@media (max-width: 760px) {
+			.nexus-ecosystem-section {
+				padding: 26px 14px 40px;
+			}
+
+			.nx-panel-card {
+				border-radius: 24px;
+			}
+
+			.nx-orbit-layer,
+			.nx-agentic-layer,
+			.nx-candidates-panel {
+				padding: 18px;
+			}
+
+			.nx-brand-badge {
+				font-size: 13px;
+				letter-spacing: 0.10em;
+			}
+
+			.nx-orbit-layout,
+			.nx-agentic-layout {
+				padding-top: 72px;
+				min-height: auto;
+			}
+
+			.nx-orbit-visual-wrap {
+				min-height: 400px;
+			}
+
+			.nx-orbit-visual {
+				height: 400px;
+			}
+
+			.nx-orbit-core {
+				width: 148px;
+				height: 148px;
+			}
+
+			.nx-orbit-core-content small {
+				font-size: 8px;
+			}
+
+			.nx-orbit-core-content strong {
+				font-size: 28px;
+			}
+
+			.nx-orbit-core-content span {
+				font-size: 11px;
+			}
+
+			.nx-orbit-node {
+				font-size: 11px;
+				padding: 9px 11px;
+				gap: 8px;
+			}
+
+			.nx-orbit-node i {
+				width: 24px;
+				height: 24px;
+				font-size: 11px;
+			}
+
+			.nx-orbit-node.retrieval { right: -4px; }
+			.nx-orbit-node.escalation { left: -4px; }
+
+			.nx-orbit-caption {
+				grid-template-columns: 1fr;
+			}
+
+			.nx-candidates-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.nx-agentic-title h3 {
+				font-size: 28px;
+			}
+
+			.nx-agentic-loop {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.nx-candidate-power {
+				grid-template-columns: 58px 1fr;
+			}
+
+			.nx-candidate-power .chip {
+				grid-column: 2;
+				width: fit-content;
+			}
+		}
+	</style>
+
+	<div class="nx-bg-orb one"></div>
+	<div class="nx-bg-orb two"></div>
+
+	<div class="nx-eco-wrap">
+		<div class="nx-main-layout">
+
+			<div class="nx-orbit-layer nx-panel-card">
+				<div class="nx-orbit-brand">
+					<div class="nx-brand-badge">Nexus Orbit</div>
+				</div>
+
+				<div class="nx-orbit-layout">
+					<div class="nx-orbit-visual-wrap">
+						<div class="nx-orbit-visual">
+							<div class="nx-orbit-ring r1"></div>
+							<div class="nx-orbit-ring r2"></div>
+							<div class="nx-orbit-ring r3"></div>
+							<div class="nx-orbit-halo"></div>
+
+							<div class="nx-orbit-core">
+								<div class="nx-orbit-core-content">
+									<small>Knowledge &amp; Interaction</small>
+									<strong>Nexus<br>Orbit</strong>
+									<span>Trusted AI Intelligence</span>
+								</div>
+							</div>
+
+							<div class="nx-orbit-node knowledge"><i>K</i>Knowledge</div>
+							<div class="nx-orbit-node retrieval"><i>R</i>Retrieval</div>
+							<div class="nx-orbit-node chat"><i>C</i>Chat</div>
+							<div class="nx-orbit-node governance"><i>G</i>Governance</div>
+							<div class="nx-orbit-node escalation"><i>E</i>Escalation</div>
+						</div>
+					</div>
+
+					<div class="nx-orbit-caption">
+						<div class="nx-mini-cap">
+							<strong>Nexus Studio</strong>
+							<span>Prepare, validate, and publish business knowledge.</span>
+						</div>
+						<div class="nx-mini-cap">
+							<strong>Nexus Live</strong>
+							<span>Deliver Q&amp;A, chat, continuity, and escalation.</span>
+						</div>
+						<div class="nx-mini-cap">
+							<strong>Nexus Admin</strong>
+							<span>Control access, channels, profiles, and governance.</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="nx-middle-connector">
+				<div class="nx-middle-connector-inner">
+					<div class="nx-middle-line"></div>
+					<div class="nx-middle-arrow"></div>
+					<div class="nx-middle-badge">Uses Orbit</div>
+				</div>
+			</div>
+
+			<div class="nx-agentic-column">
+				<div class="nx-agentic-layer nx-panel-card">
+					<div class="nx-agentic-brand">
+						<div class="nx-brand-badge">Nexus Agentic</div>
+					</div>
+
+					<div class="nx-agentic-layout">
+						<div class="nx-agentic-title">
+							<h3>Agentic layer working with Orbit</h3>
+							<p>Purpose-built workflows run as an LLM loop and use Orbit for governed retrieval, knowledge, chat, and escalation support.</p>
+						</div>
+
+						<div class="nx-agentic-loop">
+							<div class="nx-loop-pill">Reasoning</div>
+							<div class="nx-loop-pill">Tool Use</div>
+							<div class="nx-loop-pill">Retrieval Access</div>
+							<div class="nx-loop-pill">Action Orchestration</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="nx-agentic-candidates-connector">
+					<div class="nx-agentic-candidates-badge">Candidates</div>
+				</div>
+
+				<div class="nx-candidates-panel nx-panel-card">
+					<div class="nx-candidates-layout">
+						<div class="nx-candidates-head">
+							<h4>Purpose-built Candidates</h4>
+						</div>
+
+						<div class="nx-candidates-grid">
+							<div class="nx-candidate-power">
+								<div class="icon">Nx</div>
+								<div>
+									<span class="subtitle">Flagship Candidate</span>
+									<strong>Nexy</strong>
+									<p>Sales-focused candidate for outreach, persuasion, CRM updates, and notifications.</p>
+								</div>
+								<div class="chip">Flagship</div>
+							</div>
+
+							<div class="nx-candidate-power more">
+								<div class="icon">+</div>
+								<div>
+									<span class="subtitle">Future Expansion</span>
+									<strong>Future Candidates</strong>
+									<p>Future candidates for founder support, co-worker assistance, operations, and workflow execution.</p>
+								</div>
+								<div class="chip">Expansion</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+  </section>
+
   <!-- Nexus AI Governance Story Section -->
   <section id="nexus-commercial-flow" class="nxcom-section" data-stage="0" aria-label="Nexus AI governed delivery visual story">
     <style>
