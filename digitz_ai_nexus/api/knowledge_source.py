@@ -1,6 +1,6 @@
 import frappe
 
-from digitz_ai_nexus.services.knowledge_source_processor import process_knowledge_source
+from digitz_ai_nexus.services.ingestion.processor import process_knowledge_source
 
 
 @frappe.whitelist()

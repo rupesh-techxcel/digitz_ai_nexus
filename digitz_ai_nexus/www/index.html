@@ -2311,48 +2311,49 @@
     #nexus-commercial-flow .nxcom-card-cap {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 18px 30px 16px;
-      border-bottom: 1px solid rgba(33,77,187,.09);
-      background: linear-gradient(90deg, rgba(33,77,187,.04) 0%, transparent 55%);
+      gap: 20px;
+      padding: 28px 36px 26px;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+      background: linear-gradient(90deg, rgba(33,77,187,.05) 0%, transparent 60%);
       position: relative;
       z-index: 4;
     }
     #nexus-commercial-flow .nxcom-card-cap-badge {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
-      padding: 9px 20px 9px 14px;
+      gap: 12px;
+      padding: 11px 24px 11px 16px;
       border-radius: 999px;
       background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 100%);
       color: #fff;
       font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 11px;
+      font-size: 15px;
       font-weight: 950;
-      letter-spacing: .20em;
+      letter-spacing: .22em;
       text-transform: uppercase;
-      box-shadow: 0 8px 22px rgba(11,43,114,.28), inset 0 1px 0 rgba(255,255,255,.16);
+      box-shadow: 0 8px 24px rgba(11,43,114,.30), inset 0 1px 0 rgba(255,255,255,.14);
       white-space: nowrap;
     }
     #nexus-commercial-flow .nxcom-card-cap-badge::before {
       content: "";
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
-      box-shadow: 0 0 0 3px rgba(244,160,36,.30), 0 0 10px rgba(244,160,36,.55);
+      box-shadow: 0 0 0 3px rgba(244,160,36,.32), 0 0 12px rgba(244,160,36,.55);
       flex: 0 0 auto;
     }
     #nexus-commercial-flow .nxcom-card-cap-rule {
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, rgba(33,77,187,.22), rgba(33,77,187,.06) 55%, transparent);
+      background: linear-gradient(90deg, rgba(33,77,187,.18), transparent);
     }
     #nexus-commercial-flow .nxcom-card-cap-sub {
-      font-size: 11px;
-      font-weight: 600;
-      color: #8896b3;
-      letter-spacing: .05em;
+      font-size: 13px;
+      font-weight: 700;
+      color: #8a9ab8;
+      letter-spacing: .06em;
+      text-transform: uppercase;
       white-space: nowrap;
     }
 
@@ -2763,9 +2764,8 @@
     #nexus-nexy-section * { box-sizing: border-box; }
 
     .nexy-wrap {
-      max-width: 1320px;
+      width: min(1320px, calc(100% - 40px));
       margin: 0 auto;
-      padding: 0 20px;
     }
 
     /* ── card ── */
@@ -2779,22 +2779,23 @@
     .nexy-card-cap {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 18px 30px 16px;
-      border-bottom: 1px solid rgba(33,77,187,.09);
-      background: linear-gradient(90deg, rgba(33,77,187,.04) 0%, transparent 55%);
+      gap: 20px;
+      padding: 28px 36px 26px;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+      background: linear-gradient(90deg, rgba(33,77,187,.05) 0%, transparent 60%);
       border-radius: 24px 24px 0 0;
     }
     .nexy-cap-rule {
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, rgba(33,77,187,.14), transparent);
+      background: linear-gradient(90deg, rgba(33,77,187,.18), transparent);
     }
     .nexy-cap-sub {
-      font-size: 12px;
-      font-weight: 600;
-      color: #a0adc5;
-      letter-spacing: .04em;
+      font-size: 13px;
+      font-weight: 700;
+      color: #8a9ab8;
+      letter-spacing: .06em;
+      text-transform: uppercase;
       white-space: nowrap;
     }
     .nexy-card-body {
@@ -2814,24 +2815,24 @@
     .nexy-label {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 18px 8px 12px;
+      gap: 12px;
+      padding: 11px 24px 11px 16px;
       border-radius: 999px;
       background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 100%);
       color: #fff;
       font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 11px;
+      font-size: 15px;
       font-weight: 950;
-      letter-spacing: .18em;
+      letter-spacing: .22em;
       text-transform: uppercase;
-      box-shadow: 0 6px 18px rgba(11,43,114,.26);
+      box-shadow: 0 8px 24px rgba(11,43,114,.30), inset 0 1px 0 rgba(255,255,255,.14);
     }
     .nexy-label::before {
       content: "";
-      width: 8px; height: 8px;
+      width: 10px; height: 10px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
-      box-shadow: 0 0 0 3px rgba(244,160,36,.28), 0 0 8px rgba(244,160,36,.45);
+      box-shadow: 0 0 0 3px rgba(244,160,36,.32), 0 0 12px rgba(244,160,36,.55);
       flex: 0 0 auto;
     }
 
@@ -3023,7 +3024,7 @@
   <div class="nexy-wrap">
     <div class="nexy-card">
       <div class="nexy-card-cap">
-        <span class="nexy-label">NEXY &nbsp;·&nbsp; Flagship Candidate</span>
+        <span class="nexy-label">NEXY</span>
         <span class="nexy-cap-rule"></span>
         <span class="nexy-cap-sub">Multi-Role Agentic Candidate</span>
       </div>
