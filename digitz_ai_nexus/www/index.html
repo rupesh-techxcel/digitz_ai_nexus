@@ -197,8 +197,9 @@
 		.nx-main-layout {
 			display: grid;
 			grid-template-columns: minmax(0, 1.12fr) 120px minmax(0, 0.92fr);
-			gap: 18px;
-			align-items: start;
+			grid-template-rows: auto 88px auto;
+			column-gap: 18px;
+			row-gap: 0;
 		}
 
 		.nx-panel-card {
@@ -213,6 +214,9 @@
 		}
 
 		.nx-orbit-layer {
+			grid-column: 1;
+			grid-row: 1 / 4;
+			align-self: center;
 			background: var(--nx-panel);
 			min-height: 690px;
 			padding: 24px;
@@ -425,11 +429,11 @@
 		}
 
 		.nx-middle-connector {
+			grid-column: 2;
+			grid-row: 1;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			height: 100%;
-			min-height: 450px;
 		}
 
 		.nx-middle-connector-inner {
@@ -486,17 +490,10 @@
 			white-space: nowrap;
 		}
 
-		.nx-agentic-column {
-			display: grid;
-			grid-template-rows: auto 88px auto;
-			gap: 0;
-			align-self: start;
-		}
-
 		.nx-agentic-layer {
+			grid-column: 3;
+			grid-row: 1;
 			background: linear-gradient(135deg, var(--nx-blue-dark), var(--nx-blue));
-			min-height: 0;
-			height: 100%;
 			padding: 24px;
 			color: #ffffff;
 		}
@@ -580,6 +577,8 @@
 		}
 
 		.nx-agentic-candidates-connector {
+			grid-column: 3;
+			grid-row: 2;
 			position: relative;
 			display: flex;
 			align-items: center;
@@ -624,6 +623,8 @@
 		}
 
 		.nx-candidates-panel {
+			grid-column: 3;
+			grid-row: 3;
 			background: rgba(255,255,255,0.92);
 			padding: 22px;
 		}
@@ -827,11 +828,23 @@
 		@media (max-width: 1150px) {
 			.nx-main-layout {
 				grid-template-columns: 1fr;
+				grid-template-rows: auto auto auto auto auto;
 				gap: 16px;
 			}
 
+			.nx-orbit-layer,
+			.nx-middle-connector,
+			.nx-agentic-layer,
+			.nx-agentic-candidates-connector,
+			.nx-candidates-panel {
+				grid-column: 1;
+				grid-row: auto;
+				align-self: auto;
+			}
+
+			.nx-orbit-layer { min-height: auto; }
+
 			.nx-middle-connector {
-				min-height: auto;
 				height: 88px;
 			}
 
@@ -866,11 +879,6 @@
 
 			.nx-middle-badge {
 				top: 36px;
-			}
-
-			.nx-agentic-column {
-				grid-template-rows: auto 88px auto;
-				height: auto;
 			}
 		}
 
@@ -1032,8 +1040,7 @@
 				</div>
 			</div>
 
-			<div class="nx-agentic-column">
-				<div class="nx-agentic-layer nx-panel-card">
+			<div class="nx-agentic-layer nx-panel-card">
 					<div class="nx-agentic-brand">
 						<div class="nx-brand-badge">Nexus Agentic</div>
 					</div>
@@ -1086,7 +1093,6 @@
 						</div>
 					</div>
 				</div>
-			</div>
 
 		</div>
 	</div>
