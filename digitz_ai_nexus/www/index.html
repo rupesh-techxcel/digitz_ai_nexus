@@ -493,7 +493,7 @@
 		.nx-agentic-layer {
 			grid-column: 3;
 			grid-row: 1;
-			background: linear-gradient(135deg, var(--nx-blue-dark), var(--nx-blue));
+			background: linear-gradient(135deg, #2244a8 0%, #2e5cc8 100%);
 			padding: 24px;
 			color: #ffffff;
 		}
@@ -1257,10 +1257,11 @@
         position: relative;
         z-index: 4;
         display: grid;
-        grid-template-columns: minmax(260px, .58fr) minmax(0, 1fr);
-        gap: 20px;
-        align-items: center;
-        padding: 30px 30px 0;
+        grid-template-columns: minmax(260px, .52fr) minmax(0, 1fr);
+        gap: 24px;
+        align-items: stretch;
+        padding: 24px 24px 24px;
+        border-bottom: 1px solid rgba(33,77,187,.10);
       }
 
       #nexus-commercial-flow .nxcom-stage-title { min-height: 78px; }
@@ -2269,92 +2270,267 @@
       #nexus-commercial-flow .nxcom-hprod { padding: 0; }
     }
 
-    /* === Nexus Orbit section caption === */
-    #nexus-commercial-flow .nxcom-orbit-cap {
+    /* === Nexus Orbit card-level caption === */
+    #nexus-commercial-flow .nxcom-card-cap {
       display: flex;
       align-items: center;
-      gap: 20px;
-      padding: 0 4px 24px;
+      gap: 16px;
+      padding: 18px 30px 16px;
+      border-bottom: 1px solid rgba(33,77,187,.09);
+      background: linear-gradient(90deg, rgba(33,77,187,.04) 0%, transparent 55%);
+      position: relative;
+      z-index: 4;
     }
-    #nexus-commercial-flow .nxcom-orbit-cap-label {
+    #nexus-commercial-flow .nxcom-card-cap-badge {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 24px 12px 18px;
+      gap: 9px;
+      padding: 9px 20px 9px 14px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #0b2b72 0%, #123f99 100%);
-      border: 1px solid rgba(18,63,153,.30);
-      color: #ffffff;
+      background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 100%);
+      color: #fff;
       font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 950;
       letter-spacing: .20em;
       text-transform: uppercase;
-      box-shadow: 0 12px 28px rgba(18,63,153,.28), inset 0 1px 0 rgba(255,255,255,.18);
+      box-shadow: 0 8px 22px rgba(11,43,114,.28), inset 0 1px 0 rgba(255,255,255,.16);
       white-space: nowrap;
     }
-    #nexus-commercial-flow .nxcom-orbit-cap-label::before {
+    #nexus-commercial-flow .nxcom-card-cap-badge::before {
       content: "";
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
-      box-shadow: 0 0 0 4px rgba(244,160,36,.25), 0 0 14px rgba(244,160,36,.50);
+      box-shadow: 0 0 0 3px rgba(244,160,36,.30), 0 0 10px rgba(244,160,36,.55);
       flex: 0 0 auto;
     }
-    #nexus-commercial-flow .nxcom-orbit-cap-rule {
+    #nexus-commercial-flow .nxcom-card-cap-rule {
       flex: 1;
-      height: 1.5px;
-      background: linear-gradient(90deg, rgba(18,63,153,.30), rgba(18,63,153,.06) 60%, transparent);
+      height: 1px;
+      background: linear-gradient(90deg, rgba(33,77,187,.22), rgba(33,77,187,.06) 55%, transparent);
     }
-    #nexus-commercial-flow .nxcom-orbit-cap-meta {
+    #nexus-commercial-flow .nxcom-card-cap-sub {
       font-size: 11px;
-      font-weight: 700;
-      color: var(--nx-muted);
-      letter-spacing: .06em;
+      font-weight: 600;
+      color: #8896b3;
+      letter-spacing: .05em;
       white-space: nowrap;
-      opacity: .7;
+    }
+
+    /* === Title panel — dark navy theme === */
+    #nexus-commercial-flow .nxcom-stage-title {
+      min-height: 160px;
+      background:
+        radial-gradient(ellipse at 88% 88%, rgba(22,163,127,.20) 0%, transparent 44%),
+        radial-gradient(ellipse at 0% 0%, rgba(120,160,255,.18) 0%, transparent 48%),
+        linear-gradient(145deg, #1e46b0 0%, #2655cc 52%, #1f48b8 100%);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 20px;
+      padding: 26px 26px 26px 26px;
+      box-shadow: 0 14px 36px rgba(30,70,176,.22), inset 0 1px 0 rgba(255,255,255,.10);
+      position: relative;
+      overflow: hidden;
+    }
+    #nexus-commercial-flow .nxcom-stage-title::before {
+      content: "";
+      position: absolute;
+      right: -32px;
+      bottom: -32px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(90,216,190,.08), transparent 68%);
+      pointer-events: none;
+    }
+    #nexus-commercial-flow .nxcom-stage-title::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #e5a200 0%, #16A37F 100%);
+      border-radius: 4px 0 0 4px;
+    }
+
+    /* === Title panel — inner text colours === */
+    #nexus-commercial-flow .nxcom-step-kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    #nexus-commercial-flow .nxcom-step-num-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #16A37F 0%, #0e8567 100%);
+      color: #fff;
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: -.02em;
+      box-shadow: 0 6px 18px rgba(22,163,127,.40);
+      flex: 0 0 auto;
+    }
+    #nexus-commercial-flow .nxcom-step-word {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: #5ad8be;
+    }
+    #nexus-commercial-flow .nxcom-step-of {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,.28);
+    }
+    #nexus-commercial-flow .nxcom-stage-title strong {
+      display: block;
+      margin-bottom: 12px;
+      color: #ffffff !important;
+      font-family: 'Exo 2', Inter, sans-serif !important;
+      font-size: clamp(24px, 2.2vw, 38px) !important;
+      line-height: 1.06 !important;
+      font-weight: 950 !important;
+      letter-spacing: -.03em !important;
+    }
+    #nexus-commercial-flow .nxcom-stage-title span {
+      display: block;
+      color: rgba(160,190,240,.82) !important;
+      font-size: 14px !important;
+      line-height: 1.65 !important;
+    }
+
+    /* === Detail panel — clean teal-accented white === */
+    #nexus-commercial-flow .nxcom-detail-panel {
+      background: #ffffff;
+      border: 1px solid rgba(22,163,127,.22);
+      border-top: 4px solid #16A37F;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(22,163,127,.08), 0 2px 8px rgba(33,77,187,.06);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    #nexus-commercial-flow .nxcom-detail-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(22,163,127,.06) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #nexus-commercial-flow .nxcom-detail-panel-hd {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px 12px;
+      background: linear-gradient(90deg, rgba(22,163,127,.07) 0%, transparent 70%);
+      border-bottom: 1px solid rgba(22,163,127,.14);
+    }
+    #nexus-commercial-flow .nxcom-detail-panel-hd b {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      color: #0b6e5a;
+    }
+    #nexus-commercial-flow .nxcom-detail-panel-hd span {
+      font-size: 11px;
+      font-weight: 600;
+      color: #a0adc5;
+    }
+    #nexus-commercial-flow .nxcom-detail-panel > .nxcom-stage-pills {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      align-content: center;
+      padding: 14px;
+      gap: 10px;
     }
     </style>
 
     <div class="nxcom-container">
-      <div class="nxcom-orbit-cap">
-        <span class="nxcom-orbit-cap-label">Nexus Orbit</span>
-        <span class="nxcom-orbit-cap-rule"></span>
-        <span class="nxcom-orbit-cap-meta">Governed AI Knowledge &amp; Delivery</span>
-      </div>
-
       <div class="nxcom-story-card">
+        <div class="nxcom-card-cap">
+          <span class="nxcom-card-cap-badge">Nexus Orbit</span>
+          <span class="nxcom-card-cap-rule"></span>
+          <span class="nxcom-card-cap-sub">Governed AI Knowledge &amp; Delivery</span>
+        </div>
+
         <div class="nxcom-story-top">
           <div class="nxcom-stage-title" aria-live="polite">
             <div class="nxcom-stage-copy" data-step="0">
+              <div class="nxcom-step-kicker">
+                <span class="nxcom-step-num-badge">01</span>
+                <span class="nxcom-step-word">Persist</span>
+                <span class="nxcom-step-of">/ 05</span>
+              </div>
               <strong>First, each tenant gets a persistent knowledge layer.</strong>
               <span>Business content becomes a governed knowledge system \u2014 separated by tenant, reusable across channels, and ready for AI delivery.</span>
             </div>
             <div class="nxcom-stage-copy" data-step="1">
+              <div class="nxcom-step-kicker">
+                <span class="nxcom-step-num-badge">02</span>
+                <span class="nxcom-step-word">Protect</span>
+                <span class="nxcom-step-of">/ 05</span>
+              </div>
               <strong>Then, access control becomes part of the knowledge.</strong>
               <span>Knowledge Profiles expose only the safe, approved surface for each business situation.</span>
             </div>
             <div class="nxcom-stage-copy" data-step="2">
+              <div class="nxcom-step-kicker">
+                <span class="nxcom-step-num-badge">03</span>
+                <span class="nxcom-step-word">Qualify</span>
+                <span class="nxcom-step-of">/ 05</span>
+              </div>
               <strong>Next, the visitor becomes an identity profile.</strong>
               <span>Public, customer, employee, partner, or training identities are resolved before delivery.</span>
             </div>
             <div class="nxcom-stage-copy" data-step="3">
+              <div class="nxcom-step-kicker">
+                <span class="nxcom-step-num-badge">04</span>
+                <span class="nxcom-step-word">Behaviour</span>
+                <span class="nxcom-step-of">/ 05</span>
+              </div>
               <strong>Then, the chatbot follows its behaviour profile.</strong>
               <span>Persona, tone, fallback rules, confidence threshold, and escalation policy guide the AI response.</span>
             </div>
             <div class="nxcom-stage-copy" data-step="4">
+              <div class="nxcom-step-kicker">
+                <span class="nxcom-step-num-badge">05</span>
+                <span class="nxcom-step-word">Escalate</span>
+                <span class="nxcom-step-of">/ 05</span>
+              </div>
               <strong>When needed, AI escalates to a human.</strong>
               <span>The handoff keeps tenant, identity, channel, and knowledge context so the human team can continue safely.</span>
             </div>
           </div>
 
-          <div class="nxcom-stage-pills" role="tablist" aria-label="Governance story stages">
-            <button class="nxcom-stage-pill" type="button" data-step="0"><b>Persist</b><span>Layered tenant knowledge</span></button>
-            <button class="nxcom-stage-pill" type="button" data-step="1"><b>Protect</b><span>Profiled knowledge access</span></button>
-            <button class="nxcom-stage-pill" type="button" data-step="2"><b>Qualify</b><span>Identity-aware delivery</span></button>
-            <button class="nxcom-stage-pill" type="button" data-step="3"><b>Behaviour</b><span>Agent tone, fallback, escalation rules</span></button>
-            <button class="nxcom-stage-pill" type="button" data-step="4"><b>Escalate</b><span>AI to human when needed</span></button>
+          <div class="nxcom-detail-panel">
+            <div class="nxcom-detail-panel-hd">
+              <b>Governance Journey</b>
+              <span>5 steps · auto-advancing</span>
+            </div>
+            <div class="nxcom-stage-pills" role="tablist" aria-label="Governance story stages">
+              <button class="nxcom-stage-pill" type="button" data-step="0"><b>Persist</b><span>Layered tenant knowledge</span></button>
+              <button class="nxcom-stage-pill" type="button" data-step="1"><b>Protect</b><span>Profiled knowledge access</span></button>
+              <button class="nxcom-stage-pill" type="button" data-step="2"><b>Qualify</b><span>Identity-aware delivery</span></button>
+              <button class="nxcom-stage-pill" type="button" data-step="3"><b>Behaviour</b><span>Agent tone, fallback, escalation rules</span></button>
+              <button class="nxcom-stage-pill" type="button" data-step="4"><b>Escalate</b><span>AI to human when needed</span></button>
+            </div>
           </div>
         </div>
 
