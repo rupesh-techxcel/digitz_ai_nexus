@@ -1160,7 +1160,7 @@
 								<div>
 									<span class="subtitle">Flagship Candidate</span>
 									<strong>Nexy</strong>
-									<p>Sales-focused candidate for outreach, persuasion, CRM updates, and notifications.</p>
+									<p>A multi-role AI candidate — from customer care and sales orchestration to analytics and beyond. One candidate, any business function.</p>
 								</div>
 								<div class="chip">Flagship</div>
 							</div>
@@ -2749,6 +2749,363 @@
     </script>
   </section>
   <!-- End Nexus AI Governance Story Section -->
+
+  <!-- ═══════════════════════════════════════════════════════ NEXY SECTION ══ -->
+  <section id="nexus-nexy-section" aria-label="Why NEXY">
+  <style>
+    #nexus-nexy-section {
+      position: relative;
+      background: #eef4ff;
+      padding: 40px 0 56px;
+      font-family: Inter, Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    #nexus-nexy-section * { box-sizing: border-box; }
+
+    .nexy-wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── card ── */
+    .nexy-card {
+      background: transparent;
+      border: 1px solid rgba(33,77,187,.14);
+      border-radius: 24px;
+      box-shadow: 0 18px 50px rgba(16,43,103,.16);
+      overflow: visible;
+    }
+    .nexy-card-cap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 30px 16px;
+      border-bottom: 1px solid rgba(33,77,187,.09);
+      background: linear-gradient(90deg, rgba(33,77,187,.04) 0%, transparent 55%);
+      border-radius: 24px 24px 0 0;
+    }
+    .nexy-cap-rule {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(33,77,187,.14), transparent);
+    }
+    .nexy-cap-sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: #a0adc5;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .nexy-card-body {
+      padding: 40px 40px 48px;
+    }
+
+    /* ── header ── */
+    .nexy-header-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+      margin-bottom: 52px;
+    }
+    .nexy-header-left { max-width: 600px; }
+
+    .nexy-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px 8px 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 100%);
+      color: #fff;
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      box-shadow: 0 6px 18px rgba(11,43,114,.26);
+    }
+    .nexy-label::before {
+      content: "";
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
+      box-shadow: 0 0 0 3px rgba(244,160,36,.28), 0 0 8px rgba(244,160,36,.45);
+      flex: 0 0 auto;
+    }
+
+    .nexy-title {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: clamp(30px, 3.2vw, 48px);
+      font-weight: 950;
+      color: #0e1e42;
+      line-height: 1.08;
+      margin: 0 0 18px;
+      letter-spacing: -.03em;
+    }
+    .nexy-title em {
+      font-style: normal;
+      background: linear-gradient(90deg, #214dbb 0%, #16A37F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nexy-sub {
+      font-size: 15.5px;
+      color: #53688f;
+      line-height: 1.68;
+      margin: 0;
+      max-width: 520px;
+    }
+
+    .nexy-header-right {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nexy-stat {
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid rgba(33,77,187,.14);
+      border-radius: 18px;
+      padding: 18px 22px 16px;
+      box-shadow: 0 4px 18px rgba(33,77,187,.08);
+      min-width: 108px;
+    }
+    .nexy-stat strong {
+      display: block;
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 28px;
+      font-weight: 950;
+      color: #214dbb;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .nexy-stat span {
+      font-size: 11px;
+      font-weight: 700;
+      color: #8a9ab8;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    /* ── role cards grid ── */
+    .nexy-roles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .nexy-role-card {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid rgba(33,77,187,.15);
+      border-radius: 22px;
+      padding: 30px 24px 26px;
+      box-shadow: 0 6px 24px rgba(33,77,187,.09);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform .28s ease, box-shadow .28s ease;
+      overflow: hidden;
+    }
+    .nexy-role-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 44px rgba(33,77,187,.14);
+    }
+    .nexy-role-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 18px; right: 18px;
+      height: 4px;
+      border-radius: 0 0 99px 99px;
+    }
+    .nexy-role-card[data-role="0"]::before { background: linear-gradient(90deg, #16A37F, #0ecb9b); }
+    .nexy-role-card[data-role="1"]::before { background: linear-gradient(90deg, #214dbb, #4472e6); }
+    .nexy-role-card[data-role="2"]::before { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+    .nexy-role-card.nexy-role-more::before { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
+
+    .nexy-role-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px;
+    }
+    .nexy-role-card[data-role="0"] .nexy-role-icon { background: rgba(22,163,127,.10); }
+    .nexy-role-card[data-role="1"] .nexy-role-icon { background: rgba(33,77,187,.08); }
+    .nexy-role-card[data-role="2"] .nexy-role-icon { background: rgba(124,58,237,.08); }
+    .nexy-role-more .nexy-role-icon { background: #f1f5f9; }
+
+    .nexy-role-num {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .nexy-role-card[data-role="0"] .nexy-role-num { color: #16A37F; }
+    .nexy-role-card[data-role="1"] .nexy-role-num { color: #214dbb; }
+    .nexy-role-card[data-role="2"] .nexy-role-num { color: #7c3aed; }
+    .nexy-role-more .nexy-role-num { color: #a0adc5; }
+
+    .nexy-role-card h3 {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #0e1e42;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .nexy-role-more h3 { color: #6b7c9e; font-size: 17px; }
+
+    .nexy-role-card p {
+      font-size: 14px;
+      color: #53688f;
+      line-height: 1.62;
+      margin: 0;
+      flex: 1;
+    }
+    .nexy-role-more p { color: #8a9ab8; font-size: 13.5px; }
+
+    .nexy-role-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .nexy-role-tags span {
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .nexy-role-card[data-role="0"] .nexy-role-tags span { background: rgba(22,163,127,.09); color: #0b6e5a; border: 1px solid rgba(22,163,127,.22); }
+    .nexy-role-card[data-role="1"] .nexy-role-tags span { background: rgba(33,77,187,.08); color: #1a3fa8; border: 1px solid rgba(33,77,187,.18); }
+    .nexy-role-card[data-role="2"] .nexy-role-tags span { background: rgba(124,58,237,.08); color: #6d28d9; border: 1px solid rgba(124,58,237,.18); }
+
+    .nexy-role-more {
+      background: linear-gradient(140deg, #f8faff 0%, #f0f4ff 100%);
+      border-style: dashed;
+      border-color: rgba(33,77,187,.22);
+    }
+    .nexy-role-more:hover { transform: none; box-shadow: 0 6px 24px rgba(33,77,187,.09); }
+
+    .nexy-more-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .nexy-more-tags span {
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8a9ab8;
+      background: rgba(33,77,187,.06);
+      border: 1px solid rgba(33,77,187,.12);
+    }
+
+    @media (max-width: 1024px) {
+      .nexy-roles { grid-template-columns: repeat(2, 1fr); }
+      .nexy-header-row { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 600px) {
+      .nexy-roles { grid-template-columns: 1fr; }
+      .nexy-header-right { display: none; }
+    }
+  </style>
+
+  <div class="nexy-wrap">
+    <div class="nexy-card">
+      <div class="nexy-card-cap">
+        <span class="nexy-label">NEXY &nbsp;·&nbsp; Flagship Candidate</span>
+        <span class="nexy-cap-rule"></span>
+        <span class="nexy-cap-sub">Multi-Role Agentic Candidate</span>
+      </div>
+      <div class="nexy-card-body">
+
+    <div class="nexy-header-row">
+      <div class="nexy-header-left">
+        <h2 class="nexy-title">One Agentic Candidate.<br><em>Every business role.</em></h2>
+        <p class="nexy-sub">NEXY is not a sales bot. It is a multi-role AI candidate built on the Nexus platform — each role carries its own governed behaviour profile, knowledge scope, and identity rules. Deploy one agentic candidate. Activate any function.</p>
+      </div>
+      <div class="nexy-header-right">
+        <div class="nexy-stat">
+          <strong>3+</strong>
+          <span>Live Roles</span>
+        </div>
+        <div class="nexy-stat">
+          <strong>∞</strong>
+          <span>Expandable</span>
+        </div>
+        <div class="nexy-stat">
+          <strong>1</strong>
+          <span>Agentic</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nexy-roles">
+
+      <div class="nexy-role-card" data-role="0">
+        <div class="nexy-role-icon">
+          <svg viewBox="0 0 28 28" fill="none" width="26" height="26"><path d="M4 7a3 3 0 013-3h14a3 3 0 013 3v9a3 3 0 01-3 3H9l-5 4V7z" fill="rgba(22,163,127,.20)" stroke="#16A37F" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 10h10M9 14h6" stroke="#16A37F" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <span class="nexy-role-num">Role 01</span>
+        <h3>Customer Companion</h3>
+        <p>Always-on support that guides customers through queries, products, and service journeys — with identity-aware responses, the right tone, and seamless escalation when human judgment is needed.</p>
+        <div class="nexy-role-tags">
+          <span>Support</span><span>Retention</span><span>Self-service</span>
+        </div>
+      </div>
+
+      <div class="nexy-role-card" data-role="1">
+        <div class="nexy-role-icon">
+          <svg viewBox="0 0 28 28" fill="none" width="26" height="26"><circle cx="14" cy="14" r="10" fill="rgba(33,77,187,.12)" stroke="#214dbb" stroke-width="1.6"/><circle cx="14" cy="14" r="5.5" stroke="#214dbb" stroke-width="1.4"/><circle cx="14" cy="14" r="2" fill="#214dbb"/><path d="M14 4v3M14 21v3M4 14h3M21 14h3" stroke="#214dbb" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <span class="nexy-role-num">Role 02</span>
+        <h3>Sales Orchestration</h3>
+        <p>Drives outreach, qualifies prospects, nurtures leads, and updates CRM — transferring to human reps at the precise moment with full conversation context and deal signals intact.</p>
+        <div class="nexy-role-tags">
+          <span>Outreach</span><span>CRM</span><span>Lead Nurture</span>
+        </div>
+      </div>
+
+      <div class="nexy-role-card" data-role="2">
+        <div class="nexy-role-icon">
+          <svg viewBox="0 0 28 28" fill="none" width="26" height="26"><rect x="4" y="4" width="20" height="20" rx="4" fill="rgba(124,58,237,.10)" stroke="#7c3aed" stroke-width="1.6"/><path d="M8 18l4-5 4 3 4-7" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="nexy-role-num">Role 03</span>
+        <h3>Sales Intelligence</h3>
+        <p>Surfaces patterns from conversations, pipeline activity, and buyer behaviour — converting governed AI interactions into actionable insight for forecasting and decision-making.</p>
+        <div class="nexy-role-tags">
+          <span>Analytics</span><span>Pipeline</span><span>Forecasting</span>
+        </div>
+      </div>
+
+      <div class="nexy-role-card nexy-role-more">
+        <div class="nexy-role-icon">
+          <svg viewBox="0 0 28 28" fill="none" width="26" height="26"><circle cx="14" cy="14" r="10" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3"/><path d="M14 9v10M9 14h10" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <span class="nexy-role-num">More Roles</span>
+        <h3>Expanding functions</h3>
+        <p>NEXY's role library is growing. Each new role brings its own governed profile — scoped knowledge, behaviour rules, and escalation policy.</p>
+        <div class="nexy-more-tags">
+          <span>HR Companion</span><span>Ops Coordinator</span><span>Training Mentor</span><span>Finance Assistant</span>
+        </div>
+      </div>
+
+    </div>
+      </div>
+    </div>
+  </div>
+  </section>
+  <!-- End NEXY Section ════════════════════════════════════════════════════ -->
 
 
   <section class="section nexus-coverage-section" id="commercial-value" style="display:none">
