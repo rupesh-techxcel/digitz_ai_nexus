@@ -1,0 +1,278 @@
+{
+ "actions": [],
+ "autoname": "KG-.YYYY.-.#####",
+ "creation": "2026-06-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "semantic_key",
+  "query",
+  "normalized_query",
+  "section_context",
+  "tenant",
+  "channel",
+  "gap_type",
+  "access_status",
+  "confidence",
+  "frequency",
+  "first_seen_on",
+  "last_seen_on",
+  "sample_queries_json",
+  "detection_mode",
+  "section_status",
+  "status",
+  "llm_assessment_status",
+  "section_llm",
+  "is_relevant",
+  "relevance_confidence",
+  "suggested_context",
+  "suggested_topic",
+  "llm_summary",
+  "section_action",
+  "suggested_knowledge_unit",
+  "suggested_knowledge_source",
+  "action_notes",
+  "actioned_by",
+  "actioned_on",
+  "visitor_email",
+  "visitor_email_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "semantic_key",
+   "fieldtype": "Data",
+   "label": "Semantic Key",
+   "hidden": 1,
+   "read_only": 1,
+   "unique": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "query",
+   "fieldtype": "Long Text",
+   "label": "User Query",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "normalized_query",
+   "fieldtype": "Small Text",
+   "label": "Normalized Query",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_context",
+   "fieldtype": "Section Break",
+   "label": "Context"
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Data",
+   "label": "Channel"
+  },
+  {
+   "fieldname": "gap_type",
+   "fieldtype": "Select",
+   "label": "Gap Type",
+   "options": "No Context\nLow Confidence\nRestricted Access",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "access_status",
+   "fieldtype": "Data",
+   "label": "Access Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confidence",
+   "fieldtype": "Float",
+   "label": "Confidence",
+   "precision": "2",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "frequency",
+   "fieldtype": "Int",
+   "label": "Frequency",
+   "default": "1",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "first_seen_on",
+   "fieldtype": "Datetime",
+   "label": "First Seen On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_seen_on",
+   "fieldtype": "Datetime",
+   "label": "Last Seen On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sample_queries_json",
+   "fieldtype": "Code",
+   "label": "Sample Queries (JSON)",
+   "options": "JSON",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "detection_mode",
+   "fieldtype": "Select",
+   "label": "Detection Mode",
+   "options": "Reactive\nProactive",
+   "default": "Reactive",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "New\nUnder Review\nWatching\nActioned\nDismissed",
+   "default": "New",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "llm_assessment_status",
+   "fieldtype": "Select",
+   "label": "LLM Assessment",
+   "options": "Pending\nCompleted\nFailed",
+   "default": "Pending",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_llm",
+   "fieldtype": "Section Break",
+   "label": "LLM Assessment"
+  },
+  {
+   "fieldname": "is_relevant",
+   "fieldtype": "Check",
+   "label": "In-Domain (LLM says this topic belongs in the knowledge base)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "relevance_confidence",
+   "fieldtype": "Float",
+   "label": "Relevance Confidence",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "suggested_context",
+   "fieldtype": "Data",
+   "label": "Suggested Context Area",
+   "read_only": 1
+  },
+  {
+   "fieldname": "suggested_topic",
+   "fieldtype": "Data",
+   "label": "Suggested Topic",
+   "read_only": 1
+  },
+  {
+   "fieldname": "llm_summary",
+   "fieldtype": "Small Text",
+   "label": "LLM Assessment Summary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_action",
+   "fieldtype": "Section Break",
+   "label": "Admin Action"
+  },
+  {
+   "fieldname": "suggested_knowledge_unit",
+   "fieldtype": "Link",
+   "label": "Linked Knowledge Unit",
+   "options": "Nexus Knowledge Unit"
+  },
+  {
+   "fieldname": "suggested_knowledge_source",
+   "fieldtype": "Link",
+   "label": "Linked Knowledge Source",
+   "options": "Nexus Knowledge Source"
+  },
+  {
+   "fieldname": "action_notes",
+   "fieldtype": "Small Text",
+   "label": "Action Notes"
+  },
+  {
+   "fieldname": "actioned_by",
+   "fieldtype": "Link",
+   "label": "Actioned By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actioned_on",
+   "fieldtype": "Datetime",
+   "label": "Actioned On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "visitor_email",
+   "fieldtype": "Data",
+   "label": "Visitor Email",
+   "options": "Email"
+  },
+  {
+   "default": "N/A",
+   "fieldname": "visitor_email_status",
+   "fieldtype": "Select",
+   "label": "Email Status",
+   "options": "N/A\nPending\nNotified",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-06-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Knowledge",
+ "name": "Nexus Knowledge Gap",
+ "naming_rule": "Expression",
+ "autoname": "KG-.YYYY.-.#####",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "last_seen_on",
+ "sort_order": "DESC",
+ "states": [
+  {"color": "Blue",   "title": "New"},
+  {"color": "Yellow", "title": "Under Review"},
+  {"color": "Purple", "title": "Watching"},
+  {"color": "Green",  "title": "Actioned"},
+  {"color": "Gray",   "title": "Dismissed"}
+ ],
+ "track_changes": 1
+}

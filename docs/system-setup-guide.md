@@ -153,6 +153,15 @@ The seed creates one profile linked to `PUBLIC-AI-ASSISTANT`. Open it and verify
 | Escalation Enabled | as needed |
 | Fallback Message | `I do not have enough approved knowledge to answer this.` |
 
+**Smart Fallback & Email Follow-up fields** (below Fallback Message):
+
+| Field | Default | Description |
+|---|---|---|
+| **Fallback Topic** | *(blank)* | Short domain label included in the fallback message, e.g. `"Nexus AI platform configuration"`. When set, the visitor sees *"You've asked something related to [Fallback Topic]…"* instead of the generic fallback. |
+| **Offer Email Follow-up on Fallback** | ✓ On | When enabled, every fallback response offers the visitor an email notification when the gap is resolved. Disable only if you want the old plain-text fallback for a specific agent. |
+
+> **This is default behaviour.** Both public and verified-identity visitors are offered email follow-up automatically. Desk users are never shown the email prompt.
+
 **Access Categories tab** — must have at least one row:
 
 | Access Category | Enabled |
@@ -171,9 +180,16 @@ Save.
 
 Navigate to: **Nexus Live Channel** list → confirm `WEBSITE-CHAT` exists.
 
-Channels are logical backend contexts. For a public website widget, the visitor does not select a channel directly. The widget can show all published external chat categories that belong to enabled Website Chat channels for the active tenant.
+Channels are logical backend contexts. The **Channel Type** determines which users see the channel's categories:
 
-Key fields:
+| Channel Type | Who sees its categories |
+|---|---|
+| `Website Chat` | Anonymous / public visitors via the website widget |
+| `Desk` | Logged-in Frappe desk users via the desk chat widget |
+
+> **Important:** A `Website Chat` channel is for the public website widget only. Desk users require a separate channel with Channel Type = `Desk` — see Phase 6.1.
+
+Key fields for the public website channel:
 
 | Field | Value |
 |---|---|
@@ -193,10 +209,13 @@ Navigate to: **Nexus Chat Category** list → confirm `GENERAL-SUPPORT` exists.
 | Category Label | `General Support` |
 | Channel | `WEBSITE-CHAT` |
 | Enabled | ✓ |
-| Requires Authentication | unchecked (for public) |
+| Published | ✓ |
+| Visibility | `External` or `Both` |
 | Identity Verification Mode | `None` |
 
 The category belongs to one channel. Selecting the category in the widget implies the channel behind the scenes.
+
+> **A category must be both Enabled AND Published to appear in the chat widget.** An enabled but unpublished category is invisible to visitors and desk users.
 
 ### 5.3 Category Identity Route
 
@@ -211,8 +230,11 @@ Verify or create this route:
 | Identity Type | `Public` |
 | AI Agent Profile | *(the seeded profile linked to PUBLIC-AI-ASSISTANT)* |
 | Enabled | ✓ |
+| Published | ✓ |
 
 This maps: **anonymous visitor selecting GENERAL-SUPPORT under its Website Chat channel → PUBLIC-AI-ASSISTANT profile**.
+
+> **The route must also be Published.** An enabled but unpublished route is not active — the system will return "No active AI Agent Profile route" when trying to start a chat.
 
 The route should not be used to move a category to a different channel. The category establishes the channel; the route establishes which identity/profile/knowledge path handles that category.
 
@@ -247,9 +269,60 @@ If no onboarding record exists, create one manually and set status to `Approved`
 
 ## Phase 6 — Desk User Access (for internal chat)
 
-This is needed only for logged-in desk users who want to chat from the **Nexus Live Console**.
+Logged-in Frappe desk users use the **Nexus Chat Widget** embedded in the desk interface. They need a dedicated **Desk-type** Live Channel, a **published** Chat Category, a **published** Category Identity Route, an AI Agent Profile, and a User Profile Assignment.
 
-### 6.1 Create an Internal AI Agent Profile
+> **Common mistake:** Using a `Website Chat` channel type for desk users. The desk widget only loads categories from channels with Channel Type = `Desk`. A Website Chat channel will not appear in the desk widget even if it is enabled and published.
+
+### 6.1 Create a Desk Live Channel
+
+Navigate to: **Nexus Live Channel** → New.
+
+| Field | Value |
+|---|---|
+| Channel Code | `WEBSITE-INTERNAL-CHAT` |
+| Channel Name | `Website Internal Chat` |
+| Channel Type | **`Desk`** |
+| Tenant | *(your tenant)* |
+| Enabled | ✓ |
+| Public Access | unchecked |
+
+Save.
+
+### 6.2 Create a Desk Chat Category
+
+Navigate to: **Nexus Chat Category** → New.
+
+| Field | Value |
+|---|---|
+| Category Code | `INTERNAL-SUPPORT` |
+| Category Label | `Internal Support` |
+| Channel | `WEBSITE-INTERNAL-CHAT` |
+| Enabled | ✓ |
+| Published | ✓ |
+| Visibility | `Internal` or `Both` |
+
+Save.
+
+> The category must be **Published** (not just Enabled) to appear in the desk chat widget. Unpublished categories are never loaded by the widget regardless of their enabled status.
+
+### 6.3 Create a Category Identity Route for Desk
+
+Navigate to: **Nexus Category Identity Route** → New.
+
+| Field | Value |
+|---|---|
+| Channel | `WEBSITE-INTERNAL-CHAT` |
+| Chat Category | `INTERNAL-SUPPORT` |
+| Identity Type | `Desk User` |
+| AI Agent Profile | `Internal User Profile` *(see 6.4)* |
+| Enabled | ✓ |
+| Published | ✓ |
+
+Save.
+
+> The route must also be **Published**. An enabled but unpublished route will not resolve the profile and the chat will fail with "No active AI Agent Profile route".
+
+### 6.4 Create an Internal AI Agent Profile
 
 Create a new **Nexus AI Agent Profile**:
 
@@ -266,7 +339,7 @@ Create a new **Nexus AI Agent Profile**:
 |---|---|
 | `Internal Access` | ✓ |
 
-### 6.2 Assign the Profile to the Desk User
+### 6.5 Assign the Profile to the Desk User
 
 Navigate to: **Nexus User Profile Assignment** → New.
 
@@ -278,7 +351,7 @@ Navigate to: **Nexus User Profile Assignment** → New.
 
 Save.
 
-> Without this, the desk user gets a "no profile assignment" error when starting a chat from the console.
+> Without this, the desk user gets a "no profile assignment" error when starting a chat.
 
 ---
 
@@ -334,6 +407,8 @@ Back on the Knowledge Source form:
 2. Click **Publish** — source status becomes `Published`, `retrieval_ready` = 1
 
 Chunks are now live for retrieval.
+
+> **Auto-notification trigger:** If this source was created from a Knowledge Gap (via **+ KS** on the Gap Review page) and the visitor left their email, publishing the source automatically sends the visitor a follow-up email using the `nexus-gap-visitor-followup` template — no manual action required. See Phase 10.
 
 ---
 
@@ -437,6 +512,136 @@ See `apps/digitz_ai_nexus_agentic/docs/AGENTIC_ARCHITECTURE.md` for the full run
 
 ---
 
+## Phase 10 — Knowledge Gap Review & Visitor Email Follow-up
+
+### Overview
+
+When a visitor asks a question that has no matching knowledge, the system:
+
+1. Records a **Nexus Knowledge Gap** (reactive detection)
+2. Responds with a contextual fallback message referencing the configured **Fallback Topic**
+3. Offers the visitor an **email notification** for when the information becomes available
+4. Validates the visitor's email with a **one-time OTP** before saving it
+5. When an admin **publishes a Knowledge Source** that resolves the gap, the visitor is **automatically notified** by email
+
+---
+
+### 10.1 How the Visitor Experience Works
+
+**Widget chat flow when a fallback occurs:**
+
+```
+AI cannot answer → fallback message shown:
+
+  With Fallback Topic set:
+  "Our knowledge base is continuously being fine-tuned based on user
+   queries and interactions. Your question on [Fallback Topic] has been
+   noted and is a valuable input to this process. We would be happy to
+   revert back to you once this topic is covered in our knowledge base.
+   Would you like us to respond to you via email?"
+
+  Without Fallback Topic:
+  "Our knowledge base is continuously being fine-tuned based on user
+   queries and interactions. Your query has been noted and is a valuable
+   input to this process. We would be happy to revert back to you once
+   this is covered in our knowledge base.
+   Would you like us to respond to you via email?"
+
+→ Visitor types email → OTP sent via nexus-gap-otp-verification template
+→ Visitor enters OTP code → email saved on the Knowledge Gap (status: Pending)
+```
+
+**If the visitor already verified their identity** (identity verification OTP already done in the same session), the system skips the OTP and shows a simple confirmation:
+> *"We'll notify you at [email] when we have this information. Would you like to proceed?"*
+
+**Desk users** never see the email prompt — it is suppressed automatically.
+
+---
+
+### 10.2 Knowledge Gap Review Page
+
+Navigate to: `/app/nexus-knowledge-gap-review`
+
+The page is also accessible from the **Nexus Studio workspace** under the **Knowledge Workbench** section.
+
+**Summary bar chips:**
+
+| Chip | Meaning |
+|---|---|
+| Total | All gap records |
+| New | Gaps not yet actioned |
+| Relevant | LLM assessed as in-domain |
+| No Context | Queries with no matching knowledge |
+| Low Confidence | Queries answered below confidence threshold |
+| **Pending Follow-up** | Visitor emails saved, notification not yet sent |
+
+**Table columns:**
+
+| Column | Content |
+|---|---|
+| Query | Visitor's question, suggested topic, tenant |
+| Type | No Context / Low Confidence / Restricted Access |
+| Freq | Times the same question has been asked |
+| Conf | Answer confidence (0–100%) |
+| LLM | LLM relevance assessment and summary |
+| Status | New / Under Review / Watching / Actioned / Dismissed |
+| **Follow-up** | Visitor email + status; **Notify Visitor** button when pending |
+| Last Seen | Date of most recent occurrence |
+| Actions | Review, +KS, Reassess, Dismiss, ↗ |
+
+---
+
+### 10.3 Admin Workflow — Resolving a Gap
+
+1. Open **Knowledge Gap Review** → find a relevant gap
+2. Click **+ KS** → fill in the Knowledge Source form → click **Create Knowledge Source**
+3. The gap records `suggested_knowledge_source` pointing to the new source
+4. Work the source through the normal pipeline: **Process → Validate → Publish**
+5. On **Publish**, the system auto-sends the follow-up email to the visitor (if email was captured)
+
+**Manual notification:** If you want to notify the visitor before publishing (e.g. to tell them a partial answer), click **Notify Visitor** in the Follow-up column while status is Pending.
+
+> Once notified (manually or automatically), `visitor_email_status` is set to `Notified` and the button disappears. The email will **not** fire again — the status flag prevents duplicates from both paths.
+
+---
+
+### 10.4 Email Templates
+
+Two templates are loaded via fixtures on installation:
+
+| Template Name | Used When | Variables |
+|---|---|---|
+| `nexus-gap-otp-verification` | OTP sent to verify visitor email | `{{ otp }}`, `{{ validity_minutes }}` |
+| `nexus-gap-visitor-followup` | Follow-up sent when gap is resolved | `{{ gap_query }}`, `{{ gap_topic }}`, `{{ tenant_name }}` |
+
+Customise these via **Email Template** list in the desk. Variable placeholders use Jinja2 syntax.
+
+---
+
+### 10.5 Proactive Gap Detection
+
+In addition to reactive gaps (created on each fallback), the system can scan query logs for uncovered topic clusters.
+
+- **Scheduled:** Runs weekly (`detect_proactive_gaps` scheduler job)
+- **Manual trigger:** Click **Detect Gaps Now** on the Knowledge Gap Review page
+
+Proactive gaps appear with a purple **Proactive** badge in the Query column.
+
+---
+
+### 10.6 Configuration Checklist for Email Follow-up
+
+```
+[ ] Nexus AI Agent Profile — Offer Email Follow-up on Fallback = checked (default)
+[ ] Nexus AI Agent Profile — Fallback Topic set (e.g. "Company HR policies")
+[ ] Email Template nexus-gap-otp-verification — exists (loaded via fixtures)
+[ ] Email Template nexus-gap-visitor-followup — exists (loaded via fixtures)
+[ ] Outgoing email configured in Frappe (Email Account → Outgoing)
+[ ] Nexus Tenant — tenant_name set (used as sign-off in follow-up email)
+```
+
+---
+
 ## Quick-Start Checklist
 
 ```
@@ -447,13 +652,31 @@ See `apps/digitz_ai_nexus_agentic/docs/AGENTIC_ARCHITECTURE.md` for the full run
 [ ] Nexus Access Policy — Public exists, not disabled
 [ ] Nexus Access Category — Public Access → Public policy
 [ ] Nexus AI Agent Profile — linked to agent, Public Access category assigned
-[ ] Nexus Live Channel — WEBSITE-CHAT enabled
-[ ] Nexus Chat Category — GENERAL-SUPPORT enabled, channel=WEBSITE-CHAT
-[ ] Nexus Category Identity Route — GENERAL-SUPPORT + Public identity context → profile, enabled
+
+# Public website chat
+[ ] Nexus Live Channel — WEBSITE-CHAT, channel_type=Website Chat, enabled
+[ ] Nexus Chat Category — GENERAL-SUPPORT, channel=WEBSITE-CHAT, enabled AND published
+[ ] Nexus Category Identity Route — GENERAL-SUPPORT + Public identity → profile, enabled AND published
 [ ] Nexus Live Agent — PUBLIC-AI-ASSISTANT, type=AI, status=Idle, enabled=1
 [ ] Nexus Agent Onboarding — PUBLIC-AI-ASSISTANT, status=Approved
+
+# Desk user (internal) chat
+[ ] Nexus Live Channel — WEBSITE-INTERNAL-CHAT, channel_type=Desk, enabled
+[ ] Nexus Chat Category — INTERNAL-SUPPORT, channel=WEBSITE-INTERNAL-CHAT, enabled AND published
+[ ] Nexus Category Identity Route — INTERNAL-SUPPORT + Desk User identity → profile, enabled AND published
+[ ] Nexus AI Agent Profile — Internal User Profile, Internal Access category assigned
 [ ] Nexus User Profile Assignment — for each desk user who needs internal chat
+
+# Knowledge
 [ ] Nexus Knowledge Source — at least one Published source with access_policy=Public
 [ ] Knowledge Chunks — embedding_status=Completed, disabled=0
 [ ] Background worker running — bench worker --queue short
+
+# Knowledge Gap & Email Follow-up
+[ ] Nexus AI Agent Profile — Offer Email Follow-up on Fallback = checked
+[ ] Nexus AI Agent Profile — Fallback Topic set (optional but recommended)
+[ ] Email Template nexus-gap-otp-verification — exists (auto-loaded via fixtures)
+[ ] Email Template nexus-gap-visitor-followup — exists (auto-loaded via fixtures)
+[ ] Outgoing email configured in Frappe Email Account
+[ ] Nexus Tenant — tenant_name set
 ```

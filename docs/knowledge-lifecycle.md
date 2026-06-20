@@ -75,6 +75,12 @@ These are metadata for filtering relevance (not access enforcement):
 - `context`, `sub_context`
 - `entity_type`, `entity`, `topic`
 
+All standard source feeds pass through the `Nexus Knowledge Source` document
+lifecycle. If `entity_type` is omitted, it is normalized to `Knowledge Source`;
+if `entity` is omitted, it is normalized to the source title. Ingestion applies
+the same normalization for legacy records before generating units and chunks,
+keeping source and chunk classification consistent.
+
 ### Status Flow
 
 ```

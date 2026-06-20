@@ -154,7 +154,13 @@ def make_user_questions(chunk_doc):
 
     questions = []
 
-    for question in re.findall(r"[^.!?\n]*\?", chunk_text):
+    # Only reuse questions that carry an explicit answer in this chunk.
+    # A standalone FAQ/example-question list is not answer evidence.
+    for question in re.findall(
+        r"(?:^|\n)\s*Question:\s*([^\n?]+\?)\s*\n+\s*Answer:\s*\S+",
+        chunk_text,
+        flags=re.I,
+    ):
         question = normalize_space(question)
         if len(question) >= 12:
             questions.append(question)
@@ -219,6 +225,9 @@ You are preparing retrieval index entries for DIGITZ AI Nexus.
 Rules:
 - Use only the supplied approved knowledge.
 - Do not invent product claims.
+- A question mentioned in the chunk is not evidence that the chunk can answer it.
+- Ignore standalone lists of example, suggested, or unanswered questions.
+- Generate a user question only when declarative facts or an explicit answer in this same chunk support it.
 - Keep intellectual summaries concise and intent-oriented.
 - Keep user questions answerable from the chunk.
 - Return only valid JSON with keys: intellectual_summaries, human_summary, user_questions.
@@ -558,6 +567,16 @@ def validate_question_with_llm(entry_name):
         updates["generated_answer"] = answer or doc.get("answer_preview") or ""
     if doc.meta.has_field("answer_review_notes"):
         updates["answer_review_notes"] = confidence_note
+    if status == "rejected":
+        if doc.meta.has_field("disabled"):
+            updates["disabled"] = 1
+        if doc.meta.has_field("status"):
+            updates["status"] = "Archived"
+        if doc.meta.has_field("generation_notes"):
+            updates["generation_notes"] = (
+                "Archived because same-chunk validation found no answerable evidence. "
+                f"{confidence_note}"
+            )
 
     frappe.db.set_value(INDEX_DOCTYPE, entry_name, updates, update_modified=False)
 

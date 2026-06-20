@@ -86,11 +86,26 @@ web_include_js = [
 # 	"filters": "digitz_ai_nexus.utils.jinja_filters"
 # }
 
+# Fixtures
+# --------
+
+fixtures = [
+    {"dt": "Email Template", "filters": [["name", "in", ["nexus-gap-visitor-followup", "nexus-gap-otp-verification"]]]},
+    {"dt": "Custom HTML Block", "filters": [["name", "in", [
+        "nexus-home-workspace-html-block",
+        "nexus-studio-workspace-html-block",
+        "nexus-administration-workspace-html-block",
+        "nexus-live-workspace-html-block",
+        "nexus-nexy-workspace-html-block",
+    ]]]},
+]
+
 # Installation
 # ------------
 
 # before_install = "digitz_ai_nexus.install.before_install"
 after_install = "digitz_ai_nexus.setup.install.after_install"
+after_migrate = "digitz_ai_nexus.devtools.sync_workspace_blocks.sync_all_workspace_blocks"
 
 # Uninstallation
 # ------------
@@ -142,36 +157,24 @@ after_install = "digitz_ai_nexus.setup.install.after_install"
 
 # Document Events
 # ---------------
-# Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+    "Nexus Knowledge Source": {
+        "on_update": "digitz_ai_nexus.services.gap_notification_service.on_knowledge_source_published",
+    },
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"digitz_ai_nexus.tasks.all"
-# 	],
-# 	"daily": [
-# 		"digitz_ai_nexus.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"digitz_ai_nexus.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"digitz_ai_nexus.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"digitz_ai_nexus.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "daily": [
+        "digitz_ai_nexus.services.gap_detection_service.reassess_pending_gaps"
+    ],
+    "weekly": [
+        "digitz_ai_nexus.services.gap_detection_service.detect_proactive_gaps"
+    ],
+}
 
 # Testing
 # -------

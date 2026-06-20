@@ -272,12 +272,21 @@ def _related_question_filters(payload, related_names):
     return filters
 
 
-def _append_question(result, seen, query_text, question, score=0.0, correlation_type=None):
+_DEDUP_SIMILARITY_THRESHOLD = 0.75
+
+
+def _append_question(result, seen, seen_tokens, query_text, question, score=0.0, correlation_type=None):
     normalized = normalize_question(question)
     if not normalized or normalized == query_text or normalized in seen:
         return
 
+    tokens = tokenize(question)
+    for existing in seen_tokens:
+        if jaccard_score(tokens, existing) >= _DEDUP_SIMILARITY_THRESHOLD:
+            return
+
     seen.add(normalized)
+    seen_tokens.append(tokens)
     result.append({
         "question": question,
         "correlation_score": score,
@@ -319,6 +328,7 @@ def get_correlated_questions_for_answer(payload, chunks, limit=5):
 
     result = []
     seen = set()
+    seen_tokens = []
     query_text = normalize_question((payload or {}).get("query"))
 
     if correlations:
@@ -341,6 +351,7 @@ def get_correlated_questions_for_answer(payload, chunks, limit=5):
             _append_question(
                 result,
                 seen,
+                seen_tokens,
                 query_text,
                 related.canonical_text,
                 score=row.correlation_score,
@@ -353,6 +364,7 @@ def get_correlated_questions_for_answer(payload, chunks, limit=5):
         _append_question(
             result,
             seen,
+            seen_tokens,
             query_text,
             row.canonical_text,
             score=0.25,

@@ -27,6 +27,7 @@ class NexusStudioPage {
             get_source_summary: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_source_summary',
             get_sources: 'digitz_ai_nexus.api.nexus_knowledge_studio.get_knowledge_sources',
             process_source: 'digitz_ai_nexus.services.ingestion.processor.process_knowledge_source',
+            reset_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.reset_knowledge_source',
             validate_source: 'digitz_ai_nexus.api.nexus_knowledge_studio.validate_knowledge_source',
             suggest_source_fields: 'digitz_ai_nexus.api.nexus_knowledge_source_assist.suggest_knowledge_source_fields',
             create_assisted_source: 'digitz_ai_nexus.api.nexus_knowledge_source_assist.create_knowledge_source_from_suggestion',
@@ -5059,7 +5060,13 @@ class NexusStudioPage {
                             <b>${result.profiles.length}</b> profile(s) found in access chain but none have active assignments or routes.
                         </p>
                         <ul style="margin:6px 0 0; padding-left:18px; color:#666;">
-                            ${result.profiles.map(p => `<li>${frappe.utils.escape_html(p.profile_label || p.profile)}</li>`).join('')}
+                            ${result.profiles.map(p => `
+                                <li>
+                                    <a href="/app/nexus-ai-agent-profile/${encodeURIComponent(p.profile)}"
+                                       target="_blank" style="color:#2490ef;">
+                                        ${frappe.utils.escape_html(p.profile_label || p.profile)}
+                                    </a>
+                                </li>`).join('')}
                         </ul>
                     ` : ''}
                 </div>`;
@@ -5086,7 +5093,12 @@ class NexusStudioPage {
 
             return `
                 <tr>
-                    <td style="padding:4px 8px; font-weight:500;">${frappe.utils.escape_html(p.profile)}</td>
+                    <td style="padding:4px 8px; font-weight:500;">
+                        <a href="/app/nexus-ai-agent-profile/${encodeURIComponent(p.profile)}"
+                           target="_blank" style="color:#2490ef;">
+                            ${frappe.utils.escape_html(p.profile_label || p.profile)}
+                        </a>
+                    </td>
                     <td style="padding:4px 8px;">${lines.join('<br>')}</td>
                 </tr>`;
         }).join('');
@@ -5150,7 +5162,12 @@ class NexusStudioPage {
                 <div class="nks-dashboard-grid">
                     <div class="nks-dashboard-card nks-dashboard-card-blue">
                         <h5>Source Summary</h5>
-                        <p><b>Source:</b> ${frappe.utils.escape_html(row.source_title || row.name)}</p>
+                        <p><b>Source:</b>
+                            <a href="/app/nexus-knowledge-source/${encodeURIComponent(row.name)}"
+                               target="_blank" style="color:#2490ef;">
+                                ${frappe.utils.escape_html(row.source_title || row.name)}
+                            </a>
+                        </p>
                         <p><b>Type:</b> ${frappe.utils.escape_html(row.source_type || 'Manual')}</p>
                         <p><b>Business Unit:</b> ${frappe.utils.escape_html(row.business_unit || '-')}</p>
                         <p><b>Context:</b> ${frappe.utils.escape_html(row.context || '-')}</p>
@@ -5251,8 +5268,27 @@ class NexusStudioPage {
                         <p><b>Chunk Count:</b> ${frappe.utils.escape_html(String(this.get_source_technical_value(row, technical_status, 'chunk_count', 0)))}</p>
                         <p><b>Active Chunk Count:</b> ${frappe.utils.escape_html(String(this.get_source_technical_value(row, technical_status, 'active_chunk_count', 0)))}</p>
                         <p><b>Retrieval Ready:</b> ${this.format_source_yes_no(this.get_source_technical_value(row, technical_status, 'retrieval_ready', 0))}</p>
-                        <p><b>Generated Knowledge Unit:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'generated_knowledge_unit'))}</p>
-                        <p><b>Context Summary:</b> ${frappe.utils.escape_html((row.context_summary && row.context_summary.name) || '-')}</p>
+                        ${(() => {
+                            const ku = this.get_source_technical_value(row, technical_status, 'generated_knowledge_unit');
+                            const val = ku && ku !== '-' && ku !== 'undefined' ? ku : '';
+                            return val
+                                ? `<p><b>Generated Knowledge Unit:</b>
+                                     <a href="/app/nexus-knowledge-unit/${encodeURIComponent(val)}"
+                                        target="_blank" style="color:#2490ef;">
+                                       ${frappe.utils.escape_html(val)}
+                                     </a></p>`
+                                : `<p><b>Generated Knowledge Unit:</b> -</p>`;
+                        })()}
+                        ${(() => {
+                            const cs = (row.context_summary && row.context_summary.name) || '';
+                            return cs
+                                ? `<p><b>Context Summary:</b>
+                                     <a href="/app/nexus-knowledge-context-summary/${encodeURIComponent(cs)}"
+                                        target="_blank" style="color:#2490ef;">
+                                       ${frappe.utils.escape_html(cs)}
+                                     </a></p>`
+                                : `<p><b>Context Summary:</b> -</p>`;
+                        })()}
                         <p><b>Semantic Index Entries:</b> ${frappe.utils.escape_html(String(row.semantic_index_count || 0))}</p>
                         <p><b>Last Processed On:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'last_processed_on'))}</p>
                         <p><b>Validation Status:</b> ${frappe.utils.escape_html(this.get_source_technical_value(row, technical_status, 'validation_status'))}</p>
@@ -5334,6 +5370,10 @@ class NexusStudioPage {
 
         dialog.$wrapper.find('.nks-dashboard-process-source-btn').on('click', () => {
             this.process_source_from_dashboard(row.name, dialog);
+        });
+
+        dialog.$wrapper.find('.nks-dashboard-reset-source-btn').on('click', () => {
+            this.reset_source_from_dashboard(row.name, dialog);
         });
 
         dialog.$wrapper.find('.nks-dashboard-validate-source-btn').on('click', () => {
@@ -5462,6 +5502,12 @@ class NexusStudioPage {
                 </button>
             `);
         }
+
+        buttons.push(`
+            <button class="btn btn-sm btn-danger nks-dashboard-reset-source-btn">
+                Reset Generated Data
+            </button>
+        `);
 
         return buttons.join('');
     }
@@ -5872,6 +5918,69 @@ run_source_test_cases_from_dashboard(sourceName, dialog) {
         );
     }
    
+    reset_source_from_dashboard(name, dialog) {
+        if (!name) {
+            frappe.msgprint('Knowledge Source name is missing.');
+            return;
+        }
+
+        frappe.confirm(
+            `Permanently remove all generated units, chunks, semantic indexes, ` +
+            `correlations, summaries, validation tests, and test runs for <b>${frappe.utils.escape_html(name)}</b>?<br><br>` +
+            `The source document, content, and classification will be preserved as a Draft.`,
+            () => {
+                frappe.call({
+                    method: this.api.reset_source,
+                    args: {
+                        name,
+                        confirm: 'RESET_KNOWLEDGE_SOURCE'
+                    },
+                    freeze: true,
+                    freeze_message: 'Resetting generated knowledge data...',
+                    callback: (r) => {
+                        const result = r.message || {};
+                        if (!result.success) {
+                            frappe.msgprint({
+                                title: 'Reset Failed',
+                                indicator: 'red',
+                                message: frappe.utils.escape_html(result.message || 'Knowledge Source reset failed.')
+                            });
+                            return;
+                        }
+
+                        if (dialog) {
+                            dialog.hide();
+                        }
+
+                        this.load_sources();
+                        this.load_source_summary();
+                        this.load_units();
+
+                        const deleted = result.deleted || {};
+                        const deletedTotal = Object.values(deleted).reduce(
+                            (total, value) => total + Number(value || 0),
+                            0
+                        );
+
+                        frappe.msgprint({
+                            title: 'Knowledge Source Reset',
+                            indicator: 'green',
+                            message: `${frappe.utils.escape_html(name)} is ready for a fresh process run. ` +
+                                `${deletedTotal} generated record(s) were removed.`
+                        });
+                    },
+                    error: () => {
+                        frappe.msgprint({
+                            title: 'Reset Failed',
+                            indicator: 'red',
+                            message: 'Knowledge Source reset failed. No partial reset was committed.'
+                        });
+                    }
+                });
+            }
+        );
+    }
+
     process_source_from_dashboard(name, dialog) {
         if (!name) {
             frappe.msgprint('Knowledge Source name is missing.');

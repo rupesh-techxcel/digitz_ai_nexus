@@ -600,3 +600,276 @@
     }
 }
 
+/* =========================
+   Workspace Hero (nxl-ws)
+   ========================= */
+
+.nxl-ws-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+.nxl-ws-panel {
+    position: relative;
+    padding: 32px;
+    overflow: hidden;
+    border-radius: 0;
+}
+
+.nxl-ws-panel-blue {
+    background:
+        radial-gradient(circle at 85% 18%, rgba(77, 200, 255, 0.28), transparent 30%),
+        linear-gradient(135deg, #082d8f 0%, #0b58d8 52%, #1472d8 100%);
+    border: 1px solid rgba(77, 200, 255, 0.40);
+}
+
+.nxl-ws-panel-teal {
+    background:
+        radial-gradient(circle at 15% 80%, rgba(0, 184, 148, 0.20), transparent 40%),
+        linear-gradient(135deg, #054d3a 0%, #08745c 52%, #0a8c6e 100%);
+    border: 1px solid rgba(0, 184, 148, 0.36);
+}
+
+.nxl-ws-panel-purple {
+    background:
+        radial-gradient(circle at 80% 18%, rgba(148, 112, 255, 0.24), transparent 30%),
+        linear-gradient(135deg, #1a0868 0%, #4c1d95 52%, #6d28d9 100%);
+    border: 1px solid rgba(148, 112, 255, 0.36);
+}
+
+.nxl-ws-title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.nxl-ws-icon-box {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.nxl-ws-icon-box svg {
+    width: 28px;
+    height: 28px;
+}
+
+.nxl-ws-icon-box-teal {
+    background: rgba(0, 184, 148, 0.24);
+    border-color: rgba(0, 184, 148, 0.40);
+}
+
+.nxl-ws-kicker {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.nxl-ws-kicker-teal {
+    background: rgba(0, 184, 148, 0.22);
+    border-color: rgba(0, 184, 148, 0.36);
+    color: #a7ffe8;
+}
+
+.nxl-ws-kicker-purple {
+    background: rgba(148, 112, 255, 0.22);
+    border-color: rgba(148, 112, 255, 0.36);
+    color: #ddd6fe;
+}
+
+.nxl-ws-h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+    text-shadow: 0 8px 22px rgba(0, 20, 80, 0.24);
+}
+
+.nxl-ws-lead {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 700;
+    max-width: 480px;
+}
+
+.nxl-ws-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.nxl-ws-chip {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.nxl-ws-panel-title {
+    margin: 0 0 12px;
+    color: rgba(255, 255, 255, 0.90);
+    font-size: 16px;
+    font-weight: 950;
+}
+
+.nxl-ws-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nxl-ws-link-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.92);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 900;
+    transition: background 0.18s ease;
+}
+
+.nxl-ws-link-item:hover {
+    background: rgba(255, 255, 255, 0.20);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.nxl-ws-link-item-blue {
+    background: rgba(77, 163, 255, 0.16);
+    border-color: rgba(77, 163, 255, 0.26);
+}
+
+.nxl-ws-link-item-purple {
+    background: rgba(148, 112, 255, 0.16);
+    border-color: rgba(148, 112, 255, 0.26);
+}
+
+.nxl-ws-link-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 950;
+    color: #ffffff;
+}
+
+.nxl-ws-link-icon-blue {
+    background: rgba(77, 163, 255, 0.28);
+}
+
+.nxl-ws-link-icon-purple {
+    background: rgba(148, 112, 255, 0.28);
+}
+
+.nxl-ws-link-desc {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.56);
+    margin-top: 1px;
+}
+
+@media (max-width: 900px) {
+    .nxl-ws-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================
+   Workspace Quick-Link Grid (nexus-link)
+   ========================= */
+
+.nexus-link-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.nexus-link-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    background: #f4f7fd;
+    border: 1.5px solid #dce7f8;
+    color: #102b67;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 900;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.nexus-link-card:hover {
+    background: #e8effc;
+    border-color: #b8cff5;
+    color: #082d8f;
+    text-decoration: none;
+}
+
+.nexus-link-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #0b58d8, #08745c);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 950;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nexus-link-label {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 900;
+    color: #102b67;
+}
+
+.nexus-link-arrow {
+    font-size: 11px;
+    color: #7a9cc8;
+    font-weight: 900;
+}
+

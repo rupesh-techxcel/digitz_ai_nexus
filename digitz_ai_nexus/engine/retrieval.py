@@ -646,8 +646,11 @@ def score_context_summaries(query_contract, query_embedding=None, embedding_prov
     )
 
 
-def get_candidate_chunks(query_contract):
+def get_candidate_chunks(query_contract, chunk_names=None):
     filters = build_context_filters(query_contract)
+
+    if chunk_names:
+        filters["name"] = ["in", list(dict.fromkeys(chunk_names))]
 
     project = normalize_project(query_contract.get("project"))
     scope_mode = query_contract.get("project_scope_mode") or "with_general"
@@ -809,8 +812,6 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     if query not in query_variants:
         query_variants = [query] + query_variants
 
-    candidate_chunks = get_candidate_chunks(query_contract)
-    original_candidate_count = len(candidate_chunks)
     weights = get_retrieval_weights()
     base_query_embedding = query_embedding
 
@@ -837,15 +838,18 @@ def retrieve_allowed_chunks(query_contract, query_embedding=None, embedding_prov
     question_first_applied = False
 
     if question_first_chunk_names:
-        question_first_chunk_set = set(question_first_chunk_names)
-        narrowed_candidate_chunks = [
-            row for row in candidate_chunks
-            if row_value(row, "name") in question_first_chunk_set
-        ]
-
-        if narrowed_candidate_chunks:
-            candidate_chunks = narrowed_candidate_chunks
+        candidate_chunks = get_candidate_chunks(
+            query_contract,
+            chunk_names=question_first_chunk_names,
+        )
+        if candidate_chunks:
             question_first_applied = True
+        else:
+            candidate_chunks = get_candidate_chunks(query_contract)
+    else:
+        candidate_chunks = get_candidate_chunks(query_contract)
+
+    original_candidate_count = len(candidate_chunks)
 
     semantic_matches = score_semantic_index_entries(
         query_contract,

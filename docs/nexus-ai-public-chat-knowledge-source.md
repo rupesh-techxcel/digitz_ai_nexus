@@ -604,6 +604,22 @@ Question: What are behavior attributes?
 
 Answer: Behavior attributes define how an assistant should respond. They can include tone, role, welcome message, fallback message, confidence threshold, escalation rules, and do-not-answer rules.
 
+Question: What business problems does NEXUS AI solve?
+
+Answer: NEXUS AI helps organizations reduce scattered knowledge, inconsistent answers, repetitive support work, and the risk of exposing information to the wrong audience. It turns approved business content into governed answers for public visitors, customers, and employees while preserving access boundaries and human escalation paths.
+
+Question: What is RAG and how does NEXUS AI use it?
+
+Answer: RAG means retrieval-augmented generation. Before producing an answer, NEXUS AI retrieves relevant chunks from approved knowledge that the current user is allowed to access. The retrieved evidence grounds the response, and when suitable approved evidence is unavailable the assistant should use a safe fallback instead of guessing.
+
+Question: What are chat categories?
+
+Answer: Chat categories describe the purpose of a conversation, such as product enquiry, customer support, internal help, or training. NEXUS AI uses the selected category with the channel and identity route to choose the appropriate assistant behavior, knowledge access boundary, and escalation path.
+
+Question: What are NEXUS Studio, NEXUS Administration, and NEXUS Live?
+
+Answer: NEXUS Studio is the authoring workspace for preparing knowledge, configuring assistants, testing answers, and publishing AI experiences. NEXUS Administration is the governance workspace for tenants, identities, access policies, and security controls. NEXUS Live is the operations workspace for live conversations, escalation queues, human handoff, and service monitoring.
+
 Question: Can NEXUS AI integrate with ERP or business systems?
 
 Answer: Yes. NEXUS AI is designed to be extensible. It can be connected with ERP, CRM, helpdesk, reporting, and workflow systems when authorized integrations are configured. Public chat can explain these capabilities, while private data access should require authentication and permission.

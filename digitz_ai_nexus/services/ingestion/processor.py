@@ -16,6 +16,9 @@ from digitz_ai_nexus.services.semantic_index import (
 from digitz_ai_nexus.services.question_correlation import (
     build_question_correlations_for_source,
 )
+from digitz_ai_nexus.services.knowledge_source_defaults import (
+    apply_knowledge_source_defaults,
+)
 
 
 def set_if_field(doc, fieldname, value):
@@ -183,6 +186,7 @@ def create_knowledge_unit(source_doc, normalized_text, processing_version):
 
     set_if_field(unit, "source", source_doc.name)
     set_if_field(unit, "knowledge_source", source_doc.name)
+    set_if_field(unit, "source_reference", source_doc.name)
 
     set_if_field(unit, "content", normalized_text)
     set_if_field(unit, "raw_text", normalized_text)
@@ -361,6 +365,7 @@ def process_knowledge_source(source_name):
     source_doc = frappe.get_doc("Nexus Knowledge Source", source_name)
 
     try:
+        apply_knowledge_source_defaults(source_doc)
         set_if_field(source_doc, "processing_status", "Processing")
         set_if_field(source_doc, "embedding_status", "Pending")
         set_if_field(source_doc, "diagnostics_status", "Pending")

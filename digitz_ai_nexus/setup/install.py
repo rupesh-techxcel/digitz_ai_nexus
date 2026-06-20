@@ -1,6 +1,7 @@
 import frappe
 
 from digitz_ai_nexus.setup.access_seed import seed_default_access_governance
+from digitz_ai_nexus.devtools.sync_workspace_blocks import sync_all_workspace_blocks
 
 NEXUS_LOGO = "/assets/digitz_ai_nexus/images/nexus-ai.png"
 STANDARD_WORKSPACES_TO_HIDE = (
@@ -22,6 +23,7 @@ def after_install():
     """
     seed_website_settings()
     hide_standard_workspaces()
+    sync_all_workspace_blocks()
     frappe.db.commit()
     frappe.logger().info("Nexus Core install complete.")
 

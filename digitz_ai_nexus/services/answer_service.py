@@ -169,13 +169,47 @@ def run_retrieval_pipeline(
     return chunks, retrieval_result, confidence, "allowed"
 
 
-def handle_host_fallback(payload, llm_provider=None):
+def handle_host_fallback(payload, llm_provider=None, gap_name=None):
     """
     Fallback for chat mode when retrieval finds no usable knowledge.
     Uses the profile's configured fallback_message if set.
+    If email_followup_enabled and fallback_topic are set on the AI profile,
+    builds a smart message and signals the widget to offer email follow-up.
     fallback_used=1 is preserved so the escalation signal still fires.
     """
     ai_profile = payload.get("ai_profile") or {}
+    fallback_topic = (ai_profile.get("fallback_topic") or "").strip()
+    # Default True — admins can explicitly set email_followup_enabled=0 to disable
+    followup_active = ai_profile.get("email_followup_enabled", 1) not in (0, "0", False)
+
+    if followup_active and gap_name:
+        if fallback_topic:
+            answer = (
+                f"Our knowledge base is continuously being fine-tuned based on user queries and interactions. "
+                f"Your question on **{fallback_topic}** has been noted and is a valuable input to this process. "
+                f"We would be happy to revert back to you once this topic is covered in our knowledge base. "
+                f"Would you like us to respond to you via email?"
+            )
+        else:
+            answer = (
+                "Our knowledge base is continuously being fine-tuned based on user queries and interactions. "
+                "Your query has been noted and is a valuable input to this process. "
+                "We would be happy to revert back to you once this is covered in our knowledge base. "
+                "Would you like us to respond to you via email?"
+            )
+        return {
+            "status": "success",
+            "access_status": "no_context",
+            "answer": answer,
+            "confidence": 0.0,
+            "sources": [],
+            "citations": [],
+            "retrieval_result": {},
+            "fallback_used": 1,
+            "email_followup_offer": True,
+            "gap_name": gap_name,
+        }
+
     answer = (
         ai_profile.get("fallback_message")
         or payload.get("agent_fallback_message")
@@ -190,6 +224,7 @@ def handle_host_fallback(payload, llm_provider=None):
         "citations": [],
         "retrieval_result": {},
         "fallback_used": 1,
+        "email_followup_offer": False,
     }
 
 
@@ -327,6 +362,17 @@ def answer_query(
     sources = build_sources(chunks)
     correlated_questions = get_correlated_questions_for_answer(payload, chunks)
 
+    # Record low-confidence answers as gaps so admins can review borderline topics
+    try:
+        from digitz_ai_nexus.services.gap_detection_service import (
+            GAP_CONFIDENCE_THRESHOLD,
+            record_gap,
+        )
+        if confidence < GAP_CONFIDENCE_THRESHOLD:
+            record_gap(payload, access_status="low_confidence", confidence=confidence)
+    except Exception:
+        pass
+
     return {
         "status": "success",
         "access_status": "allowed",
@@ -342,8 +388,16 @@ def answer_query(
 
 def _fallback(is_chat, payload, llm_provider, retrieval_result=None, denied=None, confidence=0.0):
     """Single point of control for all fallback paths."""
+    access_status = (retrieval_result or {}).get("access_status") or "no_context"
+    gap_name = None
+    try:
+        from digitz_ai_nexus.services.gap_detection_service import record_gap
+        gap_name = record_gap(payload, access_status=access_status, confidence=confidence)
+    except Exception:
+        pass
+
     if is_chat:
-        return handle_host_fallback(payload, llm_provider=llm_provider)
+        return handle_host_fallback(payload, llm_provider=llm_provider, gap_name=gap_name)
     return build_safe_fallback(
         retrieval_result=retrieval_result,
         denied=denied,

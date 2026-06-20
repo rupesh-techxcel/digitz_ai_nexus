@@ -1,6 +1,10 @@
 import frappe
 from frappe.model.document import Document
 
+from digitz_ai_nexus.services.knowledge_source_defaults import (
+    apply_knowledge_source_defaults,
+)
+
 class NexusKnowledgeSource(Document):
     def validate(self):
         if not self.title:
@@ -17,6 +21,8 @@ class NexusKnowledgeSource(Document):
 
         if not self.status:
             self.status = "Draft"
+
+        apply_knowledge_source_defaults(self)
 
         if not self.processing_status:
             self.processing_status = "Pending"

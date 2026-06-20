@@ -61,6 +61,7 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | `Nexus Knowledge Context Summary` | `source`, `tenant`, `summary_text` | Source-level summary for context injection |
 | `Nexus Knowledge Test Case` | `query`, `expected_chunk`, `tenant` | Regression test for retrieval quality |
 | `Nexus Knowledge Test Run` | `test_case`, `status`, `confidence`, `ran_on` | Execution record for a test case |
+| `Nexus Knowledge Gap` | `query`, `tenant`, `channel`, `gap_type`, `access_status`, `confidence`, `frequency`, `semantic_key`, `status`, `detection_mode`, `llm_assessment_status`, `is_relevant`, `suggested_context`, `suggested_topic`, `llm_summary`, `suggested_knowledge_source`, `visitor_email`, `visitor_email_status`, `sample_queries_json` | Records questions the AI could not answer; drives the gap review workflow and visitor email follow-up |
 
 #### nexus_access
 
@@ -110,11 +111,13 @@ engine/
 
 | File | Responsibility |
 |---|---|
-| `answer_service.py` | End-to-end: retrieval → prompt → LLM → format answer |
+| `answer_service.py` | End-to-end: retrieval → prompt → LLM → format answer. On fallback, calls `gap_detection_service.record_gap()` and enriches response with `email_followup_offer` flag when enabled. |
 | `answer_formatter.py` | Formats raw LLM output per response mode |
 | `semantic_index.py` | Maintains keyword index on chunk upsert |
 | `knowledge_source_processor.py` | Parses source files → units → chunks |
 | `tenant_context.py` | Resolves active tenant + ecosystem configuration |
+| `gap_detection_service.py` | Records reactive and proactive Knowledge Gaps; deduplicates by semantic hash; enqueues LLM relevance assessment; provides scheduled jobs `detect_proactive_gaps` and `reassess_pending_gaps` |
+| `gap_notification_service.py` | Sends visitor follow-up emails for resolved gaps. Provides `send_visitor_notification(gap_name)` (idempotent — commits status before sending to prevent duplicates) and `on_knowledge_source_published(doc, method)` (doc event handler that auto-fires on Knowledge Source status → Published) |
 | `ingestion/` | Document parsers (PDF, DOCX, TXT, manual) |
 
 ### 2.5 API Endpoints (`api/`)
@@ -129,6 +132,7 @@ engine/
 | `nexus_administration.py` | `get_administration_snapshot()`, `get_user_context_snapshot()`, `set_active_user_context()`, `get_selector_options()`, `get_tenant_configuration_snapshot()`, `save_ecosystem_configuration()`, `save_tenant_configuration()` |
 | `nexus_knowledge_source_assist.py` | `get_knowledge_source_fields()` — Studio source listing/detail helpers |
 | `setup.py` | `create_default_access_policies()` — install-time seed |
+| `knowledge_gap.py` | **Gap Review (admin):** `get_gap_summary(tenant, status, gap_type, limit)`, `update_gap_status(gap_name, status)`, `create_knowledge_source_from_gap(gap_name, ...)`, `trigger_reassessment(gap_name)`, `trigger_proactive_detection(tenant)`, `notify_gap_visitor(gap_name)`, `get_sample_queries(gap_name)` · **Visitor email OTP (guest):** `request_gap_email_otp(gap_name, email)` — rate-limited, sends OTP via `nexus-gap-otp-verification` template · `verify_gap_email_otp(gap_name, challenge_token, otp)` — verifies OTP, saves email on gap · `submit_gap_visitor_email(gap_name, email, conversation_id)` — trusted path for already-verified visitors (no OTP) |
 
 ### 2.6 Frappe Pages
 
@@ -619,8 +623,22 @@ Agent resolves → agent_console.resolve_escalation()
 
 ## 12. Core Data Flow — Desk User Chat
 
+**Prerequisites — must all be true before desk chat works:**
+
+| Requirement | Detail |
+|---|---|
+| Live Channel | Channel Type must be **`Desk`** (not `Website Chat`). The widget only loads categories from Desk-type channels for logged-in users. |
+| Chat Category | Must be **Enabled AND Published**. Unpublished categories are not returned to the widget regardless of enabled status. |
+| Category Identity Route | Must be **Enabled AND Published**. An unpublished route will not resolve the AI Agent Profile and chat fails with "No active AI Agent Profile route". |
+| User Profile Assignment | A `Nexus User Profile Assignment` linking the Frappe user to an AI Agent Profile must exist and be active. |
+
 ```
 Desk user (logged in) triggers NexusChatWidget.open()
+    │
+    ▼
+Widget loads categories
+    → finds enabled Nexus Live Channels where channel_type = Desk
+    → returns published categories from those channels (Enabled AND Published)
     │
     ▼
 POST start_chat — no channel, no guest roles
@@ -631,7 +649,7 @@ POST start_chat — no channel, no guest roles
     ▼
 Messages via send_chat_message
     → profile_resolver checks for Nexus User Profile Assignment
-    → Falls back to category route or agent default
+    → Falls back to published Category Identity Route for the selected category
     → Normal AI pipeline
     ▲
     │

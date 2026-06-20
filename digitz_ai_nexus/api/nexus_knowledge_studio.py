@@ -6,6 +6,38 @@ import time
 import frappe
 from frappe.utils import cint, now_datetime
 
+
+SOURCE_RESET_DEFAULTS = {
+    "status": "Draft",
+    "processing_status": "Pending",
+    "processing_version": 0,
+    "chunk_count": 0,
+    "active_chunk_count": 0,
+    "embedding_status": "Pending",
+    "diagnostics_status": "Pending",
+    "validation_status": "Pending",
+    "ready_to_publish": 0,
+    "needs_review": 0,
+    "review_reason": None,
+    "validation_query": None,
+    "validation_confidence": 0,
+    "validated_on": None,
+    "validated_by": None,
+    "retrieval_ready": 0,
+    "processed_on": None,
+    "processed_by": None,
+    "last_processed_on": None,
+    "knowledge_unit": None,
+    "generated_knowledge_unit": None,
+    "raw_text": None,
+    "extracted_text_preview": None,
+    "processing_log": None,
+    "error_log": None,
+    "last_test_query": None,
+    "last_test_result": None,
+    "last_tested_on": None,
+}
+
 # -------------------------------------------------------------------------
 # Active Studio Context helpers
 # -------------------------------------------------------------------------
@@ -2749,6 +2781,192 @@ def _build_source_validation_answer(test_query, blocks):
             }
         ],
         "reason": "Source-scoped validation completed.",
+    }
+
+
+def _delete_source_documents(doctype, names):
+    deleted = 0
+    if not frappe.db.exists("DocType", doctype):
+        return deleted
+
+    for name in sorted(set(names or [])):
+        if not name or not frappe.db.exists(doctype, name):
+            continue
+        frappe.delete_doc(
+            doctype,
+            name,
+            force=True,
+            ignore_permissions=True,
+            delete_permanently=True,
+        )
+        deleted += 1
+    return deleted
+
+
+def _get_source_context_summary_names(source_name):
+    if not frappe.db.exists("DocType", "Nexus Knowledge Context Summary"):
+        return []
+
+    names = []
+    rows = frappe.get_all(
+        "Nexus Knowledge Context Summary",
+        fields=["name", "generated_from_sources"],
+        limit_page_length=0,
+    )
+    for row in rows:
+        raw_sources = row.get("generated_from_sources")
+        try:
+            sources = frappe.parse_json(raw_sources) if raw_sources else []
+        except Exception:
+            sources = []
+        if source_name in (sources or []):
+            names.append(row.name)
+    return names
+
+
+@frappe.whitelist()
+def reset_knowledge_source(name: str, confirm: str = None):
+    """Remove one source's generated artifacts and restore its initial draft state."""
+    if not name or not frappe.db.exists("Nexus Knowledge Source", name):
+        frappe.throw("Knowledge Source not found.")
+
+    source_doc = frappe.get_doc("Nexus Knowledge Source", name)
+    if not frappe.has_permission("Nexus Knowledge Source", "write", doc=source_doc):
+        frappe.throw("Not permitted to reset this Knowledge Source.", frappe.PermissionError)
+
+    if confirm != "RESET_KNOWLEDGE_SOURCE":
+        frappe.throw("Confirmation is required to reset this Knowledge Source.")
+
+    try:
+        chunks = frappe.get_all(
+            "Nexus Knowledge Chunk",
+            filters={"knowledge_source": name},
+            fields=["name", "knowledge_unit"],
+            limit_page_length=0,
+        )
+        chunk_names = [row.name for row in chunks]
+        unit_names = {row.knowledge_unit for row in chunks if row.get("knowledge_unit")}
+
+        for fieldname in ["generated_knowledge_unit", "knowledge_unit"]:
+            if source_doc.meta.has_field(fieldname) and source_doc.get(fieldname):
+                unit_names.add(source_doc.get(fieldname))
+
+        # Older unit schema versions did not retain a source link. Processing
+        # creates their titles as "<source title> - v<version>".
+        source_title = source_doc.get("title") or source_doc.name
+        unit_meta = frappe.get_meta("Nexus Knowledge Unit")
+        if unit_meta.has_field("source_reference"):
+            unit_names.update(
+                frappe.get_all(
+                    "Nexus Knowledge Unit",
+                    filters={"source_reference": name},
+                    pluck="name",
+                    limit_page_length=0,
+                )
+            )
+        unit_names.update(
+            frappe.get_all(
+                "Nexus Knowledge Unit",
+                filters={"title": ["like", f"{source_title} - v%"]},
+                pluck="name",
+                limit_page_length=0,
+            )
+        )
+
+        test_case_names = frappe.get_all(
+            "Nexus Knowledge Test Case",
+            filters={"knowledge_source": name},
+            pluck="name",
+            limit_page_length=0,
+        )
+        test_run_names = set(
+            frappe.get_all(
+                "Nexus Knowledge Test Run",
+                filters={"knowledge_source": name},
+                pluck="name",
+                limit_page_length=0,
+            )
+        )
+        if test_case_names:
+            test_run_names.update(
+                frappe.get_all(
+                    "Nexus Knowledge Test Run",
+                    filters={"test_case": ["in", test_case_names]},
+                    pluck="name",
+                    limit_page_length=0,
+                )
+            )
+
+        correlation_names = frappe.get_all(
+            "Nexus Question Correlation",
+            filters={"knowledge_source": name},
+            pluck="name",
+            limit_page_length=0,
+        )
+        index_names = frappe.get_all(
+            "Nexus Knowledge Index Entry",
+            filters={"knowledge_source": name},
+            pluck="name",
+            limit_page_length=0,
+        )
+        summary_names = _get_source_context_summary_names(name)
+
+        if frappe.db.exists("DocType", "Nexus Knowledge Gap") and unit_names:
+            gap_meta = frappe.get_meta("Nexus Knowledge Gap")
+            if gap_meta.has_field("suggested_knowledge_unit"):
+                gaps = frappe.get_all(
+                    "Nexus Knowledge Gap",
+                    filters={"suggested_knowledge_unit": ["in", list(unit_names)]},
+                    pluck="name",
+                    limit_page_length=0,
+                )
+                for gap_name in gaps:
+                    frappe.db.set_value(
+                        "Nexus Knowledge Gap",
+                        gap_name,
+                        "suggested_knowledge_unit",
+                        None,
+                        update_modified=False,
+                    )
+
+        reset_values = {
+            fieldname: value
+            for fieldname, value in SOURCE_RESET_DEFAULTS.items()
+            if source_doc.meta.has_field(fieldname)
+        }
+        frappe.db.set_value(
+            "Nexus Knowledge Source", name, reset_values, update_modified=True
+        )
+
+        deleted = {
+            "test_runs": _delete_source_documents(
+                "Nexus Knowledge Test Run", test_run_names
+            ),
+            "test_cases": _delete_source_documents(
+                "Nexus Knowledge Test Case", test_case_names
+            ),
+            "question_correlations": _delete_source_documents(
+                "Nexus Question Correlation", correlation_names
+            ),
+            "index_entries": _delete_source_documents(
+                "Nexus Knowledge Index Entry", index_names
+            ),
+            "chunks": _delete_source_documents("Nexus Knowledge Chunk", chunk_names),
+            "units": _delete_source_documents("Nexus Knowledge Unit", unit_names),
+            "context_summaries": _delete_source_documents(
+                "Nexus Knowledge Context Summary", summary_names
+            ),
+        }
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+    return {
+        "success": True,
+        "source": name,
+        "message": "Knowledge Source reset to its initial draft state.",
+        "deleted": deleted,
     }
 
 
