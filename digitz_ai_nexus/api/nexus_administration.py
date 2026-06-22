@@ -318,7 +318,6 @@ def get_selector_options():
                     "channel_name",
                     "channel_code",
                     "channel_type",
-                    "public_access",
                     "enabled",
                 ],
             ),

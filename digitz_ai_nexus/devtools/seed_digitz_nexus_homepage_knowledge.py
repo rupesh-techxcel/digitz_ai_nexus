@@ -627,7 +627,6 @@ def _ensure_channel(tenant, code, name, channel_type):
     doc.channel_name           = name
     doc.channel_type           = channel_type
     doc.enabled                = 1
-    doc.public_access          = 1
     doc.requires_visitor_email = 0
     doc.agent_based            = 0
     doc.description            = f"DIGITZ AI Nexus website {channel_type} channel."

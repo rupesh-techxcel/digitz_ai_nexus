@@ -229,12 +229,13 @@ def submit_gap_visitor_email(gap_name, email, conversation_id=None):
         "visitor_email": email,
         "visitor_email_status": "Pending",
     })
+    _capture_gap_followup_contact(gap_name, email, conversation_id)
     frappe.db.commit()
     return {"success": True}
 
 
 @frappe.whitelist(allow_guest=True)
-def request_gap_email_otp(gap_name, email):
+def request_gap_email_otp(gap_name, email, conversation_id=None):
     """Send a 6-digit OTP to the visitor's email so they can verify it before being saved."""
     import hashlib
     import random
@@ -263,7 +264,13 @@ def request_gap_email_otp(gap_name, email):
 
     frappe.cache().set_value(
         f"gap_email_otp:{challenge_token}",
-        {"gap_name": gap_name, "email": email, "otp_hash": otp_hash, "attempts": 0},
+        {
+            "gap_name": gap_name,
+            "email": email,
+            "otp_hash": otp_hash,
+            "attempts": 0,
+            "conversation_id": conversation_id,
+        },
         expires_in_sec=600,
     )
 
@@ -289,7 +296,7 @@ def request_gap_email_otp(gap_name, email):
 
 
 @frappe.whitelist(allow_guest=True)
-def verify_gap_email_otp(gap_name, challenge_token, otp):
+def verify_gap_email_otp(gap_name, challenge_token, otp, conversation_id=None):
     """Verify the OTP and save the visitor email on the gap record."""
     import hashlib
 
@@ -322,9 +329,34 @@ def verify_gap_email_otp(gap_name, challenge_token, otp):
         "visitor_email": email,
         "visitor_email_status": "Pending",
     })
+    _capture_gap_followup_contact(
+        gap_name,
+        email,
+        conversation_id or data.get("conversation_id"),
+    )
     frappe.db.commit()
     frappe.cache().delete_value(cache_key)
     return {"success": True, "email": email}
+
+
+def _capture_gap_followup_contact(gap_name, email, conversation_id=None):
+    """Persist the visitor's explicit request for a knowledge-gap notification."""
+    from digitz_ai_nexus_live.services.visitor_data_capture import capture_visitor_data
+
+    gap = frappe.get_doc("Nexus Knowledge Gap", gap_name)
+    capture_visitor_data(
+        email=email,
+        conversation=conversation_id,
+        collection_context="Knowledge Gap Follow-up",
+        selected_option="Notify me when this information is available",
+        collection_reason=f"Visitor requested a follow-up for unanswered question: {gap.query}",
+        source_event="knowledge_gap_followup_requested",
+        email_verified=True,
+        consent_status="Explicitly Provided",
+        consent_scope="Notification when the requested knowledge becomes available",
+        reference_doctype="Nexus Knowledge Gap",
+        reference_name=gap.name,
+    )
 
 
 @frappe.whitelist()

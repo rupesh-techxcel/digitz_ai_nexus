@@ -526,7 +526,6 @@ Key fields:
 - channel_name: Display name for admin interfaces.
 - channel_type: Website Q&A, Website Chat, Desk, Portal, or API. The Website Chat type supports conversational sessions with memory and escalation. The Website Q&A type is stateless — single question, single answer. The Desk type is for internal desk user sessions.
 - enabled: 1 to activate.
-- public_access: Checkbox. 1 means accessible to public visitors without authentication.
 - requires_visitor_email: Checkbox. When 1, the visitor must supply an email before the chat begins. Used for identity pre-collection before the conversation starts.
 - agent_based: Checkbox. When 1, the channel routes directly to a specific agent rather than through category-route resolution.
 - default_agent: Link to Nexus AI Agent Profile. Used when agent_based equals 1 or as the fallback.
@@ -957,7 +956,6 @@ def _ensure_internal_channel(tenant):
     doc.channel_name           = "Nexus Internal Chat"
     doc.channel_type           = "Desk"
     doc.enabled                = 1
-    doc.public_access          = 0
     doc.requires_visitor_email = 0
     doc.agent_based            = 0
     doc.description            = "Internal desk channel for platform admin and operator knowledge access."

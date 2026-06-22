@@ -178,7 +178,7 @@ engine/
 
 | DocType | Key Fields | Purpose |
 |---|---|---|
-| `Nexus Live Channel` | `channel_code`, `tenant`, `channel_name`, `channel_type`, `enabled`, `default_agent`, `public_access`, `requires_visitor_email` | Logical entry point/context — website chat, mobile, desk, API, campaign, support surface |
+| `Nexus Live Channel` | `channel_code`, `tenant`, `channel_name`, `channel_type`, `enabled`, `default_agent`, `requires_visitor_email` | Logical entry point/context — website chat, mobile, desk, API, campaign, support surface |
 | `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `faq_questions` | Visitor-facing topic/service. Belongs to one channel, so selecting the category implies the channel. |
 | `Nexus Chat Category FAQ` | (child) `question`, `answer` | Pre-built FAQ answers for a category |
 | `Nexus Identity Type` | `type_code`, `type_label`, `description` | Named identity classes (e.g. Employee, Customer, Partner) — intentionally global, not tenant-scoped |

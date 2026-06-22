@@ -69,11 +69,9 @@ The third command seeds the agentic runtime: Nexy agent candidate, default safet
 | Public access policy | Nexus Access Policy | `Public` |
 | Access categories | Nexus Access Category | `Public Access`, `Internal Access`, `Restricted Access` |
 | Website chat channel | Nexus Live Channel | `WEBSITE-CHAT` |
-| Default chat category | Nexus Chat Category | `GENERAL-SUPPORT` |
 | Identity types | Nexus Identity Type | Public, Customer, Prospect, Partner, Internal, Admin |
 | Default AI agent | Nexus Live Agent | `PUBLIC-AI-ASSISTANT` |
 | Default AI profile | Nexus AI Agent Profile | linked to `PUBLIC-AI-ASSISTANT` |
-| Default route | Nexus Category Identity Route | `WEBSITE-CHAT + GENERAL-SUPPORT + Public → PUBLIC-AI-ASSISTANT profile` |
 
 ---
 
@@ -201,12 +199,12 @@ Key fields for the public website channel:
 
 ### 5.2 Chat Category
 
-Navigate to: **Nexus Chat Category** list → confirm `GENERAL-SUPPORT` exists.
+Navigate to: **Nexus Chat Category** list and create a purpose-specific visitor option.
 
 | Field | Value |
 |---|---|
-| Category Code | `GENERAL-SUPPORT` |
-| Category Label | `General Support` |
+| Category Code | A unique purpose-specific code |
+| Category Label | The visitor-facing option |
 | Channel | `WEBSITE-CHAT` |
 | Enabled | ✓ |
 | Published | ✓ |
@@ -226,13 +224,13 @@ Verify or create this route:
 | Field | Value |
 |---|---|
 | Channel | `WEBSITE-CHAT` |
-| Chat Category | `GENERAL-SUPPORT` |
+| Chat Category | The purpose-specific category created above |
 | Identity Type | `Public` |
 | AI Agent Profile | *(the seeded profile linked to PUBLIC-AI-ASSISTANT)* |
 | Enabled | ✓ |
 | Published | ✓ |
 
-This maps: **anonymous visitor selecting GENERAL-SUPPORT under its Website Chat channel → PUBLIC-AI-ASSISTANT profile**.
+This maps an anonymous visitor's selected category to the appropriate public AI profile.
 
 > **The route must also be Published.** An enabled but unpublished route is not active — the system will return "No active AI Agent Profile route" when trying to start a chat.
 
@@ -423,7 +421,7 @@ Enter:
 | Input | Value |
 |---|---|
 | Channel | `WEBSITE-CHAT` |
-| Chat Category | `GENERAL-SUPPORT` |
+| Chat Category | A configured purpose-specific category |
 | Identity Type | `Public` |
 
 Expected result:
@@ -655,8 +653,8 @@ Proactive gaps appear with a purple **Proactive** badge in the Query column.
 
 # Public website chat
 [ ] Nexus Live Channel — WEBSITE-CHAT, channel_type=Website Chat, enabled
-[ ] Nexus Chat Category — GENERAL-SUPPORT, channel=WEBSITE-CHAT, enabled AND published
-[ ] Nexus Category Identity Route — GENERAL-SUPPORT + Public identity → profile, enabled AND published
+[ ] Nexus Chat Category — purpose-specific category on WEBSITE-CHAT, enabled AND published
+[ ] Nexus Category Identity Route — selected category + Public identity → profile, enabled AND published
 [ ] Nexus Live Agent — PUBLIC-AI-ASSISTANT, type=AI, status=Idle, enabled=1
 [ ] Nexus Agent Onboarding — PUBLIC-AI-ASSISTANT, status=Approved
 
