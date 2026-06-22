@@ -5588,15 +5588,15 @@ section[id="qna-experience"]{
 /* Two-column full-width layout */
 .nxp-page .nxpl-hero-layout{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  min-height:600px;
+  grid-template-columns:1.35fr 0.85fr;
+  min-height:520px;
   position:relative;
 }
 
 /* Left column */
 .nxp-page .nxpl-hero-left{
   display:flex;flex-direction:column;justify-content:center;
-  padding:88px 48px 88px 0;
+  padding:64px 40px 64px 0;
   position:relative;
 }
 .nxp-page .nxpl-hero-badge{
@@ -5608,17 +5608,17 @@ section[id="qna-experience"]{
 }
 .nxp-page .nxpl-hero-badge svg{ width:13px;height:13px; }
 .nxp-page .nxpl-hero-h1{
-  font-size:clamp(2rem,3.6vw,3.4rem);
-  color:#fff;font-weight:900;line-height:1.08;letter-spacing:-0.3px;
-  margin:0 0 20px;max-width:none;
+  font-size:clamp(1.75rem,2.9vw,2.9rem);
+  color:#fff;font-weight:900;line-height:1.1;letter-spacing:-0.3px;
+  margin:0 0 18px;max-width:none;
 }
 .nxp-page .nxpl-hero-em{
   background:linear-gradient(135deg,#5b9df5 0%,#16a37f 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .nxp-page .nxpl-hero-sub{
-  font-size:1rem;color:rgba(255,255,255,0.6);line-height:1.82;
-  max-width:520px;margin:0 0 32px;
+  font-size:0.95rem;color:rgba(255,255,255,0.6);line-height:1.65;
+  max-width:none;margin:0 0 28px;
 }
 .nxp-page .nxpl-hero-actions{
   display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:36px;
@@ -5653,7 +5653,7 @@ section[id="qna-experience"]{
 /* Right column — workspace visual panel */
 .nxp-page .nxpl-hero-right{
   display:flex;align-items:center;justify-content:center;
-  padding:64px 0 64px 40px;
+  padding:48px 0 48px 24px;
   position:relative;
 }
 .nxp-page .nxpl-hero-right::before{

@@ -11,15 +11,15 @@
   <style>
     /* ── Platform workspace orbit visual — mirrors home page ring visual ── */
     .nxpl-hero-visual {
-      position: relative; height: 450px;
+      position: relative; height: 380px;
       display: flex; align-items: center; justify-content: center;
     }
     .nxpl-visual-wrap {
-      position: relative; width: 400px; height: 400px;
+      position: relative; width: 340px; height: 340px;
     }
     .nxpl-visual-wrap::before {
       content: ""; position: absolute; top: 50%; left: 50%;
-      width: 350px; height: 350px; transform: translate(-50%,-50%);
+      width: 298px; height: 298px; transform: translate(-50%,-50%);
       border-radius: 50%; border: 1px solid rgba(255,255,255,.08);
       box-shadow: 0 0 50px rgba(138,177,255,.12); pointer-events: none;
     }
@@ -32,7 +32,7 @@
     .nxpl-core {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%);
-      width: 136px; height: 136px; border-radius: 50%;
+      width: 116px; height: 116px; border-radius: 50%;
       background: radial-gradient(circle, #ffffff 0%, #eef4ff 70%, #dce7ff 100%);
       box-shadow:
         0 0 36px rgba(255,255,255,.42),
@@ -41,12 +41,12 @@
       display: flex; align-items: center; justify-content: center;
       z-index: 3;
     }
-    .nxpl-core-logo { width: 92px; height: auto; }
+    .nxpl-core-logo { width: 78px; height: auto; }
     /* Orbit ring */
     .nxpl-ring {
       position: absolute; top: 50%; left: 50%;
       transform: translate(-50%,-50%);
-      width: 292px; height: 292px; border-radius: 50%;
+      width: 248px; height: 248px; border-radius: 50%;
       border: 1px solid rgba(255,255,255,.20);
       box-shadow: 0 0 0 1px rgba(255,255,255,.03), 0 0 40px rgba(255,255,255,.08);
       animation: nxpl-ring-spin 14s linear infinite;
@@ -61,13 +61,13 @@
       align-items: center; gap: 8px; text-decoration: none; z-index: 5;
     }
     .nxpl-pn-icon {
-      width: 76px; height: 76px; border-radius: 22px;
+      width: 64px; height: 64px; border-radius: 18px;
       display: flex; align-items: center; justify-content: center;
       border: 2px solid rgba(255,255,255,.18);
       transition: transform .28s ease, box-shadow .28s ease;
     }
     .nxpl-pnode:hover .nxpl-pn-icon { transform: scale(1.10) translateY(-4px); }
-    .nxpl-pn-icon svg { width: 36px; height: 36px; }
+    .nxpl-pn-icon svg { width: 30px; height: 30px; }
     .nxpl-pn-label {
       display: inline-block; font-size: .68rem; font-weight: 800;
       letter-spacing: .08em; text-transform: uppercase;
@@ -79,13 +79,13 @@
       font-size: .60rem; font-weight: 700; letter-spacing: .04em;
       color: rgba(255,255,255,.72); white-space: nowrap; text-align: center;
     }
-    /* Positions: 120° intervals on 146px radius. Container 400×400, center (200,200).
-       chat(0°): center(200,54)  → top:16  left:162
-       qa(120°): center(326,273) → top:235 left:288
-       apps(240°):center(74,273) → top:235 left:36  */
-    .nxpl-pn-studio { top: 6px;   left: 162px; animation: nxpl-float1 4.8s ease-in-out infinite; }
-    .nxpl-pn-live   { top: 235px; left: 288px; animation: nxpl-float2 4.2s ease-in-out 1s infinite; }
-    .nxpl-pn-admin  { top: 235px; left: 36px;  animation: nxpl-float3 5.4s ease-in-out 2s infinite; }
+    /* Positions: 120° intervals on 124px radius. Container 340×340, center (170,170).
+       studio(0°): center(170,46)  → top:8   left:132
+       live(120°): center(277,232) → top:194 left:239
+       admin(240°):center(63,232)  → top:194 left:25  */
+    .nxpl-pn-studio { top: 8px;   left: 132px; animation: nxpl-float1 4.8s ease-in-out infinite; }
+    .nxpl-pn-live   { top: 194px; left: 239px; animation: nxpl-float2 4.2s ease-in-out 1s infinite; }
+    .nxpl-pn-admin  { top: 194px; left: 25px;  animation: nxpl-float3 5.4s ease-in-out 2s infinite; }
     /* Icon colored backgrounds */
     .nxpl-pn-studio .nxpl-pn-icon {
       background: linear-gradient(145deg, #2a5cd8 0%, #1a3fa8 100%);
@@ -242,6 +242,7 @@
         <a href="/nexus-platform" class="nav-active">Nexus Orbit</a>
         <a href="/how-nexus-works">Orbit Architecture</a>
         <a href="/pricing">Pricing</a>
+        <a href="/nexy">Nexy — Agentic Candidate</a>
         <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
       </nav>
     </div>
@@ -970,6 +971,7 @@
             <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Orbit</a>
             <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Orbit Architecture</a>
             <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Pricing</a>
+            <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexy</a>
           </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>

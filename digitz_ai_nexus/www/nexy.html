@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXY — AI-Governed Business Growth Orchestrator | Nexus AI</title>
+  <meta name="description" content="Nexy is the Nexus Agentic Candidate — beginning as a Visitor Companion and expanding into a full AI-governed business growth orchestrator.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/digitz_ai_nexus/css/digitz_ai_nexus_site.css">
+  <style>
+    /* ────────────────────────────────────────────────────────
+       NEXY PAGE — nxy- prefix
+    ──────────────────────────────────────────────────────── */
+
+    :root {
+      --nx-navy:  #0b2b72;
+      --nx-blue:  #214dbb;
+      --nx-teal:  #16A37F;
+      --nx-gold:  #f4a024;
+      --nx-text:  #0e1e42;
+      --nx-muted: #53688f;
+    }
+
+    /* ── Hero ── */
+    .nxy-hero {
+      background:
+        radial-gradient(circle at 88% 18%, rgba(138,177,255,.26) 0%, transparent 36%),
+        radial-gradient(circle at 92% 10%, rgba(255,255,255,.10) 0%, transparent 20%),
+        radial-gradient(ellipse 68% 72% at 72% 62%, rgba(22,163,127,.20) 0%, transparent 58%),
+        radial-gradient(ellipse 56% 52% at 14% 22%, rgba(33,77,187,.46) 0%, transparent 52%),
+        radial-gradient(ellipse 38% 38% at 50% 108%, rgba(30,70,180,.14) 0%, transparent 55%),
+        linear-gradient(135deg, #081f5d 0%, #0f2d70 28%, #193f99 60%, #0c2356 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .nxy-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: .20;
+      pointer-events: none;
+    }
+    .nxy-hero::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #214dbb 0%, #1a3fa8 20%, #16A37F 52%, #e0a62f 80%, #c8860a 100%);
+      z-index: 5;
+    }
+    .nxy-hero-inner {
+      position: relative; z-index: 2;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 56px;
+      align-items: center;
+      padding: 72px 0 64px;
+    }
+    @media (max-width: 860px) {
+      .nxy-hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .nxy-hero-visual { display: none; }
+    }
+
+    /* Hero left */
+    .nxy-hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 999px;
+      background: rgba(22,163,127,.18); border: 1px solid rgba(22,163,127,.36);
+      color: #5dfbca; font-family: 'Exo 2', sans-serif;
+      font-size: 11px; font-weight: 800; letter-spacing: .10em; text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .nxy-hero-eyebrow svg { opacity: .8; }
+    .nxy-hero-h1 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(3.2rem, 6vw, 5.4rem);
+      font-weight: 900; color: #fff; line-height: 1.0;
+      letter-spacing: -1px; margin: 0 0 8px;
+    }
+    .nxy-hero-tagline {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      font-weight: 700; color: #7eb8ff; margin: 0 0 22px; line-height: 1.3;
+    }
+    .nxy-hero-lead {
+      font-size: clamp(.92rem, 1.2vw, 1.02rem);
+      color: rgba(255,255,255,.76);
+      line-height: 1.76; margin: 0 0 40px; max-width: 520px;
+    }
+    .nxy-hero-pills {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .nxy-pill-teal {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 999px;
+      background: rgba(22,163,127,.22); border: 1.5px solid rgba(22,163,127,.48);
+      color: #5dfbca; font-size: 13px; font-weight: 700;
+      text-decoration: none; transition: background .2s;
+    }
+    .nxy-pill-teal:hover { background: rgba(22,163,127,.36); }
+    .nxy-pill-blue {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 999px;
+      background: rgba(33,77,187,.28); border: 1.5px solid rgba(138,177,255,.38);
+      color: #a5c8ff; font-size: 13px; font-weight: 700;
+      text-decoration: none; transition: background .2s;
+    }
+    .nxy-pill-blue:hover { background: rgba(33,77,187,.44); }
+
+    /* ── Hero role row (Visitor Companion readable label) ── */
+    .nxy-hero-role-row {
+      display: flex; align-items: center; gap: 10px;
+      margin: 6px 0 22px; flex-wrap: wrap;
+    }
+    .nxy-role-vc {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.22rem);
+      font-weight: 900; color: #5dfbca; letter-spacing: .01em;
+      padding: 5px 16px; border-radius: 8px;
+      background: rgba(22,163,127,.18); border: 1.5px solid rgba(22,163,127,.44);
+    }
+    .nxy-role-sep {
+      color: rgba(255,255,255,.28); font-size: 1.1rem; font-weight: 300;
+    }
+    .nxy-role-go {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1rem, 1.6vw, 1.22rem);
+      font-weight: 700; color: rgba(165,200,255,.55); letter-spacing: .01em;
+    }
+
+    /* ── Hero flow visual ── */
+    .nxy-hero-visual {
+      display: flex; justify-content: center; align-items: center;
+      align-self: center;
+    }
+    .nxy-flow-visual {
+      width: 380px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* Input source cards */
+    .nxy-flow-inputs {
+      display: flex; gap: 14px; width: 100%; justify-content: center;
+    }
+    .nxy-fin-card {
+      flex: 1; max-width: 165px;
+      padding: 18px 14px 16px;
+      border-radius: 18px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      text-align: center;
+    }
+    .nxy-fin-orbit {
+      background: rgba(22,163,127,.12);
+      border: 1.5px solid rgba(22,163,127,.35);
+    }
+    .nxy-fin-comm {
+      background: rgba(33,77,187,.12);
+      border: 1.5px solid rgba(138,177,255,.28);
+    }
+    .nxy-fin-icon {
+      width: 52px; height: 52px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nxy-fin-orbit .nxy-fin-icon {
+      background: rgba(22,163,127,.22);
+      box-shadow: 0 0 24px rgba(22,163,127,.35);
+    }
+    .nxy-fin-comm .nxy-fin-icon {
+      background: rgba(33,77,187,.22);
+      box-shadow: 0 0 24px rgba(33,77,187,.30);
+    }
+    .nxy-fin-label {
+      font-size: 10px; font-weight: 800;
+      line-height: 1.45; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .nxy-fin-orbit .nxy-fin-label { color: #5dfbca; }
+    .nxy-fin-comm .nxy-fin-label { color: #a5c8ff; }
+
+    /* SVG connector paths */
+    .nxy-flow-svg { width: 380px; height: 70px; overflow: visible; display: block; }
+
+    /* NEXY hub */
+    .nxy-hub-wrap { position: relative; width: 110px; height: 110px; }
+    .nxy-hub-halo {
+      position: absolute; inset: -14px; border-radius: 50%;
+      border: 1px solid rgba(22,163,127,.22);
+      animation: nxy-hub-pulse 3s ease-in-out infinite;
+    }
+    .nxy-hub-halo-2 {
+      position: absolute; inset: -28px; border-radius: 50%;
+      border: 1px solid rgba(22,163,127,.10);
+      animation: nxy-hub-pulse 3s ease-in-out infinite .8s;
+    }
+    @keyframes nxy-hub-pulse {
+      0%,100% { opacity: .6; transform: scale(1); }
+      50%      { opacity: 1; transform: scale(1.04); }
+    }
+    .nxy-hub-core {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #1ec49a 0%, #16A37F 45%, #0a5438 100%);
+      box-shadow: 0 0 42px rgba(22,163,127,.55), 0 0 80px rgba(22,163,127,.20);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nxy-hub-nx {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 1.9rem; font-weight: 900; color: #fff; letter-spacing: -1px;
+      text-shadow: 0 2px 12px rgba(0,0,0,.30);
+    }
+
+    /* Down connector */
+    .nxy-flow-down-svg { width: 380px; height: 50px; overflow: visible; display: block; }
+
+    /* Visitor journey output */
+    .nxy-flow-output {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%;
+    }
+    .nxy-fout-step {
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      padding: 12px 10px 10px; border-radius: 16px; min-width: 82px;
+    }
+    .nxy-fout-icon {
+      width: 44px; height: 44px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nxy-fout-lbl {
+      font-size: 9px; font-weight: 800;
+      letter-spacing: .09em; text-transform: uppercase; text-align: center; line-height: 1.35;
+    }
+    .nxy-fout-arr {
+      color: rgba(255,255,255,.22); font-size: 20px;
+      margin-bottom: 22px; flex-shrink: 0;
+    }
+    .nxy-fout-visitor {
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    }
+    .nxy-fout-visitor .nxy-fout-icon { background: rgba(255,255,255,.12); }
+    .nxy-fout-visitor .nxy-fout-lbl { color: rgba(255,255,255,.55); }
+    .nxy-fout-guided {
+      background: rgba(33,77,187,.12); border: 1px solid rgba(138,177,255,.22);
+    }
+    .nxy-fout-guided .nxy-fout-icon {
+      background: rgba(33,77,187,.24);
+      box-shadow: 0 0 16px rgba(33,77,187,.28);
+    }
+    .nxy-fout-guided .nxy-fout-lbl { color: #a5c8ff; }
+    .nxy-fout-convert {
+      background: rgba(22,163,127,.14); border: 1.5px solid rgba(22,163,127,.40);
+      animation: nxy-convert-glow 2.8s ease-in-out infinite;
+    }
+    @keyframes nxy-convert-glow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(22,163,127,0); }
+      50%      { box-shadow: 0 0 20px 5px rgba(22,163,127,.22); }
+    }
+    .nxy-fout-convert .nxy-fout-icon {
+      background: rgba(22,163,127,.26);
+      box-shadow: 0 0 20px rgba(22,163,127,.42);
+    }
+    .nxy-fout-convert .nxy-fout-lbl { color: #5dfbca; }
+
+    @media (max-width: 860px) { .nxy-hero-visual { display: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .nxy-hub-halo, .nxy-hub-halo-2, .nxy-fout-convert { animation: none; }
+    }
+
+    /* ── Hero foot strip ── */
+    .nxy-hero-foot {
+      background: rgba(4, 10, 32, 0.44);
+      border-top: 1px solid rgba(255,255,255,.10);
+      position: relative; z-index: 2;
+      padding: 20px 0 24px;
+    }
+    .nxy-hero-foot-row {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+
+    /* ── Section badge ── */
+    .nxy-section-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .72rem; font-weight: 800; letter-spacing: .10em;
+      text-transform: uppercase; border-radius: 50px; padding: 5px 14px; margin-bottom: 18px;
+    }
+    .nxy-badge-teal {
+      color: #0d7a5f;
+      background: rgba(22,163,127,.10); border: 1px solid rgba(22,163,127,.24);
+    }
+    .nxy-badge-blue {
+      color: #214dbb;
+      background: rgba(33,77,187,.08); border: 1px solid rgba(33,77,187,.20);
+    }
+
+    /* Pulsing live dot */
+    .nxy-live-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #16A37F; position: relative;
+    }
+    .nxy-live-dot::after {
+      content: ''; position: absolute; inset: -3px; border-radius: 50%;
+      border: 1.5px solid rgba(22,163,127,.5);
+      animation: nxy-pulse 1.8s ease-out infinite;
+    }
+    @keyframes nxy-pulse {
+      0%   { transform: scale(1);   opacity: 1; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
+    /* ── Section layouts ── */
+    .nxy-section-vc {
+      background: #fff;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+      padding: 72px 0 80px;
+    }
+    .nxy-section-go {
+      background: #f8faff;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+      padding: 72px 0 80px;
+    }
+
+    /* Section head */
+    .nxy-section-head {
+      max-width: 760px; margin: 0 0 52px;
+    }
+    .nxy-section-h2 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1.7rem, 2.8vw, 2.5rem);
+      font-weight: 900; color: #0f2650;
+      margin: 0 0 22px; line-height: 1.12; letter-spacing: -.3px;
+    }
+    .nxy-section-lead p {
+      font-size: .98rem; color: #4a5e72; line-height: 1.78; margin: 0 0 16px;
+    }
+    .nxy-section-lead p:last-child { margin-bottom: 0; }
+
+    /* Mechanism highlight box */
+    .nxy-mech-box {
+      background: linear-gradient(135deg, rgba(22,163,127,.07) 0%, rgba(33,77,187,.06) 100%);
+      border: 1.5px solid rgba(22,163,127,.22);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin: 0 0 52px;
+    }
+    .nxy-mech-box h3 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 1.05rem; font-weight: 800; color: #0b4a38;
+      margin: 0 0 12px;
+    }
+    .nxy-mech-box p {
+      font-size: .96rem; color: #2a5040; line-height: 1.72; margin: 0;
+    }
+
+    /* Feature blocks — uses shared nxpl-feat-block classes + overrides */
+    .nxy-feat-blocks-teal .nxpl-feat-block {
+      border-color: rgba(22,163,127,.14);
+      box-shadow: 0 2px 12px rgba(22,163,127,.06);
+    }
+    .nxy-feat-blocks-teal .nxpl-feat-block:hover {
+      box-shadow: 0 6px 24px rgba(22,163,127,.12);
+    }
+    .nxy-feat-blocks-blue .nxpl-feat-block {
+      border-color: rgba(33,77,187,.11);
+      box-shadow: 0 2px 12px rgba(33,77,187,.06);
+    }
+    .nxy-feat-blocks-blue .nxpl-feat-block:hover {
+      box-shadow: 0 6px 24px rgba(33,77,187,.11);
+    }
+
+    /* Icon color variants */
+    .nxy-fi-teal {
+      background: linear-gradient(145deg, rgba(22,163,127,.14) 0%, rgba(22,163,127,.08) 100%);
+      border-color: rgba(22,163,127,.22);
+      color: #0d8460;
+    }
+    .nxy-fi-blue {
+      background: linear-gradient(145deg, rgba(33,77,187,.12) 0%, rgba(33,77,187,.06) 100%);
+      border-color: rgba(33,77,187,.20);
+      color: #214dbb;
+    }
+
+    /* Two-column feature grid for GO section */
+    .nxy-feat-blocks-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 760px) {
+      .nxy-feat-blocks-2col { grid-template-columns: 1fr; }
+    }
+    /* Override shared nxpl-feat-blocks stacking for 2col context */
+    .nxy-feat-blocks-2col .nxpl-feat-block {
+      margin: 0;
+    }
+
+    /* Positioning callout box */
+    .nxy-position-box {
+      border-radius: 16px;
+      padding: 26px 32px;
+      margin: 40px 0 0;
+    }
+    .nxy-position-box-teal {
+      background: linear-gradient(135deg, rgba(22,163,127,.08) 0%, rgba(11,43,114,.05) 100%);
+      border: 1.5px solid rgba(22,163,127,.20);
+    }
+    .nxy-position-box-blue {
+      background: linear-gradient(135deg, rgba(33,77,187,.07) 0%, rgba(22,163,127,.05) 100%);
+      border: 1.5px solid rgba(33,77,187,.18);
+    }
+    .nxy-position-box p {
+      font-size: .97rem; font-style: italic;
+      line-height: 1.72; margin: 0;
+    }
+    .nxy-position-box-teal p { color: #1a5e4a; }
+    .nxy-position-box-blue p { color: #1a2e6a; }
+
+    /* Orbit connection callout */
+    .nxy-orbit-callout {
+      background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 55%, #16A37F 100%);
+      padding: 52px 0;
+    }
+    .nxy-orbit-callout-inner {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      gap: 32px; flex-wrap: wrap;
+    }
+    .nxy-orbit-callout-label {
+      font-size: 11px; font-weight: 800; letter-spacing: .12em;
+      color: rgba(255,255,255,.55); text-transform: uppercase; margin-bottom: 10px;
+    }
+    .nxy-orbit-callout h2 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+      font-weight: 900; color: #fff; margin: 0 0 10px; line-height: 1.25;
+    }
+    .nxy-orbit-callout p {
+      font-size: 15px; color: rgba(255,255,255,.72);
+      margin: 0; max-width: 520px; line-height: 1.6;
+    }
+    .nxy-orbit-callout-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.30);
+      color: #fff; font-size: 14px; font-weight: 700;
+      padding: 13px 24px; border-radius: 10px;
+      text-decoration: none; white-space: nowrap; flex-shrink: 0;
+      transition: background .2s;
+    }
+    .nxy-orbit-callout-link:hover { background: rgba(255,255,255,.22); }
+
+    /* Override heading colour in GO section */
+    .nxy-section-go .nxy-section-h2 { color: #0f2650; }
+    .nxy-section-go .nxpl-ws-head-copy h2 { color: #0f2650; }
+
+    /* Ensure section desc paragraphs in GO section don't inherit from nxpl */
+    .nxy-go-desc p {
+      font-size: .97rem; color: #4a5e72; line-height: 1.78; margin: 0 0 16px;
+    }
+    .nxy-go-desc p:last-child { margin-bottom: 0; }
+
+  </style>
+</head>
+<body>
+
+<div class="digitz-website nexus-home nxp-page">
+
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a href="/" class="logo nexus-logo-wrap" aria-label="Nexus AI Home">
+        <img src="/assets/digitz_ai_nexus/images/nexus-ai.png" alt="Nexus AI" class="nexus-logo-img"/>
+      </a>
+      <nav class="nav" aria-label="Primary Navigation">
+        <a href="/">Home</a>
+        <a href="/nexus-platform">Nexus Orbit</a>
+        <a href="/how-nexus-works">Orbit Architecture</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/nexy" class="nav-active">Nexy — Agentic Candidate</a>
+        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="nxy-hero">
+    <div class="container">
+      <div class="nxy-hero-inner">
+
+        <!-- Left: headline + CTAs -->
+        <div class="nxy-hero-left">
+          <span class="nxy-hero-eyebrow">
+            <svg viewBox="0 0 16 16" fill="none" width="12" height="12" aria-hidden="true">
+              <circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/>
+              <circle cx="8" cy="8" r="2" fill="currentColor"/>
+              <path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Nexus Agentic Candidate
+          </span>
+          <h1 class="nxy-hero-h1">NEXY</h1>
+          <div class="nxy-hero-role-row">
+            <span class="nxy-role-vc">Visitor Companion</span>
+            <span class="nxy-role-sep">→</span>
+            <span class="nxy-role-go">Business Growth Orchestrator</span>
+          </div>
+          <p class="nxy-hero-lead">Nexy connects customer intelligence, product context, engagement behaviour, and business opportunities into one coordinated AI-governed growth system — beginning today as your Visitor Companion and expanding into full business growth orchestration.</p>
+          <div class="nxy-hero-pills">
+            <a href="#nexy-visitor-companion" class="nxy-pill-teal">
+              Visitor Companion
+              <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="#nexy-growth-orchestrator" class="nxy-pill-blue">
+              Growth Orchestrator
+              <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: Visitor Companion — concept flow visual -->
+        <div class="nxy-hero-visual" aria-hidden="true">
+          <div class="nxy-flow-visual">
+
+            <!-- Row 1: Two knowledge inputs -->
+            <div class="nxy-flow-inputs">
+              <div class="nxy-fin-card nxy-fin-orbit">
+                <div class="nxy-fin-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
+                    <ellipse cx="12" cy="6.5" rx="8.5" ry="3.2" stroke="#5dfbca" stroke-width="1.6"/>
+                    <path d="M3.5 6.5v4.5c0 1.77 3.81 3.2 8.5 3.2s8.5-1.43 8.5-3.2V6.5" stroke="#5dfbca" stroke-width="1.5"/>
+                    <path d="M3.5 11v4.5c0 1.77 3.81 3.2 8.5 3.2s8.5-1.43 8.5-3.2V11" stroke="#5dfbca" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+                  </svg>
+                </div>
+                <span class="nxy-fin-label">Nexus Orbit<br>Knowledge</span>
+              </div>
+              <div class="nxy-fin-card nxy-fin-comm">
+                <div class="nxy-fin-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
+                    <path d="M12 3C7.03 3 3 6.58 3 11c0 2.18.92 4.16 2.42 5.62L4 21l4.76-1.54A9.4 9.4 0 0012 19c4.97 0 9-3.58 9-8s-4.03-8-9-8Z" stroke="#a5c8ff" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M8 10.5h8M8 13.5h5" stroke="#a5c8ff" stroke-width="1.4" stroke-linecap="round" opacity=".65"/>
+                    <circle cx="17" cy="10.5" r="1" fill="#a5c8ff" opacity=".5"/>
+                  </svg>
+                </div>
+                <span class="nxy-fin-label">Communication<br>Intelligence</span>
+              </div>
+            </div>
+
+            <!-- Converging animated path -->
+            <svg class="nxy-flow-svg" viewBox="0 0 380 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path id="nxy-pl" d="M 101 0 C 101 35, 190 35, 190 70" stroke="rgba(93,251,202,.28)" stroke-width="1.5" fill="none"/>
+              <path id="nxy-pr" d="M 279 0 C 279 35, 190 35, 190 70" stroke="rgba(165,200,255,.25)" stroke-width="1.5" fill="none"/>
+              <circle r="3.5" fill="#5dfbca" opacity=".9">
+                <animateMotion dur="1.9s" repeatCount="indefinite" begin="0s"><mpath href="#nxy-pl"/></animateMotion>
+              </circle>
+              <circle r="2" fill="#5dfbca" opacity=".45">
+                <animateMotion dur="1.9s" repeatCount="indefinite" begin="0.95s"><mpath href="#nxy-pl"/></animateMotion>
+              </circle>
+              <circle r="3.5" fill="#a5c8ff" opacity=".85">
+                <animateMotion dur="2.1s" repeatCount="indefinite" begin="0.3s"><mpath href="#nxy-pr"/></animateMotion>
+              </circle>
+              <circle r="2" fill="#a5c8ff" opacity=".45">
+                <animateMotion dur="2.1s" repeatCount="indefinite" begin="1.35s"><mpath href="#nxy-pr"/></animateMotion>
+              </circle>
+            </svg>
+
+            <!-- NEXY processing hub -->
+            <div class="nxy-hub-wrap">
+              <div class="nxy-hub-halo-2"></div>
+              <div class="nxy-hub-halo"></div>
+              <div class="nxy-hub-core">
+                <span class="nxy-hub-nx">Nx</span>
+              </div>
+            </div>
+
+            <!-- Downward animated path -->
+            <svg class="nxy-flow-down-svg" viewBox="0 0 380 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path id="nxy-pd" d="M 190 0 L 190 50" stroke="rgba(93,251,202,.32)" stroke-width="1.5" fill="none"/>
+              <circle r="3.5" fill="#5dfbca" opacity=".9">
+                <animateMotion dur="1.1s" repeatCount="indefinite" begin="0s"><mpath href="#nxy-pd"/></animateMotion>
+              </circle>
+              <circle r="2" fill="#5dfbca" opacity=".45">
+                <animateMotion dur="1.1s" repeatCount="indefinite" begin="0.55s"><mpath href="#nxy-pd"/></animateMotion>
+              </circle>
+            </svg>
+
+            <!-- Visitor journey: three outcome steps -->
+            <div class="nxy-flow-output">
+              <div class="nxy-fout-step nxy-fout-visitor">
+                <div class="nxy-fout-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                    <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,.65)" stroke-width="1.6"/>
+                    <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="rgba(255,255,255,.65)" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <span class="nxy-fout-lbl">Visitor<br>Arrives</span>
+              </div>
+              <div class="nxy-fout-arr">→</div>
+              <div class="nxy-fout-step nxy-fout-guided">
+                <div class="nxy-fout-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                    <path d="M20 4H4a1 1 0 00-1 1v10a1 1 0 001 1h4l3 3 3-3h6a1 1 0 001-1V5a1 1 0 00-1-1Z" stroke="#a5c8ff" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M8 9h8M8 12.5h5" stroke="#a5c8ff" stroke-width="1.4" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <span class="nxy-fout-lbl">Nexy<br>Guides</span>
+              </div>
+              <div class="nxy-fout-arr">→</div>
+              <div class="nxy-fout-step nxy-fout-convert">
+                <div class="nxy-fout-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                    <circle cx="12" cy="12" r="8.5" stroke="#5dfbca" stroke-width="1.6"/>
+                    <path d="M8.5 12.5l2.5 2.5 4.5-5" stroke="#5dfbca" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <span class="nxy-fout-lbl">Visitor<br>Subscribes</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /.container -->
+
+    <!-- Hero footer strip -->
+    <div class="nxy-hero-foot">
+      <div class="container">
+        <div class="nxy-hero-foot-row">
+          <a href="#nexy-visitor-companion" class="nxy-pill-teal">Visitor Companion ↓</a>
+          <a href="#nexy-growth-orchestrator" class="nxy-pill-blue">Growth Orchestrator ↓</a>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ═══════════════ SECTION 1: VISITOR COMPANION ═══════════════ -->
+  <section class="nxy-section-vc" id="nexy-visitor-companion">
+    <div class="container">
+
+      <div class="nxy-section-head">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+          <span class="nxy-section-badge nxy-badge-teal">Current Pilot · Active</span>
+          <span class="nxy-live-dot" title="Active pilot"></span>
+        </div>
+        <h2 class="nxy-section-h2">Nexy as Visitor Companion</h2>
+        <div class="nxy-section-lead">
+          <p>Before Nexy becomes a full business growth orchestrator, it begins as a focused visitor companion for the Nexus platform. In this role, Nexy helps website visitors understand the value of Nexus, explore how the platform can support their business, and move confidently toward subscription or enquiry.</p>
+          <p>Because Nexy is grounded in the knowledge prepared within Nexus Orbit, it does not respond randomly or generically. It understands the platform's positioning, its business relevance, and the specific value it can offer to different types of visitors. This allows Nexy to interact with each visitor in a meaningful, guided, and business-aware manner.</p>
+        </div>
+      </div>
+
+      <!-- Key mechanism highlight -->
+      <div class="nxy-mech-box">
+        <h3>How Nexy Guides Visitors to Buy</h3>
+        <p>Nexy uses the approved knowledge stored inside Nexus Orbit — platform value, competitive advantages, unique propositions, business use cases, and key differentiators — combined with communication intelligence to understand each visitor's intent, respond with precision, and guide them confidently toward subscription or purchase.</p>
+      </div>
+
+      <!-- 7 Capabilities -->
+      <div class="nxpl-feat-blocks nxy-feat-blocks-teal">
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="14" cy="10" r="5.5"/>
+              <path d="M5 24c0-4.42 4.03-8 9-8s9 3.58 9 8"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Helps visitors understand the Nexus platform</h3>
+            <p>Explains what Nexus AI is, what problems it solves, and how it adds value to different types of businesses — in language that matches the visitor's context.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="22" height="18" rx="4"/>
+              <path d="M8 11h12M8 15h8"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Explains value propositions and business benefits</h3>
+            <p>Communicates the platform's specific benefits in terms the visitor understands — reducing support load, governing AI responses, enabling multi-tenant deployments, and more.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 3L4 8l10 5 10-5L14 3Z"/>
+              <path d="M4 14l10 5 10-5"/>
+              <path d="M4 19l10 5 10-5" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Uses Nexus Orbit knowledge to provide grounded responses</h3>
+            <p>Every Nexy response is grounded in knowledge that has been approved and validated inside Nexus Orbit — not hallucinated, not generic, not out of scope.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V8l8-4Z"/>
+              <path d="M10 14l2.5 2.5L18 11"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Highlights competitive advantages and unique capabilities</h3>
+            <p>Presents what makes Nexus AI distinct — its governed knowledge architecture, identity-aware response model, multi-tenant isolation, and human escalation design — clearly and confidently.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="M17 17l5.5 5.5" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Connects visitor needs with relevant Nexus features</h3>
+            <p>Listens to the visitor's business context, identifies the relevant platform features, and explains how those features address the visitor's specific situation.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 20l5-8 4 5 4-7 5 4"/>
+              <rect x="3" y="3" width="22" height="22" rx="4" opacity=".3"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Guides visitors toward enquiry, subscription, or next action</h3>
+            <p>Rather than leaving visitors to browse alone, Nexy actively guides each conversation toward a defined outcome — a subscription decision, an enquiry, or a clear next step.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              <path d="M9 10h10M9 13.5h6" opacity=".6"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Maintains a controlled, consistent, and business-aware conversation</h3>
+            <p>Every Nexy conversation stays within the approved scope. It does not discuss topics outside the knowledge boundary, does not make claims the platform cannot support, and maintains a consistent, professional tone throughout.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Positioning statement -->
+      <div class="nxy-position-box nxy-position-box-teal">
+        <p>"Nexy as Visitor Companion is the first pilot expression of Nexus Agentic — using Nexus Orbit knowledge to guide website visitors, explain platform value, understand business intent, and support the journey from interest to subscription."</p>
+      </div>
+
+      <!-- CTA -->
+      <div class="nxpl-ws-cta" style="border-top-color:rgba(22,163,127,.15);">
+        <p>Experience how Nexy engages visitors with platform-grounded intelligence and guides them toward the right next step.</p>
+        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Nexy Now</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ SECTION 2: BUSINESS GROWTH ORCHESTRATOR ═══════════════ -->
+  <section class="nxy-section-go" id="nexy-growth-orchestrator">
+    <div class="container">
+
+      <div class="nxy-section-head">
+        <span class="nxy-section-badge nxy-badge-blue">Full Orchestration</span>
+        <h2 class="nxy-section-h2">Nexy as Business Growth Orchestrator</h2>
+        <div class="nxy-go-desc">
+          <p>Nexy is an AI-governed business growth orchestrator designed to connect product understanding, customer intelligence, engagement signals, and business opportunities into one coordinated growth system.</p>
+          <p>It goes beyond simple automation by understanding what the business offers, who the ideal customers are, how visitors and prospects interact, and which activities can move them closer to meaningful engagement. Nexy brings together product definitions, customer persona mapping, website visitor behaviour, chat interactions, CRM activity, communication history, and opportunity signals to help businesses analyse intent and guide the next best action.</p>
+          <p>With Nexy, every customer touchpoint becomes part of a connected intelligence flow. Website visits, enquiry patterns, chat conversations, follow-ups, CRM updates, and interaction history are continuously analysed to identify interest, understand customer needs, and support growth-focused decisions.</p>
+          <p>Nexy helps businesses define their offerings clearly, understand the right customer segments, analyse engagement behaviour, and coordinate intelligent actions across connected systems. It can work with CRM platforms, website visitor analytics, chat systems, communication channels, and internal business workflows to create a more informed and governed customer journey.</p>
+          <p>Rather than treating customer engagement as isolated activities, Nexy connects them into a structured growth process. It enables businesses to understand possibilities, prioritise opportunities, improve communication, and guide teams with AI-supported intelligence while keeping the process governed, traceable, and aligned with business objectives.</p>
+        </div>
+      </div>
+
+      <!-- 10 Core Capabilities — 2-column grid -->
+      <div class="nxy-feat-blocks-2col nxy-feat-blocks-blue">
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="20" height="20" rx="4"/>
+              <path d="M9 10h10M9 14h7M9 18h5"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Product &amp; Offering Definition Intelligence</h3>
+            <p>Understands and maps the business's products, services, and value propositions to enable contextually relevant customer engagement across every touchpoint.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="10" r="4"/>
+              <circle cx="20" cy="9" r="3" opacity=".6"/>
+              <path d="M3 24c0-3.87 3.13-7 7-7h2"/>
+              <path d="M20 16c2.76 0 5 2.24 5 5" opacity=".6"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Customer Persona &amp; Segment Mapping</h3>
+            <p>Identifies and maintains profiles of ideal customer types, their characteristics, behaviours, and decision patterns to guide targeted communication and engagement.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="22" height="16" rx="3"/>
+              <polyline points="6,16 10,10 14,13 18,8 23,11"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Website Visitor Behaviour Analysis</h3>
+            <p>Tracks and interprets how visitors interact with your website — pages visited, time spent, content consumed — to understand interest signals and readiness to engage.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              <path d="M9 9h10M9 13h6"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Chat &amp; Enquiry Interaction Analysis</h3>
+            <p>Analyses conversations, question patterns, and topic focus from chat interactions to identify intent, assess readiness, and surface actionable insights.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 20l5-8 4 5 4-7 5 4"/>
+              <circle cx="23" cy="7" r="3"/>
+              <path d="M3 24h22" opacity=".3"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>CRM-Connected Opportunity Tracking</h3>
+            <p>Integrates with CRM activity to track lead status, deal progression, follow-up patterns, and opportunity signals — connecting engagement data to pipeline reality.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 7h4l2 4h8l2-4h2"/>
+              <path d="M7 7l2 10h10l2-10"/>
+              <circle cx="14" cy="20" r="1.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Customer Journey Understanding</h3>
+            <p>Maps the full journey from first visit to active engagement, identifying where customers are, what they need next, and which actions will move them forward.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="14" cy="14" r="9"/>
+              <path d="M14 9v5l3 3"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Engagement Signal Interpretation</h3>
+            <p>Reads and interprets signals from across all channels — visits, enquiries, responses, inactions — to build a connected picture of each prospect's intent and timing.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="9" height="9" rx="2.2"/>
+              <rect x="16" y="3" width="9" height="9" rx="2.2"/>
+              <rect x="3" y="16" width="9" height="9" rx="2.2"/>
+              <path d="M20.5 16v9M16 20.5h9" opacity=".6"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>AI-Guided Activity Orchestration</h3>
+            <p>Recommends and coordinates the right actions across connected systems — follow-up timing, content to share, team to involve, channel to use — guided by intelligence, not guesswork.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4l2.5 5 5.5.8-4 3.9.95 5.5L14 16.8l-4.95 2.4.95-5.5L6 9.8l5.5-.8L14 4Z"/>
+              <path d="M6 23h16" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Business Opportunity Discovery</h3>
+            <p>Surfaces opportunities that might otherwise be missed — re-engagement candidates, high-intent visitors, stalled deals, and underserved segments — for proactive action.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V8l8-4Z"/>
+              <path d="M10 14l2.5 2.5L18 11"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Governed Customer Communication Support</h3>
+            <p>Ensures all outbound communication is grounded in approved content, consistent in tone, aligned with business policy, and fully traceable for audit and quality control.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Positioning statement -->
+      <div class="nxy-position-box nxy-position-box-blue">
+        <p>"Nexy connects customer intelligence, product context, engagement behaviour, and business activity into one AI-governed orchestration layer that helps businesses understand intent, discover opportunities, and guide growth-focused actions."</p>
+      </div>
+
+      <!-- CTA -->
+      <div class="nxpl-ws-cta" style="border-top-color:rgba(33,77,187,.12);">
+        <p>Learn how Nexy can connect your customer intelligence, engagement signals, and CRM data into a governed growth system for your business.</p>
+        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us to Learn More</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ ORBIT CONNECTION CALLOUT ═══════════════ -->
+  <section class="nxy-orbit-callout">
+    <div class="container">
+      <div class="nxy-orbit-callout-inner">
+        <div>
+          <div class="nxy-orbit-callout-label">Built on NEXUS ORBIT</div>
+          <h2>Nexy Runs on Nexus Orbit</h2>
+          <p>Every Nexy response, action, and orchestration step is grounded in knowledge governed by Nexus Orbit — the platform's knowledge, identity, governance, and messaging infrastructure that ensures Nexy stays accurate, controlled, and fully auditable.</p>
+        </div>
+        <a href="/nexus-platform" class="nxy-orbit-callout-link">
+          Explore Nexus Orbit
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <section class="nexus-cta-footer" id="contact">
+    <div class="container">
+
+      <div class="ncf-products-strip">
+        <div class="ncf-prod-card">
+          <img src="/assets/digitz_ai_nexus/images/nexus-chat-agent-icon.svg" alt="" class="ncf-prod-icon"/>
+          <div class="ncf-prod-body">
+            <strong>Nexus Chat Bot</strong>
+            <span>Multi-tenant conversational AI for public visitors, verified customers, and internal teams — each governed by its own identity, knowledge, and access policy.</span>
+            <div class="ncf-prod-tags">
+              <span>Multi-tenant</span><span>Identity-aware</span><span>Governed</span>
+            </div>
+          </div>
+        </div>
+        <div class="ncf-prod-sep"></div>
+        <div class="ncf-prod-card">
+          <span class="ncf-prod-icon ncf-prod-icon-qa">
+            <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="56" height="56" rx="14" fill="url(#qa-g2)"/><circle cx="28" cy="25" r="11.5" stroke="white" stroke-width="2.4"/><path d="M24.5 22.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5c0 2-3.5 3.3-3.5 4.7" stroke="white" stroke-width="2.4" stroke-linecap="round"/><circle cx="28" cy="31.5" r="1.5" fill="white"/><path d="M20 42h16" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/><defs><linearGradient id="qa-g2" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse"><stop stop-color="#214DBB"/><stop offset="1" stop-color="#16A37F"/></linearGradient></defs></svg>
+          </span>
+          <div class="ncf-prod-body">
+            <strong>Nexus Q&amp;A</strong>
+            <span>Structured answers sourced from your approved knowledge base — no hallucinations, no out-of-scope replies, always auditable and controlled.</span>
+            <div class="ncf-prod-tags">
+              <span>Knowledge-driven</span><span>Auditable</span><span>No hallucinations</span>
+            </div>
+          </div>
+        </div>
+        <div class="ncf-prod-sep"></div>
+        <div class="ncf-prod-card">
+          <img src="/assets/digitz_ai_nexus/images/nexus-apps-icon.svg" alt="" class="ncf-prod-icon"/>
+          <div class="ncf-prod-body">
+            <strong>Nexus Apps</strong>
+            <span>Purpose-built workflow apps for onboarding, support, HR, ERP, training, and more — each configured for a specific role, process, and knowledge set.</span>
+            <div class="ncf-prod-tags">
+              <span>Workflow-ready</span><span>Role-based</span><span>Embeddable</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ncf-cta-row">
+        <div class="ncf-cta-text">
+          <h2>Deploy Nexus Chat Bots, Q&amp;A, and Apps on one governed platform</h2>
+          <p>One platform. Three powerful AI experiences. Governed by identity, knowledge, and access from day one.</p>
+        </div>
+        <div class="ncf-actions">
+          <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="margin-right:6px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
+            Chat with Us
+          </a>
+        </div>
+      </div>
+
+    </div>
+    <div class="ncf-bottom-bar">
+      <div class="container">
+        <div class="ncf-bottom">
+          <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
+          <nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Orbit</a>
+            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Orbit Architecture</a>
+            <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Pricing</a>
+            <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexy</a>
+          </nav>
+          <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── Nexus AI Chat Widget ── -->
+<script>
+    window.NexusChatConfig = {};
+    window.dev_server    = 1;
+    window.socketio_port = 9512;
+    window.frappe = window.frappe || {};
+    frappe.boot = { sitename: 'digitz_ai_nexus_live_test.site', socketio_port: 9512 };
+    frappe.ready_events = [];
+    frappe.ready = function(fn){ frappe.ready_events.push(fn); };
+</script>
+<script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
+<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.WAX5PEHK.js"></script>
+
+</body>
+</html>
