@@ -526,12 +526,13 @@
         <img src="/assets/digitz_ai_nexus/images/nexus-ai.png" alt="Nexus AI" class="nexus-logo-img"/>
       </a>
       <nav class="nav" aria-label="Primary Navigation">
-        <a href="/">Home</a>
-        <a href="/nexus-platform">Nexus Orbit</a>
-        <a href="/how-nexus-works" class="nav-active">Orbit Architecture</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/nexy">Nexy — Agentic Candidate</a>
-        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
+        <a href="/">HOME</a>
+        <a href="/nexus-platform">NEXUS ORBIT</a>
+        <a href="/how-nexus-works" class="nav-active">ORBIT ARCHITECTURE</a>
+        <a href="/pricing">PRICING</a>
+        <a href="/nexy">NEXY — AGENTIC CANDIDATE</a>
+        <a href="/app/nexus-knowledge-browser">NEXUS BROWSER</a>
+        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">CHAT with<br>NEXY</a>
       </nav>
     </div>
   </header>
@@ -747,6 +748,58 @@
             <div class="ndoc-rnote"><span class="ndoc-rstate validated" style="font-size:11px;padding:1px 7px;">Validated</span> Testing passed; content is approved and ready to publish.</div>
             <div class="ndoc-rnote"><span class="ndoc-rstate published" style="font-size:11px;padding:1px 7px;">Published</span> Live and retrievable by the AI for real user queries.</div>
             <div class="ndoc-rnote"><span class="ndoc-rstate failed" style="font-size:11px;padding:1px 7px;">Failed</span> Testing or processing encountered issues; content returns to Draft for revision.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Knowledge Automation Block -->
+      <div class="ndoc-ingest-block" style="margin-bottom:24px;">
+        <div class="ndoc-ingest-header">
+          <svg viewBox="0 0 22 22" fill="none" width="20" height="20"><circle cx="11" cy="11" r="8" stroke="#214dbb" stroke-width="1.6"/><path d="M8 11l2 2 4-4" stroke="#16A37F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 7h10" stroke="#214dbb" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <strong>Knowledge Quality &amp; Gap Intelligence</strong>
+        </div>
+        <p class="ndoc-ingest-desc">Publishing knowledge is not the end of the process. Nexus continuously monitors how knowledge performs in live use, closes gaps proactively, and generates correlated questions so that sources are robust against paraphrasing.</p>
+
+        <div class="ndoc-two-col" style="margin-top:20px;margin-bottom:0;">
+          <div>
+            <div class="ndoc-concept" style="margin-bottom:12px;">
+              <div class="ndoc-concept-icon">
+                <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><path d="M11 3l1.8 5.4H18l-4.6 3.4 1.8 5.4L11 14l-4.2 3.2 1.8-5.4L4 8.4h5.2z" stroke="#214dbb" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              </div>
+              <div>
+                <strong>Auto-generated Useful Questions</strong>
+                <p>During processing, Nexus automatically generates a set of useful questions for each knowledge source — questions that this source is best equipped to answer. These are indexed alongside the content and used by the routing engine to understand a source's coverage area, improving retrieval precision over plain keyword matching.</p>
+              </div>
+            </div>
+            <div class="ndoc-concept">
+              <div class="ndoc-concept-icon">
+                <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><path d="M4 8h14M4 14h14" stroke="#214dbb" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="2" stroke="#5c6bc0" stroke-width="1.4"/><circle cx="14" cy="14" r="2" stroke="#5c6bc0" stroke-width="1.4"/></svg>
+              </div>
+              <div>
+                <strong>Correlated Question Sets</strong>
+                <p>Backward testing produces Knowledge Test Cases — multiple phrasings of the same question — testing whether the source retrieves reliably under paraphrasing and synonym variation. These correlated question sets stay attached to the source and are re-evaluated whenever content is updated, maintaining retrieval quality over time.</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="ndoc-concept teal" style="margin-bottom:12px;">
+              <div class="ndoc-concept-icon">
+                <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><circle cx="11" cy="11" r="8" stroke="#16A37F" stroke-width="1.7"/><path d="M11 7v4" stroke="#16A37F" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="14.5" r="1" fill="#16A37F"/></svg>
+              </div>
+              <div>
+                <strong>Reactive Gap Detection</strong>
+                <p>When a live query falls below the confidence threshold and triggers a fallback, the system automatically logs a Knowledge Gap record — capturing the visitor's question, session context, and which access categories were searched. Gaps accumulate a frequency count so high-volume gaps rise to the top of the review queue.</p>
+              </div>
+            </div>
+            <div class="ndoc-concept teal">
+              <div class="ndoc-concept-icon">
+                <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><rect x="3" y="3" width="16" height="16" rx="3" stroke="#16A37F" stroke-width="1.7"/><path d="M7 11h8M11 7v8" stroke="#16A37F" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <strong>Gap-to-Source Workflow</strong>
+                <p>A Knowledge Gap can be converted directly into a new Knowledge Source draft in one action. Nexus pre-populates the draft with the gap's question cluster, category assignment, and suggested access classification. Once approved and published, the related gap records are automatically closed.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1075,6 +1128,16 @@
             </div>
           </div>
 
+          <div class="ndoc-concept" style="margin-top:12px;">
+            <div class="ndoc-concept-icon">
+              <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><rect x="2" y="4" width="8" height="7" rx="2" stroke="#214dbb" stroke-width="1.6"/><rect x="12" y="4" width="8" height="7" rx="2" stroke="#214dbb" stroke-width="1.6"/><path d="M6 11v3M16 11v3M3 14h16" stroke="#214dbb" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <strong>Identity Profile</strong>
+              <p>A named identity context within a tenant that bridges an Identity Type to a specific Knowledge Profile. Where Identity Type defines <em>who</em> someone is (Customer, Partner, Employee), the Identity Profile defines <em>which knowledge scope</em> they receive within this tenant. Multiple profiles can map to the same identity type — a "Standard Customer" and a "Premium Customer" can both be Verified Customers but receive different knowledge ceilings. The Category Identity Route selects the right profile per conversation.</p>
+            </div>
+          </div>
+
           <div class="ndoc-concept gold">
             <div class="ndoc-concept-icon">
               <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><circle cx="11" cy="11" r="8" stroke="#e0a62f" stroke-width="1.7"/><path d="M11 7v4l3 2" stroke="#e0a62f" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -1346,32 +1409,36 @@
 
       <div class="ndoc-two-col" style="margin-bottom:32px;">
         <div>
-          <h3 style="font-family:var(--nx-h);font-size:16px;font-weight:800;color:var(--nx-navy);margin:0 0 14px;">When does escalation trigger?</h3>
-          <div class="ndoc-concept rose">
-            <div class="ndoc-concept-icon">
-              <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><circle cx="11" cy="11" r="8" stroke="#d4365a" stroke-width="1.7"/><path d="M11 7v5" stroke="#d4365a" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="15" r="1" fill="#d4365a"/></svg>
+          <h3 style="font-family:var(--nx-h);font-size:16px;font-weight:800;color:var(--nx-navy);margin:0 0 10px;">When does escalation trigger?</h3>
+          <p style="font-size:13.5px;color:var(--nx-muted);margin:0 0 14px;line-height:1.6;">Seven distinct trigger conditions — each independently configurable per AI Agent Profile. All require both gates to be open (see right).</p>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><circle cx="9" cy="9" r="6.5" stroke="#d4365a" stroke-width="1.5"/><path d="M9 5.5v4" stroke="#d4365a" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="12" r=".8" fill="#d4365a"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">Low Confidence</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">Retrieval score falls below the profile's confidence threshold.</span></div>
             </div>
-            <div>
-              <strong>Low Confidence</strong>
-              <p>The AI's retrieval score falls below the behaviour profile's confidence threshold and the query cannot be answered reliably.</p>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><rect x="2" y="3" width="14" height="12" rx="2" stroke="#d4365a" stroke-width="1.5"/><path d="M5 7h8M5 10h5" stroke="#d4365a" stroke-width="1.3" stroke-linecap="round"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">No Approved Knowledge</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">No published knowledge was found within the permitted access scope for this query.</span></div>
             </div>
-          </div>
-          <div class="ndoc-concept rose">
-            <div class="ndoc-concept-icon">
-              <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><path d="M11 3L3 7v8l8 4 8-4V7l-8-4Z" stroke="#d4365a" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><circle cx="9" cy="6.5" r="2.8" stroke="#d4365a" stroke-width="1.5"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#d4365a" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">User Requested Human</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">Visitor explicitly asks to speak with a person; intent is detected automatically.</span></div>
             </div>
-            <div>
-              <strong>User Requested Human</strong>
-              <p>The visitor explicitly asks to speak with a person. Nexus detects this intent and initiates the escalation flow.</p>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><path d="M3 14V9a6 6 0 0112 0v5" stroke="#d4365a" stroke-width="1.5" stroke-linecap="round"/><path d="M1 14h16" stroke="#d4365a" stroke-width="1.3" stroke-linecap="round"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">Sales Lead Detected</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">Query intent is a buying signal or pricing inquiry requiring a sales handoff.</span></div>
             </div>
-          </div>
-          <div class="ndoc-concept rose">
-            <div class="ndoc-concept-icon">
-              <svg viewBox="0 0 22 22" fill="none" width="22" height="22"><path d="M4 7h14M4 12h14" stroke="#d4365a" stroke-width="1.7" stroke-linecap="round"/><path d="M4 17h8" stroke="#d4365a" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><path d="M9 2l1.5 4.5H15l-3.8 2.8 1.4 4.5L9 11l-3.6 2.8 1.4-4.5L3 6.5h4.5z" stroke="#d4365a" stroke-width="1.4" stroke-linejoin="round"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">Support Required</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">Conversation indicates a support issue beyond AI resolution scope.</span></div>
             </div>
-            <div>
-              <strong>Repeated Fallback / Restricted Topic</strong>
-              <p>The AI has fallen back multiple times, or the topic is flagged as escalation-required by the behaviour profile (e.g. sales leads, compliance queries, support requirements).</p>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><path d="M9 3v6M9 12v1" stroke="#d4365a" stroke-width="1.6" stroke-linecap="round"/><rect x="1.5" y="1.5" width="15" height="15" rx="3" stroke="#d4365a" stroke-width="1.4"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">Restricted Topic</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">Topic is flagged in the behaviour profile as requiring mandatory human review.</span></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(212,54,90,.05);border:1px solid rgba(212,54,90,.18);border-radius:10px;">
+              <svg viewBox="0 0 18 18" fill="none" width="16" height="16" style="flex-shrink:0;margin-top:2px;"><path d="M4 6h10M4 10h10M4 14h6" stroke="#d4365a" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <div><strong style="font-size:13.5px;color:#d4365a;">Repeated Fallback</strong> <span style="font-size:12.5px;color:var(--nx-muted);display:block;margin-top:1px;">AI has fallen back on the same or similar questions multiple times within the session.</span></div>
             </div>
           </div>
         </div>
@@ -1566,10 +1633,11 @@
         <div class="ncf-bottom">
           <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
           <nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Orbit</a>
-            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Orbit Architecture</a>
-            <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Pricing</a>
-            <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexy</a>
+            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXUS ORBIT</a>
+            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">ORBIT ARCHITECTURE</a>
+            <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">PRICING</a>
+            <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXY</a>
+            <a href="/app/nexus-knowledge-browser" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXUS BROWSER</a>
           </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>

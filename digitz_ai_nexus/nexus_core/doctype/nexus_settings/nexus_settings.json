@@ -32,7 +32,11 @@
   "enable_retrieval_debug",
   "section_live_chat",
   "chat_idle_timeout_minutes",
-  "show_correlated_on_desk"
+  "show_correlated_on_desk",
+  "section_nexy",
+  "nexy_email_verification_mandatory",
+  "section_knowledge_browser",
+  "browser_default_tenant"
  ],
  "fields": [
   {
@@ -201,12 +205,36 @@
    "fieldname": "show_correlated_on_desk",
    "fieldtype": "Check",
    "label": "Show Correlated Questions on Desk"
+  },
+  {
+   "fieldname": "section_nexy",
+   "fieldtype": "Section Break",
+   "label": "Nexy Settings"
+  },
+  {
+   "default": "0",
+   "description": "When enabled, the system validates that every 'Use for Nexy' category has identity verification configured before a Nexy handover can proceed.",
+   "fieldname": "nexy_email_verification_mandatory",
+   "fieldtype": "Check",
+   "label": "Email Verification Mandatory for Nexy"
+  },
+  {
+   "fieldname": "section_knowledge_browser",
+   "fieldtype": "Section Break",
+   "label": "Knowledge Browser Settings"
+  },
+  {
+   "fieldname": "browser_default_tenant",
+   "fieldtype": "Link",
+   "label": "Default Tenant for Browser",
+   "options": "Nexus Tenant",
+   "description": "Tenant whose public knowledge feed is shown in the Knowledge Browser. Falls back to Default Tenant if not set."
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-04 00:00:00.000000",
+ "modified": "2026-06-23 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Nexus Core",
  "name": "Nexus Settings",

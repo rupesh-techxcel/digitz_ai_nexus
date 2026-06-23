@@ -1454,16 +1454,28 @@ def get_tenants_chat_reachability():
         return {"success": True, "tenants": {t: _no_chain(reason="no_access_categories") for t in tenant_policies}}
 
     # Step 3: Access Categories → enabled Category Identity Routes
-    # (Routes now own the agent profile; knowledge access is governed at query time
-    #  via Identity Profile → Knowledge Profile → Access Category intersection.)
+    # Fetch routes grouped by tenant so the reachability panel only shows routes
+    # that belong to the same tenant as the knowledge chunk.  Cross-tenant routes
+    # cannot reach the chunks at query time (different access policies) so
+    # including them here is misleading.
     try:
-        route_rows = frappe.get_all(
+        all_route_rows = frappe.get_all(
             "Nexus Category Identity Route",
             filters={"enabled": 1},
-            fields=["name", "ai_agent_profile", "channel", "chat_category"],
+            fields=["name", "tenant", "ai_agent_profile", "channel", "chat_category"],
         )
     except Exception:
         return {"success": True, "tenants": {}}
+
+    # Build a per-tenant routes map; routes with no tenant recorded fall back to
+    # being included only for tenants that have no other routes configured.
+    routes_by_tenant = {}
+    for r in all_route_rows:
+        t = r.get("tenant") or ""
+        routes_by_tenant.setdefault(t, []).append(r)
+
+    # route_rows is kept for backward compat (used later for profile label lookup)
+    route_rows = all_route_rows
 
     all_profile_names = list({r["ai_agent_profile"] for r in route_rows if r.get("ai_agent_profile")})
 
@@ -1511,10 +1523,13 @@ def get_tenants_chat_reachability():
         for policy in policies:
             tenant_categories.update(policy_to_categories.get(policy, set()))
 
-        # All routes are candidates — knowledge filtering happens at query time
+        # Only include routes that belong to this tenant.  Fall back to routes
+        # with no tenant recorded if no tenant-specific routes exist.
+        tenant_routes = routes_by_tenant.get(tenant) or routes_by_tenant.get("") or []
+
         profiles = []
         seen_profiles = set()
-        for route in route_rows:
+        for route in tenant_routes:
             profile_name = route.get("ai_agent_profile")
             if not profile_name or profile_name in seen_profiles:
                 continue

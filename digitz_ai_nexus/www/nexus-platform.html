@@ -238,12 +238,13 @@
         <img src="/assets/digitz_ai_nexus/images/nexus-ai.png" alt="Nexus AI" class="nexus-logo-img"/>
       </a>
       <nav class="nav" aria-label="Primary Navigation">
-        <a href="/">Home</a>
-        <a href="/nexus-platform" class="nav-active">Nexus Orbit</a>
-        <a href="/how-nexus-works">Orbit Architecture</a>
-        <a href="/pricing">Pricing</a>
-        <a href="/nexy">Nexy — Agentic Candidate</a>
-        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Us</a>
+        <a href="/">HOME</a>
+        <a href="/nexus-platform" class="nav-active">NEXUS ORBIT</a>
+        <a href="/how-nexus-works">ORBIT ARCHITECTURE</a>
+        <a href="/pricing">PRICING</a>
+        <a href="/nexy">NEXY — AGENTIC CANDIDATE</a>
+        <a href="/app/nexus-knowledge-browser">NEXUS BROWSER</a>
+        <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">CHAT with<br>NEXY</a>
       </nav>
     </div>
   </header>
@@ -636,10 +637,13 @@
               <li>Content tagging by topic, sub-context, business unit, and project</li>
               <li>Knowledge readiness lifecycle — Draft → Processing → Testing → Validated → Published; failed content returns to Draft for revision</li>
               <li>Backward testing — the platform automatically generates synthetic questions from your content and tests whether the AI produces accurate, useful answers before a single real user can query it</li>
+              <li>Auto-generated useful questions per source — during processing, Nexus generates the questions each source is best positioned to answer, indexed alongside the content to improve routing precision beyond keyword matching</li>
+              <li>Correlated question sets (Knowledge Test Cases) — backward testing produces multiple phrasings of the same question, testing retrieval under paraphrasing and synonym variation; these sets stay attached to the source and are re-evaluated on each update</li>
               <li>Approval workflow — content staged, reviewed, and published by authorised users</li>
               <li>Version control — previous content versions retained and restorable</li>
               <li>Content expiry and scheduled review dates</li>
-              <li>Knowledge coverage report — identify gaps before going live</li>
+              <li>Knowledge Gap detection — reactive gaps are logged automatically when live queries fall below the confidence threshold; each gap captures the visitor's question, session context, and searched categories, with a frequency count so high-volume gaps surface first</li>
+              <li>Gap-to-Source workflow — any knowledge gap can be converted to a new source draft in one action; Nexus pre-populates the draft with the gap's question cluster, category assignment, and suggested access classification; when the source is published, related gaps close automatically</li>
             </ul>
           </div>
         </div>
@@ -657,6 +661,7 @@
               <li>Identity Registry SafeGuard — a hard ceiling defined per identity type that caps what any holder of that identity can access, regardless of what the AI Agent Profile allows; the narrower set always wins</li>
               <li>Category Identity Route — maps Channel + Chat Category + Identity Type to a specific AI Agent Profile, enabling different AI behaviour, tone, and knowledge scope for different users on the same channel without any code changes</li>
               <li>Verification modes per Chat Category: None, Email OTP, Registered Email OTP — each category can require a different level of verification before the AI responds</li>
+              <li>Identity Profile — a named identity context within a tenant that bridges an Identity Type to a specific Knowledge Profile; multiple profiles can map to the same identity type (e.g. Standard Customer and Premium Customer are both Verified Customers but receive different knowledge ceilings); the Category Identity Route selects the correct profile per session automatically</li>
               <li>Identity Registry — register known individuals with email verification, link them to business records (Customer, Contact, Lead), and assign multiple identity profiles with date-ranged validity</li>
               <li>Identity fallback — define the default behaviour and knowledge scope when identity cannot be confirmed</li>
             </ul>
@@ -968,10 +973,11 @@
         <div class="ncf-bottom">
           <span class="ncf-copyright">© 2026 Techxcel Technologies. All rights reserved.</span>
           <nav style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexus Orbit</a>
-            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Orbit Architecture</a>
-            <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Pricing</a>
-            <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">Nexy</a>
+            <a href="/nexus-platform" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXUS ORBIT</a>
+            <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">ORBIT ARCHITECTURE</a>
+            <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">PRICING</a>
+            <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXY</a>
+            <a href="/app/nexus-knowledge-browser" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXUS BROWSER</a>
           </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
         </div>

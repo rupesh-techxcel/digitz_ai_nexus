@@ -1,6 +1,6 @@
 # DIGITZ AI Nexus — Complete Implementation Architecture
 
-> Last updated: 2026-06-17. Source of truth for all five Nexus apps.
+> Last updated: 2026-06-22. Source of truth for all five Nexus apps.
 
 ---
 
@@ -45,7 +45,7 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | DocType | Key Fields | Purpose |
 |---|---|---|
 | `Nexus Tenant` | `tenant_name`, `tenant_code`, `disabled` | Multi-tenant root — every entity is scoped to a tenant |
-| `Nexus Settings` | (Single) | Global platform settings |
+| `Nexus Settings` | (Single) `nexy_email_verification_mandatory` | Global platform settings. The `nexy_email_verification_mandatory` Check enforces that every "Use for Nexy" category must have identity verification configured before a Nexy handover can proceed. |
 | `Nexus Business Unit` | `name`, `tenant` | Organisational grouping of knowledge |
 | `Nexus Business Keyword` | `keyword`, `category` | Topic classification vocabulary |
 | `Nexus Keyword Category` | `category_name` | Groups keywords by domain |
@@ -179,7 +179,7 @@ engine/
 | DocType | Key Fields | Purpose |
 |---|---|---|
 | `Nexus Live Channel` | `channel_code`, `tenant`, `channel_name`, `channel_type`, `enabled`, `default_agent`, `requires_visitor_email` | Logical entry point/context — website chat, mobile, desk, API, campaign, support surface |
-| `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `faq_questions` | Visitor-facing topic/service. Belongs to one channel, so selecting the category implies the channel. |
+| `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `use_for_nexy`, `faq_questions` | Visitor-facing topic/service. Belongs to one channel, so selecting the category implies the channel. `use_for_nexy` flags this as a Nexy-exclusive category — must have identity verification and a published route (validated on save). |
 | `Nexus Chat Category FAQ` | (child) `question`, `answer` | Pre-built FAQ answers for a category |
 | `Nexus Identity Type` | `type_code`, `type_label`, `description` | Named identity classes (e.g. Employee, Customer, Partner) — intentionally global, not tenant-scoped |
 | `Nexus Identity Registry` | `registry_name`, `description`, `enabled` | Registry of verified identities — intentionally global |
@@ -199,7 +199,7 @@ engine/
 
 | DocType | Key Fields | Purpose |
 |---|---|---|
-| `Nexus Live Conversation` | `conversation_id`, `conversation_type`, `channel`, `chat_category`, `resolved_identity_type`, `identity_registry`, `visitor_name`, `visitor_email`, `user_type`, `assigned_agent`, `assigned_ai_agent_profile`, `status`, `intent`, `confidence`, `escalation_status`, `escalated_at`, `human_agent`, `started_on` | Central session record for every chat |
+| `Nexus Live Conversation` | `conversation_id`, `conversation_type`, `channel`, `chat_category`, `resolved_identity_type`, `identity_registry`, `visitor_name`, `visitor_email`, `user_type`, `assigned_agent`, `assigned_ai_agent_profile`, `status`, `intent`, `confidence`, `escalation_status`, `escalated_at`, `human_agent`, `started_on`, `nexy_handover_category` | Central session record for every chat. `nexy_handover_category` is set during Nexy handover detection and cleared once the handover completes. |
 | `Nexus Live Message` | `conversation`, `sender_type`, `sender_name`, `message`, `response_type`, `sent_at` | Individual message within a conversation |
 | `Nexus Conversation Feedback` | `conversation`, `rating`, `comment`, `submitted_at` | Visitor satisfaction rating |
 | `Nexus Conversation Participant` | (child) `user`, `role` | Tracks multiple participants in a session |
@@ -244,6 +244,9 @@ engine/
 | `identity_verification.py` | Challenge/response identity verification flow |
 | `conversation_context_service.py` | Enriches query payload with conversation history |
 | `intent_handler_service.py` | Checks for and executes structured intent overrides |
+| `nexy_handover_service.py` | Nexy intent detection and handover orchestration. `detect_nexy_intent(message)` — keyword scan (price, demo, consultancy, etc.). `get_nexy_category(channel, tenant)` — resolves the active Nexy category for the channel. `validate_nexy_routing(channel, tenant)` — preflight check used by admins. `initiate_nexy_handover(conversation, payload)` — stores pending category, switches intent to `await_nexy_verification` when email verification is required. `complete_nexy_handover(conversation, payload)` — resolves Nexy AI profile, rewrites conversation's category + agent snapshot. |
+| `visitor_tracking_service.py` | `get_or_create_visitor()`, `get_or_create_session()`, `start_page_visit()` — propagate `tenant` from widget → channel → tracking records |
+| `conversation_service.py` | CRUD for conversations and messages; `stamp_email_on_web_visitor()` — writes OTP-verified email to `Nexus Web Visitor` |
 
 ### 3.4 API Endpoints (`api/`)
 
@@ -577,6 +580,20 @@ Background job (_process_ai_response)
     8. publish_chat_response [after_commit] → widget receives answer
 ```
 
+### 10.1 Conversation Intent States
+
+The `intent` field on `Nexus Live Conversation` drives branching in `continue_live_chat()`:
+
+| Intent Value | Meaning | Next Transition |
+|---|---|---|
+| `await_category` | Visitor has not yet selected a chat category | Set on conversation start; cleared when visitor sends `__cat__:<code>` |
+| `await_verification` | Category requires email OTP before chat starts | Cleared once `Nexus Identity Verification Challenge` is verified |
+| `await_nexy_verification` | Nexy handover pending — waiting for email OTP | Cleared once challenge verified → `complete_nexy_handover()` runs |
+| `await_name` | Widget is collecting visitor's display name | Cleared once name captured, category picker shown |
+| `await_close_confirm` | AI asked "anything else?" — waiting for close confirmation | Cleared on yes (conversation closed) or no (resume normal flow) |
+| `post_escalation` | First visitor message after human agent resolved | One-shot flag cleared immediately; triggers post-escalation AI response |
+| *(empty)* | Normal conversational flow | `detect_nexy_intent()` checked; `_enqueue_ai_response()` called |
+
 ---
 
 ## 11. Core Data Flow — Human Escalation
@@ -659,10 +676,102 @@ Note: Desk User conversations are EXCLUDED from the Live Console
 
 ---
 
-## 13. Identity Resolution Chain
+## 13. Core Data Flow — Nexy Handover
+
+Nexy is the platform's premium AI operator. Regular chat categories can hand off to a Nexy-flagged category when the visitor signals a high-value intent (pricing, demo, consultancy, etc.).
+
+### 13.1 Setup Requirements
+
+For Nexy handover to work on a channel, ALL of the following must be true:
+
+| Requirement | Where Configured |
+|---|---|
+| At least one `Nexus Chat Category` with `use_for_nexy = 1`, `enabled = 1`, `published = 1` | Chat Category form |
+| That category has `identity_verification_mode` ≠ None (if global setting requires it) | Chat Category form |
+| That category has at least one `Nexus Category Identity Route` that is `enabled = 1`, `published = 1` | Category Profile Routes page |
+| `Nexus Settings → nexy_email_verification_mandatory` determines whether verification is globally enforced | Nexus Settings (Single) |
+
+The `Nexus Chat Category` controller (`nexus_chat_category.py`) validates these constraints on save and warns via `frappe.msgprint`.
+
+### 13.2 Intent Trigger Keywords (hardcoded, `nexy_handover_service.py`)
+
+```
+price, pricing, cost, costs, how much, rates, fee, fees,
+subscription, plan, plans, package, packages, quote, quotation,
+demo, demonstration, trial, show me,
+consultancy, consultation, consult, consulting,
+proposal, enterprise, custom solution,
+buy, purchase, get started, sign up
+```
+
+### 13.3 Handover State Machine
+
+```
+Visitor sends message (normal AI flow)
+    │
+    ▼
+live_chat_service.continue_live_chat()
+    → detect_nexy_intent(message) [nexy_handover_service.py]
+    → _is_already_nexy(conversation) → skip if already in a Nexy category
+    │
+    ├─ No trigger → normal _enqueue_ai_response()
+    │
+    └─ Trigger detected
+           │
+           ▼
+       initiate_nexy_handover(conversation, payload)
+           → get_nexy_category(channel, tenant) → find use_for_nexy category
+           → db_set nexy_handover_category on conversation
+           │
+           ├─ Category requires email verification AND visitor not yet verified
+           │       → db_set intent = "await_nexy_verification"
+           │       → AI message: "I can connect you to Nexy — please verify your identity…"
+           │       → publish_chat_response(status=await_nexy_verification, identity_verification_offer=True)
+           │       → return {status: await_nexy_verification}
+           │
+           └─ No verification needed (or already verified)
+                   → complete_nexy_handover(conversation, payload)
+                   → AI message: "You've been connected to [Nexy Category]…"
+                   → return {status: nexy_handover_complete}
+
+    ──── on next message from visitor (intent = "await_nexy_verification") ────
+
+    live_chat_service.continue_live_chat()
+        → intent == "await_nexy_verification"
+        → get_verified_challenge(identity_verification_challenge, chat_category=nexy_handover_category)
+        │
+        ├─ No valid challenge → nudge: "Please verify your identity…"
+        │       → publish_chat_response(status=await_nexy_verification, identity_verification_offer=True)
+        │
+        └─ Challenge verified
+               → db_set visitor_email, resolved_identity_type, identity_registry
+               → stamp_email_on_web_visitor(conversation, email, verified=True)
+               → complete_nexy_handover(conversation, payload)
+                     → resolve_behavior_from_chat_category(nexy_cat, identity_type, …)
+                     → get Nexus AI Agent Profile from route
+                     → db_set chat_category, assigned_agent, ai_profile_snapshot_json
+                     → db_set intent = "", nexy_handover_category = None
+                     → conversation.reload()
+               → AI message: "Identity verified. You're now connected to [Nexy]…"
+               → publish_chat_response(status=nexy_handover_complete)
+               → return {status: nexy_handover_complete}
+```
+
+### 13.4 Key Invariants
+
+- `detect_nexy_intent` is only called when `conversation.chat_category` is set (i.e. visitor has already selected a category) and `nexy_handover_category` is not already pending.
+- `_is_already_nexy(conversation)` prevents double-handover: if the current `chat_category` already has `use_for_nexy = 1`, the trigger is a no-op.
+- The `ai_profile_snapshot_json` is fully rewritten on handover completion — the Nexy profile's behavior prompt, tone, and knowledge profile replace the original category's snapshot.
+- `nexy_handover_category` is cleared (set to None) on both successful completion and on any failure path where `complete_nexy_handover` returns None.
+- Email stamping on `Nexus Web Visitor` uses the same `stamp_email_on_web_visitor()` path as normal `await_verification`, so visitor analytics stay consistent.
+
+---
+
+## 14. Identity Resolution Chain
 
 ```
 Chat Category (identity_verification_mode)
+
     │
     ├─ None → use default identity type
     ├─ Email Lookup → check Nexus Identity Registry
@@ -687,7 +796,7 @@ Identity Registry Safeguard:
 
 ---
 
-## 14. Tenant Isolation Rules
+## 15. Tenant Isolation Rules
 
 | DocType | Isolation |
 |---|---|
@@ -704,7 +813,7 @@ Identity Registry Safeguard:
 
 ---
 
-## 15. Build & Deployment Notes
+## 16. Build & Deployment Notes
 
 | Action | Command |
 |---|---|
@@ -716,7 +825,7 @@ Identity Registry Safeguard:
 
 ---
 
-## 16. File Map Quick Reference
+## 17. File Map Quick Reference
 
 ```
 digitz_ai_nexus/
@@ -742,7 +851,9 @@ digitz_ai_nexus_live/
 │   ├── nexus_live_escalations/doctype/   LiveEscalation, EscalationRule, AgentQueue
 │   ├── nexus_live_analytics/doctype/     InteractionLog, Outcome, LeadCapture
 │   ├── digitz_ai_nexus_live/doctype/     NexusAIBehaviour (Single)
-│   ├── services/                         LiveChatService, EscalationService, Realtime
+│   ├── services/                         LiveChatService, EscalationService, Realtime,
+│   │                                     NexyHandoverService, ConversationService,
+│   │                                     VisitorTrackingService
 │   ├── api/                              live.py, agent_console.py, live_studio.py, ...
 │   └── public/js/                        nexus_chat_widget.bundle.js (source)
 
