@@ -1,0 +1,230 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:NCENQ-.{#####}",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "visitor",
+  "visitor_email",
+  "verification_status",
+  "web_session",
+  "conversation",
+  "tenant",
+  "enquiry_stage",
+  "column_break_1",
+  "enquiry_score",
+  "escalation_recommended",
+  "created_on",
+  "section_persona",
+  "matched_persona",
+  "persona_confidence",
+  "column_break_2",
+  "section_qualification",
+  "recommended_next_step",
+  "product_fit_json",
+  "section_discovery",
+  "discovery_data",
+  "stage_signal",
+  "signal_log",
+  "section_recommendations",
+  "recommended_products",
+  "recommended_services",
+  "section_summary",
+  "conversation_summary"
+ ],
+ "fields": [
+  {
+   "fieldname": "visitor",
+   "fieldtype": "Link",
+   "label": "Visitor",
+   "options": "Nexus Web Visitor",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "visitor_email",
+   "fieldtype": "Data",
+   "label": "Visitor Email",
+   "options": "Email",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "verification_status",
+   "fieldtype": "Select",
+   "label": "Email Verification",
+   "options": "Unverified\nOTP Verified",
+   "default": "Unverified",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "web_session",
+   "fieldtype": "Link",
+   "label": "Web Session",
+   "options": "Nexus Web Session"
+  },
+  {
+   "fieldname": "conversation",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "options": "Nexus Live Conversation",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1
+  },
+  {
+   "fieldname": "enquiry_stage",
+   "fieldtype": "Select",
+   "label": "Journey Stage",
+   "options": "ARRIVED\nGREETING\nDISCOVERY\nENGAGED\nPRESENTING\nOBJECTION_HANDLING\nINTERESTED\nCONVERTING\nCONVERTED\nDECLINED\nESCALATED",
+   "default": "ARRIVED",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "enquiry_score",
+   "fieldtype": "Int",
+   "label": "Enquiry Score (0-100)",
+   "default": "0",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "escalation_recommended",
+   "fieldtype": "Check",
+   "label": "Escalation Recommended",
+   "default": "0"
+  },
+  {
+   "fieldname": "created_on",
+   "fieldtype": "Datetime",
+   "label": "Created On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_persona",
+   "fieldtype": "Section Break",
+   "label": "Persona Match"
+  },
+  {
+   "fieldname": "matched_persona",
+   "fieldtype": "Link",
+   "label": "Matched Persona",
+   "options": "Nexus Companion Persona"
+  },
+  {
+   "fieldname": "persona_confidence",
+   "fieldtype": "Float",
+   "label": "Persona Confidence (%)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_qualification",
+   "fieldtype": "Section Break",
+   "label": "Qualification"
+  },
+  {
+   "fieldname": "recommended_next_step",
+   "fieldtype": "Data",
+   "label": "Recommended Next Step"
+  },
+  {
+   "fieldname": "product_fit_json",
+   "fieldtype": "Code",
+   "label": "Product Fit Data (JSON)",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_discovery",
+   "fieldtype": "Section Break",
+   "label": "Discovery & Signals"
+  },
+  {
+   "fieldname": "discovery_data",
+   "fieldtype": "Code",
+   "label": "Discovery Data (JSON)",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "stage_signal",
+   "fieldtype": "Data",
+   "label": "Last Signal",
+   "read_only": 1,
+   "description": "Most recent LLM-classified visitor buying signal"
+  },
+  {
+   "fieldname": "signal_log",
+   "fieldtype": "Code",
+   "label": "Signal Log (JSON)",
+   "options": "JSON",
+   "read_only": 1,
+   "description": "Chronological log of classified signals for analytics"
+  },
+  {
+   "fieldname": "section_recommendations",
+   "fieldtype": "Section Break",
+   "label": "Recommendations"
+  },
+  {
+   "fieldname": "recommended_products",
+   "fieldtype": "Table",
+   "label": "Recommended Products",
+   "options": "Nexus Companion Enquiry Product"
+  },
+  {
+   "fieldname": "recommended_services",
+   "fieldtype": "Table",
+   "label": "Recommended Services",
+   "options": "Nexus Companion Enquiry Service"
+  },
+  {
+   "fieldname": "section_summary",
+   "fieldtype": "Section Break",
+   "label": "Conversation Summary"
+  },
+  {
+   "fieldname": "conversation_summary",
+   "fieldtype": "Long Text",
+   "label": "Conversation Summary"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Companion",
+ "name": "Nexus Companion Enquiry",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

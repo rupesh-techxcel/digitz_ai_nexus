@@ -3,3 +3,4 @@ Nexus Knowledge
 Nexus Access
 Nexus AI
 Nexus Operations
+Nexus Companion

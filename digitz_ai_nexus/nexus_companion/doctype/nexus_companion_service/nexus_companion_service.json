@@ -1,0 +1,286 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:NCS-.{#####}",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "service_name",
+  "category",
+  "tenant",
+  "enabled",
+  "column_break_1",
+  "next_step",
+  "chat_category",
+  "section_description",
+  "description",
+  "section_intelligence",
+  "features",
+  "column_break_2",
+  "benefits",
+  "section_positioning",
+  "unique_value_propositions",
+  "column_break_3",
+  "competitive_differentiators",
+  "section_fit",
+  "challenges_solved",
+  "column_break_4",
+  "qualification_criteria",
+  "disqualification_criteria",
+  "section_outcomes",
+  "typical_outcomes",
+  "column_break_5",
+  "success_metrics",
+  "section_objections",
+  "objection_responses",
+  "section_conversion",
+  "conversion_type",
+  "conversion_threshold_score",
+  "column_break_conv",
+  "post_conversion_action",
+  "conversion_config",
+  "conversion_message",
+  "conversion_fallback",
+  "section_personas",
+  "target_personas"
+ ],
+ "fields": [
+  {
+   "fieldname": "service_name",
+   "fieldtype": "Data",
+   "label": "Service Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "next_step",
+   "fieldtype": "Select",
+   "label": "Default Next Step",
+   "options": "Learn More\nEvaluation Request\nConsultation Request\nDirect Meeting"
+  },
+  {
+   "fieldname": "chat_category",
+   "fieldtype": "Link",
+   "label": "Knowledge Category",
+   "options": "Nexus Chat Category",
+   "description": "Nexus Chat Category used to retrieve factual knowledge about this service"
+  },
+  {
+   "fieldname": "section_description",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Long Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_intelligence",
+   "fieldtype": "Section Break",
+   "label": "Service Intelligence"
+  },
+  {
+   "fieldname": "features",
+   "fieldtype": "Long Text",
+   "label": "What's Included"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "benefits",
+   "fieldtype": "Long Text",
+   "label": "Benefits"
+  },
+  {
+   "fieldname": "section_positioning",
+   "fieldtype": "Section Break",
+   "label": "Positioning"
+  },
+  {
+   "fieldname": "unique_value_propositions",
+   "fieldtype": "Long Text",
+   "label": "Unique Value Propositions"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "competitive_differentiators",
+   "fieldtype": "Long Text",
+   "label": "Competitive Differentiators"
+  },
+  {
+   "fieldname": "section_fit",
+   "fieldtype": "Section Break",
+   "label": "Visitor Fit"
+  },
+  {
+   "fieldname": "challenges_solved",
+   "fieldtype": "Long Text",
+   "label": "Challenges Addressed",
+   "description": "Visitor problems this service addresses"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qualification_criteria",
+   "fieldtype": "Long Text",
+   "label": "Qualification Criteria",
+   "description": "Signals that indicate a visitor is a strong fit"
+  },
+  {
+   "fieldname": "disqualification_criteria",
+   "fieldtype": "Long Text",
+   "label": "Disqualification Criteria",
+   "description": "Situations where this service is NOT the right fit — do not recommend"
+  },
+  {
+   "fieldname": "section_outcomes",
+   "fieldtype": "Section Break",
+   "label": "Outcomes"
+  },
+  {
+   "fieldname": "typical_outcomes",
+   "fieldtype": "Long Text",
+   "label": "Typical Outcomes"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "success_metrics",
+   "fieldtype": "Long Text",
+   "label": "Success Metrics"
+  },
+  {
+   "fieldname": "section_objections",
+   "fieldtype": "Section Break",
+   "label": "Objection Handling"
+  },
+  {
+   "fieldname": "objection_responses",
+   "fieldtype": "Long Text",
+   "label": "Objection Responses",
+   "description": "Common concerns and how to address them (one per line: Concern | Response)"
+  },
+  {
+   "fieldname": "section_conversion",
+   "fieldtype": "Section Break",
+   "label": "Conversion Configuration"
+  },
+  {
+   "fieldname": "conversion_type",
+   "fieldtype": "Select",
+   "label": "Conversion Mechanism",
+   "options": "\nLead Capture\nMeeting Booking\nDirect Purchase\nSubscription\nTrial Activation\nDownload Gate\nHuman Handoff\nWebhook",
+   "description": "How the engagement cycle completes for this service"
+  },
+  {
+   "fieldname": "conversion_threshold_score",
+   "fieldtype": "Int",
+   "label": "Conversion Threshold (score)",
+   "default": "65",
+   "description": "Enquiry score at which Nexy should guide toward the next step"
+  },
+  {
+   "fieldname": "column_break_conv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "post_conversion_action",
+   "fieldtype": "Select",
+   "label": "After Next Step",
+   "options": "\nClose Conversation\nContinue Conversation\nEscalate to Human",
+   "description": "What Nexy does after the visitor takes the next step"
+  },
+  {
+   "fieldname": "conversion_config",
+   "fieldtype": "Code",
+   "label": "Next Step Config (JSON)",
+   "options": "JSON",
+   "description": "JSON with calendar link, form URL, webhook endpoint, or other mechanism params"
+  },
+  {
+   "fieldname": "conversion_message",
+   "fieldtype": "Long Text",
+   "label": "Next Step Prompt",
+   "description": "What Nexy says when guiding the visitor toward the next step"
+  },
+  {
+   "fieldname": "conversion_fallback",
+   "fieldtype": "Long Text",
+   "label": "Fallback Message",
+   "description": "Message shown if the next step action cannot be completed"
+  },
+  {
+   "fieldname": "section_personas",
+   "fieldtype": "Section Break",
+   "label": "Target Personas"
+  },
+  {
+   "fieldname": "target_personas",
+   "fieldtype": "Table",
+   "label": "Target Personas",
+   "options": "Nexus Companion Service Persona"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Companion",
+ "name": "Nexus Companion Service",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

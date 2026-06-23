@@ -5,6 +5,89 @@ from digitz_ai_nexus.engine.llm import get_openai_client
 
 MAX_CHAT_ITERATIONS = 5
 
+_COMPANION_TOOL_SCHEMAS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "record_discovery",
+            "description": (
+                "Store a piece of visitor information you have just learned during conversation. "
+                "Call this whenever the visitor reveals details about their business, challenges, goals, "
+                "industry, team size, or current situation. These details build the visitor's profile."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "field": {
+                        "type": "string",
+                        "description": (
+                            "The discovery field name, e.g. 'industry', 'company_size', "
+                            "'current_challenges', 'goals', 'timeline', 'decision_maker', "
+                            "'existing_systems', 'budget_range', 'business_maturity'"
+                        ),
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "The value the visitor provided for this field",
+                    },
+                },
+                "required": ["field", "value"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_product_detail",
+            "description": (
+                "Retrieve detailed information about a specific product or service to help a visitor "
+                "understand how it might address their situation. Use when the visitor has shown interest "
+                "in a specific offering or when a product is a strong fit for their stated challenges."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "product_name": {
+                        "type": "string",
+                        "description": "The name of the product or service to look up",
+                    },
+                    "product_type": {
+                        "type": "string",
+                        "enum": ["product", "service"],
+                        "description": "Whether this is a product or service",
+                    },
+                },
+                "required": ["product_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_relevant_reference",
+            "description": (
+                "Retrieve a relevant customer story, testimonial, or outcome to build trust and "
+                "demonstrate real-world impact. Use when the visitor asks for proof, examples, or "
+                "wants to know if others have faced similar challenges."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "industry": {
+                        "type": "string",
+                        "description": "The industry or sector to match stories against",
+                    },
+                    "challenge": {
+                        "type": "string",
+                        "description": "The challenge or pain point to find relevant stories for",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+]
+
 _CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
@@ -99,12 +182,20 @@ def run_chat_agent_loop(payload, retrieval_fn=None):
     all_retrieved_chunks = []
     last_retrieval_result = {}
 
+    # Companion mode: merge in companion tools and capture conversation reference for tool handlers
+    companion_mode = bool(
+        (payload.get("ai_profile") or {}).get("companion_mode")
+        or payload.get("companion_mode")
+    )
+    active_tool_schemas = _CHAT_TOOL_SCHEMAS + (_COMPANION_TOOL_SCHEMAS if companion_mode else [])
+    conversation_name = payload.get("conversation_name") or payload.get("session_name")
+
     for _ in range(MAX_CHAT_ITERATIONS):
         try:
             response = client.chat.completions.create(
                 model=model,
                 messages=messages,
-                tools=_CHAT_TOOL_SCHEMAS,
+                tools=active_tool_schemas,
                 tool_choice="auto",
                 temperature=0.3,
             )
@@ -176,6 +267,30 @@ def run_chat_agent_loop(payload, retrieval_fn=None):
                         "intent_action": "escalate",
                         "chat_mode": "agent_loop",
                     }
+
+                elif tool_name == "record_discovery" and companion_mode:
+                    result = _execute_record_discovery(tool_input, conversation_name)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    })
+
+                elif tool_name == "get_product_detail" and companion_mode:
+                    result = _execute_get_product_detail(tool_input, payload)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    })
+
+                elif tool_name == "get_relevant_reference" and companion_mode:
+                    result = _execute_get_relevant_reference(tool_input, payload)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    })
 
                 else:
                     messages.append({
@@ -403,3 +518,82 @@ def _fallback_response(payload):
         "fallback_used": 1,
         "chat_mode": "agent_loop",
     }
+
+
+# ---------------------------------------------------------------------------
+# Companion tool executors
+# ---------------------------------------------------------------------------
+
+def _execute_record_discovery(tool_input: dict, conversation_name: str | None) -> dict:
+    """
+    Persist a discovered visitor data point to the conversation's companion_discovery_json
+    and trigger enquiry update + persona re-matching.
+    """
+    field = (tool_input.get("field") or "").strip()
+    value = (tool_input.get("value") or "").strip()
+
+    if not field or not value:
+        return {"status": "error", "message": "field and value are required"}
+
+    if not conversation_name:
+        return {"status": "ok", "recorded": False, "reason": "no conversation context"}
+
+    try:
+        from digitz_ai_nexus.nexus_companion.services.enquiry_service import update_enquiry
+        conversation = frappe.get_doc("Nexus Live Conversation", conversation_name)
+        update_enquiry(conversation, {field: value})
+        return {"status": "ok", "recorded": True, "field": field}
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Companion: record_discovery failed")
+        return {"status": "ok", "recorded": False, "reason": "save error — continuing"}
+
+
+def _execute_get_product_detail(tool_input: dict, payload: dict) -> dict:
+    """Return detailed information about a Nexus Companion Product or Service."""
+    product_name = (tool_input.get("product_name") or "").strip()
+    product_type = (tool_input.get("product_type") or "product").lower()
+
+    if not product_name:
+        return {"error": "product_name is required"}
+
+    doctype = "Nexus Companion Service" if product_type == "service" else "Nexus Companion Product"
+    name_field = "service_name" if product_type == "service" else "product_name"
+
+    try:
+        matches = frappe.get_all(
+            doctype,
+            filters={"enabled": 1, name_field: ["like", f"%{product_name}%"]},
+            fields=[
+                name_field, "category", "description", "features", "benefits",
+                "challenges_solved", "typical_outcomes", "qualification_criteria",
+                "objection_responses", "next_step",
+            ],
+            limit_page_length=1,
+        )
+        if not matches:
+            return {"found": False, "message": f"No enabled {product_type} matching '{product_name}' found."}
+
+        item = matches[0]
+        return {"found": True, "type": product_type, "detail": {k: v for k, v in item.items() if v}}
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Companion: get_product_detail failed")
+        return {"error": "Could not retrieve product details"}
+
+
+def _execute_get_relevant_reference(tool_input: dict, payload: dict) -> dict:
+    """Return a relevant customer story, testimonial, or outcome."""
+    industry = (tool_input.get("industry") or "").strip()
+    challenge = (tool_input.get("challenge") or "").strip()
+
+    tenant = (payload.get("ai_profile") or {}).get("tenant") or payload.get("tenant") or ""
+    discovery_data = {"industry": industry, "current_challenges": challenge}
+
+    try:
+        from digitz_ai_nexus.nexus_companion.services.reference_matching_service import get_relevant_references
+        refs = get_relevant_references(discovery_data, None, tenant, limit=2)
+        if not refs:
+            return {"found": False, "message": "No approved customer references found for this profile."}
+        return {"found": True, "references": refs}
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Companion: get_relevant_reference failed")
+        return {"error": "Could not retrieve references"}

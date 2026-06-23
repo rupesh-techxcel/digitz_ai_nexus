@@ -1996,6 +1996,43 @@ def sync_custom_html_block(block_name, html, dry_run=False):
     }
 
 
+def sync_fixture_block(block_name, dry_run=False):
+    """Sync a Custom HTML Block (both html and style) from the fixture JSON file."""
+    import json
+    import os
+
+    fixture_path = os.path.join(
+        os.path.dirname(__file__), "..", "fixtures", "custom_html_block.json"
+    )
+    with open(fixture_path) as f:
+        fixture_data = json.load(f)
+
+    block_data = next((b for b in fixture_data if b["name"] == block_name), None)
+    if not block_data:
+        frappe.logger().warning("sync_fixture_block: %s not found in fixture file", block_name)
+        return {"block": block_name, "changed": False, "updated": False, "error": "not in fixture"}
+
+    if not frappe.db.exists("Custom HTML Block", block_name):
+        frappe.logger().warning("sync_fixture_block: %s not in database", block_name)
+        return {"block": block_name, "changed": False, "updated": False, "error": "not in db"}
+
+    doc = frappe.get_doc("Custom HTML Block", block_name)
+    new_html = (block_data.get("html") or "").strip()
+    new_style = (block_data.get("style") or "").strip()
+
+    html_changed = (doc.html or "").strip() != new_html
+    style_changed = (doc.style or "").strip() != new_style
+    changed = html_changed or style_changed
+
+    if changed and not dry_run:
+        doc.html = new_html
+        doc.style = new_style
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+    return {"block": block_name, "changed": changed, "updated": bool(changed and not dry_run)}
+
+
 def sync_home_workspace_block(dry_run=False):
     return sync_custom_html_block(HOME_BLOCK, HOME_HTML, dry_run=dry_run)
 
@@ -2045,4 +2082,11 @@ def sync_all_workspace_blocks(dry_run=False):
             results.append(fn(dry_run=dry_run))
         except Exception as e:
             frappe.logger().warning("sync_all_workspace_blocks: %s failed — %s", fn.__name__, e)
+
+    # Fixture-driven blocks (html + style both sourced from fixtures/custom_html_block.json)
+    for block_name in ("nexus-nexy-companion-workspace-html-block",):
+        try:
+            results.append(sync_fixture_block(block_name, dry_run=dry_run))
+        except Exception as e:
+            frappe.logger().warning("sync_all_workspace_blocks: fixture block %s failed — %s", block_name, e)
     return results

@@ -264,6 +264,9 @@ DO NOT ANSWER RULES:
 
     safe_fallback = profile.get("fallback_message") or SAFE_FALLBACK_ANSWER
 
+    # ── Companion context (injected when companion_mode is active) ────────────
+    companion_block = _build_companion_block(query_contract)
+
     return f"""
 You are DIGITZ AI Nexus, a controlled enterprise knowledge assistant.
 
@@ -300,7 +303,7 @@ Instructions:
 
 APPROVED KNOWLEDGE:
 {approved_knowledge}
-
+{companion_block}
 CURRENT USER MESSAGE:
 {original_query}
 
@@ -312,3 +315,142 @@ FOLLOW-UP DETECTED:
 
 ANSWER:
 """.strip()
+
+
+# ── Companion prompt block ────────────────────────────────────────────────────
+
+def _build_companion_block(query_contract: dict) -> str:
+    """
+    Build the Nexy Companion Engine context block.
+
+    This block transforms the LLM from a knowledge assistant into a
+    conversation-driving engine with a clear objective. It is injected
+    after APPROVED KNOWLEDGE and before the current user message.
+
+    Returns an empty string when not in companion mode (zero cost on non-companion calls).
+    """
+    ctx = query_contract.get("companion_context")
+    if not ctx:
+        return ""
+
+    stage = ctx.get("companion_stage") or "ARRIVED"
+    persona_name = ctx.get("companion_persona_name")
+    persona_confidence = ctx.get("companion_persona_confidence") or 0
+    discovery_summary = ctx.get("companion_discovery_summary") or "No visitor profile collected yet."
+    products_block = ctx.get("companion_products_block") or ""
+    references_block = ctx.get("companion_references_block") or ""
+    playbook_name = ctx.get("companion_playbook_name") or ""
+    guidelines = ctx.get("companion_guidelines") or ""
+    stage_focus = ctx.get("companion_stage_focus") or ""
+    discovery_questions = ctx.get("companion_discovery_questions") or ""
+    objection_responses = ctx.get("companion_objection_responses") or ""
+    next_step_options = ctx.get("companion_next_step_options") or ""
+    email_verified = ctx.get("companion_email_verified", True)
+
+    # ── Persona line ──────────────────────────────────────────────────────────
+    if persona_name:
+        persona_line = f"Matched Visitor Persona: {persona_name} ({persona_confidence:.0f}% confidence)"
+    else:
+        persona_line = "Visitor Persona: Not yet identified — continue discovery"
+
+    # ── Email verification note ───────────────────────────────────────────────
+    verification_note = "" if email_verified else (
+        "Email Not Yet Collected: Naturally invite the visitor to share their email "
+        "when it fits the conversation — frame it as personalising the experience, "
+        "not as a gate. Do not force it."
+    )
+
+    # ── Build the directive block ─────────────────────────────────────────────
+    parts = [
+        "--- NEXY COMPANION ENGINE ---",
+        "",
+        "IDENTITY:",
+        "You are Nexy — an intelligent advisor built into this platform.",
+        "You combine product knowledge (from APPROVED KNOWLEDGE above) with",
+        "conversation intelligence to guide visitors toward the outcome that",
+        "best serves their situation.",
+        "",
+        "OBJECTIVE:",
+        "Move this conversation toward a positive outcome for the visitor:",
+        "understood needs → matched solution → clear next step → cycle completed.",
+        "A positive outcome is not a pitch — it is the visitor leaving better",
+        "informed, with a concrete path forward that fits their situation.",
+        "",
+        "CURRENT SITUATION:",
+        f"Journey Stage: {stage}",
+        persona_line,
+    ]
+
+    if verification_note:
+        parts += ["", verification_note]
+
+    parts += [
+        "",
+        "VISITOR PROFILE COLLECTED:",
+        discovery_summary,
+    ]
+
+    if products_block:
+        parts += [
+            "",
+            "AVAILABLE SOLUTIONS (use APPROVED KNOWLEDGE above for factual details):",
+            products_block,
+        ]
+
+    if references_block:
+        parts += [
+            "",
+            "RELEVANT REFERENCES (use to build confidence — only cite approved content):",
+            references_block,
+        ]
+
+    if guidelines:
+        parts += [
+            "",
+            f"CONVERSATION GUIDELINES{' — ' + playbook_name if playbook_name else ''}:",
+            guidelines,
+        ]
+
+    if stage_focus:
+        parts += [
+            "",
+            "YOUR DIRECTIVE FOR THIS TURN:",
+            stage_focus,
+        ]
+
+    if discovery_questions:
+        parts += [
+            "",
+            "DISCOVERY QUESTIONS (draw from these contextually — one at a time):",
+            discovery_questions,
+        ]
+
+    if objection_responses:
+        parts += [
+            "",
+            "OBJECTION LIBRARY:",
+            objection_responses,
+        ]
+
+    if next_step_options:
+        parts += [
+            "",
+            "AVAILABLE NEXT STEPS:",
+            next_step_options,
+        ]
+
+    parts += [
+        "",
+        "LANGUAGE RULES (non-negotiable):",
+        "- Never use the words 'sales', 'selling', 'sell', or 'pitch'",
+        "- Use: advise, guide, recommend, explore, progress, take the next step",
+        "- One question per response maximum during discovery",
+        "- Be specific — use their stated challenges in your response",
+        "- Only recommend when there is genuine fit; be honest when there is not",
+        "- Do not invent pricing, timelines, or guarantees not in APPROVED KNOWLEDGE",
+        "",
+        "--- END COMPANION ENGINE ---",
+        "",
+    ]
+
+    return "\n".join(parts)

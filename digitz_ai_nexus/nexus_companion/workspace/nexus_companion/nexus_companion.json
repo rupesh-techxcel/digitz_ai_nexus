@@ -1,0 +1,119 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"ncp-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Nexy Companion</span>\",\"col\":12}}]",
+ "creation": "2026-06-23 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "purple",
+ "is_hidden": 0,
+ "label": "Nexy Companion",
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Companion",
+ "name": "Nexy Companion",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "Nexus Nexy",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 12.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "format": "",
+   "icon": "dashboard",
+   "label": "Companion Dashboard",
+   "link_to": "nexus-companion-dashboard",
+   "type": "Page"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "format": "",
+   "icon": "book",
+   "label": "Nexus Companion Playbook",
+   "link_to": "Nexus Companion Playbook",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "",
+   "icon": "users",
+   "label": "Nexus Companion Persona",
+   "link_to": "Nexus Companion Persona",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "format": "",
+   "icon": "package",
+   "label": "Nexus Companion Product",
+   "link_to": "Nexus Companion Product",
+   "type": "DocType"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "format": "",
+   "icon": "tool",
+   "label": "Nexus Companion Service",
+   "link_to": "Nexus Companion Service",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "format": "",
+   "icon": "star",
+   "label": "Nexus Companion Story",
+   "link_to": "Nexus Companion Story",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "format": "",
+   "icon": "message-square",
+   "label": "Nexus Companion Testimonial",
+   "link_to": "Nexus Companion Testimonial",
+   "type": "DocType"
+  },
+  {
+   "color": "Gray",
+   "doc_view": "List",
+   "format": "",
+   "icon": "file-text",
+   "label": "Nexus Companion Case Study",
+   "link_to": "Nexus Companion Case Study",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "format": "",
+   "icon": "trending-up",
+   "label": "Nexus Companion Outcome",
+   "link_to": "Nexus Companion Outcome",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "",
+   "icon": "inbox",
+   "label": "Nexus Companion Enquiry",
+   "link_to": "Nexus Companion Enquiry",
+   "type": "DocType"
+  }
+ ],
+ "title": "Nexy Companion"
+}

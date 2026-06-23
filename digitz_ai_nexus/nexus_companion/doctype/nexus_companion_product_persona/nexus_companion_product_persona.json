@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "persona",
+  "persona_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "persona",
+   "fieldtype": "Link",
+   "label": "Persona",
+   "options": "Nexus Companion Persona",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "persona_name",
+   "fieldtype": "Data",
+   "label": "Persona Name",
+   "fetch_from": "persona.persona_name",
+   "read_only": 1,
+   "in_list_view": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Companion",
+ "name": "Nexus Companion Product Persona",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

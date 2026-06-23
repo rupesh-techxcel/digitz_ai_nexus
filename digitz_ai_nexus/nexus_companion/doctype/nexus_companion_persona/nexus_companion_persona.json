@@ -1,0 +1,225 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:NCPE-.{#####}",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "persona_name",
+  "tenant",
+  "enabled",
+  "column_break_1",
+  "customer_type",
+  "company_size",
+  "business_maturity",
+  "section_context",
+  "industry",
+  "column_break_2",
+  "section_needs",
+  "challenges",
+  "column_break_3",
+  "pain_points",
+  "section_goals",
+  "goals",
+  "column_break_4",
+  "desired_outcomes",
+  "section_triggers",
+  "buying_triggers",
+  "column_break_5",
+  "common_objections",
+  "section_communication",
+  "communication_style",
+  "column_break_6",
+  "recommended_messaging",
+  "section_recommendations",
+  "recommended_products",
+  "recommended_services"
+ ],
+ "fields": [
+  {
+   "fieldname": "persona_name",
+   "fieldtype": "Data",
+   "label": "Persona Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_type",
+   "fieldtype": "Select",
+   "label": "Customer Type",
+   "options": "\nB2B\nB2C\nBoth"
+  },
+  {
+   "fieldname": "company_size",
+   "fieldtype": "Select",
+   "label": "Company Size",
+   "options": "\nSolo\nMicro (2-10)\nSME (11-50)\nMid-Market (51-200)\nEnterprise (200+)"
+  },
+  {
+   "fieldname": "business_maturity",
+   "fieldtype": "Select",
+   "label": "Business Maturity",
+   "options": "\nStartup\nGrowing\nEstablished\nScaling"
+  },
+  {
+   "fieldname": "section_context",
+   "fieldtype": "Section Break",
+   "label": "Industry Context"
+  },
+  {
+   "fieldname": "industry",
+   "fieldtype": "Data",
+   "label": "Industry",
+   "description": "e.g. Retail, Manufacturing, Professional Services, Healthcare"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_needs",
+   "fieldtype": "Section Break",
+   "label": "Challenges & Pain Points"
+  },
+  {
+   "fieldname": "challenges",
+   "fieldtype": "Long Text",
+   "label": "Challenges",
+   "description": "Typical business challenges this persona faces"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pain_points",
+   "fieldtype": "Long Text",
+   "label": "Pain Points",
+   "description": "Specific frustrations and friction points"
+  },
+  {
+   "fieldname": "section_goals",
+   "fieldtype": "Section Break",
+   "label": "Goals & Outcomes"
+  },
+  {
+   "fieldname": "goals",
+   "fieldtype": "Long Text",
+   "label": "Goals"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "desired_outcomes",
+   "fieldtype": "Long Text",
+   "label": "Desired Outcomes"
+  },
+  {
+   "fieldname": "section_triggers",
+   "fieldtype": "Section Break",
+   "label": "Engagement Signals"
+  },
+  {
+   "fieldname": "buying_triggers",
+   "fieldtype": "Long Text",
+   "label": "Engagement Triggers",
+   "description": "Events or situations that prompt this persona to seek a solution"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "common_objections",
+   "fieldtype": "Long Text",
+   "label": "Common Concerns",
+   "description": "Typical hesitations or objections from this persona"
+  },
+  {
+   "fieldname": "section_communication",
+   "fieldtype": "Section Break",
+   "label": "Communication Approach"
+  },
+  {
+   "fieldname": "communication_style",
+   "fieldtype": "Long Text",
+   "label": "Communication Style",
+   "description": "How to speak with this persona — tone, depth, vocabulary"
+  },
+  {
+   "fieldname": "column_break_6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "recommended_messaging",
+   "fieldtype": "Long Text",
+   "label": "Recommended Messaging",
+   "description": "Key angles and themes that resonate with this persona"
+  },
+  {
+   "fieldname": "section_recommendations",
+   "fieldtype": "Section Break",
+   "label": "Recommended Products & Services"
+  },
+  {
+   "fieldname": "recommended_products",
+   "fieldtype": "Table",
+   "label": "Recommended Products",
+   "options": "Nexus Companion Persona Product"
+  },
+  {
+   "fieldname": "recommended_services",
+   "fieldtype": "Table",
+   "label": "Recommended Services",
+   "options": "Nexus Companion Persona Service"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Companion",
+ "name": "Nexus Companion Persona",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

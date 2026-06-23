@@ -97,6 +97,7 @@ fixtures = [
         "nexus-administration-workspace-html-block",
         "nexus-live-workspace-html-block",
         "nexus-nexy-workspace-html-block",
+        "nexus-nexy-companion-workspace-html-block",
     ]]]},
 ]
 

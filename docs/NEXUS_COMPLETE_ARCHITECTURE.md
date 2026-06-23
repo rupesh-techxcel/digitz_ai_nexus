@@ -37,6 +37,7 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | `nexus_ai` | LLM provider configuration |
 | `nexus_operations` | Tenant configuration, query logging, user context |
 | `nexus_security` | Security utilities (no DocTypes) |
+| `nexus_companion` | Intent-driven LLM conversion engine — journey stages, signal classification, enquiry lifecycle, persona matching, reference matching, dashboard |
 
 ### 2.2 DocTypes
 
@@ -86,6 +87,31 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | `Nexus Tenant Configuration` | `tenant`, `ecosystem`, `llm_provider`, `is_default` | Active LLM/embedding configuration per tenant |
 | `Nexus Query Log` | `tenant`, `query`, `answer`, `confidence`, `retrieval_count`, `status` | Audit log for every query |
 | `Nexus User Context` | `user`, `tenant`, `business_unit`, `knowledge_profile` | Tracks active Studio context for a desk user |
+
+#### nexus_companion
+
+| DocType | Key Fields | Purpose |
+|---|---|---|
+| `Nexus Companion Product` | `product_name`, `tenant`, `enabled`, `chat_category`, `challenges_solved`, `objection_responses`, `disqualification_criteria`, `conversion_type`, `conversion_threshold_score`, `conversion_config`, `conversion_message`, `post_conversion_action` | Product intelligence profile — what Nexy knows about a product, how to present it, and how its conversion cycle completes |
+| `Nexus Companion Product Persona` | (child) `persona` | Links a product to target personas |
+| `Nexus Companion Service` | (same as Product) `service_name`, … | Service-level equivalent of Product |
+| `Nexus Companion Service Persona` | (child) `persona` | Links a service to target personas |
+| `Nexus Companion Persona` | `persona_name`, `tenant`, `enabled`, `industry`, `company_size`, `business_maturity`, `customer_type`, `challenges`, `goals`, `communication_style` | Visitor archetype — drives matching, message framing, and product recommendation |
+| `Nexus Companion Persona Product` | (child) `product` | Persona → Product recommendation |
+| `Nexus Companion Persona Service` | (child) `service` | Persona → Service recommendation |
+| `Nexus Companion Playbook` | `playbook_name`, `tenant`, `enabled`, `is_default`, `discovery_questions`, `communication_guidelines`, `escalation_score_threshold`, `escalation_triggers`, `next_step_options` | Per-channel engagement playbook — discovery flow, guidelines, escalation thresholds |
+| `Nexus Companion Story` | `title`, `tenant`, `approved`, `visibility`, `industry`, `challenge`, `solution`, `outcomes`, `summary` | Approved customer success story for trust-building |
+| `Nexus Companion Story Product` | (child) `product` | Links story to products |
+| `Nexus Companion Story Persona` | (child) `persona` | Links story to personas |
+| `Nexus Companion Testimonial` | `tenant`, `approved`, `rating`, `testimonial`, `linked_product`, `linked_service` | Short customer testimonial (name/company optional) |
+| `Nexus Companion Case Study` | `title`, `tenant`, `approved`, `visibility`, `customer_profile`, `initial_situation`, `outcomes`, `metrics` | Detailed case study for deeper social proof |
+| `Nexus Companion Case Study Persona` | (child) `persona` | Links case study to personas |
+| `Nexus Companion Outcome` | `outcome_label`, `outcome_category`, `tenant`, `approved`, `detail` | Discrete reusable outcome statement |
+| `Nexus Companion Outcome Product` | (child) `product` | Links outcome to products |
+| `Nexus Companion Outcome Persona` | (child) `persona` | Links outcome to personas |
+| `Nexus Companion Enquiry` | `visitor`, `visitor_email`, `verification_status`, `web_session`, `conversation`, `tenant`, `enquiry_stage`, `enquiry_score`, `matched_persona`, `stage_signal`, `signal_log`, `discovery_data`, `recommended_next_step`, `escalation_recommended` | Full journey record for a visitor — created automatically when companion mode is active; updated in real time |
+| `Nexus Companion Enquiry Product` | (child) `product`, `product_name`, `fit_score` | Recommended product rows on an enquiry |
+| `Nexus Companion Enquiry Service` | (child) `service`, `service_name`, `fit_score` | Recommended service rows on an enquiry |
 
 ### 2.3 Engine Layer (`engine/`)
 
@@ -140,6 +166,37 @@ engine/
 |---|---|---|
 | `nexus_studio_page` | `/nexus-studio` | **Nexus Studio** — knowledge authoring and indexing |
 | `nexus_admin` | `/nexus-admin` | **Nexus Admin** — tenant/configuration/governance dashboard |
+
+### 2.7 Nexus Companion Framework
+
+The companion is a horizontal capability layered across the existing chat pipeline. Full documentation: `apps/digitz_ai_nexus/docs/nexus-companion-framework.md`.
+
+**Purpose:** Intent-driven LLM conversion engine. Default intent is Sales — guide visitors from discovery to a completed conversion (enquiry captured, meeting booked, subscription activated). The LLM itself drives the conversion process; the platform supplies structured context, not a rule engine.
+
+**Activation:** Set `companion_mode = 1` on a `Nexus AI Agent Profile`. All conversations on that profile enter companion mode automatically.
+
+**Services:**
+
+| File | Responsibility |
+|---|---|
+| `nexus_companion/services/companion_context_service.py` | Assembles full companion context dict per AI turn (stage, persona, products block, references block, playbook guidelines) |
+| `nexus_companion/services/enquiry_service.py` | Enquiry lifecycle — create/update/score/stage advance; signal-driven stage machine + score-based fallback |
+| `nexus_companion/services/signal_classifier.py` | LLM-powered per-message buying signal classification (14 signal types; falls back to CURIOUS on failure) |
+| `nexus_companion/services/persona_matching_service.py` | Keyword/weighted scoring against persona fields to identify visitor archetype |
+| `nexus_companion/services/reference_matching_service.py` | Retrieves relevant Stories, Testimonials, and Outcomes based on industry and persona |
+
+**Journey Stages (11):**
+`ARRIVED → GREETING → DISCOVERY → ENGAGED → PRESENTING ⇌ OBJECTION_HANDLING → INTERESTED → CONVERTING → CONVERTED / DECLINED / ESCALATED`
+
+Stage transitions are signal-driven. Every visitor message is classified as one of 14 signal types by the LLM. The signal type determines stage transition. Score-based advancement (0–100 composite score) is retained as a safety-net fallback.
+
+**Prompt injection:** `engine/prompt.py` → `_build_companion_block()` injects a `--- NEXY COMPANION ENGINE ---` block after APPROVED KNOWLEDGE. Block structure: IDENTITY → OBJECTIVE → CURRENT SITUATION → AVAILABLE SOLUTIONS → REFERENCES → GUIDELINES → DIRECTIVE → LANGUAGE RULES.
+
+**Key invariant:** The words "sales", "selling", "sell", "pitch", "lead" must not appear in any visitor-facing output, system prompt, DocType label, or code variable within the companion module. Use: advising, guiding, enquiry, companion, next step.
+
+**API endpoints:** `nexus_companion/api/companion_dashboard.py` — `get_dashboard_data()`, `get_enquiry_detail()`, `get_tenants()`
+
+**Dashboard page:** `nexus_companion/page/nexus_companion_dashboard/` — stage funnel, conversion stats, enquiry list, persona frequency, config summary
 
 ---
 

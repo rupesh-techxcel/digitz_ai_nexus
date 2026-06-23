@@ -1,0 +1,181 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:NCPB-.{#####}",
+ "creation": "2026-06-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "playbook_name",
+  "tenant",
+  "enabled",
+  "is_default",
+  "column_break_1",
+  "description",
+  "section_discovery",
+  "discovery_questions",
+  "column_break_2",
+  "qualification_questions",
+  "section_guidelines",
+  "communication_guidelines",
+  "column_break_3",
+  "objection_responses",
+  "section_references",
+  "reference_usage_rules",
+  "section_escalation",
+  "escalation_score_threshold",
+  "column_break_4",
+  "escalation_triggers",
+  "section_next_steps",
+  "next_step_options"
+ ],
+ "fields": [
+  {
+   "fieldname": "playbook_name",
+   "fieldtype": "Data",
+   "label": "Playbook Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "label": "Tenant",
+   "options": "Nexus Tenant",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Default Playbook",
+   "default": "0"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_discovery",
+   "fieldtype": "Section Break",
+   "label": "Discovery"
+  },
+  {
+   "fieldname": "discovery_questions",
+   "fieldtype": "Long Text",
+   "label": "Discovery Questions",
+   "description": "One question per line \u2014 Nexy draws from these contextually"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qualification_questions",
+   "fieldtype": "Long Text",
+   "label": "Qualification Signals",
+   "description": "Keywords or phrases that indicate interest or fit"
+  },
+  {
+   "fieldname": "section_guidelines",
+   "fieldtype": "Section Break",
+   "label": "Advisor Guidelines"
+  },
+  {
+   "fieldname": "communication_guidelines",
+   "fieldtype": "Long Text",
+   "label": "Communication Guidelines"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "objection_responses",
+   "fieldtype": "Long Text",
+   "label": "Concern Responses"
+  },
+  {
+   "fieldname": "section_references",
+   "fieldtype": "Section Break",
+   "label": "Reference Usage"
+  },
+  {
+   "fieldname": "reference_usage_rules",
+   "fieldtype": "Long Text",
+   "label": "Reference Usage Rules",
+   "description": "When and how to surface customer stories and outcomes"
+  },
+  {
+   "fieldname": "section_escalation",
+   "fieldtype": "Section Break",
+   "label": "Escalation Settings"
+  },
+  {
+   "fieldname": "escalation_score_threshold",
+   "fieldtype": "Int",
+   "label": "Escalation Score Threshold",
+   "default": "70",
+   "description": "Enquiry score above which human escalation is recommended"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "escalation_triggers",
+   "fieldtype": "Long Text",
+   "label": "Escalation Trigger Keywords",
+   "description": "Words that force immediate escalation regardless of score"
+  },
+  {
+   "fieldname": "section_next_steps",
+   "fieldtype": "Section Break",
+   "label": "Next Step Options"
+  },
+  {
+   "fieldname": "next_step_options",
+   "fieldtype": "Long Text",
+   "label": "Available Next Steps",
+   "description": "One per line \u2014 e.g. Schedule a Demo, Request Proposal, Talk to an Advisor"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Nexus Companion",
+ "name": "Nexus Companion Playbook",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
