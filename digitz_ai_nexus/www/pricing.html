@@ -63,7 +63,7 @@
     .nxpr-hero-h1 em { font-style: normal; color: #7eb4ff; }
     .nxpr-hero-sub {
       font-size: clamp(.93rem, 1.4vw, 1.08rem);
-      color: rgba(255,255,255,.72); max-width: 600px;
+      color: rgba(255,255,255,.72); max-width: 640px;
       margin: 0 auto 36px; line-height: 1.72;
     }
     .nxpr-hero-note {
@@ -79,8 +79,8 @@
     }
     .nxpr-plans-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
       align-items: start;
     }
 
@@ -99,19 +99,36 @@
       box-shadow: 0 10px 40px rgba(33,77,187,.14);
       transform: translateY(-4px);
     }
-    .nxpr-card-premium {
+    .nxpr-card-lite {
+      border-color: rgba(33,77,187,.08);
+      background: #fafbff;
+    }
+    .nxpr-card-lite .nxpr-card-head {
+      background: #f4f6fb;
+      border-bottom-color: rgba(33,77,187,.07);
+    }
+    .nxpr-plan-icon-lite { background: linear-gradient(135deg, #dce4f5, #c8d6f0); }
+    .nxpr-plan-tier-lite { color: #5a7ab0; }
+    .nxpr-check-lite     { color: #5a7ab0; }
+    .nxpr-btn-lite {
+      background: rgba(33,77,187,.05); border: 1.5px solid rgba(33,77,187,.18);
+      color: #5a7ab0;
+    }
+    .nxpr-btn-lite:hover { background: rgba(33,77,187,.10); }
+
+    .nxpr-card-pro {
       border-color: rgba(33,77,187,.30);
       box-shadow: 0 4px 32px rgba(33,77,187,.14), 0 0 0 1px rgba(33,77,187,.18);
     }
-    .nxpr-card-premium:hover {
+    .nxpr-card-pro:hover {
       box-shadow: 0 14px 52px rgba(33,77,187,.22);
     }
-    .nxpr-card-advanced {
-      border-color: rgba(22,163,127,.22);
-      box-shadow: 0 2px 16px rgba(22,163,127,.08);
+    .nxpr-card-command {
+      border-color: rgba(224,166,47,.28);
+      box-shadow: 0 2px 16px rgba(224,166,47,.08);
     }
-    .nxpr-card-advanced:hover {
-      box-shadow: 0 10px 40px rgba(22,163,127,.16);
+    .nxpr-card-command:hover {
+      box-shadow: 0 10px 40px rgba(224,166,47,.18);
     }
 
     /* Popular badge */
@@ -124,18 +141,18 @@
       white-space: nowrap;
     }
 
-    /* Card header stripe */
+    /* Card header */
     .nxpr-card-head {
       padding: 32px 28px 24px;
       border-bottom: 1px solid rgba(33,77,187,.08);
     }
-    .nxpr-card-premium .nxpr-card-head {
+    .nxpr-card-pro .nxpr-card-head {
       background: linear-gradient(135deg, #f0f5ff 0%, #e8f0ff 100%);
       border-bottom-color: rgba(33,77,187,.14);
     }
-    .nxpr-card-advanced .nxpr-card-head {
-      background: linear-gradient(135deg, #f0faf7 0%, #e6f7f3 100%);
-      border-bottom-color: rgba(22,163,127,.14);
+    .nxpr-card-command .nxpr-card-head {
+      background: linear-gradient(135deg, #fdf8ed 0%, #fdf2d0 100%);
+      border-bottom-color: rgba(224,166,47,.18);
     }
     .nxpr-plan-icon {
       width: 48px; height: 48px; border-radius: 14px;
@@ -143,17 +160,17 @@
       margin-bottom: 16px;
     }
     .nxpr-plan-icon svg { width: 26px; height: 26px; }
-    .nxpr-plan-icon-basic    { background: linear-gradient(135deg, #e8efff, #d4e1ff); }
-    .nxpr-plan-icon-premium  { background: linear-gradient(135deg, #2158c7, #1a3fa8); }
-    .nxpr-plan-icon-advanced { background: linear-gradient(135deg, #16A37F, #0d8a6a); }
+    .nxpr-plan-icon-orbit   { background: linear-gradient(135deg, #e8efff, #d4e1ff); }
+    .nxpr-plan-icon-pro     { background: linear-gradient(135deg, #2158c7, #1a3fa8); }
+    .nxpr-plan-icon-command { background: linear-gradient(135deg, #e0a62f, #c8860a); }
 
     .nxpr-plan-tier {
       font-size: .68rem; font-weight: 800; letter-spacing: .12em;
       text-transform: uppercase; margin-bottom: 6px;
     }
-    .nxpr-plan-tier-basic    { color: #214dbb; }
-    .nxpr-plan-tier-premium  { color: #214dbb; }
-    .nxpr-plan-tier-advanced { color: #0d8a6a; }
+    .nxpr-plan-tier-orbit   { color: #214dbb; }
+    .nxpr-plan-tier-pro     { color: #214dbb; }
+    .nxpr-plan-tier-command { color: #9a6500; }
 
     .nxpr-plan-name {
       font-family: 'Exo 2', sans-serif;
@@ -164,10 +181,31 @@
       font-size: .86rem; color: #4a5e72; line-height: 1.55;
     }
 
-    /* Pricing */
+    /* Discount / save row */
+    .nxpr-save-row {
+      display: flex; align-items: center; gap: 9px;
+      margin-bottom: 8px;
+    }
+    .nxpr-save-badge {
+      font-size: .63rem; font-weight: 800; letter-spacing: .09em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #16A37F, #0d8a6a);
+      color: #fff; border-radius: 5px; padding: 3px 9px;
+      flex-shrink: 0;
+    }
+    .nxpr-price-was {
+      font-size: 1rem; font-weight: 700; color: #5a7090;
+      text-decoration: line-through; text-decoration-thickness: 2px;
+      text-decoration-color: #e05252;
+    }
+
+    /* Price block */
     .nxpr-price-block {
       padding: 24px 28px 20px;
       border-bottom: 1px solid rgba(33,77,187,.07);
+    }
+    .nxpr-card-command .nxpr-price-block {
+      border-bottom-color: rgba(224,166,47,.10);
     }
     .nxpr-price-label {
       font-size: .70rem; font-weight: 700; letter-spacing: .08em;
@@ -194,13 +232,14 @@
       border: none; border-top: 1px dashed rgba(33,77,187,.12);
       margin: 14px 0;
     }
+    .nxpr-card-command .nxpr-price-sep { border-top-color: rgba(224,166,47,.20); }
     .nxpr-onboard-row {
       display: flex; align-items: center; justify-content: space-between;
       background: rgba(33,77,187,.04); border: 1px solid rgba(33,77,187,.10);
       border-radius: 10px; padding: 10px 14px;
     }
-    .nxpr-card-advanced .nxpr-onboard-row {
-      background: rgba(22,163,127,.04); border-color: rgba(22,163,127,.14);
+    .nxpr-card-command .nxpr-onboard-row {
+      background: rgba(224,166,47,.05); border-color: rgba(224,166,47,.18);
     }
     .nxpr-onboard-label {
       font-size: .77rem; font-weight: 600; color: #4a5e72;
@@ -209,47 +248,116 @@
       font-family: 'Exo 2', sans-serif;
       font-size: 1.05rem; font-weight: 800; color: #0e1f3a;
     }
-    .nxpr-custom-price {
-      font-family: 'Exo 2', sans-serif;
-      font-size: 2rem; font-weight: 900; color: #0d8a6a; line-height: 1;
-    }
 
-    /* Features list */
+    /* Core features list */
     .nxpr-features {
-      padding: 22px 28px 24px;
-      flex: 1;
+      padding: 20px 28px 16px;
     }
     .nxpr-features-label {
       font-size: .68rem; font-weight: 800; letter-spacing: .10em;
-      text-transform: uppercase; color: #7a92b0; margin-bottom: 14px;
+      text-transform: uppercase; color: #7a92b0; margin-bottom: 12px;
     }
     .nxpr-feature-list {
       list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: 11px;
+      display: flex; flex-direction: column; gap: 9px;
     }
     .nxpr-feature-list li {
-      display: flex; align-items: flex-start; gap: 10px;
-      font-size: .87rem; color: #2a3f5a; line-height: 1.5;
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: .85rem; color: #2a3f5a; line-height: 1.48;
     }
     .nxpr-feature-list li svg {
       flex-shrink: 0; margin-top: 2px;
-      width: 16px; height: 16px;
+      width: 15px; height: 15px;
     }
-    .nxpr-check-basic    { color: #214dbb; }
-    .nxpr-check-premium  { color: #214dbb; }
-    .nxpr-check-advanced { color: #0d8a6a; }
-    .nxpr-feature-new {
-      display: inline-block; font-size: .62rem; font-weight: 800;
-      letter-spacing: .06em; text-transform: uppercase;
-      background: linear-gradient(90deg, #2158c7, #16A37F);
-      color: #fff; border-radius: 4px; padding: 1px 6px;
-      margin-left: 6px; vertical-align: middle; line-height: 1.6;
+    .nxpr-check-orbit   { color: #214dbb; }
+    .nxpr-check-pro     { color: #214dbb; }
+    .nxpr-check-command { color: #9a6500; }
+
+    /* ── Nexy Companion sub-block ── */
+    .nxpr-nexy-block {
+      margin: 8px 28px 12px;
+      border: 1.5px solid rgba(79,70,229,.18);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .nxpr-nexy-head {
+      background: linear-gradient(90deg, rgba(79,70,229,.08), rgba(33,77,187,.04));
+      border-bottom: 1px solid rgba(79,70,229,.12);
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nxpr-nexy-head svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .nxpr-nexy-label {
+      font-size: .63rem; font-weight: 800; letter-spacing: .11em;
+      text-transform: uppercase; color: #3730a3;
+    }
+    .nxpr-cap-grid {
+      display: grid; grid-template-columns: 1fr auto;
+    }
+    .nxpr-cap-key {
+      padding: 5px 14px; font-size: .79rem; color: #4a5e72;
+      border-bottom: 1px solid rgba(79,70,229,.06);
+    }
+    .nxpr-cap-val {
+      padding: 5px 14px; font-size: .79rem; font-weight: 700; color: #0e1f3a;
+      text-align: right; border-bottom: 1px solid rgba(79,70,229,.06);
+      white-space: nowrap;
+    }
+    .nxpr-cap-val-accent { color: #3730a3; }
+    .nxpr-cap-badges {
+      padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 5px;
+      background: rgba(79,70,229,.02);
+    }
+    .nxpr-cap-badge {
+      font-size: .62rem; font-weight: 700;
+      background: rgba(79,70,229,.09); color: #3730a3;
+      border-radius: 4px; padding: 2px 7px;
     }
 
-    /* CTA button in card */
-    .nxpr-card-cta {
-      padding: 20px 28px 28px;
+    /* ── WhatsApp Outreach sub-block ── */
+    .nxpr-wa-block {
+      margin: 0 28px 20px;
+      border: 1.5px solid rgba(37,211,102,.22);
+      border-radius: 14px;
+      overflow: hidden;
     }
+    .nxpr-wa-head {
+      background: linear-gradient(90deg, rgba(37,211,102,.07), rgba(22,163,127,.04));
+      border-bottom: 1px solid rgba(37,211,102,.14);
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nxpr-wa-label {
+      font-size: .63rem; font-weight: 800; letter-spacing: .11em;
+      text-transform: uppercase; color: #1a7a3c;
+    }
+    .nxpr-wa-cap-grid {
+      display: grid; grid-template-columns: 1fr auto;
+    }
+    .nxpr-wa-key {
+      padding: 5px 14px; font-size: .79rem; color: #4a5e72;
+      border-bottom: 1px solid rgba(37,211,102,.07);
+    }
+    .nxpr-wa-val {
+      padding: 5px 14px; font-size: .79rem; font-weight: 700; color: #0e1f3a;
+      text-align: right; border-bottom: 1px solid rgba(37,211,102,.07);
+      white-space: nowrap;
+    }
+    .nxpr-wa-footer {
+      padding: 7px 14px;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(37,211,102,.04);
+    }
+    .nxpr-wa-incl {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .63rem; font-weight: 800; letter-spacing: .04em;
+      background: rgba(37,211,102,.15); color: #1a7a3c;
+      border-radius: 5px; padding: 2px 8px;
+    }
+    .nxpr-wa-incl svg { width: 9px; height: 9px; }
+
+    /* Card CTA */
+    .nxpr-card-cta { padding: 4px 28px 28px; }
     .nxpr-btn {
       display: block; width: 100%; text-align: center;
       padding: 13px 20px;
@@ -259,23 +367,94 @@
       transition: opacity .18s, transform .18s;
     }
     .nxpr-btn:hover { opacity: .88; transform: translateY(-1px); }
-    .nxpr-btn-basic {
+    .nxpr-btn-orbit {
       background: rgba(33,77,187,.08); border: 1.5px solid rgba(33,77,187,.25);
       color: #214dbb;
     }
-    .nxpr-btn-basic:hover { background: rgba(33,77,187,.14); }
-    .nxpr-btn-premium {
+    .nxpr-btn-orbit:hover { background: rgba(33,77,187,.14); }
+    .nxpr-btn-pro {
       background: linear-gradient(135deg, #2158c7 0%, #1a3fa8 100%);
       color: #fff;
       box-shadow: 0 4px 18px rgba(33,77,187,.30);
     }
-    .nxpr-btn-advanced {
-      background: linear-gradient(135deg, #16A37F 0%, #0d8a6a 100%);
+    .nxpr-btn-command {
+      background: linear-gradient(135deg, #e0a62f 0%, #c8860a 100%);
       color: #fff;
-      box-shadow: 0 4px 18px rgba(22,163,127,.28);
+      box-shadow: 0 4px 18px rgba(224,166,47,.28);
     }
 
-    /* ── What's inside each plan ── */
+    /* ── Custom Engagement Band ── */
+    .nxpr-custom-band {
+      background: linear-gradient(135deg, #07102a 0%, #0b1d48 50%, #0e2855 100%);
+      padding: 72px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .nxpr-custom-band::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .nxpr-custom-band::after {
+      content: "";
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #e0a62f 0%, #c8860a 40%, #16A37F 70%, #214dbb 100%);
+    }
+    .nxpr-custom-inner {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: 1.1fr 1fr;
+      gap: 72px; align-items: center;
+    }
+    .nxpr-custom-kicker {
+      font-size: .68rem; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; color: #e0a62f; margin-bottom: 14px;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .nxpr-custom-h2 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(1.5rem, 2.8vw, 2.2rem); font-weight: 900;
+      color: #fff; margin: 0 0 16px; line-height: 1.18;
+    }
+    .nxpr-custom-h2 em { font-style: normal; color: #e0c46f; }
+    .nxpr-custom-p {
+      font-size: .93rem; color: rgba(255,255,255,.70); line-height: 1.72;
+      margin-bottom: 28px;
+    }
+    .nxpr-custom-badges {
+      display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 32px;
+    }
+    .nxpr-custom-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(224,166,47,.10); border: 1px solid rgba(224,166,47,.25);
+      border-radius: 50px; padding: 5px 14px;
+      font-size: .76rem; font-weight: 700; color: #e0c46f;
+    }
+    .nxpr-custom-badge svg { width: 10px; height: 10px; flex-shrink: 0; }
+    .nxpr-custom-cta-note {
+      font-size: .80rem; color: rgba(255,255,255,.40); margin-top: 12px;
+    }
+    .nxpr-custom-right-label {
+      font-size: .66rem; font-weight: 800; letter-spacing: .10em;
+      text-transform: uppercase; color: rgba(255,255,255,.40); margin-bottom: 20px;
+    }
+    .nxpr-custom-list {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .nxpr-custom-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: .90rem; color: rgba(255,255,255,.78); line-height: 1.55;
+    }
+    .nxpr-custom-list li svg {
+      flex-shrink: 0; margin-top: 2px;
+      width: 17px; height: 17px; color: #e0a62f;
+    }
+
+    /* ── What's inside every plan ── */
     .nxpr-includes-band {
       background: #fff;
       border-bottom: 1px solid rgba(33,77,187,.10);
@@ -309,8 +488,9 @@
       background: #f8faff;
       box-shadow: 0 2px 10px rgba(33,77,187,.05);
     }
-    .nxpr-inc-card-premium { border-color: rgba(33,77,187,.22); background: #f0f5ff; }
-    .nxpr-inc-card-advanced { border-color: rgba(22,163,127,.20); background: #f0faf7; }
+    .nxpr-inc-card-nexy  { border-color: rgba(79,70,229,.18);  background: #f5f4ff; }
+    .nxpr-inc-card-wa    { border-color: rgba(37,211,102,.18); background: #f2fdf5; }
+    .nxpr-inc-card-gold  { border-color: rgba(224,166,47,.20); background: #fdf8ed; }
     .nxpr-inc-icon {
       width: 44px; height: 44px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
@@ -320,7 +500,7 @@
     .nxpr-inc-icon-teal   { background: linear-gradient(135deg, #16A37F, #0d8a6a); }
     .nxpr-inc-icon-gold   { background: linear-gradient(135deg, #e0a62f, #a06a00); }
     .nxpr-inc-icon-indigo { background: linear-gradient(135deg, #4f46e5, #3730a3); }
-    .nxpr-inc-icon-navy   { background: linear-gradient(135deg, #0b2b72, #1a3fa8); }
+    .nxpr-inc-icon-green  { background: linear-gradient(135deg, #25D366, #1a9e48); }
     .nxpr-inc-title {
       font-family: 'Exo 2', sans-serif;
       font-size: 1.05rem; font-weight: 800;
@@ -334,42 +514,10 @@
       letter-spacing: .08em; text-transform: uppercase;
       border-radius: 4px; padding: 2px 7px; margin-top: 10px;
     }
-    .nxpr-tag-basic    { background: rgba(33,77,187,.09);  color: #214dbb; }
-    .nxpr-tag-premium  { background: rgba(33,77,187,.12);  color: #1a3fa8; }
-    .nxpr-tag-advanced { background: rgba(22,163,127,.12); color: #0d8a6a; }
-
-    /* ── AGENTIC backbone callout ── */
-    .nxpr-agentic-band {
-      background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 60%, #16A37F 100%);
-      padding: 52px 0;
-    }
-    .nxpr-agentic-inner {
-      display: flex; align-items: center; gap: 40px; flex-wrap: wrap;
-    }
-    .nxpr-agentic-copy { flex: 1; min-width: 260px; }
-    .nxpr-agentic-kicker {
-      font-size: .68rem; font-weight: 800; letter-spacing: .14em;
-      text-transform: uppercase; color: #7eb4ff; margin-bottom: 10px;
-    }
-    .nxpr-agentic-h2 {
-      font-family: 'Exo 2', sans-serif;
-      font-size: clamp(1.3rem, 2.2vw, 1.9rem); font-weight: 900;
-      color: #fff; margin: 0 0 10px; line-height: 1.22;
-    }
-    .nxpr-agentic-p {
-      font-size: .91rem; color: rgba(255,255,255,.75); line-height: 1.7;
-    }
-    .nxpr-agentic-badges {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;
-    }
-    .nxpr-agentic-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.20);
-      border-radius: 50px; padding: 5px 14px;
-      font-size: .76rem; font-weight: 700; color: rgba(255,255,255,.90);
-    }
-    .nxpr-agentic-badge svg { width: 12px; height: 12px; flex-shrink: 0; }
-    .nxpr-agentic-cta { flex-shrink: 0; }
+    .nxpr-tag-all    { background: rgba(33,77,187,.09);  color: #214dbb; }
+    .nxpr-tag-nexy   { background: rgba(79,70,229,.10);  color: #3730a3; }
+    .nxpr-tag-wa     { background: rgba(37,211,102,.12); color: #1a7a3c; }
+    .nxpr-tag-custom { background: rgba(224,166,47,.12); color: #9a6500; }
 
     /* ── FAQ ── */
     .nxpr-faq-band {
@@ -398,19 +546,17 @@
     }
 
     /* ── Responsive ── */
-    @media (max-width: 900px) {
+    @media (max-width: 1300px) {
+      .nxpr-plans-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 1100px) {
+      .nxpr-custom-inner { grid-template-columns: 1fr; gap: 40px; }
+      .nxpr-includes-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 700px) {
       .nxpr-plans-grid { grid-template-columns: 1fr; }
       .nxpr-includes-grid { grid-template-columns: 1fr; }
       .nxpr-faq-grid { grid-template-columns: 1fr; }
-      .nxpr-agentic-inner { flex-direction: column; }
-    }
-    @media (max-width: 1100px) {
-      .nxpr-plans-grid { grid-template-columns: 1fr 1fr; }
-      .nxpr-card-advanced { grid-column: span 2; }
-      .nxpr-includes-grid { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 900px) {
-      .nxpr-card-advanced { grid-column: span 1; }
     }
   </style>
 </head>
@@ -445,18 +591,18 @@
           <path d="M8 1.5l1.8 3.6 4 .58-2.9 2.82.68 3.98L8 10.4l-3.58 1.98.68-3.98L2.2 5.68l4-.58L8 1.5z"
                 fill="currentColor" opacity=".9"/>
         </svg>
-        Transparent Pricing
+        Transparent Pricing · Yearly Plans
       </span>
 
       <h1 class="nxpr-hero-h1">
-        Governed AI that's built<br>
-        <em>to scale with your ambition</em>
+        Governed AI for businesses<br>
+        <em>built to grow beyond 10 people</em>
       </h1>
       <p class="nxpr-hero-sub">
-        Every plan includes Nexus ORBIT — the governed knowledge and interaction layer — with agentic intelligence layered on top. Start where your business is. Grow without limits.
+        Every NEXUS ORBIT plan includes the Nexy Companion Framework, WhatsApp Outreach, and the full 7-layer governance engine. Capacity scales with your tier — the platform doesn't change.
       </p>
 
-      <p class="nxpr-hero-note">All prices in USD &middot; Billed annually &middot; Excludes applicable taxes</p>
+      <p class="nxpr-hero-note">All prices in USD &middot; Billed annually &middot; WhatsApp Business API costs included &middot; Excludes applicable taxes</p>
 
     </div>
   </section>
@@ -467,115 +613,161 @@
 
       <div class="nxpr-plans-grid">
 
-        <!-- ─── BASIC ─── -->
-        <div class="nxpr-card nxpr-card-basic">
+        <!-- ─── ORBIT LITE ─── -->
+        <div class="nxpr-card nxpr-card-lite">
           <div class="nxpr-card-head">
-            <div class="nxpr-plan-icon nxpr-plan-icon-basic">
-              <svg viewBox="0 0 26 26" fill="none" stroke="#214dbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 3l8 3.5v7c0 4.5-3.3 8.2-8 9.9C8.3 21.7 5 18 5 13.5v-7L13 3z"/>
+            <div class="nxpr-plan-icon nxpr-plan-icon-lite">
+              <svg viewBox="0 0 26 26" fill="none" stroke="#5a7ab0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="13" cy="13" r="5"/>
+                <circle cx="13" cy="13" r="10" stroke-dasharray="3 3"/>
               </svg>
             </div>
-            <div class="nxpr-plan-tier nxpr-plan-tier-basic">Basic</div>
-            <div class="nxpr-plan-name">Nexus Core</div>
-            <div class="nxpr-plan-tagline">Governed knowledge, human escalation, and your first AI companion — everything you need to deliver trustworthy AI at launch.</div>
+            <div class="nxpr-plan-tier nxpr-plan-tier-lite">NEXUS ORBIT</div>
+            <div class="nxpr-plan-name">Orbit Lite</div>
+            <div class="nxpr-plan-tagline">The full governed AI platform for micro-teams — same knowledge engine, same Nexy Companion, same WhatsApp outreach. Built for businesses just getting started.</div>
           </div>
 
           <div class="nxpr-price-block">
             <div class="nxpr-price-label">Annual Subscription</div>
+            <div class="nxpr-save-row">
+              <span class="nxpr-save-badge">Save 30%</span>
+              <span class="nxpr-price-was">$1,820</span>
+            </div>
             <div class="nxpr-price-row">
               <span class="nxpr-price-currency">$</span>
-              <span class="nxpr-price-amount">890</span>
+              <span class="nxpr-price-amount">1,400</span>
               <span class="nxpr-price-period">/ year</span>
             </div>
-            <div class="nxpr-price-note">$74 / month equivalent</div>
+            <div class="nxpr-price-note">$117 / month equivalent</div>
             <hr class="nxpr-price-sep">
             <div class="nxpr-onboard-row">
               <span class="nxpr-onboard-label">One-time Onboarding</span>
-              <span class="nxpr-onboard-amount">$500</span>
+              <span class="nxpr-onboard-amount">$750</span>
             </div>
           </div>
 
           <div class="nxpr-features">
-            <div class="nxpr-features-label">What's included</div>
+            <div class="nxpr-features-label">Platform included</div>
             <ul class="nxpr-feature-list">
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Single-tenant Knowledge Governance System
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                7-Layer Governance Routing Chain
               </li>
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Governed Q&amp;A with hallucination controls
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Knowledge Lifecycle — Draft to Published with backward testing
               </li>
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Human Escalation — live agent handoff with full context
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Knowledge Gap Detection &amp; Gap-to-Source workflow
               </li>
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Nexy Companion — your branded agentic AI
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Human Escalation with full conversation context transfer
               </li>
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Website chat widget — embeds on any domain
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Website Chat Widget — embeds on any domain
               </li>
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Nexus Studio — knowledge authoring &amp; config
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Nexus Studio, Live Console &amp; Administration
               </li>
               <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Nexus Live — conversation monitoring &amp; console
-              </li>
-              <li>
-                <svg class="nxpr-check-basic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Up to 3 users &middot; 5,000 interactions/month
+                <svg class="nxpr-check-lite" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Up to 200 knowledge sources &middot; Up to 4 users
               </li>
             </ul>
+          </div>
 
-            <!-- WhatsApp add-on -->
-            <div style="margin-top:18px;border:1.5px solid rgba(37,211,102,.30);border-radius:12px;padding:14px 16px;background:rgba(37,211,102,.04);display:flex;align-items:flex-start;gap:12px;">
-              <svg viewBox="0 0 24 24" fill="#25D366" width="22" height="22" flex-shrink="0" style="flex-shrink:0;margin-top:1px;" aria-hidden="true">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.554 4.107 1.523 5.834L.057 23.882l6.239-1.637A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.808 9.808 0 01-5.007-1.375l-.36-.214-3.702.971.988-3.61-.235-.372A9.794 9.794 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182c5.43 0 9.818 4.388 9.818 9.818 0 5.43-4.388 9.818-9.818 9.818z"/>
+          <!-- Nexy Companion block -->
+          <div class="nxpr-nexy-block">
+            <div class="nxpr-nexy-head">
+              <svg viewBox="0 0 14 14" fill="none" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round">
+                <circle cx="7" cy="5.5" r="3"/>
+                <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4"/>
+                <path d="M9.5 3.5l1.5-1.5M4.5 3.5L3 2"/>
               </svg>
-              <div>
-                <div style="font-size:.82rem;font-weight:800;color:#1a7a3c;margin-bottom:3px;">Nexy &amp; Chatbot on WhatsApp <span style="font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(37,211,102,.18);color:#1a7a3c;border-radius:4px;padding:1px 7px;margin-left:5px;">Add-on</span></div>
-                <div style="font-size:.80rem;color:#2a3f5a;line-height:1.5;">Extend Nexy and your governed chatbot to WhatsApp — same knowledge, same governance, on the world's largest messaging platform.</div>
-                <div style="font-size:.82rem;font-weight:800;color:#1a7a3c;margin-top:7px;">+ $400 / year</div>
-              </div>
+              <span class="nxpr-nexy-label">Nexy Companion Framework</span>
+            </div>
+            <div class="nxpr-cap-grid">
+              <span class="nxpr-cap-key">Conversation Playbooks</span>
+              <span class="nxpr-cap-val">2</span>
+              <span class="nxpr-cap-key">AI Personas</span>
+              <span class="nxpr-cap-val">2</span>
+              <span class="nxpr-cap-key">Conversations / month</span>
+              <span class="nxpr-cap-val">2,000</span>
+              <span class="nxpr-cap-key">Conversation overage</span>
+              <span class="nxpr-cap-val nxpr-cap-val-accent">+$25 / 2,000</span>
+            </div>
+            <div class="nxpr-cap-badges">
+              <span class="nxpr-cap-badge">Signal Classification</span>
+              <span class="nxpr-cap-badge">Enquiry Scoring</span>
+              <span class="nxpr-cap-badge">Journey Tracking</span>
+            </div>
+          </div>
+
+          <!-- WhatsApp Outreach block -->
+          <div class="nxpr-wa-block">
+            <div class="nxpr-wa-head">
+              <svg viewBox="0 0 14 14" fill="#25D366" width="13" height="13" aria-hidden="true">
+                <path d="M10.17 8.48c-.17-.09-1.02-.5-1.18-.56-.16-.06-.27-.09-.39.09-.12.17-.44.56-.54.67-.1.12-.2.13-.37.04-.17-.09-.73-.27-1.39-.86-.51-.46-.86-1.02-.96-1.19-.1-.17-.01-.27.08-.35.08-.08.17-.2.26-.3.09-.1.12-.17.17-.29.06-.11.03-.21-.01-.3-.04-.09-.39-.94-.53-1.29-.14-.34-.28-.29-.39-.3l-.33-.01c-.11 0-.3.04-.46.22-.16.17-.6.59-.6 1.44 0 .85.62 1.67.71 1.79.08.11 1.22 1.86 2.95 2.61.41.18.73.28.98.36.41.13.79.11 1.08.07.33-.05 1.02-.42 1.16-.82.14-.4.14-.75.1-.82-.04-.07-.16-.11-.33-.2z"/>
+                <path d="M7 .5C3.41.5.5 3.41.5 7c0 1.23.32 2.39.88 3.39L.5 13.5l3.23-.95C4.69 13.17 5.82 13.5 7 13.5c3.59 0 6.5-2.91 6.5-6.5S10.59.5 7 .5zm0 11.9c-1.06 0-2.07-.3-2.93-.81l-.21-.12-2.15.56.57-2.09-.14-.22A5.37 5.37 0 011.63 7C1.63 4.05 4.05 1.63 7 1.63c2.94 0 5.37 2.42 5.37 5.37 0 2.94-2.43 5.4-5.37 5.4z"/>
+              </svg>
+              <span class="nxpr-wa-label">WhatsApp Outreach</span>
+            </div>
+            <div class="nxpr-wa-cap-grid">
+              <span class="nxpr-wa-key">Active Campaigns</span>
+              <span class="nxpr-wa-val">1</span>
+              <span class="nxpr-wa-key">Outreach Messages / month</span>
+              <span class="nxpr-wa-val">2,000</span>
+              <span class="nxpr-wa-key">Message Templates</span>
+              <span class="nxpr-wa-val">3</span>
+              <span class="nxpr-wa-key">Message overage</span>
+              <span class="nxpr-wa-val" style="color:#1a7a3c;font-weight:800;">+$25 / 2,000</span>
+            </div>
+            <div class="nxpr-wa-footer">
+              <span class="nxpr-wa-incl">
+                <svg viewBox="0 0 10 10" fill="none"><polyline points="2,5.5 4,7.5 8,3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                WhatsApp API costs included
+              </span>
             </div>
           </div>
 
           <div class="nxpr-card-cta">
-            <a href="#" class="nxpr-btn nxpr-btn-basic" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
-              Get started with Basic
+            <a href="#" class="nxpr-btn nxpr-btn-lite" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+              Get started with Orbit Lite
             </a>
           </div>
         </div>
 
-        <!-- ─── PREMIUM ─── -->
-        <div class="nxpr-card nxpr-card-premium">
-          <div class="nxpr-popular-badge">Most Popular</div>
-
+        <!-- ─── ORBIT ─── -->
+        <div class="nxpr-card">
           <div class="nxpr-card-head">
-            <div class="nxpr-plan-icon nxpr-plan-icon-premium">
-              <svg viewBox="0 0 26 26" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2l2.8 5.6L22 8.6l-4.5 4.4 1.06 6.2L13 16.2l-5.56 3-1.06-6.2L2 8.6l6.2-1 2.8-5.6z"/>
+            <div class="nxpr-plan-icon nxpr-plan-icon-orbit">
+              <svg viewBox="0 0 26 26" fill="none" stroke="#214dbb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="13" cy="13" r="10"/>
+                <ellipse cx="13" cy="13" rx="4" ry="10"/>
+                <line x1="3" y1="13" x2="23" y2="13"/>
               </svg>
             </div>
-            <div class="nxpr-plan-tier nxpr-plan-tier-premium">Premium</div>
-            <div class="nxpr-plan-name">Nexus Intelligence</div>
-            <div class="nxpr-plan-tagline">Everything in Core, plus autonomous Sales Orchestration — Nexus AI that doesn't just answer, it acts on your behalf.</div>
+            <div class="nxpr-plan-tier nxpr-plan-tier-orbit">NEXUS ORBIT</div>
+            <div class="nxpr-plan-name">Orbit</div>
+            <div class="nxpr-plan-tagline">The governed AI foundation for growing teams — knowledge, escalation, Nexy Companion, and WhatsApp outreach included from day one.</div>
           </div>
 
           <div class="nxpr-price-block">
             <div class="nxpr-price-label">Annual Subscription</div>
+            <div class="nxpr-save-row">
+              <span class="nxpr-save-badge">Save 30%</span>
+              <span class="nxpr-price-was">$4,680</span>
+            </div>
             <div class="nxpr-price-row">
               <span class="nxpr-price-currency">$</span>
-              <span class="nxpr-price-amount">2,490</span>
+              <span class="nxpr-price-amount">3,600</span>
               <span class="nxpr-price-period">/ year</span>
             </div>
-            <div class="nxpr-price-note">$208 / month equivalent</div>
+            <div class="nxpr-price-note">$300 / month equivalent</div>
             <hr class="nxpr-price-sep">
             <div class="nxpr-onboard-row">
               <span class="nxpr-onboard-label">One-time Onboarding</span>
@@ -584,120 +776,347 @@
           </div>
 
           <div class="nxpr-features">
-            <div class="nxpr-features-label">Everything in Basic, plus</div>
+            <div class="nxpr-features-label">Platform included</div>
             <ul class="nxpr-feature-list">
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <span>Sales Orchestration <span class="nxpr-feature-new">New</span></span>
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                7-Layer Governance Routing Chain
               </li>
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Autonomous lead qualification &amp; nurture flows
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Knowledge Lifecycle — Draft to Published with backward testing
               </li>
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                CRM sync &amp; deal stage automation
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Knowledge Gap Detection &amp; Gap-to-Source workflow
               </li>
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Multi-tenant knowledge isolation
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Human Escalation with full conversation context transfer
               </li>
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Advanced identity verification flows
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Website Chat Widget — embeds on any domain
               </li>
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Analytics dashboard &amp; conversation intelligence
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Nexus Studio, Live Console &amp; Administration
               </li>
               <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Up to 10 users &middot; 25,000 interactions/month
-              </li>
-              <li>
-                <svg class="nxpr-check-premium" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Priority support &amp; onboarding concierge
+                <svg class="nxpr-check-orbit" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Up to 200 knowledge sources &middot; Up to 10 users
               </li>
             </ul>
           </div>
 
+          <!-- Nexy Companion block -->
+          <div class="nxpr-nexy-block">
+            <div class="nxpr-nexy-head">
+              <svg viewBox="0 0 14 14" fill="none" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round">
+                <circle cx="7" cy="5.5" r="3"/>
+                <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4"/>
+                <path d="M9.5 3.5l1.5-1.5M4.5 3.5L3 2"/>
+              </svg>
+              <span class="nxpr-nexy-label">Nexy Companion Framework</span>
+            </div>
+            <div class="nxpr-cap-grid">
+              <span class="nxpr-cap-key">Conversation Playbooks</span>
+              <span class="nxpr-cap-val">4</span>
+              <span class="nxpr-cap-key">AI Personas</span>
+              <span class="nxpr-cap-val">5</span>
+              <span class="nxpr-cap-key">Conversations / month</span>
+              <span class="nxpr-cap-val">5,000</span>
+              <span class="nxpr-cap-key">Conversation overage</span>
+              <span class="nxpr-cap-val nxpr-cap-val-accent">+$25 / 2,000</span>
+            </div>
+            <div class="nxpr-cap-badges">
+              <span class="nxpr-cap-badge">Signal Classification</span>
+              <span class="nxpr-cap-badge">Enquiry Scoring</span>
+              <span class="nxpr-cap-badge">Journey Tracking</span>
+            </div>
+          </div>
+
+          <!-- WhatsApp Outreach block -->
+          <div class="nxpr-wa-block">
+            <div class="nxpr-wa-head">
+              <svg viewBox="0 0 14 14" fill="#25D366" width="13" height="13" aria-hidden="true">
+                <path d="M10.17 8.48c-.17-.09-1.02-.5-1.18-.56-.16-.06-.27-.09-.39.09-.12.17-.44.56-.54.67-.1.12-.2.13-.37.04-.17-.09-.73-.27-1.39-.86-.51-.46-.86-1.02-.96-1.19-.1-.17-.01-.27.08-.35.08-.08.17-.2.26-.3.09-.1.12-.17.17-.29.06-.11.03-.21-.01-.3-.04-.09-.39-.94-.53-1.29-.14-.34-.28-.29-.39-.3l-.33-.01c-.11 0-.3.04-.46.22-.16.17-.6.59-.6 1.44 0 .85.62 1.67.71 1.79.08.11 1.22 1.86 2.95 2.61.41.18.73.28.98.36.41.13.79.11 1.08.07.33-.05 1.02-.42 1.16-.82.14-.4.14-.75.1-.82-.04-.07-.16-.11-.33-.2z"/>
+                <path d="M7 .5C3.41.5.5 3.41.5 7c0 1.23.32 2.39.88 3.39L.5 13.5l3.23-.95C4.69 13.17 5.82 13.5 7 13.5c3.59 0 6.5-2.91 6.5-6.5S10.59.5 7 .5zm0 11.9c-1.06 0-2.07-.3-2.93-.81l-.21-.12-2.15.56.57-2.09-.14-.22A5.37 5.37 0 011.63 7C1.63 4.05 4.05 1.63 7 1.63c2.94 0 5.37 2.42 5.37 5.37 0 2.94-2.43 5.4-5.37 5.4z"/>
+              </svg>
+              <span class="nxpr-wa-label">WhatsApp Outreach</span>
+            </div>
+            <div class="nxpr-wa-cap-grid">
+              <span class="nxpr-wa-key">Active Campaigns</span>
+              <span class="nxpr-wa-val">1</span>
+              <span class="nxpr-wa-key">Outreach Messages / month</span>
+              <span class="nxpr-wa-val">5,000</span>
+              <span class="nxpr-wa-key">Message Templates</span>
+              <span class="nxpr-wa-val">3</span>
+              <span class="nxpr-wa-key">Message overage</span>
+              <span class="nxpr-wa-val" style="color:#1a7a3c;font-weight:800;">+$25 / 2,000</span>
+            </div>
+            <div class="nxpr-wa-footer">
+              <span class="nxpr-wa-incl">
+                <svg viewBox="0 0 10 10" fill="none"><polyline points="2,5.5 4,7.5 8,3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                WhatsApp API costs included
+              </span>
+            </div>
+          </div>
+
           <div class="nxpr-card-cta">
-            <a href="#" class="nxpr-btn nxpr-btn-premium" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
-              Get started with Premium
+            <a href="#" class="nxpr-btn nxpr-btn-orbit" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+              Get started with Orbit
             </a>
           </div>
         </div>
 
-        <!-- ─── ADVANCED ─── -->
-        <div class="nxpr-card nxpr-card-advanced">
+        <!-- ─── ORBIT PRO ─── -->
+        <div class="nxpr-card nxpr-card-pro">
+          <div class="nxpr-popular-badge">Most Popular</div>
 
           <div class="nxpr-card-head">
-            <div class="nxpr-plan-icon nxpr-plan-icon-advanced">
+            <div class="nxpr-plan-icon nxpr-plan-icon-pro">
               <svg viewBox="0 0 26 26" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="13" cy="13" r="10.5"/>
-                <path d="M9 13l3 3 5-5"/>
-                <path d="M13 3v2M13 21v2M3 13h2M21 13h2"/>
+                <path d="M13 2l2.8 5.6L22 8.6l-4.5 4.4 1.06 6.2L13 16.2l-5.56 3L6.5 13 2 8.6l6.2-1L13 2z"/>
               </svg>
             </div>
-            <div class="nxpr-plan-tier nxpr-plan-tier-advanced">Advanced</div>
-            <div class="nxpr-plan-name">Nexus Enterprise</div>
-            <div class="nxpr-plan-tagline">Fully custom architecture, dedicated infrastructure, bespoke agentic workflows, and enterprise SLAs — priced to your scale and complexity.</div>
+            <div class="nxpr-plan-tier nxpr-plan-tier-pro">NEXUS ORBIT</div>
+            <div class="nxpr-plan-name">Orbit Pro</div>
+            <div class="nxpr-plan-tagline">Everything in Orbit, plus identity verification, advanced access controls, and expanded Nexy capacity — built for ambitious mid-market teams.</div>
           </div>
 
           <div class="nxpr-price-block">
-            <div class="nxpr-price-label">Custom Pricing</div>
-            <div class="nxpr-price-row">
-              <span class="nxpr-custom-price">Let's talk</span>
+            <div class="nxpr-price-label">Annual Subscription</div>
+            <div class="nxpr-save-row">
+              <span class="nxpr-save-badge">Save 30%</span>
+              <span class="nxpr-price-was">$8,580</span>
             </div>
-            <div class="nxpr-price-note">Tailored to your tenant count, workflow depth, and integration scope</div>
+            <div class="nxpr-price-row">
+              <span class="nxpr-price-currency">$</span>
+              <span class="nxpr-price-amount">6,600</span>
+              <span class="nxpr-price-period">/ year</span>
+            </div>
+            <div class="nxpr-price-note">$550 / month equivalent</div>
             <hr class="nxpr-price-sep">
             <div class="nxpr-onboard-row">
-              <span class="nxpr-onboard-label">Onboarding &amp; Implementation</span>
-              <span class="nxpr-onboard-amount">Custom</span>
+              <span class="nxpr-onboard-label">One-time Onboarding</span>
+              <span class="nxpr-onboard-amount">$2,500</span>
             </div>
           </div>
 
           <div class="nxpr-features">
-            <div class="nxpr-features-label">Everything in Premium, plus</div>
+            <div class="nxpr-features-label">Everything in Orbit, plus</div>
             <ul class="nxpr-feature-list">
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Dedicated Nexus ORBIT infrastructure
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Identity Verification Flows &amp; Identity Registry
               </li>
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Custom agentic workflow design &amp; build
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                SafeGuard — hard access ceiling per identity type
               </li>
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Unlimited tenants, users &amp; interactions
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Category Identity Route — channel + category + identity routing
               </li>
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                White-label Nexy Companion with your brand identity
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Companion Dashboard — live stage, signal &amp; score monitoring
               </li>
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                On-premise or private cloud deployment options
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Conversion Mechanisms — 8 types including Lead Capture &amp; Meeting Booking
               </li>
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                SLA-backed uptime, dedicated support engineer
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Priority support &amp; onboarding concierge
               </li>
               <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                ERP, HRMS &amp; third-party deep integrations
-              </li>
-              <li>
-                <svg class="nxpr-check-advanced" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Governance audit trails &amp; compliance reporting
+                <svg class="nxpr-check-pro" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Up to 500 knowledge sources &middot; Up to 30 users
               </li>
             </ul>
           </div>
 
+          <!-- Nexy Companion block -->
+          <div class="nxpr-nexy-block">
+            <div class="nxpr-nexy-head">
+              <svg viewBox="0 0 14 14" fill="none" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round">
+                <circle cx="7" cy="5.5" r="3"/>
+                <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4"/>
+                <path d="M9.5 3.5l1.5-1.5M4.5 3.5L3 2"/>
+              </svg>
+              <span class="nxpr-nexy-label">Nexy Companion Framework</span>
+            </div>
+            <div class="nxpr-cap-grid">
+              <span class="nxpr-cap-key">Conversation Playbooks</span>
+              <span class="nxpr-cap-val">6</span>
+              <span class="nxpr-cap-key">AI Personas</span>
+              <span class="nxpr-cap-val">10</span>
+              <span class="nxpr-cap-key">Conversations / month</span>
+              <span class="nxpr-cap-val">12,000</span>
+              <span class="nxpr-cap-key">Conversation overage</span>
+              <span class="nxpr-cap-val nxpr-cap-val-accent">+$20 / 1,000</span>
+            </div>
+            <div class="nxpr-cap-badges">
+              <span class="nxpr-cap-badge">Signal Classification</span>
+              <span class="nxpr-cap-badge">Enquiry Scoring</span>
+              <span class="nxpr-cap-badge">Journey Tracking</span>
+              <span class="nxpr-cap-badge">Companion Dashboard</span>
+              <span class="nxpr-cap-badge">Conversion Mechanisms</span>
+            </div>
+          </div>
+
+          <!-- WhatsApp Outreach block -->
+          <div class="nxpr-wa-block">
+            <div class="nxpr-wa-head">
+              <svg viewBox="0 0 14 14" fill="#25D366" width="13" height="13" aria-hidden="true">
+                <path d="M10.17 8.48c-.17-.09-1.02-.5-1.18-.56-.16-.06-.27-.09-.39.09-.12.17-.44.56-.54.67-.1.12-.2.13-.37.04-.17-.09-.73-.27-1.39-.86-.51-.46-.86-1.02-.96-1.19-.1-.17-.01-.27.08-.35.08-.08.17-.2.26-.3.09-.1.12-.17.17-.29.06-.11.03-.21-.01-.3-.04-.09-.39-.94-.53-1.29-.14-.34-.28-.29-.39-.3l-.33-.01c-.11 0-.3.04-.46.22-.16.17-.6.59-.6 1.44 0 .85.62 1.67.71 1.79.08.11 1.22 1.86 2.95 2.61.41.18.73.28.98.36.41.13.79.11 1.08.07.33-.05 1.02-.42 1.16-.82.14-.4.14-.75.1-.82-.04-.07-.16-.11-.33-.2z"/>
+                <path d="M7 .5C3.41.5.5 3.41.5 7c0 1.23.32 2.39.88 3.39L.5 13.5l3.23-.95C4.69 13.17 5.82 13.5 7 13.5c3.59 0 6.5-2.91 6.5-6.5S10.59.5 7 .5zm0 11.9c-1.06 0-2.07-.3-2.93-.81l-.21-.12-2.15.56.57-2.09-.14-.22A5.37 5.37 0 011.63 7C1.63 4.05 4.05 1.63 7 1.63c2.94 0 5.37 2.42 5.37 5.37 0 2.94-2.43 5.4-5.37 5.4z"/>
+              </svg>
+              <span class="nxpr-wa-label">WhatsApp Outreach</span>
+            </div>
+            <div class="nxpr-wa-cap-grid">
+              <span class="nxpr-wa-key">Active Campaigns</span>
+              <span class="nxpr-wa-val">5</span>
+              <span class="nxpr-wa-key">Outreach Messages / month</span>
+              <span class="nxpr-wa-val">12,000</span>
+              <span class="nxpr-wa-key">Message Templates</span>
+              <span class="nxpr-wa-val">15</span>
+            </div>
+            <div class="nxpr-wa-footer">
+              <span class="nxpr-wa-incl">
+                <svg viewBox="0 0 10 10" fill="none"><polyline points="2,5.5 4,7.5 8,3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                WhatsApp API costs included
+              </span>
+            </div>
+          </div>
+
           <div class="nxpr-card-cta">
-            <a href="#" class="nxpr-btn nxpr-btn-advanced" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
-              Talk to our team
+            <a href="#" class="nxpr-btn nxpr-btn-pro" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+              Get started with Orbit Pro
+            </a>
+          </div>
+        </div>
+
+        <!-- ─── ORBIT COMMAND ─── -->
+        <div class="nxpr-card nxpr-card-command">
+
+          <div class="nxpr-card-head">
+            <div class="nxpr-plan-icon nxpr-plan-icon-command">
+              <svg viewBox="0 0 26 26" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13,2 16,9 24,9 18,14 20,22 13,17 6,22 8,14 2,9 10,9"/>
+              </svg>
+            </div>
+            <div class="nxpr-plan-tier nxpr-plan-tier-command">NEXUS ORBIT</div>
+            <div class="nxpr-plan-name">Orbit Command</div>
+            <div class="nxpr-plan-tagline">The complete platform — unlimited Nexy capacity, unlimited WhatsApp outreach, and full NEXUS AGENTIC for your most ambitious AI deployments.</div>
+          </div>
+
+          <div class="nxpr-price-block">
+            <div class="nxpr-price-label">Annual Subscription</div>
+            <div class="nxpr-save-row">
+              <span class="nxpr-save-badge">Save 30%</span>
+              <span class="nxpr-price-was">$14,040</span>
+            </div>
+            <div class="nxpr-price-row">
+              <span class="nxpr-price-currency">$</span>
+              <span class="nxpr-price-amount">10,800</span>
+              <span class="nxpr-price-period">/ year</span>
+            </div>
+            <div class="nxpr-price-note">$900 / month equivalent</div>
+            <hr class="nxpr-price-sep">
+            <div class="nxpr-onboard-row">
+              <span class="nxpr-onboard-label">One-time Onboarding</span>
+              <span class="nxpr-onboard-amount">$4,000</span>
+            </div>
+          </div>
+
+          <div class="nxpr-features">
+            <div class="nxpr-features-label">Everything in Orbit Pro, plus</div>
+            <ul class="nxpr-feature-list">
+              <li>
+                <svg class="nxpr-check-command" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                NEXUS AGENTIC Sales Pack — autonomous enquiry-to-opportunity flow
+              </li>
+              <li>
+                <svg class="nxpr-check-command" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                NEXUS AGENTIC Purchase Pack — vendor &amp; procurement intelligence
+              </li>
+              <li>
+                <svg class="nxpr-check-command" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Approval Engine — governed multi-step approvals via AI
+              </li>
+              <li>
+                <svg class="nxpr-check-command" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Custom AI Behaviour Profiles per channel &amp; category
+              </li>
+              <li>
+                <svg class="nxpr-check-command" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Dedicated support engineer
+              </li>
+              <li>
+                <svg class="nxpr-check-command" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,8.5 7,10.5 11,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Unlimited knowledge sources &middot; Unlimited users
+              </li>
+            </ul>
+          </div>
+
+          <!-- Nexy Companion block -->
+          <div class="nxpr-nexy-block">
+            <div class="nxpr-nexy-head">
+              <svg viewBox="0 0 14 14" fill="none" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round">
+                <circle cx="7" cy="5.5" r="3"/>
+                <path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4"/>
+                <path d="M9.5 3.5l1.5-1.5M4.5 3.5L3 2"/>
+              </svg>
+              <span class="nxpr-nexy-label">Nexy Companion Framework</span>
+            </div>
+            <div class="nxpr-cap-grid">
+              <span class="nxpr-cap-key">Conversation Playbooks</span>
+              <span class="nxpr-cap-val nxpr-cap-val-accent">Unlimited</span>
+              <span class="nxpr-cap-key">AI Personas</span>
+              <span class="nxpr-cap-val nxpr-cap-val-accent">Unlimited</span>
+              <span class="nxpr-cap-key">Conversations / month</span>
+              <span class="nxpr-cap-val nxpr-cap-val-accent">Unlimited</span>
+              <span class="nxpr-cap-key">Conversation overage</span>
+              <span class="nxpr-cap-val">None</span>
+            </div>
+            <div class="nxpr-cap-badges">
+              <span class="nxpr-cap-badge">All Orbit Pro features</span>
+              <span class="nxpr-cap-badge">Custom Persona Architecture</span>
+              <span class="nxpr-cap-badge">Full Conversion Suite</span>
+            </div>
+          </div>
+
+          <!-- WhatsApp Outreach block -->
+          <div class="nxpr-wa-block">
+            <div class="nxpr-wa-head">
+              <svg viewBox="0 0 14 14" fill="#25D366" width="13" height="13" aria-hidden="true">
+                <path d="M10.17 8.48c-.17-.09-1.02-.5-1.18-.56-.16-.06-.27-.09-.39.09-.12.17-.44.56-.54.67-.1.12-.2.13-.37.04-.17-.09-.73-.27-1.39-.86-.51-.46-.86-1.02-.96-1.19-.1-.17-.01-.27.08-.35.08-.08.17-.2.26-.3.09-.1.12-.17.17-.29.06-.11.03-.21-.01-.3-.04-.09-.39-.94-.53-1.29-.14-.34-.28-.29-.39-.3l-.33-.01c-.11 0-.3.04-.46.22-.16.17-.6.59-.6 1.44 0 .85.62 1.67.71 1.79.08.11 1.22 1.86 2.95 2.61.41.18.73.28.98.36.41.13.79.11 1.08.07.33-.05 1.02-.42 1.16-.82.14-.4.14-.75.1-.82-.04-.07-.16-.11-.33-.2z"/>
+                <path d="M7 .5C3.41.5.5 3.41.5 7c0 1.23.32 2.39.88 3.39L.5 13.5l3.23-.95C4.69 13.17 5.82 13.5 7 13.5c3.59 0 6.5-2.91 6.5-6.5S10.59.5 7 .5zm0 11.9c-1.06 0-2.07-.3-2.93-.81l-.21-.12-2.15.56.57-2.09-.14-.22A5.37 5.37 0 011.63 7C1.63 4.05 4.05 1.63 7 1.63c2.94 0 5.37 2.42 5.37 5.37 0 2.94-2.43 5.4-5.37 5.4z"/>
+              </svg>
+              <span class="nxpr-wa-label">WhatsApp Outreach</span>
+            </div>
+            <div class="nxpr-wa-cap-grid">
+              <span class="nxpr-wa-key">Active Campaigns</span>
+              <span class="nxpr-wa-val" style="color:#9a6500;font-weight:800;">Unlimited</span>
+              <span class="nxpr-wa-key">Outreach Messages / month</span>
+              <span class="nxpr-wa-val" style="color:#9a6500;font-weight:800;">Unlimited</span>
+              <span class="nxpr-wa-key">Message Templates</span>
+              <span class="nxpr-wa-val" style="color:#9a6500;font-weight:800;">Unlimited</span>
+            </div>
+            <div class="nxpr-wa-footer">
+              <span class="nxpr-wa-incl">
+                <svg viewBox="0 0 10 10" fill="none"><polyline points="2,5.5 4,7.5 8,3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                WhatsApp API costs included
+              </span>
+            </div>
+          </div>
+
+          <div class="nxpr-card-cta">
+            <a href="#" class="nxpr-btn nxpr-btn-command" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+              Get started with Orbit Command
             </a>
           </div>
         </div>
@@ -706,7 +1125,73 @@
     </div><!-- /.container -->
   </section>
 
-  <!-- ═══ WHAT'S INSIDE ═══ -->
+  <!-- ═══ CUSTOM ENGAGEMENT ═══ -->
+  <section class="nxpr-custom-band" id="custom">
+    <div class="container">
+      <div class="nxpr-custom-inner">
+
+        <div class="nxpr-custom-left">
+          <div class="nxpr-custom-kicker">
+            <svg viewBox="0 0 12 12" fill="currentColor" width="11" height="11"><polygon points="6,1 7.8,4.2 11.5,4.7 8.8,7.3 9.4,11 6,9.2 2.6,11 3.2,7.3 0.5,4.7 4.2,4.2"/></svg>
+            Custom Engagement
+          </div>
+          <h2 class="nxpr-custom-h2">
+            CRM Integration<br>+ <em>Business Orchestration</em>
+          </h2>
+          <p class="nxpr-custom-p">
+            When your business processes need to be woven directly into Nexus — not just advised through it — we scope a custom engagement. CRM integration, ERP connectivity, and the full NEXUS AGENTIC autonomous layer are designed and built to your operational blueprint.
+          </p>
+          <div class="nxpr-custom-badges">
+            <span class="nxpr-custom-badge">
+              <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="2.5"/></svg>
+              NEXUS AGENTIC Full
+            </span>
+            <span class="nxpr-custom-badge">
+              <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="2.5"/></svg>
+              CRM / ERP Integration
+            </span>
+            <span class="nxpr-custom-badge">
+              <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="2.5"/></svg>
+              Scoped Proposal in 48hrs
+            </span>
+          </div>
+          <a href="#" class="btn btn-primary" style="background:linear-gradient(135deg,#e0a62f,#c8860a);border:none;color:#fff;display:inline-block;" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+            Request a scoped proposal →
+          </a>
+          <p class="nxpr-custom-cta-note">No obligation. We'll map your workflows and return a proposal within 48 hours.</p>
+        </div>
+
+        <div class="nxpr-custom-right">
+          <div class="nxpr-custom-right-label">What this engagement covers</div>
+          <ul class="nxpr-custom-list">
+            <li>
+              <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,9 7.5,11.5 12,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong style="color:#fff;">CRM Integration</strong> — Nexus reads and writes to your CRM; AI interactions update records, stage pipelines, and trigger follow-ups automatically.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,9 7.5,11.5 12,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong style="color:#fff;">Business Orchestration</strong> — multi-step agentic workflows spanning departments, approval chains, and third-party systems.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,9 7.5,11.5 12,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong style="color:#fff;">NEXUS AGENTIC Full Suite</strong> — Sales Pack, Purchase Pack, and Approval Engine configured end-to-end for your business processes.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,9 7.5,11.5 12,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong style="color:#fff;">Dedicated Implementation</strong> — architecture, build, and launch managed by the Nexus engineering team with handover documentation.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="7" stroke="currentColor" stroke-width="1.5"/><polyline points="5,9 7.5,11.5 12,6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span><strong style="color:#fff;">Ongoing Governance</strong> — continued platform access on Orbit Command, plus a support retainer for workflow evolution.</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WHAT'S INSIDE EVERY PLAN ═══ -->
   <section class="nxpr-includes-band" id="whats-inside">
     <div class="container">
 
@@ -714,8 +1199,8 @@
         <svg viewBox="0 0 14 14" fill="currentColor" width="12" height="12"><rect x="1" y="1" width="4.5" height="4.5" rx=".8"/><rect x="8.5" y="1" width="4.5" height="4.5" rx=".8"/><rect x="1" y="8.5" width="4.5" height="4.5" rx=".8"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx=".8"/></svg>
         Platform Capabilities
       </div>
-      <h2 class="nxpr-section-title">Built on NEXUS ORBIT.<br>Powered by agentic intelligence.</h2>
-      <p class="nxpr-section-lead">Every plan is built on the same governed knowledge layer. What differs is the depth of autonomy and the scale of orchestration unlocked at each tier.</p>
+      <h2 class="nxpr-section-title">Every plan. The same governed engine.<br>Capacity that grows with you.</h2>
+      <p class="nxpr-section-lead">The intelligence layer doesn't change between tiers — only the capacity limits and depth of agentic automation available to you.</p>
 
       <div class="nxpr-includes-grid">
 
@@ -723,18 +1208,32 @@
         <div class="nxpr-inc-card">
           <div class="nxpr-inc-icon nxpr-inc-icon-blue">
             <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
-              <path d="M11 3l7 3v5.5c0 4-2.8 7.2-7 8.5C7.8 18.7 4 15.5 4 11.5V6L11 3z"/>
+              <path d="M11 3l7 3v5.5c0 4-2.8 7.2-7 8.5C8.8 18.7 5 15.5 5 11.5V6L11 3z"/>
               <polyline points="7.5,11 10,13.5 14.5,9"/>
             </svg>
           </div>
-          <div class="nxpr-inc-title">Knowledge Governance</div>
-          <div class="nxpr-inc-body">Author, version, and govern every response your AI delivers. Policy-enforced retrieval ensures no answer falls outside your approved knowledge base.</div>
-          <span class="nxpr-inc-plan-tag nxpr-tag-basic">All Plans</span>
+          <div class="nxpr-inc-title">7-Layer Governance</div>
+          <div class="nxpr-inc-body">Knowledge Foundation → Access Governance → Identity &amp; Verification → Intelligent Routing → AI Behaviour Profile → Governed Delivery → Human Escalation. Every response passes through every layer, every time.</div>
+          <span class="nxpr-inc-plan-tag nxpr-tag-all">All Plans</span>
+        </div>
+
+        <!-- Knowledge Lifecycle -->
+        <div class="nxpr-inc-card">
+          <div class="nxpr-inc-icon nxpr-inc-icon-teal">
+            <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="11" cy="11" r="8.5"/>
+              <polyline points="11,7 11,11 14,13"/>
+              <path d="M7 4.5l-2 2 2 2"/>
+            </svg>
+          </div>
+          <div class="nxpr-inc-title">Knowledge Lifecycle</div>
+          <div class="nxpr-inc-body">Author knowledge in Draft, run automated Backward Testing, move through Validation — only Publish what passes. Gap Detection flags unanswered questions and routes them back to your knowledge team.</div>
+          <span class="nxpr-inc-plan-tag nxpr-tag-all">All Plans</span>
         </div>
 
         <!-- Human Escalation -->
         <div class="nxpr-inc-card">
-          <div class="nxpr-inc-icon nxpr-inc-icon-teal">
+          <div class="nxpr-inc-icon nxpr-inc-icon-blue">
             <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
               <circle cx="8" cy="7" r="3.5"/>
               <path d="M2 19c0-3.3 2.7-6 6-6h.5"/>
@@ -743,41 +1242,40 @@
             </svg>
           </div>
           <div class="nxpr-inc-title">Human Escalation</div>
-          <div class="nxpr-inc-body">Seamless live-agent handoff with full conversation context, identity, and knowledge trail transferred — zero repetition for the customer.</div>
-          <span class="nxpr-inc-plan-tag nxpr-tag-basic">All Plans</span>
+          <div class="nxpr-inc-body">8 trigger types — Low Confidence, No Approved Knowledge, User Requested Human, Qualified Enquiry, Support Required, Restricted Topic, Repeated Fallback, and Other. Full context transfer — no customer ever repeats themselves.</div>
+          <span class="nxpr-inc-plan-tag nxpr-tag-all">All Plans</span>
         </div>
 
-        <!-- Nexy Companion -->
-        <div class="nxpr-inc-card">
-          <div class="nxpr-inc-icon nxpr-inc-icon-navy">
+        <!-- Nexy Companion Framework -->
+        <div class="nxpr-inc-card nxpr-inc-card-nexy">
+          <div class="nxpr-inc-icon nxpr-inc-icon-indigo">
             <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
               <circle cx="11" cy="8" r="4"/>
               <path d="M4 19c0-3.9 3.1-7 7-7h.5c3.9 0 7 3.1 7 7"/>
               <path d="M14.5 5.5l2-2M7.5 5.5l-2-2"/>
             </svg>
           </div>
-          <div class="nxpr-inc-title">Nexy Companion</div>
-          <div class="nxpr-inc-body">Your AI companion with a defined identity, persona, and role set. Nexy operates across knowledge delivery, escalation, and agentic task execution.</div>
-          <span class="nxpr-inc-plan-tag nxpr-tag-basic">All Plans</span>
+          <div class="nxpr-inc-title">Nexy Companion Framework</div>
+          <div class="nxpr-inc-body">Intent-driven AI companion with 11-stage conversation journey, 14-signal LLM classification, enquiry scoring (0–100), persona matching, and a configurable Playbook engine. In every plan — capacity limits vary by tier.</div>
+          <span class="nxpr-inc-plan-tag nxpr-tag-nexy">All Plans · Capacity varies</span>
         </div>
 
-        <!-- Sales Orchestration -->
-        <div class="nxpr-inc-card nxpr-inc-card-premium">
-          <div class="nxpr-inc-icon nxpr-inc-icon-blue">
+        <!-- WhatsApp Outreach -->
+        <div class="nxpr-inc-card nxpr-inc-card-wa">
+          <div class="nxpr-inc-icon nxpr-inc-icon-green">
             <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
-              <path d="M3 17l4-4 4 4 8-8"/>
-              <circle cx="19" cy="9" r="2"/>
-              <path d="M3 21h16"/>
+              <path d="M3 3h16v12H8l-5 4V3z"/>
+              <path d="M7 8h9M7 11h6"/>
             </svg>
           </div>
-          <div class="nxpr-inc-title">Sales Orchestration</div>
-          <div class="nxpr-inc-body">Autonomous qualification, objection handling, and deal progression — NEXUS AGENTIC works your pipeline while your team focuses on closing.</div>
-          <span class="nxpr-inc-plan-tag nxpr-tag-premium">Premium &amp; Advanced</span>
+          <div class="nxpr-inc-title">WhatsApp Outreach</div>
+          <div class="nxpr-inc-body">Run outbound campaigns, send templated messages, and engage prospects on WhatsApp — all governed by the same knowledge layer as your chat. WhatsApp Business API message costs are fully included in your plan. Campaign limits vary by tier.</div>
+          <span class="nxpr-inc-plan-tag nxpr-tag-wa">All Plans · API costs included</span>
         </div>
 
-        <!-- Agentic Workflows -->
-        <div class="nxpr-inc-card nxpr-inc-card-premium">
-          <div class="nxpr-inc-icon nxpr-inc-icon-indigo">
+        <!-- NEXUS AGENTIC -->
+        <div class="nxpr-inc-card nxpr-inc-card-gold">
+          <div class="nxpr-inc-icon nxpr-inc-icon-gold">
             <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
               <rect x="2" y="3" width="6" height="6" rx="1.5"/>
               <rect x="14" y="3" width="6" height="6" rx="1.5"/>
@@ -785,57 +1283,11 @@
               <path d="M5 9v2.5a2 2 0 002 2h2M17 9v2.5a2 2 0 01-2 2h-2"/>
             </svg>
           </div>
-          <div class="nxpr-inc-title">Agentic Workflows</div>
-          <div class="nxpr-inc-body">Multi-step autonomous workflows that span your knowledge base, CRM, ERP, and communication channels — triggered by conversation, not cron jobs.</div>
-          <span class="nxpr-inc-plan-tag nxpr-tag-premium">Premium &amp; Advanced</span>
+          <div class="nxpr-inc-title">NEXUS AGENTIC</div>
+          <div class="nxpr-inc-body">The autonomous execution layer — Sales Pack, Purchase Pack, and Approval Engine. Triggered by AI conversation, not manual input. Available in Orbit Command, and fully custom-scoped in the CRM Integration + Business Orchestration engagement.</div>
+          <span class="nxpr-inc-plan-tag nxpr-tag-custom">Orbit Command &amp; Custom</span>
         </div>
 
-        <!-- Custom Architecture -->
-        <div class="nxpr-inc-card nxpr-inc-card-advanced">
-          <div class="nxpr-inc-icon nxpr-inc-icon-teal">
-            <svg viewBox="0 0 22 22" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.8" stroke-linecap="round">
-              <circle cx="11" cy="11" r="8.5"/>
-              <circle cx="11" cy="11" r="3.5"/>
-              <path d="M11 2.5v3M11 16.5v3M2.5 11h3M16.5 11h3"/>
-            </svg>
-          </div>
-          <div class="nxpr-inc-title">Custom Architecture</div>
-          <div class="nxpr-inc-body">Bespoke deployment topology, dedicated infrastructure, custom integrations, and a white-labelled Nexy Companion that carries your brand.</div>
-          <span class="nxpr-inc-plan-tag nxpr-tag-advanced">Advanced Only</span>
-        </div>
-
-      </div><!-- /.nxpr-includes-grid -->
-    </div>
-  </section>
-
-  <!-- ═══ AGENTIC BACKBONE CALLOUT ═══ -->
-  <section class="nxpr-agentic-band">
-    <div class="container">
-      <div class="nxpr-agentic-inner">
-        <div class="nxpr-agentic-copy">
-          <div class="nxpr-agentic-kicker">NEXUS AGENTIC</div>
-          <h2 class="nxpr-agentic-h2">Every plan runs on an agentic backbone. It just gets deeper as you grow.</h2>
-          <p class="nxpr-agentic-p">NEXUS AGENTIC is not an add-on — it's the autonomous execution layer woven into every tier of the platform. Basic gives you your first agentic companion. Premium unlocks orchestrated sales and operations. Advanced removes all limits.</p>
-          <div class="nxpr-agentic-badges">
-            <span class="nxpr-agentic-badge">
-              <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="2.5"/></svg>
-              Agentic by default
-            </span>
-            <span class="nxpr-agentic-badge">
-              <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="2.5"/></svg>
-              Governed always
-            </span>
-            <span class="nxpr-agentic-badge">
-              <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="2.5"/></svg>
-              Scales with you
-            </span>
-          </div>
-        </div>
-        <div class="nxpr-agentic-cta">
-          <a href="/how-nexus-works" class="btn btn-secondary" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:#fff;">
-            See the architecture →
-          </a>
-        </div>
       </div>
     </div>
   </section>
@@ -848,39 +1300,49 @@
         <svg viewBox="0 0 14 14" fill="none" width="12" height="12" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5.5"/><path d="M5.5 5.3a1.8 1.8 0 013.4.9C8.9 7.5 7 7.9 7 9M7 11v.5" stroke-linecap="round"/></svg>
         Common Questions
       </div>
-      <h2 class="nxpr-section-title">Questions about pricing</h2>
-      <p class="nxpr-section-lead">Still deciding? Here are the answers we hear most often.</p>
+      <h2 class="nxpr-section-title">Pricing questions answered</h2>
+      <p class="nxpr-section-lead">Everything you need to decide which plan fits your business.</p>
 
       <div class="nxpr-faq-grid">
 
         <div class="nxpr-faq-item">
           <p class="nxpr-faq-q">What does the onboarding fee cover?</p>
-          <p class="nxpr-faq-a">The one-time onboarding fee covers environment setup, knowledge base structuring, channel configuration, identity policy setup, and a guided launch session with your team. It ensures your platform is production-ready from day one — not just installed.</p>
+          <p class="nxpr-faq-a">The one-time onboarding fee covers environment setup, knowledge base structuring, channel configuration, identity policy setup, Nexy Companion configuration, and a guided launch session with your team. It ensures your platform is production-ready from day one — not just installed.</p>
         </div>
 
         <div class="nxpr-faq-item">
-          <p class="nxpr-faq-q">Can I upgrade from Basic to Premium later?</p>
-          <p class="nxpr-faq-a">Yes — plan upgrades are prorated. Your knowledge base, conversations, and configurations carry over without any migration work. Upgrades typically activate within one business day.</p>
+          <p class="nxpr-faq-q">Are WhatsApp Business API costs really included?</p>
+          <p class="nxpr-faq-a">Yes — all three plans include WhatsApp Business API message costs within the campaign and message limits for your tier. There are no surprise per-message charges on top of your subscription. If you exceed your monthly message limit, additional messages can be purchased as a block.</p>
         </div>
 
         <div class="nxpr-faq-item">
-          <p class="nxpr-faq-q">What counts as an "interaction"?</p>
-          <p class="nxpr-faq-a">An interaction is a complete visitor conversation session — regardless of the number of messages within it. Agentic background tasks (CRM sync, workflow steps) do not count toward your interaction quota.</p>
+          <p class="nxpr-faq-q">How do conversation overage charges work?</p>
+          <p class="nxpr-faq-a">Orbit is capped at 3,000 conversations per month; Orbit Pro at 10,000. Orbit Command has no cap. If you exceed your monthly limit, overage is billed at +$25 per 1,000 conversations (Orbit) or +$20 per 1,000 (Orbit Pro). Overage is charged at the end of each billing month. You can upgrade at any time to avoid overage.</p>
         </div>
 
         <div class="nxpr-faq-item">
-          <p class="nxpr-faq-q">Is there a free trial available?</p>
-          <p class="nxpr-faq-a">We offer a guided 14-day proof-of-concept for qualified organisations. During PoC you get a fully configured Basic environment with your own knowledge content loaded — so you evaluate with real data, not demo data.</p>
+          <p class="nxpr-faq-q">What's the difference between a Playbook and a Persona?</p>
+          <p class="nxpr-faq-a">A <strong>Persona</strong> is Nexy's identity configuration — name, tone, role, and communication style. A <strong>Playbook</strong> is the structured conversation strategy that guides how Nexy advances a visitor through the 11-stage journey. One Playbook can use multiple Personas, and different channels or categories can run different Playbooks.</p>
         </div>
 
         <div class="nxpr-faq-item">
-          <p class="nxpr-faq-q">Does the Basic plan support the website chat widget?</p>
-          <p class="nxpr-faq-a">Yes. All plans include the embeddable website chat widget. Register your domain once in the admin panel and the widget loads on every page of that domain automatically — one script tag, site-wide coverage.</p>
+          <p class="nxpr-faq-q">What counts as a conversation?</p>
+          <p class="nxpr-faq-a">A conversation is a complete visitor session — from first message to close, regardless of the number of exchanges within it. WhatsApp outreach messages are counted separately against your outreach message limit, not your conversation quota. Agentic background tasks do not count toward either limit.</p>
         </div>
 
         <div class="nxpr-faq-item">
-          <p class="nxpr-faq-q">How does Advanced custom pricing work?</p>
-          <p class="nxpr-faq-a">Advanced pricing is scoped to your deployment — tenant count, expected interaction volume, infrastructure requirements, custom workflow complexity, and integration depth. Reach out via the chat and we'll turn around a proposal within 48 hours.</p>
+          <p class="nxpr-faq-q">Can I upgrade my plan later?</p>
+          <p class="nxpr-faq-a">Yes — upgrades are prorated to your remaining annual term. Your knowledge base, conversations, Nexy configuration, WhatsApp campaigns, and all settings carry over without migration work. Upgrades typically activate within one business day.</p>
+        </div>
+
+        <div class="nxpr-faq-item">
+          <p class="nxpr-faq-q">Is there a proof-of-concept period?</p>
+          <p class="nxpr-faq-a">We offer a guided 14-day proof of concept for qualified organisations on Orbit or Orbit Pro. During the PoC you get a fully configured environment with your own knowledge content loaded — so you evaluate with real business data, not a demo. Chat with us to check qualification criteria.</p>
+        </div>
+
+        <div class="nxpr-faq-item">
+          <p class="nxpr-faq-q">What does the Custom engagement include that Orbit Command doesn't?</p>
+          <p class="nxpr-faq-a">Orbit Command gives you the full platform with unlimited capacity. The Custom engagement adds direct CRM/ERP integration (Nexus reads and writes to your business systems), bespoke multi-step business orchestration workflows, and a dedicated implementation team who designs and builds the agentic layer to your operational blueprint.</p>
         </div>
 
       </div>
@@ -895,10 +1357,10 @@
         <div class="ncf-prod-card">
           <img src="/assets/digitz_ai_nexus/images/nexus-chat-agent-icon.svg" alt="" class="ncf-prod-icon"/>
           <div class="ncf-prod-body">
-            <strong>Start with Basic</strong>
-            <span>Governed knowledge, human escalation, and Nexy Companion — your complete AI foundation, live in days not months.</span>
+            <strong>Orbit Lite</strong>
+            <span>The full platform for micro-teams — governed knowledge, Nexy Companion, and WhatsApp outreach for up to 4 users.</span>
             <div class="ncf-prod-tags">
-              <span>$890/yr</span><span>$500 onboarding</span><span>Live in days</span>
+              <span>$1,400/yr</span><span>$750 onboarding</span><span>4 users</span>
             </div>
           </div>
         </div>
@@ -906,10 +1368,21 @@
         <div class="ncf-prod-card">
           <img src="/assets/digitz_ai_nexus/images/nexus-chat-agent-icon.svg" alt="" class="ncf-prod-icon"/>
           <div class="ncf-prod-body">
-            <strong>Go Premium</strong>
-            <span>Add autonomous Sales Orchestration and multi-tenant intelligence to your governed AI platform — the tier built for growth.</span>
+            <strong>Orbit</strong>
+            <span>Knowledge governance, Nexy Companion, WhatsApp outreach, and human escalation — your governed AI foundation, production-ready in days.</span>
             <div class="ncf-prod-tags">
-              <span>$2,490/yr</span><span>$1,500 onboarding</span><span>Most popular</span>
+              <span>$3,600/yr</span><span>$1,500 onboarding</span><span>5,000 conversations/mo</span>
+            </div>
+          </div>
+        </div>
+        <div class="ncf-prod-sep"></div>
+        <div class="ncf-prod-card">
+          <img src="/assets/digitz_ai_nexus/images/nexus-chat-agent-icon.svg" alt="" class="ncf-prod-icon"/>
+          <div class="ncf-prod-body">
+            <strong>Orbit Pro</strong>
+            <span>Add identity verification, SafeGuard access controls, and expanded Nexy capacity — the tier built for growing mid-market teams.</span>
+            <div class="ncf-prod-tags">
+              <span>$6,600/yr</span><span>$2,500 onboarding</span><span>Most popular</span>
             </div>
           </div>
         </div>
@@ -917,10 +1390,10 @@
         <div class="ncf-prod-card">
           <img src="/assets/digitz_ai_nexus/images/nexus-apps-icon.svg" alt="" class="ncf-prod-icon"/>
           <div class="ncf-prod-body">
-            <strong>Enterprise Scale</strong>
-            <span>Unlimited tenants, custom agentic workflows, dedicated infrastructure, and white-label Nexy — built to your exact specification.</span>
+            <strong>Orbit Command</strong>
+            <span>Unlimited Nexy capacity, unlimited WhatsApp outreach, and the full NEXUS AGENTIC suite — everything, no limits.</span>
             <div class="ncf-prod-tags">
-              <span>Custom pricing</span><span>Dedicated infra</span><span>SLA-backed</span>
+              <span>$10,800/yr</span><span>$4,000 onboarding</span><span>Unlimited capacity</span>
             </div>
           </div>
         </div>
@@ -928,13 +1401,13 @@
 
       <div class="ncf-cta-row">
         <div class="ncf-cta-text">
-          <h2>Ready to deploy governed AI?</h2>
-          <p>Talk to our team and we'll help you find the right starting point — no obligation, no boilerplate demos.</p>
+          <h2>Not sure which plan fits?</h2>
+          <p>Tell Nexy what you're trying to build — it will help you find the right starting point. No obligation, no boilerplate demos.</p>
         </div>
         <div class="ncf-actions">
           <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
             <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" style="margin-right:6px;vertical-align:-2px;"><path d="M2 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 4V4z"/></svg>
-            Chat with Us
+            Chat with Nexy
           </a>
         </div>
       </div>

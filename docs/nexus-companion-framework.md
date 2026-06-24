@@ -855,7 +855,79 @@ Enforced at multiple layers:
 
 ---
 
-## 19. Future Expansion
+## 19. Nexy Outreach — WhatsApp Proactive Engagement
+
+> Implemented 2026-06-23. Module: `digitz_ai_nexus_nexy`.
+
+Nexy can initiate the companion conversation instead of waiting for a visitor to arrive. The engine, stages, persona, and playbook are identical — only the entry point changes.
+
+### 19.1 Contact Intelligence Layer
+
+| DocType | Autoname | Purpose |
+|---|---|---|
+| `Nexus Contact` | `NC-.#####` | Unified person record — bridges inbound visitors and outreach targets |
+| `Nexus Company` | `NCOM-.#####` | B2B account record linked to contacts |
+| `Nexus Contact Segment` | `NCSEG-.#####` | Saved filter producing the target list for a campaign |
+
+**Contact entry paths:**
+1. **CSV Import** — via `api/contact_import.py → import_contacts()`. Requires consent confirmation. Handles column mapping, duplicate detection (whatsapp → email → phone priority), and segment assignment in one step.
+2. **Auto-promote from Companion** — when `mark_converted()` or ESCALATED signal fires, `enquiry_service._promote_to_nexus_contact()` creates a Nexus Contact from the Enquiry data (visitor email, phone, persona, score). Idempotent.
+3. **Manual entry** — standard Frappe form.
+
+### 19.2 Outreach Run
+
+| DocType | Autoname | Purpose |
+|---|---|---|
+| `Nexy Outreach Run` | `NOR-.#####` | Single execution of a campaign — one run per wave (Initial, Follow-up 1, …) |
+
+**Nexy Engagement Campaign** extended fields: `target_segment`, `outreach_channel` (Nexus Live Channel), `companion_playbook`.
+
+**Nexy Engagement Message** extended fields: `outreach_run`, `nexus_contact`, `linked_conversation`, `sent_on`, `replied_on`.
+
+### 19.3 Flow
+
+```
+Nexus Contact Segment → Nexy Outreach Run → per contact background job
+    → generate_outreach_message()
+        send_mode=Template: WhatsApp Template with {{variable}} substitution
+        send_mode=Free-text + LLM: answer_query() generates personalised opening
+        send_mode=Free-text simple: fixed greeting with topic
+    → Approval gate (if Nexus Settings.outreach_approval_required)
+    → send_approved_message()
+        send_whatsapp_reply() or WhatsApp Message (template path)
+        create_outreach_conversation() → Nexus Live Conversation
+            delivery_method=WhatsApp, conversation_origin=Outreach
+            companion_journey_stage=GREETING (skips ARRIVED)
+    → Contact replies → on_whatsapp_message() inbound hook
+        → _handle_existing_conversation() detects conversation_origin=Outreach
+        → _notify_outreach_reply() → handle_outreach_reply() background job
+            marks EngagementMessage → Responded, updates contact last_contact_date
+        → regular AI pipeline continues (companion engine handles from GREETING)
+```
+
+### 19.4 Services
+
+| File | Location | Responsibility |
+|---|---|---|
+| `nexus_contact_import_service.py` | `digitz_ai_nexus_nexy/services/` | CSV parse, column mapping, duplicate check, company upsert, segment refresh |
+| `nexy_outreach_service.py` | `digitz_ai_nexus_nexy/services/` | `run_outreach_batch`, `generate_outreach_message`, `send_approved_message`, `handle_outreach_reply` |
+| `api/contact_import.py` | `digitz_ai_nexus_nexy/api/` | `import_contacts`, `download_import_template`, `launch_outreach_run`, `approve_outreach_message`, `bulk_approve_run_messages` |
+
+### 19.5 Nexus Settings — new Outreach section
+
+| Field | Default | Purpose |
+|---|---|---|
+| `outreach_approval_required` | 0 | When on, every EngagementMessage must be approved before send |
+| `default_outreach_wa_account` | — | Fallback WA account when run has none set |
+| `outreach_session_window_hours` | 24 | Free-text window; outside this Template mode is required |
+
+### 19.6 Language rule
+
+All outreach messages follow the same LANGUAGE RULES as the companion engine (no "sell"/"sales"/"pitch"). The simple fallback message uses "I'm Nexy — an intelligent advisor" framing.
+
+---
+
+## 20. Future Expansion
 
 - **WhatsApp OTP verification**: The `verification_status` field on Enquiry is ready for a second channel. The widget-level OTP flow will route to `request_verification()` with a WhatsApp channel once supported.
 - **Conversion UX in widget**: The chat widget needs inline components for Direct Purchase (payment form), Meeting Booking (calendar picker), and Trial Activation (account creation). The `conversion_config` JSON already carries the necessary URLs.
@@ -863,4 +935,5 @@ Enforced at multiple layers:
 - **Knowledge bridge**: Each product/service now has a `chat_category` link. The next step is updating `_build_products_block()` to retrieve factual product knowledge through the Nexus retrieval engine (vector + BM25 + reranker) rather than raw DB fields, so product knowledge benefits from the same governance as all other knowledge.
 - **Enquiry analytics**: The `signal_log` field is the backbone for conversion funnel analytics — which signals precede CONVERTED, where do most visitors drop off, which objections are most common.
 - **Human handover enrichment**: Extending `nexy_handover_service.py` to pass `companion_enquiry`, `matched_persona`, `discovery_data`, `signal_log`, and `enquiry_score` as a structured handover package for human agents.
+- **Outreach re-engagement choice**: When Nexy re-engages a contact with prior history, the opening message should ask "Would you like to pick up where we left off, or start fresh?" — the choice determines whether `companion_discovery_json` from the previous enquiry is loaded into the new conversation context.
 - **Companion intent extensions**: Customer Support intent (intent = resolve, success = ticket closed), Onboarding intent (intent = activate, success = feature used), Retention intent (intent = reengage, success = renewal confirmed) — all follow the same engine structure with different stage focus entries and conversion mechanisms.

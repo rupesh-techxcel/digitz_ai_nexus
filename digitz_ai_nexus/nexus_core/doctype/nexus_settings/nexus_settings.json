@@ -36,7 +36,12 @@
   "section_nexy",
   "nexy_email_verification_mandatory",
   "section_knowledge_browser",
-  "browser_default_tenant"
+  "browser_default_tenant",
+  "section_outreach",
+  "outreach_approval_required",
+  "default_outreach_wa_account",
+  "col_break_outreach",
+  "outreach_session_window_hours"
  ],
  "fields": [
   {
@@ -229,6 +234,36 @@
    "label": "Default Tenant for Browser",
    "options": "Nexus Tenant",
    "description": "Tenant whose public knowledge feed is shown in the Knowledge Browser. Falls back to Default Tenant if not set."
+  },
+  {
+   "fieldname": "section_outreach",
+   "fieldtype": "Section Break",
+   "label": "Outreach Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "outreach_approval_required",
+   "fieldtype": "Check",
+   "label": "Require Approval Before Sending Outreach",
+   "description": "When enabled, every Engagement Message must be approved before it is dispatched via WhatsApp."
+  },
+  {
+   "fieldname": "default_outreach_wa_account",
+   "fieldtype": "Link",
+   "label": "Default WhatsApp Account for Outreach",
+   "options": "WhatsApp Account",
+   "description": "Used when an Outreach Run does not specify a WhatsApp account."
+  },
+  {
+   "fieldname": "col_break_outreach",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "24",
+   "fieldname": "outreach_session_window_hours",
+   "fieldtype": "Int",
+   "label": "Free-text Session Window (Hours)",
+   "description": "Hours within which a contact who previously messaged can receive free-text outreach. Outside this window a WhatsApp Template is required."
   }
  ],
  "index_web_pages_for_search": 1,

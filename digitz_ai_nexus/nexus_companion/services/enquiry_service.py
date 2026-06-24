@@ -174,7 +174,9 @@ def advance_journey_stage_from_signal(conversation, signal_type: str) -> str:
     # ── Hard-coded signal transitions ─────────────────────────────────────────
 
     if signal_type == "REQUESTING_HUMAN":
-        return _set_stage(conversation, "ESCALATED")
+        _set_stage(conversation, "ESCALATED")
+        _promote_to_nexus_contact(conversation, "ESCALATED")
+        return "ESCALATED"
 
     if signal_type == "DECLINING":
         return _set_stage(conversation, "DECLINED")
@@ -299,6 +301,112 @@ def mark_converted(conversation, product_name: str = None) -> None:
         "enquiry_stage": "CONVERTED",
     })
     conversation.db_set("companion_journey_stage", "CONVERTED", update_modified=False)
+    _promote_to_nexus_contact(conversation, "CONVERTED")
+
+
+def _promote_to_nexus_contact(conversation, stage: str) -> None:
+    """
+    Auto-create a Nexus Contact from a companion enquiry when a visitor reaches
+    CONVERTED or ESCALATED.  Idempotent — skips if a contact already exists for
+    this visitor or email.
+    """
+    try:
+        import frappe as _frappe
+
+        tenant = getattr(conversation, "tenant", None)
+        if not tenant:
+            return
+
+        visitor_name = getattr(conversation, "web_visitor", None)
+        visitor_email = getattr(conversation, "visitor_email", None) or ""
+        visitor_phone = getattr(conversation, "visitor_phone", None) or ""
+
+        # Match by visitor link first
+        if visitor_name and _frappe.db.exists("Nexus Contact", {"linked_visitor": visitor_name, "tenant": tenant}):
+            _update_contact_stage(
+                _frappe.db.get_value("Nexus Contact", {"linked_visitor": visitor_name, "tenant": tenant}, "name"),
+                conversation, stage
+            )
+            return
+
+        # Match by email
+        if visitor_email and _frappe.db.exists("Nexus Contact", {"email": visitor_email, "tenant": tenant}):
+            _update_contact_stage(
+                _frappe.db.get_value("Nexus Contact", {"email": visitor_email, "tenant": tenant}, "name"),
+                conversation, stage
+            )
+            return
+
+        # Build display name from enquiry data
+        discovery = {}
+        if conversation.companion_enquiry:
+            raw = _frappe.db.get_value("Nexus Companion Enquiry", conversation.companion_enquiry, "discovery_data") or "{}"
+            try:
+                discovery = __import__("json").loads(raw)
+            except Exception:
+                discovery = {}
+
+        display_name = visitor_email or visitor_phone or "Unknown"
+
+        enquiry_score = 0
+        matched_persona = None
+        persona_confidence = 0.0
+        if conversation.companion_enquiry:
+            eq = _frappe.db.get_value(
+                "Nexus Companion Enquiry",
+                conversation.companion_enquiry,
+                ["enquiry_score", "matched_persona", "persona_confidence"],
+                as_dict=True
+            ) or {}
+            enquiry_score = eq.get("enquiry_score") or 0
+            matched_persona = eq.get("matched_persona")
+            persona_confidence = eq.get("persona_confidence") or 0.0
+
+        contact = _frappe.get_doc({
+            "doctype": "Nexus Contact",
+            "tenant": tenant,
+            "display_name": display_name,
+            "email": visitor_email,
+            "phone": visitor_phone,
+            "whatsapp_number": visitor_phone,
+            "source": "Inbound Companion",
+            "consent_status": "Opted In",
+            "status": "Active",
+            "linked_visitor": visitor_name,
+            "matched_persona": matched_persona,
+            "persona_confidence": persona_confidence,
+            "last_enquiry_score": enquiry_score,
+            "last_journey_stage": stage,
+            "last_contact_date": _frappe.utils.now_datetime(),
+            "total_conversations": 1,
+        })
+        contact.insert(ignore_permissions=True)
+        _frappe.db.commit()
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Companion: auto-promote to Nexus Contact failed")
+
+
+def _update_contact_stage(contact_name, conversation, stage):
+    """Update an existing Nexus Contact's stage and score from the latest enquiry."""
+    try:
+        updates = {"last_journey_stage": stage, "last_contact_date": frappe.utils.now_datetime()}
+        if conversation.companion_enquiry:
+            eq = frappe.db.get_value(
+                "Nexus Companion Enquiry",
+                conversation.companion_enquiry,
+                ["enquiry_score", "matched_persona", "persona_confidence"],
+                as_dict=True,
+            ) or {}
+            if eq.get("enquiry_score"):
+                updates["last_enquiry_score"] = eq["enquiry_score"]
+            if eq.get("matched_persona"):
+                updates["matched_persona"] = eq["matched_persona"]
+            if eq.get("persona_confidence"):
+                updates["persona_confidence"] = eq["persona_confidence"]
+        frappe.db.set_value("Nexus Contact", contact_name, updates)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Companion: contact stage update failed")
 
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
