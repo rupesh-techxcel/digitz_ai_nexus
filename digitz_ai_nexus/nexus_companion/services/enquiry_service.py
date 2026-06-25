@@ -140,6 +140,11 @@ def update_enquiry(conversation, discovery_delta: dict, signal: dict | None = No
         _append_signal_log(enquiry, signal)
         enquiry.stage_signal = signal.get("signal_type", "")
 
+        # Flag escalation_recommended when visitor has been consistently disengaging
+        consecutive = _count_consecutive_resistance_signals(enquiry.signal_log or "[]")
+        if consecutive >= 3 and not enquiry.escalation_recommended:
+            enquiry.escalation_recommended = 1
+
     # Re-run persona matching
     match = match_persona(existing, tenant)
     if match["persona"]:
@@ -504,6 +509,22 @@ def _resolve_web_session(conversation) -> str | None:
         ) or None
     except Exception:
         return None
+
+
+def _count_consecutive_resistance_signals(signal_log_json: str) -> int:
+    """Count consecutive resistance signals from the end of the signal log."""
+    _RESISTANCE = {"HESITATING", "DEFLECTING", "DISENGAGING", "OBJECTING"}
+    try:
+        log = json.loads(signal_log_json or "[]")
+    except Exception:
+        return 0
+    count = 0
+    for entry in reversed(log):
+        if entry.get("signal_type") in _RESISTANCE:
+            count += 1
+        else:
+            break
+    return count
 
 
 def _resolve_recommended_products(enquiry, conversation) -> None:

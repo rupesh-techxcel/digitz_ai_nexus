@@ -120,9 +120,13 @@ _CHAT_TOOL_SCHEMAS = [
         "function": {
             "name": "request_escalation",
             "description": (
-                "Request escalation to a human agent when you cannot find a satisfactory answer "
-                "after searching, or when the user explicitly requests human help. "
-                "This ends the current turn immediately."
+                "Trigger an escalation to a human specialist. Call this ONLY in one of two cases:\n"
+                "(1) The visitor has explicitly asked to speak with a human in their CURRENT message "
+                "(e.g. 'I want to talk to someone', 'Can I speak to your team?', 'connect me to a person').\n"
+                "(2) You already offered to connect the visitor with a specialist in a PREVIOUS message "
+                "and the visitor has just confirmed with a clear 'yes', 'please', 'sure', or equivalent.\n"
+                "NEVER call this in the same turn you first offer escalation — offer first, wait for the "
+                "visitor's explicit confirmation in their next message, then call this tool."
             ),
             "parameters": {
                 "type": "object",

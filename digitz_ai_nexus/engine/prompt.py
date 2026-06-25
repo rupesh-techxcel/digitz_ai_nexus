@@ -355,11 +355,19 @@ def _build_companion_block(query_contract: dict) -> str:
     references_block = ctx.get("companion_references_block") or ""
     playbook_name = ctx.get("companion_playbook_name") or ""
     guidelines = ctx.get("companion_guidelines") or ""
-    stage_focus = ctx.get("companion_stage_focus") or ""
+    stage_directive = ctx.get("companion_stage_directive") or ctx.get("companion_stage_focus") or ""
     discovery_questions = ctx.get("companion_discovery_questions") or ""
     objection_responses = ctx.get("companion_objection_responses") or ""
     next_step_options = ctx.get("companion_next_step_options") or ""
     email_verified = ctx.get("companion_email_verified", True)
+
+    # Strategy engine fields
+    engagement_mode = ctx.get("companion_engagement_mode") or "PROGRESSING"
+    disengagement_turn = ctx.get("companion_disengagement_turn") or 0
+    discovery_status = ctx.get("companion_discovery_status") or {}
+    recent_signals = ctx.get("companion_recent_signals") or []
+    show_capability_reveal = ctx.get("companion_show_capability_reveal", False)
+    capability_context = ctx.get("companion_capability_context") or {}
 
     # ── Persona line ──────────────────────────────────────────────────────────
     if persona_name:
@@ -377,6 +385,17 @@ def _build_companion_block(query_contract: dict) -> str:
     # ── Build the directive block ─────────────────────────────────────────────
     parts = [
         "--- NEXY COMPANION ENGINE ---",
+        "",
+        "COMPANION MODE — OVERRIDES THE CORE RULES ABOVE FOR CONVERSATIONAL TURNS:",
+        "1. When the visitor shares context about themselves (their business, team, role,",
+        "   challenges, situation, or goals), respond naturally and with insight.",
+        "   You do NOT need approved knowledge to acknowledge what they have shared.",
+        "2. Never say 'I don't have enough approved knowledge' for a conversational message.",
+        "   If the visitor tells you about their business — that is not a knowledge question.",
+        "3. Only call search_knowledge when the visitor asks a specific factual question",
+        "   about a product feature, pricing, policy, integration, or case study.",
+        "4. Your goal is insight-led conversation: connect what the visitor shares to",
+        "   a relevant observation about their situation, then ask ONE follow-up question.",
         "",
         "IDENTITY:",
         "You are Nexy — an intelligent advisor built into this platform.",
@@ -398,11 +417,88 @@ def _build_companion_block(query_contract: dict) -> str:
     if verification_note:
         parts += ["", verification_note]
 
+    # ── Engagement mode warning (only when off-track) ─────────────────────────
+    if engagement_mode in ("RESISTANT", "DISENGAGING"):
+        mode_header = f"VISITOR ENGAGEMENT: {engagement_mode}"
+        if disengagement_turn > 0:
+            mode_header += f"  (re-engagement turn {disengagement_turn})"
+        parts += ["", mode_header]
+        if recent_signals:
+            parts.append(f"RECENT SIGNALS: {' → '.join(recent_signals)}")
+        parts.append(
+            "Standard discovery/presentation approach is NOT working — adapt immediately."
+        )
+
     parts += [
         "",
         "VISITOR PROFILE COLLECTED:",
         discovery_summary,
     ]
+
+    # ── Discovery progress (DISCOVERY and ENGAGED stages only) ────────────────
+    if stage in ("DISCOVERY", "ENGAGED") and discovery_status:
+        collected_total = len(discovery_status.get("collected") or [])
+        priority_collected = discovery_status.get("priority_collected") or []
+        priority_missing = discovery_status.get("priority_missing") or []
+        next_focus = discovery_status.get("next_focus")
+        priority_complete = discovery_status.get("priority_complete", False)
+
+        if priority_complete:
+            parts += [
+                "",
+                "DISCOVERY PROGRESS: All priority fields collected — begin connecting "
+                "their situation to relevant solutions.",
+            ]
+        else:
+            parts += [
+                "",
+                f"DISCOVERY PROGRESS ({collected_total} of 10 fields collected):",
+            ]
+            if priority_collected:
+                parts.append(f"✓ Priority collected: {', '.join(priority_collected)}")
+            if priority_missing:
+                parts.append(f"○ Priority still needed: {', '.join(priority_missing)}")
+            if next_focus:
+                parts.append(f"→ Ask about: {next_focus} (one question this turn)")
+
+    # ── Capability reveal (DISCOVERY + PROGRESSING, 1-2 priority fields known) ──
+    if show_capability_reveal:
+        context_line = ", ".join(
+            f"{k.replace('_', ' ')}: {v}" for k, v in capability_context.items()
+        ) if capability_context else ""
+        parts += [
+            "",
+            "--- CAPABILITY REVEAL ---",
+            "The visitor has just shared meaningful business context."
+            + (f" Known so far: {context_line}." if context_line else ""),
+            "This is a ONE-TIME opportunity to plant a relevant Nexus insight.",
+            "After your acknowledgment and before your next discovery question,",
+            "weave ONE of the teasers below into a single conversational sentence,",
+            "personalised to their specific context (e.g. 'A technical company your size...').",
+            "Keep it natural — not a pitch. One sentence only.",
+            "",
+            "IMPORTANT: If the conversation history above already shows that you introduced",
+            "a Nexus capability or platform insight in a previous turn, SKIP this section",
+            "entirely — do not repeat the same kind of statement.",
+            "",
+            "NEXUS CAPABILITY TEASERS — pick the single most relevant one:",
+            "• Knowledge vault: 'You might not know this yet — Nexus can securely store",
+            "  everything your business knows (products, services, USPs, policies) and use it",
+            "  precisely to respond to website visitors and prospects, any time of day.'",
+            "• Outreach at scale: 'One thing that surprises most businesses is that Nexus lets",
+            "  you reach many people simultaneously with personalised outreach — without ever",
+            "  compromising their privacy.'",
+            "• Relationship-led revenue: 'What sets Nexus apart is that it builds natural,",
+            "  ongoing relationships with visitors — not just answers questions — which is what",
+            "  turns curious visitors into actual customers.'",
+            "• Always-on advisor: 'The part that often surprises people: your business knowledge",
+            "  works for you 24/7 — every visitor gets accurate, relevant answers whether your",
+            "  team is online or not.'",
+            "• Strategic conversations: 'Unlike a standard chatbot, Nexus runs strategic",
+            "  conversations — it learns visitor context and uses it to surface the right insight",
+            "  at exactly the right moment.'",
+            "--- END CAPABILITY REVEAL ---",
+        ]
 
     if products_block:
         parts += [
@@ -425,11 +521,11 @@ def _build_companion_block(query_contract: dict) -> str:
             guidelines,
         ]
 
-    if stage_focus:
+    if stage_directive:
         parts += [
             "",
             "YOUR DIRECTIVE FOR THIS TURN:",
-            stage_focus,
+            stage_directive,
         ]
 
     if discovery_questions:
@@ -462,6 +558,9 @@ def _build_companion_block(query_contract: dict) -> str:
         "- Be specific — use their stated challenges in your response",
         "- Only recommend when there is genuine fit; be honest when there is not",
         "- Do not invent pricing, timelines, or guarantees not in APPROVED KNOWLEDGE",
+        "- Escalation consent: Never call request_escalation in the same turn you first offer it. "
+        "Offer first ('Would you like me to connect you with a specialist?'), wait for the visitor's "
+        "explicit 'yes' in their next message, then call request_escalation.",
         "",
         "--- END COMPANION ENGINE ---",
         "",
