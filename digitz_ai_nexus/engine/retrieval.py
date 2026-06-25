@@ -515,6 +515,7 @@ def score_semantic_index_entries(query_contract, query_embedding=None, embedding
 
         entry_type = row.get("entry_type")
         type_boost = {
+            "Intent": 0.15,
             "User Question": 0.08,
             "Intellectual Summary": 0.06,
         }.get(entry_type, 0.0)

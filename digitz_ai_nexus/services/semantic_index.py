@@ -313,11 +313,18 @@ def archive_existing_index_entries(source_name):
     return len(names)
 
 
-def build_index_payloads(chunk_doc, generation_method="Heuristic"):
+def build_index_payloads(chunk_doc, generation_method="Heuristic", source_intent=None):
     if generation_method == "LLM":
         try:
             payloads = make_llm_payloads(chunk_doc)
             if payloads:
+                if source_intent:
+                    payloads.append({
+                        "entry_type": "Intent",
+                        "canonical_text": source_intent,
+                        "display_summary": make_human_summary(chunk_doc.get("chunk_text")),
+                        "generation_method": "Manual",
+                    })
                 return payloads
         except Exception:
             frappe.log_error(frappe.get_traceback(), "Nexus Semantic Index LLM Generation Failed")
@@ -341,6 +348,14 @@ def build_index_payloads(chunk_doc, generation_method="Heuristic"):
 
     for payload in payloads:
         payload["generation_method"] = generation_method
+
+    if source_intent:
+        payloads.append({
+            "entry_type": "Intent",
+            "canonical_text": source_intent,
+            "display_summary": human_summary,
+            "generation_method": "Manual",
+        })
 
     return payloads
 
@@ -434,9 +449,16 @@ def generate_index_entries_for_chunks(chunk_names, generation_method="Heuristic"
     for chunk_name in chunk_names:
         try:
             chunk_doc = frappe.get_doc("Nexus Knowledge Chunk", chunk_name)
+            source_intent = None
+            if chunk_doc.get("knowledge_source"):
+                _intent = frappe.db.get_value(
+                    "Nexus Knowledge Source", chunk_doc.knowledge_source, "intent"
+                )
+                source_intent = (_intent or "").strip() or None
             for payload in build_index_payloads(
                 chunk_doc,
                 generation_method=generation_method,
+                source_intent=source_intent,
             ):
                 name = create_index_entry(chunk_doc, payload)
                 if name:

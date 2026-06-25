@@ -5,7 +5,7 @@
   "engine": "InnoDB",
   "field_order": [
     "access_category",
-    "enabled"
+    "disabled"
   ],
   "fields": [
     {
@@ -17,11 +17,11 @@
       "reqd": 1
     },
     {
-      "default": "1",
-      "fieldname": "enabled",
+      "default": "0",
+      "fieldname": "disabled",
       "fieldtype": "Check",
       "in_list_view": 1,
-      "label": "Enabled"
+      "label": "Disabled"
     }
   ],
   "index_web_pages_for_search": 0,

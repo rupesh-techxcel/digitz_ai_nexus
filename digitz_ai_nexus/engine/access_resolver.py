@@ -48,7 +48,7 @@ def resolve_knowledge_profile_policy_names(knowledge_profile_name):
         filters={
             "parent": knowledge_profile_name,
             "parentfield": "access_categories",
-            "enabled": 1,
+            "disabled": 0,
         },
         pluck="access_category",
     )
@@ -133,8 +133,11 @@ def resolve_allowed_policies(query_contract):
     Calculate final allowed access policy names for retrieval.
 
     Public endpoints (force_public_only=True or is_public=True):
-        Returns all primitive Public policies for the tenant (e.g. "Public-NEXUS-AI")
-        plus the bare "Public" name for backward compatibility. Cannot be overridden.
+        When the route has a public_knowledge_profile configured (ai_profile carries
+        knowledge_profile_names), returns the intersection of primitive Public policies
+        and the profile's policies — scoping retrieval to only the public knowledge the
+        admin assigned to this route. Falls back to all primitive Public policies when no
+        profile is configured or the intersection is empty.
 
     System Manager session:
         Returns all enabled policies — unrestricted.
@@ -155,14 +158,31 @@ def resolve_allowed_policies(query_contract):
 
     if force_public_only:
         tenant = query_contract.get("tenant") or ai_profile.get("tenant")
-        public_policies = resolve_primitive_public_policies(tenant=tenant)
+        public_policies = set(resolve_primitive_public_policies(tenant=tenant))
+
+        # When the route has a specific public_knowledge_profile configured, scope
+        # retrieval to only the public policies inside that profile. The intersection
+        # with primitive_public_policies is an unconditional safety ceiling — a
+        # misconfigured profile containing non-public policies cannot leak through.
+        # Falls back to all primitive public policies if the intersection is empty.
+        kp_names = ai_profile.get("knowledge_profile_names") or []
+        if kp_names:
+            profile_policies = resolve_knowledge_profiles_policy_names(kp_names)
+            scoped = public_policies.intersection(profile_policies)
+            if scoped:
+                public_policies = scoped
+            cap_label = "force_public_only+profile_scoped"
+        else:
+            cap_label = "force_public_only"
+
+        public_policies = list(public_policies)
         return {
             "allowed_access_policies": public_policies,
             "force_public_only": True,
-            "profile_policy_names": [],
+            "profile_policy_names": public_policies,
             "safeguard_policy_names": [],
             "identity_policy_names": public_policies,
-            "access_cap_applied": "force_public_only",
+            "access_cap_applied": cap_label,
         }
 
     if is_system_manager_session_user():
@@ -198,6 +218,10 @@ def resolve_allowed_policies(query_contract):
 
     if knowledge_profile_names:
         profile_policies = resolve_knowledge_profiles_policy_names(knowledge_profile_names)
+        # Primitive public policies are always accessible regardless of identity — union them in
+        # so that knowledge sources marked Public-NEXUS-AI are retrievable by registered users too.
+        public_policies = set(resolve_primitive_public_policies(tenant=tenant))
+        profile_policies = profile_policies | public_policies
         safeguard_policies = resolve_access_categories_policy_names(safeguard_access_categories)
         identity_policies = resolve_identity_policy_cap(identity_type, tenant=tenant)
         effective_cap = _intersect_caps(safeguard_policies, identity_policies)

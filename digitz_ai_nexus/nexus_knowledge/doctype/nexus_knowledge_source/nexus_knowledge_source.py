@@ -113,6 +113,48 @@ class NexusKnowledgeSource(Document):
 
         self.disable_existing_chunks_after_source_change()
 
+    def after_save(self):
+        if self.is_new():
+            return
+        before = self.get_doc_before_save()
+        if before and (before.get("intent") or "") != (self.intent or ""):
+            self._refresh_intent_index_entries()
+
+    def _refresh_intent_index_entries(self):
+        from digitz_ai_nexus.services.semantic_index import create_index_entry, has_semantic_index_doctype
+        if not has_semantic_index_doctype():
+            return
+
+        intent = (self.intent or "").strip()
+
+        existing = frappe.get_all(
+            "Nexus Knowledge Index Entry",
+            filters={"knowledge_source": self.name, "entry_type": "Intent"},
+            pluck="name",
+        )
+        for entry_name in existing:
+            frappe.delete_doc("Nexus Knowledge Index Entry", entry_name, ignore_permissions=True, force=True)
+        frappe.db.commit()
+
+        if not intent:
+            return
+
+        chunks = frappe.get_all(
+            "Nexus Knowledge Chunk",
+            filters={"knowledge_source": self.name, "disabled": 0},
+            pluck="name",
+        )
+        for chunk_name in chunks:
+            try:
+                chunk_doc = frappe.get_doc("Nexus Knowledge Chunk", chunk_name)
+                create_index_entry(chunk_doc, {
+                    "entry_type": "Intent",
+                    "canonical_text": intent,
+                    "generation_method": "Manual",
+                })
+            except Exception:
+                frappe.log_error(frappe.get_traceback(), f"Nexus Intent Index Refresh: {chunk_name}")
+
     def disable_existing_chunks_after_source_change(self):
         if not frappe.db.exists("DocType", "Nexus Knowledge Chunk"):
             return

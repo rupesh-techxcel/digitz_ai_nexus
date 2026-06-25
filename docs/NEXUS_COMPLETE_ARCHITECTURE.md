@@ -1,6 +1,6 @@
 # DIGITZ AI Nexus — Complete Implementation Architecture
 
-> Last updated: 2026-06-22. Source of truth for all five Nexus apps.
+> Last updated: 2026-06-25 (profile-scoped public retrieval). Source of truth for all five Nexus apps.
 
 ---
 
@@ -72,7 +72,7 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | `Nexus Access Category` | `category_name`, `tenant`, `description` | Named grouping of access policies |
 | `Nexus Access Category Policy` | (child) `category`, `policy` | Many-to-many: links policies to categories |
 | `Knowledge Profile` | `profile_name`, `tenant`, `enabled`, `access_categories` (Table) | Defines a context profile with a set of allowed access categories |
-| `Knowledge Profile Access Category` | (child) `access_category` | Child row of Knowledge Profile |
+| `Knowledge Profile Access Category` | (child) `access_category`, `disabled` | Child row of Knowledge Profile. `disabled` (Check, default 0) — unchecked by default so rows are active; check to exclude a category without deleting the row. Only rows with `disabled=0` are included in policy resolution. |
 
 #### nexus_ai
 
@@ -247,7 +247,7 @@ Stage transitions are signal-driven. Every visitor message is classified as one 
 | `Nexus Identity Knowledge Rule` | `identity_type`, `knowledge_profile`, `rule_label` | Directly links identity type to knowledge profile |
 | `Nexus Identity Safe Guard Access Category` | (child) `access_category` | Access categories allowed for an identity type as a safety cap |
 | `Nexus Identity Type Safe Guard Category` | (child) `access_category` | Second child for safe guard limits |
-| `Nexus Category Identity Route` | `channel`, `chat_category`, `ai_agent_profile`, `identity_profiles`, `enabled`, `published`, `priority` | Routes a selected chat category and visitor identity context to the AI behavior profile and identity/knowledge access chain. Channel is derived from the category context and retained for filtering/reporting. |
+| `Nexus Category Identity Route` | `channel`, `chat_category`, `ai_agent_profile`, `identity_profiles`, `public_knowledge_profile`, `enabled`, `published`, `priority` | Routes a selected chat category and visitor identity context to the AI behavior profile and identity/knowledge access chain. Channel is derived from the category context and retained for filtering/reporting. `public_knowledge_profile` (Link → Knowledge Profile) — the knowledge boundary granted to Public (unverified) visitors who reach this route. When set, the resolver uses exactly the access policies inside that profile for retrieval; nothing outside those policies is visible. When blank, the system falls back to the AI Agent Profile's own knowledge profiles. See §14.1 for the full resolution chain. |
 | `Nexus Route Identity Profile` | (child) `identity_type`, `identity_profile` | Per-identity profiles within a route |
 | `Nexus Identity Verification Challenge` | `conversation`, `challenge_type`, `status`, `challenge_sent_at` | Active identity challenge in progress |
 | `Nexus Website Widget` | `widget_name`, `tenant`, `position`, `primary_color` | Embeddable chat widget configuration. The widget may load all published External/Both categories under enabled Website Chat channels for the tenant; visitors select categories, not channels. |
@@ -731,6 +731,48 @@ Note: Desk User conversations are EXCLUDED from the Live Console
 (filtered by user_type != 'Desk User')
 ```
 
+### 12.1 Public Access Mode (Admin Desk Chat)
+
+Public Access Mode lets a System Manager or admin desk user simulate exactly what a real public visitor sees — same AI agent (Nexy Companion), same knowledge boundary, same access policies — without leaving the Frappe desk.
+
+**Activation:** The chat widget header contains a globe button (`ncw-pub-mode-btn`). Clicking it:
+1. Toggles `S.public_access_mode = true` in widget state
+2. Shows an amber strip (`ncw-pub-mode-strip`) below the header as a persistent visual indicator
+3. Restarts the conversation (calls `start_new_chat()`) so the new mode takes effect immediately
+
+**How it propagates:**
+
+| Call site | What changes |
+|---|---|
+| `start_new_chat()` | `base.force_public_only = true` added to the start payload |
+| `send_message()` | `msg_payload.force_public_only = true` added to every message payload |
+| `select_category()` | `cat_payload.force_public_only = true` added to category selection |
+
+The widget's `render_category_picker()` also hides the Nexy sticky row for desk users **unless** `S.public_access_mode` is true — so the "Connect with Nexy" option only appears in the category picker when Public Access Mode is active.
+
+**Server-side effect of `force_public_only = true`:**
+
+| Stage | Behaviour |
+|---|---|
+| `start_live_chat()` — category picker | `picker_is_internal = false`; queries for External/Both categories (Nexy) instead of Internal/Both |
+| `continue_live_chat()` — category selection | `identity_type` forced to `"Public"`, `_is_authenticated = false` — routes through `resolve_behavior_from_chat_category` as a public visitor |
+| `continue_live_chat()` — nudge re-picker | Does NOT treat the desk user as internal; re-sends the public category picker |
+| `build_core_chat_payload()` | `force_public_only` computed as `True`; passed into `resolve_allowed_policies()` |
+| `resolve_allowed_policies()` | Short-circuits **before** the System Manager bypass; returns primitive public policies only (`['Public', 'Public-NEXUS-AI']`) |
+| `_process_ai_response()` | Clears `core_payload["chat_history"]` when `force_public_only=True` and `user_type="Desk User"` — prevents desk intro messages (e.g. "I'm Raju On Desk") from anchoring the LLM in a desk persona |
+
+**Key invariant:** `force_public_only=True` is checked **first** in `resolve_allowed_policies()`, before the System Manager bypass check. This means even a user with `System Manager` role receives only public-policy knowledge in this mode — the admin cannot accidentally see private or internal knowledge while testing the public visitor experience.
+
+**Conversation fields frozen at category selection (Public Access Mode):**
+
+| Field | Value set |
+|---|---|
+| `resolved_identity_type` | `"Public"` |
+| `assigned_ai_agent_profile` | Nexy Companion profile name |
+| `ai_profile_snapshot_json` | Frozen Nexy behavior snapshot (knowledge profile names, behavior prompt, etc.) |
+
+All subsequent turns in the conversation read behavior from the frozen snapshot via `resolve_behavior_from_conversation()`, so the public simulation is consistent across the full conversation even if config changes mid-session.
+
 ---
 
 ## 13. Core Data Flow — Nexy Handover
@@ -850,6 +892,85 @@ Identity Registry Safeguard:
     Nexus Identity Safe Guard Access Category caps allowed categories
     for verified identities BEFORE the route resolution intersects them.
 ```
+
+### 14.1 Public Visitor Knowledge Resolution (`public_knowledge_profile`)
+
+When a visitor resolves as `Public` identity type (including admin desk users in Public Access Mode), `profile_resolver.resolve_behavior_from_chat_category()` reads the `public_knowledge_profile` field from the matched route and stores it as `knowledge_profile_names` in the behavior dict, which is then frozen into `ai_profile_snapshot_json`.
+
+```
+profile_resolver.resolve_behavior_from_chat_category()
+    │
+    ▼
+_find_any_route(channel, category, tenant)
+    → first enabled+published Nexus Category Identity Route for this category
+    │
+    ▼
+public_knowledge_profile field on the route
+    │
+    ├─ Set  → knowledge_profile_names = [public_knowledge_profile]
+    └─ Blank → knowledge_profile_names = []
+    │
+    ▼
+Stored in behavior dict → frozen in ai_profile_snapshot_json
+```
+
+At query time, `build_core_chat_payload()` sets `force_public_only=True` (because `resolved_identity_type == "Public"`) and calls `resolve_allowed_policies()`, which now applies the profile as a scope:
+
+```
+resolve_allowed_policies()  [access_resolver.py]
+    │
+    ▼
+force_public_only = True
+    │
+    ▼
+primitive_public_policies = resolve_primitive_public_policies(tenant)
+    → all Nexus Access Policy records where is_primitive=1
+    → e.g. {'Public', 'Public-NEXUS-AI'}
+    │
+    ├─ knowledge_profile_names is EMPTY (no profile on route)
+    │       → allowed = primitive_public_policies          (all public knowledge for tenant)
+    │       → access_cap_applied = "force_public_only"
+    │
+    └─ knowledge_profile_names is SET
+            │
+            ▼
+        resolve_knowledge_profiles_policy_names(kp_names)
+            → Knowledge Profile Access Category child rows (disabled=0 only)
+            → each row → Nexus Access Category → its Access Policies
+            → e.g. profile_policies = {'Public-NEXUS-AI'}
+            │
+            ▼
+        scoped = primitive_public_policies ∩ profile_policies
+            e.g. {'Public', 'Public-NEXUS-AI'} ∩ {'Public-NEXUS-AI'} = {'Public-NEXUS-AI'}
+            │
+            ├─ scoped non-empty → allowed = scoped
+            │       → access_cap_applied = "force_public_only+profile_scoped"
+            │
+            └─ scoped empty (profile has no public-type policies → misconfigured)
+                    → allowed = primitive_public_policies  (safe fallback)
+                    → access_cap_applied = "force_public_only"
+    │
+    ▼
+Retrieval filter on Nexus Knowledge Chunk:
+    access_policy IN [allowed]  AND  tenant = '<tenant>'
+```
+
+**What this means in plain terms:**
+
+Only chunks whose `access_policy` field exactly matches one of the policies inside the configured Access Category are retrieved. Any knowledge source tagged with a policy from a *different* Access Category — even if that policy is also "public type" — is excluded. Different category routes can therefore have different public knowledge scopes:
+
+| Route | public_knowledge_profile | Retrieval scope |
+|---|---|---|
+| Connect with Nexy | `NEXUS-COMMERCIAL-KNOWLEDGE-PROFILE-NEXUS-AI` | Only `Public-NEXUS-AI` (commercial) chunks |
+| General FAQ (hypothetical) | *(blank)* | All primitive public chunks for tenant |
+
+**Safety ceiling — intersection prevents privilege escalation:**
+
+The intersection with `primitive_public_policies` is unconditional. If a profile's Access Category is accidentally configured with a non-public policy (e.g. `Internal-NEXUS-AI`), that policy is not in `primitive_public_policies` and is stripped from `scoped` before the return. A misconfigured profile cannot expose non-public knowledge to public visitors.
+
+**Configuration requirement — `Disabled` checkbox on child rows:**
+
+`resolve_knowledge_profiles_policy_names` filters child rows with `disabled=0`. Access Category rows inside the Knowledge Profile are active by default (Disabled unchecked). Check **Disabled** on a row to temporarily exclude that Access Category from resolution without deleting it. If all rows are disabled, `profile_policies` comes back empty → `scoped` is empty → falls back to all primitive public policies for the tenant.
 
 ---
 

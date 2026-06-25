@@ -18,6 +18,8 @@
   "entity_type",
   "entity",
   "topic",
+  "retrieval_signals_section",
+  "intent",
   "governance_section",
   "access_policy",
   "priority",
@@ -126,6 +128,17 @@
    "fieldname": "topic",
    "fieldtype": "Data",
    "label": "Topic"
+  },
+  {
+   "fieldname": "retrieval_signals_section",
+   "fieldtype": "Section Break",
+   "label": "Retrieval Signals"
+  },
+  {
+   "description": "Natural language description of what user requests this source should answer. E.g. 'User asks about our business hours or availability'. Chunks in this source will be boosted in retrieval when a query matches this description.",
+   "fieldname": "intent",
+   "fieldtype": "Small Text",
+   "label": "Intent Trigger"
   },
   {
    "fieldname": "governance_section",
