@@ -154,6 +154,9 @@ def update_enquiry(conversation, discovery_delta: dict, signal: dict | None = No
     # Determine recommended next step
     enquiry.recommended_next_step = _recommended_next_step(enquiry.enquiry_score)
 
+    # Resolve and record recommended products from the chat category
+    _resolve_recommended_products(enquiry, conversation)
+
     enquiry.save(ignore_permissions=True)
 
 
@@ -501,6 +504,52 @@ def _resolve_web_session(conversation) -> str | None:
         ) or None
     except Exception:
         return None
+
+
+def _resolve_recommended_products(enquiry, conversation) -> None:
+    """
+    Populate enquiry.recommended_products from the Nexus Companion Products
+    configured for the conversation's chat_category. Runs on every update_enquiry
+    call so the list stays current as the visitor's profile clarifies.
+
+    Products are matched by chat_category (exact) with a tenant safety filter.
+    Existing rows are replaced only when the product list has changed to avoid
+    unnecessary DB churn.
+    """
+    try:
+        chat_category = getattr(conversation, "chat_category", None)
+        if not chat_category:
+            return
+
+        tenant = enquiry.tenant
+        products = frappe.get_all(
+            "Nexus Companion Product",
+            filters={"chat_category": chat_category, "tenant": tenant, "enabled": 1},
+            fields=["name", "product_name", "conversion_threshold_score"],
+            order_by="creation asc",
+            limit_page_length=5,
+        )
+        if not products:
+            return
+
+        existing_names = {row.product for row in (enquiry.recommended_products or [])}
+        new_names = {p.name for p in products}
+
+        if existing_names == new_names:
+            return
+
+        enquiry.recommended_products = []
+        score = enquiry.enquiry_score or 0
+        for p in products:
+            threshold = p.get("conversion_threshold_score") or 0
+            fit = min(int(score * 1.1) if score >= threshold else int(score * 0.8), 100)
+            enquiry.append("recommended_products", {
+                "product": p.name,
+                "product_name": p.product_name,
+                "fit_score": fit,
+            })
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Companion: _resolve_recommended_products failed")
 
 
 # ── Conversion action ──────────────────────────────────────────────────────────
