@@ -258,6 +258,9 @@ def answer_query(
     llm_provider=None,
     query_embedding=None,
 ):
+    
+    frappe.logger("nexus_debug").info("from answer_query")
+    
     if not payload:
         frappe.throw("Payload is required")
 

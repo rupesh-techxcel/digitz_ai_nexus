@@ -149,6 +149,11 @@ _CHAT_TOOL_SCHEMAS = [
 
 
 def run_chat_agent_loop(payload, retrieval_fn=None):
+    
+    print("from run_chat_agent_loop")
+    frappe.logger("nexus_debug").info("from run_chat_agent_loop")
+    
+    
     """
     LLM-driven tool-calling loop for chat mode.
 
@@ -173,6 +178,7 @@ def run_chat_agent_loop(payload, retrieval_fn=None):
     query = payload.get("query") or ""
     allowed_policies = payload.get("allowed_access_policies")
 
+    frappe.logger("nexus_debug").info(allowed_policies or "No allowed policies in payload")
     # Fail closed: empty policy list means access resolution produced no permitted policies
     if allowed_policies is not None and len(allowed_policies) == 0:
         return build_restricted_response(retrieval_result={}, denied=[])
@@ -316,6 +322,8 @@ def run_chat_agent_loop(payload, retrieval_fn=None):
         if answer:
             sources = build_sources(all_retrieved_chunks)
             confidence = calculate_confidence(all_retrieved_chunks)
+            
+            frappe.logger("nexus_debug").info(answer)
             return {
                 "status": "success",
                 "access_status": "allowed",
@@ -327,7 +335,11 @@ def run_chat_agent_loop(payload, retrieval_fn=None):
                 "fallback_used": 0,
                 "chat_mode": "agent_loop",
             }
+        else:
+            frappe.logger("nexus_debug").info("No relevant information found.")
+        
 
+    frappe.logger("nexus_debug").info("No relevant information found — returning fallback response.")
     return _fallback_response(payload)
 
 
