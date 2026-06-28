@@ -147,7 +147,6 @@ _CHAT_TOOL_SCHEMAS = [
     },
 ]
 
-
 def run_chat_agent_loop(payload, retrieval_fn=None):
     
     print("from run_chat_agent_loop")
@@ -624,3 +623,588 @@ def _execute_get_relevant_reference(tool_input: dict, payload: dict) -> dict:
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Companion: get_relevant_reference failed")
         return {"error": "Could not retrieve references"}
+
+def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
+    """
+    Controller-owned agent loop.
+
+    The controller decides:
+    - allowed tools
+    - whether knowledge is needed
+    - whether escalation is allowed
+    - whether CTA/conversion is allowed
+
+    The LLM only drafts the response within that plan.
+    """
+
+    from digitz_ai_nexus.engine.llm import get_openai_client
+    from digitz_ai_nexus.services.answer_service import (
+        build_sources,
+        build_citation_summary,
+        calculate_confidence,
+    )
+
+    payload = payload or {}
+    controller_plan = controller_plan or {}
+
+    settings = frappe.get_single("Nexus Settings")
+    model = settings.llm_model or "gpt-4o-mini"
+    client = get_openai_client()
+
+    allowed_policies = payload.get("allowed_access_policies")
+
+    if allowed_policies is not None and len(allowed_policies) == 0:
+        return {
+            "status": "success",
+            "access_status": "restricted",
+            "answer": "You do not have permission to access this information.",
+            "confidence": 0.0,
+            "sources": [],
+            "citations": [],
+            "retrieval_result": {},
+            "fallback_used": 1,
+            "chat_mode": "controlled_companion_loop",
+            "companion_controller": True,
+            "conversion_action": None,
+        }
+
+    messages = _build_controlled_companion_messages(payload, controller_plan)
+
+    if not isinstance(messages, list) or not messages:
+        frappe.log_error(
+            json.dumps({
+                "payload_keys": list(payload.keys()),
+                "controller_plan": controller_plan,
+                "messages": messages,
+            }, indent=2),
+            "Controlled Companion Loop: invalid messages",
+        )
+
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are Nexy, a helpful business companion. "
+                    "Respond naturally and ask one relevant question."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    payload.get("query")
+                    or payload.get("original_query")
+                    or "Please continue the conversation."
+                ),
+            },
+        ]
+
+    active_tools = []
+    allowed_tools = set(controller_plan.get("allowed_tools") or [])
+
+    if "search_knowledge" in allowed_tools:
+        active_tools.append(_CHAT_TOOL_SCHEMAS[0])
+
+    if "request_escalation" in allowed_tools or controller_plan.get("allow_escalation"):
+        active_tools.append(_CHAT_TOOL_SCHEMAS[1])
+
+    all_retrieved_chunks = []
+    last_retrieval_result = {}
+
+    max_tool_calls = int(controller_plan.get("max_tool_calls") or 1)
+    tool_call_count = 0
+    
+    grounding_mode = controller_plan.get("grounding_mode") or "controller_only"
+    
+    print("\n\n========== CONTROLLED LOOP DEBUG ==========")
+    print("grounding_mode:", grounding_mode)
+    print("knowledge_needed:", controller_plan.get("knowledge_needed"))
+    print("allowed_tools:", controller_plan.get("allowed_tools"))
+    print("knowledge_query:", controller_plan.get("knowledge_query"))
+    print("visitor_query:", payload.get("query") or payload.get("original_query"))
+    print("steering_decision:", controller_plan.get("steering_decision"))
+    print("external_intent:", controller_plan.get("external_intent"))
+    print("==========================================\n\n")
+
+    if grounding_mode == "nexus_knowledge_only":
+        search_query = (
+            controller_plan.get("knowledge_query")
+            or payload.get("query")
+            or payload.get("original_query")
+            or ""
+        )
+    
+        result, retrieval_result, chunks = _execute_search(
+            {"query": search_query},
+            payload,
+            allowed_policies,
+            retrieval_fn=retrieval_fn,
+        )
+
+        last_retrieval_result = retrieval_result or {}
+
+        specific_grounding = _has_specific_grounding_for_intent(
+            chunks=chunks,
+            controller_plan=controller_plan,
+            payload=payload,
+        )
+
+        print("\n\n========== SPECIFIC GROUNDING DEBUG ==========")
+        print("grounding_mode:", grounding_mode)
+        print("external_intent:", controller_plan.get("external_intent"))
+        print("steering_decision:", controller_plan.get("steering_decision"))
+        print("retrieved_chunk_count:", len(chunks or []))
+        print("specific_grounding:", specific_grounding)
+        print("=============================================\n\n")
+
+        if not chunks or not specific_grounding:
+            print("\n\n========== GOVERNED FALLBACK DEBUG ==========")
+            print("Nexus Orbit knowledge was missing or too general.")
+            print("grounding_mode:", grounding_mode)
+            print("external_intent:", controller_plan.get("external_intent"))
+            print("steering_decision:", controller_plan.get("steering_decision"))
+            print("visitor_query:", payload.get("query") or payload.get("original_query"))
+            print("knowledge_query:", controller_plan.get("knowledge_query"))
+            print("============================================\n\n")
+
+            return {
+                "status": "success",
+                "access_status": "no_context",
+                "answer": _knowledge_required_fallback(payload, controller_plan),
+                "confidence": 0.0,
+                "sources": [],
+                "citations": [],
+                "retrieval_result": last_retrieval_result,
+                "fallback_used": 1,
+                "chat_mode": "controlled_companion_loop",
+                "companion_controller": True,
+                "conversion_action": None,
+            }
+
+        all_retrieved_chunks.extend(chunks)
+        
+        print("\n\n========== NEXUS KNOWLEDGE SEARCH DEBUG ==========")
+        print("search_query:", search_query)
+        print("retrieved_chunk_count:", len(chunks or []))
+        print("retrieval_result:", json.dumps(retrieval_result or {}, indent=2, default=str))
+        print("result_for_llm:")
+        print(json.dumps(result or {}, indent=2, default=str)[:3000])
+        print("=================================================\n\n")
+
+        last_retrieval_result = retrieval_result or {}
+
+        messages.append({
+            "role": "system",
+            "content": (
+                "PERMITTED NEXUS ORBIT KNOWLEDGE FOR THIS TURN:\n"
+                f"{json.dumps(result, indent=2, default=str)}\n\n"
+                "You must answer only from the permitted Nexus Orbit knowledge above. "
+                "Do not add product capabilities, pricing, integrations, automation, dashboards, "
+                "technical methods, or implementation details that are not present in this knowledge."
+            ),
+        })
+
+        # Since Nexus knowledge has already been retrieved directly by controller,
+        # do not allow the LLM to call tools again for this turn.
+        active_tools = []
+
+    for _ in range(3):
+        request_args = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.3,
+        }
+
+        if active_tools:
+            request_args["tools"] = active_tools
+
+            # Important:
+            # If the controller says knowledge is needed, force the first tool call
+            # to search_knowledge instead of allowing the LLM to answer from assumption.
+            if (
+                controller_plan.get("knowledge_needed")
+                and "search_knowledge" in allowed_tools
+                and tool_call_count == 0
+            ):
+                request_args["tool_choice"] = {
+                    "type": "function",
+                    "function": {"name": "search_knowledge"},
+                }
+            else:
+                request_args["tool_choice"] = "auto"
+
+        try:
+            response = client.chat.completions.create(**request_args)
+        except Exception:
+            frappe.log_error(
+                frappe.get_traceback(),
+                "Controlled Companion Loop: LLM call failed",
+            )
+
+            return {
+                "status": "success",
+                "access_status": "conversational",
+                "answer": (
+                    "Thanks for sharing that. Could you tell me a little more about "
+                    "what you are trying to improve first?"
+                ),
+                "confidence": 1.0,
+                "sources": [],
+                "citations": [],
+                "retrieval_result": {},
+                "fallback_used": 0,
+                "chat_mode": "controlled_companion_loop",
+                "companion_controller": True,
+                "conversion_action": None,
+            }
+
+        choice = response.choices[0]
+
+        if choice.finish_reason == "stop":
+            answer = _clean_companion_answer(choice.message.content or "")
+            
+            print("\n\n========== FINAL CONTROLLED ANSWER DEBUG ==========")
+            print("grounding_mode:", controller_plan.get("grounding_mode"))
+            print("knowledge_needed:", controller_plan.get("knowledge_needed"))
+            print("retrieved_chunk_count:", len(all_retrieved_chunks or []))
+            print("access_status:", "allowed" if all_retrieved_chunks else "conversational")
+            print("answer:")
+            print(answer)
+            print("=================================================\n\n")
+
+            if not answer:
+                answer = (
+                    "Thanks for sharing that. Could you tell me a little more about "
+                    "what you are trying to achieve?"
+                )
+
+            sources = build_sources(all_retrieved_chunks)
+            confidence = (
+                calculate_confidence(all_retrieved_chunks)
+                if all_retrieved_chunks
+                else 1.0
+            )
+
+            return {
+                "status": "success",
+                "access_status": "allowed" if all_retrieved_chunks else "conversational",
+                "answer": answer,
+                "confidence": confidence,
+                "sources": sources,
+                "citations": build_citation_summary(sources),
+                "retrieval_result": last_retrieval_result,
+                "fallback_used": 0,
+                "chat_mode": "controlled_companion_loop",
+                "companion_controller": True,
+                "conversion_action": None,
+            }
+
+        if choice.finish_reason == "tool_calls":
+            messages.append(_serialise_assistant_message(choice.message))
+
+            for tool_call in choice.message.tool_calls:
+                tool_name = tool_call.function.name
+
+                if tool_name not in allowed_tools:
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({
+                            "error": f"Tool '{tool_name}' is not allowed in this controller state."
+                        }),
+                    })
+                    continue
+
+                if tool_call_count >= max_tool_calls:
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({
+                            "error": "Tool call limit reached for this controller state."
+                        }),
+                    })
+                    continue
+
+                tool_call_count += 1
+
+                try:
+                    tool_input = json.loads(tool_call.function.arguments or "{}")
+                except Exception:
+                    tool_input = {}
+
+                if tool_name == "search_knowledge":
+                    result, retrieval_result, chunks = _execute_search(
+                        tool_input,
+                        payload,
+                        allowed_policies,
+                        retrieval_fn=retrieval_fn,
+                    )
+
+                    if chunks:
+                        all_retrieved_chunks.extend(chunks)
+                        last_retrieval_result = retrieval_result
+
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    })
+
+                elif tool_name == "request_escalation":
+                    return {
+                        "status": "success",
+                        "access_status": "intent_handled",
+                        "answer": _clean_companion_answer(_escalation_answer(payload)),
+                        "confidence": 1.0,
+                        "sources": [],
+                        "citations": [],
+                        "retrieval_result": {},
+                        "fallback_used": 0,
+                        "user_requested_human": True,
+                        "intent_action": "escalate",
+                        "chat_mode": "controlled_companion_loop",
+                        "companion_controller": True,
+                        "conversion_action": None,
+                    }
+
+        else:
+            break
+
+    return {
+        "status": "success",
+        "access_status": "conversational",
+        "answer": (
+            "Thanks for sharing that. Could you tell me a little more about "
+            "what you are trying to achieve?"
+        ),
+        "confidence": 1.0,
+        "sources": [],
+        "citations": [],
+        "retrieval_result": {},
+        "fallback_used": 0,
+        "chat_mode": "controlled_companion_loop",
+        "companion_controller": True,
+        "conversion_action": None,
+    }
+     
+def _build_controlled_companion_messages(payload, controller_plan):
+    """
+    Build messages for controller-owned companion agent loop.
+    Must always return a valid OpenAI messages list.
+    """
+
+    payload = payload or {}
+    controller_plan = controller_plan or {}
+
+    ai_profile = payload.get("ai_profile") or {}
+
+    query = (
+        payload.get("query")
+        or payload.get("original_query")
+        or payload.get("message")
+        or ""
+    )
+
+    conversation_context = (
+        payload.get("conversation_context")
+        or payload.get("chat_history_text")
+        or ""
+    )
+
+    behavior_prompt = (
+        ai_profile.get("behavior_prompt")
+        or payload.get("agent_behavior_prompt")
+        or "You are Nexy, a helpful business companion."
+    )
+
+    system_prompt = f"""
+    {behavior_prompt}
+
+    CONTROLLED COMPANION MODE:
+    The Business Companion Controller owns the conversation flow.
+
+    You must follow the controller plan exactly.
+
+    CONTROLLER PLAN:
+    {json.dumps(controller_plan, indent=2)}
+    
+    RESPONSE GOAL:
+    {controller_plan.get("response_goal") or ""}
+
+    STRICT RULES:
+    1. Do not decide the business journey yourself.
+    2. Do not move to demo, quotation, representative handoff, or meeting unless the controller plan allows it.
+    3. Do not call tools unless they are listed in allowed_tools.
+    4. If knowledge_needed is false, do not call search_knowledge.
+    5. If the visitor asks something outside the current milestone, acknowledge briefly and follow the steering decision.
+    6. Ask only one question unless the controller plan says otherwise.
+    7. Never mention controller, internal intent, milestone, steering, or tool policy to the visitor.
+    8. Keep the response concise, natural, and business-friendly.
+    9. Do not invent product facts, pricing, commitments, guarantees, or implementation details.
+    10. If the controller plan includes discovery_delta, use it as known visitor context.
+    11. Do not ask the visitor to submit a demo request unless allow_conversion_action is true.
+    12. If allow_conversion_action is false, continue discovery or answer the current question only.
+    13. If the visitor already confirmed a demo or next step, do not ask for confirmation again.
+    14. If product or technical implementation details are not available from permitted knowledge, say clearly that the exact details are not confirmed.
+    15. Do not use phrases like "typically enables", "usually supports", or "can automate" to imply confirmed product capability unless the knowledge tool confirms it.
+    16. Do not prefix the response with "AI Agent:", "Assistant:", "Nexy:", or any speaker name.
+    17. If the visitor asks how Nexus can help with ads, lead generation, recruitment, or operations, do not explain process categories unless those categories are clearly present in the permitted Nexus Orbit knowledge. Do not infer customer profiling, lead capture, qualification, follow-up, routing, tracking, automation, dashboards, or decision support from general platform knowledge.
+    18. If grounding_mode is "nexus_knowledge_only", answer only from permitted Nexus Orbit knowledge provided in this turn. If no knowledge is provided, do not answer from assumption. Do not provide advisory guesses, product capabilities, pricing, integrations, automation claims, dashboards, or implementation details from general LLM knowledge.
+    19. If grounding_mode is "controller_only", you may draft natural wording only within the controller plan. Do not make product, pricing, technical, integration, automation, or capability claims.
+    """
+
+    user_prompt = f"""
+    CONVERSATION SO FAR:
+    {conversation_context}
+
+    CURRENT VISITOR MESSAGE:
+    {query}
+    """
+
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt.strip(),
+        },
+        {
+            "role": "user",
+            "content": user_prompt.strip(),
+        },
+    ]
+
+    return messages
+
+def _clean_companion_answer(answer):
+    """
+    Remove role prefixes leaked by the LLM.
+    The widget already renders sender labels.
+    """
+
+    text = (answer or "").strip()
+
+    prefixes = [
+        "AI Agent:",
+        "Assistant:",
+        "Nexy:",
+        "Zara:",
+        "Nova:",
+        "Jade:",
+    ]
+
+    changed = True
+    while changed:
+        changed = False
+        for prefix in prefixes:
+            if text.lower().startswith(prefix.lower()):
+                text = text[len(prefix):].strip()
+                changed = True
+
+    return text
+
+def _knowledge_required_fallback(payload, controller_plan):
+    """
+    Safe fallback when grounding_mode is nexus_knowledge_only
+    but Nexus Orbit has no confirmed knowledge for the question.
+    """
+
+    decision = controller_plan.get("steering_decision")
+    query = payload.get("query") or payload.get("original_query") or ""
+
+    if decision == "answer_with_orbit_or_policy":
+        return (
+            "I don't have confirmed pricing information available in Nexus Orbit for that question. "
+            "I should not guess pricing, packages, discounts, or commercial commitments. "
+            "Could you share the type of requirement you are considering so the right pricing path can be checked?"
+        )
+
+    if decision in ["answer_solution_fit", "explain_solution_method"]:
+        return (
+            "I don't have confirmed Nexus Orbit knowledge available for that specific capability yet, "
+            "so I should not claim exactly how Nexus handles it. "
+            "I can capture your requirement clearly and help route it for the right confirmed guidance."
+        )
+
+    if decision == "answer_with_orbit":
+        return (
+            "I don't have confirmed Nexus Orbit knowledge available for that specific question yet. "
+            "I should not guess product capabilities, integrations, automation, or implementation details."
+        )
+
+    return (
+        "I don't have confirmed Nexus Orbit knowledge available for that specific question yet, "
+        "so I should not answer from assumption."
+    )
+
+def _has_specific_grounding_for_intent(chunks, controller_plan, payload=None):
+    """
+    Checks whether retrieved Nexus knowledge is specific enough
+    for the current intent.
+
+    This prevents broad/general Nexus knowledge from being treated
+    as proof for specific product, pricing, integration, or capability claims.
+    """
+
+    payload = payload or {}
+
+    intent = controller_plan.get("external_intent")
+    decision = controller_plan.get("steering_decision")
+
+    visitor_query = (
+        payload.get("query")
+        or payload.get("original_query")
+        or payload.get("message")
+        or ""
+    ).lower()
+
+    text = " ".join(
+        (c.get("chunk_text") or c.get("text") or "").lower()
+        for c in (chunks or [])
+    )
+
+    if not text.strip():
+        return False
+
+    if intent in ("solution_fit_question", "solution_method_question"):
+        # If the visitor specifically asks about Facebook ads,
+        # general Nexus business/agentic knowledge is not enough.
+        if "facebook" in visitor_query or "fb ads" in visitor_query:
+            return any(
+                k in text
+                for k in [
+                    "facebook ads",
+                    "facebook ad",
+                    "facebook lead",
+                    "meta ads",
+                    "ad campaign",
+                ]
+            )
+
+        required_any = [
+            "lead generation",
+            "customer profiling",
+            "lead capture",
+            "enquiry qualification",
+            "inquiry qualification",
+            "follow-up",
+            "conversion tracking",
+            "conversion improvement",
+        ]
+
+        return any(k in text for k in required_any)
+
+    if decision == "answer_with_orbit_or_policy":
+        required_any = [
+            "price",
+            "pricing",
+            "package",
+            "subscription",
+            "quotation",
+            "payment",
+            "commercial",
+        ]
+
+        return any(k in text for k in required_any)
+
+    if decision == "answer_with_orbit":
+        return bool(text.strip())
+
+    return bool(chunks)
