@@ -1,6 +1,6 @@
 # Nexus Companion Framework
 
-> Last updated: 2026-06-23
+> Last updated: 2026-06-28 (Business Companion Controller, companion_milestone, realtime dashboard updates)
 > Module: `nexus_companion` inside `digitz_ai_nexus`
 > App spans: `digitz_ai_nexus`, `digitz_ai_nexus_live`
 
@@ -29,7 +29,14 @@ The Nexus Companion Framework turns Nexy into an **intent-driven conversation en
 
 ## 2. Architecture
 
-The companion is a horizontal layer across the existing chat pipeline. Per-turn flow:
+The companion operates in one of two modes, selected per turn:
+
+| Mode | Entry path | Who decides what to say |
+|---|---|---|
+| **Controller-Led** (`controlled_companion`) | `business_companion_controller.handle_companion_turn()` | Controller owns milestone, intent, steering, grounding, and response goal. LLM only drafts within those constraints. |
+| **Prompt-Injection** (`companion_advisor`) | Legacy path — `_build_companion_block()` in `prompt.py` | LLM drives the conversation; platform injects structured context block. |
+
+### 2.1 Controller-Led Per-Turn Flow (current primary mode)
 
 ```
 Visitor message arrives
@@ -41,26 +48,50 @@ live_chat_service.continue_live_chat()
 _process_ai_response()  [background job]
         │
         ├── build_core_chat_payload()
-        │        └── _build_ai_profile_dict() — includes companion_mode,
-        │                                        companion_playbook
+        │        └── _build_ai_profile_dict() — companion_mode, companion_playbook
         │
-        ├── Nexy enrichment (digitz_ai_nexus_nexy — existing)
+        ├── if companion_mode:
+        │       handle_companion_turn(conversation, agent, payload, core_payload)
+        │           ├── 1. Resolve current_milestone from companion_milestone field
+        │           ├── 2. Detect pending_action (demo_request / human_handoff etc.)
+        │           ├── 3. get_or_create_enquiry()
+        │           ├── 4. classify_signal()          ── LLM: buying signal (14 types)
+        │           ├── 5. classify_external_intent() ── LLM: what visitor wants (15 types)
+        │           ├── 6. _extract_discovery_data()  ── LLM: structured business fields
+        │           ├── 7. update_enquiry()            ── merge delta, re-score, re-match persona
+        │           ├── 8. advance_journey_stage_from_signal()
+        │           ├── 9. _publish_progress_update()  ── realtime to desk dashboard
+        │           ├── 10. _decide_steering()         ── controller picks the business move
+        │           ├── 11. _apply_grounding_policy()  ── set nexus_knowledge_only / controller_only / no_llm_direct
+        │           │
+        │           ├── Short-circuit (no LLM):
+        │           │       demo confirmed  → _handle_demo_confirmation()
+        │           │       demo rejected   → _handle_demo_rejection()
+        │           │       next_step asked → _handle_next_step_question()
+        │           │
+        │           └── run_controlled_companion_loop()
+        │                   ├── if grounding_mode == nexus_knowledge_only: fetch knowledge first
+        │                   ├── build messages with controller_plan (response_goal, allowed_tools)
+        │                   └── LLM drafts response within controller constraints
         │
-        ├── Companion enrichment (new):
-        │        if companion_mode:
-        │            companion_context = build_companion_context()
-        │            core_payload["companion_context"] = companion_context
-        │            core_payload["response_mode"] = "companion_advisor"
-        │
+        └── _maybe_advance_milestone()
+                ├── check if discovery criteria met (industry + current_challenges filled)
+                ├── if yes: write companion_milestone = business_discovery on conversation + enquiry
+                └── _publish_progress_update() ── realtime to desk dashboard
+```
+
+### 2.2 Prompt-Injection Flow (legacy / non-controller path)
+
+```
+_process_ai_response()
+        ├── build_core_chat_payload()
+        ├── companion_context = build_companion_context()
+        │        core_payload["companion_context"] = companion_context
+        │        core_payload["response_mode"] = "companion_advisor"
         ├── answer_query(core_payload)
-        │        └── prompt.py → _build_companion_block()
-        │               Injects NEXY COMPANION ENGINE block into the system prompt
-        │               (OBJECTIVE → SITUATION → ARSENAL → DIRECTIVE → RULES)
-        │
-        └── Post-response (companion mode only):
-                 ├── classify_signal(visitor_message) — LLM signal classification
-                 ├── update_enquiry(signal, discovery_delta) — persist + re-score
-                 ├── advance_journey_stage_from_signal() — signal-driven stage machine
+        │        └── prompt.py → _build_companion_block() injects NEXY COMPANION ENGINE block
+        └── Post-response:
+                 ├── classify_signal() → update_enquiry() → advance_journey_stage_from_signal()
                  ├── advance_journey_stage() — score-based fallback
                  └── check_escalation_threshold() + check_trigger_keywords()
 ```
@@ -73,15 +104,17 @@ _process_ai_response()  [background job]
 digitz_ai_nexus/nexus_companion/
 ├── __init__.py
 ├── services/
-│   ├── companion_context_service.py   ← context assembly for each AI turn
-│   ├── enquiry_service.py             ← stage machine, scoring, enquiry lifecycle
-│   ├── signal_classifier.py           ← LLM-powered buying signal classification (new)
-│   ├── persona_matching_service.py    ← keyword scoring for persona identification
-│   └── reference_matching_service.py ← story/testimonial/outcome retrieval
+│   ├── business_companion_controller.py ← CONTROLLER — owns milestone, steering, grounding per turn
+│   ├── companion_intent_service.py      ← external intent classification (15 intents; keyword-first, LLM fallback)
+│   ├── companion_context_service.py     ← context assembly for prompt-injection path
+│   ├── enquiry_service.py               ← stage machine, scoring, enquiry lifecycle, realtime emit
+│   ├── signal_classifier.py             ← LLM-powered buying signal classification (14 types)
+│   ├── persona_matching_service.py      ← keyword scoring for persona identification
+│   └── reference_matching_service.py   ← story/testimonial/outcome retrieval
 ├── api/
-│   └── companion_dashboard.py         ← dashboard data endpoints
+│   └── companion_dashboard.py           ← dashboard data endpoints (returns companion_milestone)
 ├── page/
-│   └── nexus_companion_dashboard/     ← Frappe Page for the companion dashboard
+│   └── nexus_companion_dashboard/       ← Frappe Page: stage funnel, milestone column, realtime subscribe
 └── doctype/
     ├── nexus_companion_product/
     ├── nexus_companion_product_persona/      (child)
@@ -288,9 +321,10 @@ The full sales cycle record for a visitor. Created automatically when companion 
 
 | Field | Type | Description |
 |---|---|---|
-| `enquiry_stage` | Select | Current stage (mirrors `companion_journey_stage` on the conversation) |
+| `enquiry_stage` | Select | Current funnel/reporting stage (mirrors `companion_journey_stage` on the conversation) |
+| `companion_milestone` | Select | Controller milestone synced from the conversation each turn (8 milestones: `onboarding_business` → `conversion`) |
 | `enquiry_score` | Int (0–100) | Composite qualification score |
-| `escalation_recommended` | Check | Set when score ≥ playbook threshold |
+| `escalation_recommended` | Check | Set when 3+ consecutive resistance signals are classified |
 | `created_on` | Datetime | When the enquiry was created |
 
 **Persona fields:**
@@ -346,11 +380,12 @@ When `companion_mode = 1`:
 
 ### 5.2 Nexus Live Conversation (in `digitz_ai_nexus_live`)
 
-Five fields under a **Companion Journey** section:
+Six fields under a **Companion Journey** section:
 
 | Field | Type | Description |
 |---|---|---|
-| `companion_journey_stage` | Select | Current stage (see section 6 for full stage list) |
+| `companion_journey_stage` | Select | Current funnel/reporting stage (11 values — see section 6) |
+| `companion_milestone` | Select | Controller-owned milestone (8 values). Written by `business_companion_controller` on every turn via `_maybe_advance_milestone()` and `frappe.db.set_value`. Read-only in the form. |
 | `companion_persona` | Link → Nexus Companion Persona | Best-matched persona (set by service, read only) |
 | `companion_persona_confidence` | Float | Matching confidence 0–100 (read only) |
 | `companion_enquiry` | Link → Nexus Companion Enquiry | Linked enquiry record (read only) |
@@ -566,7 +601,130 @@ Called once per AI turn in `_process_ai_response()`. Returns:
 
 ---
 
-## 11. Prompt Injection
+## 11. Business Companion Controller
+
+**File:** `digitz_ai_nexus/nexus_companion/services/business_companion_controller.py`
+
+The controller is the decision engine that runs **before** the LLM on every companion turn. It owns all business choices; the LLM only classifies, extracts, and drafts.
+
+### 11.1 Controller Milestones
+
+Eight milestones represent the controller's current objective — independent from journey stages:
+
+| Milestone | Objective |
+|---|---|
+| `onboarding_business` | Collect core business context (industry, challenges) before anything else |
+| `business_discovery` | Deepen understanding of operations, scale, team, goals |
+| `pain_discovery` | Identify specific pain points and current friction |
+| `solution_mapping` | Map visitor challenges to product/service capabilities |
+| `evidence_building` | Build confidence with stories, outcomes, references |
+| `demo_arrangement` | Confirm fit and arrange a focused demo or walkthrough |
+| `quotation` | Handle pricing discussion and commercial fit |
+| `conversion` | Complete the conversion action (confirmed demo, booking, etc.) |
+
+Milestones are stored in `companion_milestone` on `Nexus Live Conversation` (written by the controller) and synced to `companion_milestone` on `Nexus Companion Enquiry` by `update_enquiry()` each turn.
+
+Advancement from `onboarding_business` → `business_discovery` fires automatically when `discovery_data` has both `industry` and `current_challenges` filled (`_maybe_advance_milestone()`).
+
+### 11.2 External Intent Classification
+
+**File:** `nexus_companion/services/companion_intent_service.py` → `classify_external_intent()`
+
+A second LLM classification per turn alongside signal classification. Returns what the visitor is **trying to do** (as opposed to the signal, which describes how they feel).
+
+**15 intent types:**
+
+| Intent | Description |
+|---|---|
+| `business_context_answer` | Visitor answering about their business/situation |
+| `business_scale_question` | Asking about scale, volume, operational size |
+| `pricing_question` | Asking about price, cost, quotation |
+| `demo_interest` | Wants a demo, meeting, presentation, walkthrough |
+| `demo_confirmation` | Confirming a previously offered demo/next step |
+| `demo_rejection` | Declining a previously offered demo/next step |
+| `next_step_question` | Asking what to do next / how to proceed |
+| `human_request` | Wants to speak to a representative |
+| `product_question` | Asking about features, capabilities, modules |
+| `solution_fit_question` | Asking how Nexus can help with their problem |
+| `solution_method_question` | Asking how a suggested solution approach would work |
+| `technical_how_it_works_question` | Asking about technical workflow, integrations |
+| `off_topic` | Unrelated to the business conversation |
+| `greeting` | Opening greeting only |
+| `unknown` | Unclear — LLM fallback |
+
+Fast keyword rules run first; LLM classification is the fallback for ambiguous messages.
+
+### 11.3 Steering Decisions
+
+`_decide_steering()` maps (milestone × external_intent) → one steering decision:
+
+**Hard interrupts (milestone-independent):**
+
+| Intent (+ context) | Decision | Grounding |
+|---|---|---|
+| `demo_confirmation` + pending demo | `confirm_demo_request` | `no_llm_direct` |
+| `demo_rejection` + pending demo | `demo_rejected` | `no_llm_direct` |
+| `solution_fit_question` | `answer_solution_fit` | `nexus_knowledge_only` |
+| `next_step_question` | `answer_next_step` | `no_llm_direct` |
+| `solution_method_question` | `explain_solution_method` | `nexus_knowledge_only` |
+| `technical_how_it_works_question` | `answer_with_orbit` | `nexus_knowledge_only` |
+| `human_request` | `offer_escalation` | `controller_only` |
+
+**Onboarding milestone rules:**
+
+| Intent | Decision |
+|---|---|
+| `business_context_answer` | `continue_milestone` |
+| `business_scale_question` | `answer_and_continue_onboarding` |
+| `pricing_question` | `brief_answer_then_redirect` |
+| `demo_interest` | `acknowledge_then_redirect` |
+| `product_question` | `brief_answer_then_redirect` |
+| `off_topic` | `redirect_to_milestone` |
+
+**Post-onboarding:**
+
+| Intent | Decision |
+|---|---|
+| `pricing_question` | `answer_with_orbit_or_policy` |
+| `demo_interest` | `consider_next_step` |
+| `product_question` | `answer_with_orbit` |
+| (default) | `normal_companion` |
+
+### 11.4 Grounding Policy
+
+`_apply_grounding_policy()` sets the `grounding_mode` for the controlled agent loop:
+
+| Grounding mode | When applied | LLM behaviour |
+|---|---|---|
+| `no_llm_direct` | `confirm_demo_request`, `demo_rejected` | Controller returns hardcoded response; LLM not called |
+| `nexus_knowledge_only` | Any knowledge-requiring intent | Knowledge fetched from Nexus Orbit before the LLM call; LLM must answer from confirmed chunks |
+| `controller_only` | All other decisions | LLM drafts freely within response_goal and steering |
+
+### 11.5 Pending Action Detection
+
+`_detect_pending_action()` scans the last few turns of conversation context for markers that indicate Nexy already offered an action:
+
+| Pending action | Detected when |
+|---|---|
+| `demo_already_confirmed` | "I'll go ahead and arrange", "demo request has been", "consultant will contact you" |
+| `demo_request` | "submit a demo request", "arrange a demo", "detailed walkthrough", "would you like to proceed" |
+| `human_handoff` | "connect you with our team", "speak with someone", "team member" |
+
+This prevents the controller from re-offering a demo or re-asking a question Nexy already handled.
+
+### 11.6 Short-Circuit Handlers (no LLM)
+
+| Condition | Handler | Response |
+|---|---|---|
+| `decision == confirm_demo_request` and visitor email not yet collected | `_handle_demo_confirmation()` | Asks for email to create demo request |
+| `decision == confirm_demo_request` and email already on conversation | `_handle_demo_confirmation()` | Confirms demo and sets `conversion_action.type = demo_request` |
+| `decision == demo_rejected` | `_handle_demo_rejection()` | Warm "no problem" response, resumes discovery |
+| `decision == answer_next_step` and demo already confirmed | `_handle_next_step_question()` | Directs visitor to email step or consultant contact |
+| `decision == answer_next_step` and demo offer pending | `_handle_next_step_question()` | Treats as confirmation, calls `_handle_demo_confirmation()` |
+
+---
+
+## 12. Prompt Injection
 
 **File:** `digitz_ai_nexus/engine/prompt.py` — `_build_companion_block()`
 
@@ -736,23 +894,37 @@ On successful conversion: `mark_converted(conversation)` → enquiry stage → C
 
 **File:** `digitz_ai_nexus/nexus_companion/api/companion_dashboard.py`
 **Page:** `digitz_ai_nexus/nexus_companion/page/nexus_companion_dashboard/`
+**Route:** `/app/nexus-companion-dashboard`
 
 ### `get_dashboard_data(tenant=None) → dict`
 
 Returns in one call:
-- `stage_funnel` — counts across all 11 stages
+- `stage_funnel` — counts across all 11 journey stages (clickable filter on the table)
 - `stats` — total, today, converted (CONVERTED stage), escalated, avg_score_7d
-- `recent_enquiries` — last 20 with visitor name, persona, conversation ID
+- `recent_enquiries` — last 20 with visitor name, journey stage, **companion_milestone**, persona, score, conversation ID
 - `top_personas` — top 5 matched personas by frequency
 - `config_summary` — counts of active playbooks, personas, products, services, stories, testimonials, outcomes
 
 ### `get_enquiry_detail(name) → dict`
 
-Full detail for a single enquiry including recommended products/services, visitor name, persona name, conversation ID.
+Full detail for a single enquiry: journey stage + **companion_milestone**, score, next step, escalation flag, matched persona + confidence, all discovery data, recommended products, identity, signal history (last 8 signals). Includes links to open the full Nexus Companion Enquiry form or Nexus Live Conversation form.
 
 ### `get_tenants() → list`
 
 Available tenants for the tenant selector.
+
+### Realtime Updates
+
+The dashboard subscribes to `companion_progress_update` events on load (`_subscribe_realtime()`). When the companion controller or enquiry service emits this event:
+- The matching table row's **Stage** and **Milestone** badges update in-place
+- The funnel counts re-calculate from the patched cached data
+- No full page reload needed
+
+The `companion_progress_update` event is emitted from two places:
+1. `business_companion_controller._publish_progress_update()` — after every stage advance and milestone advance
+2. `enquiry_service._set_stage()` — after every signal-driven stage transition
+
+Payload: `{enquiry, conversation, stage, milestone}`
 
 ---
 
@@ -840,18 +1012,22 @@ Enforced at multiple layers:
 |---|---|
 | `digitz_ai_nexus/modules.txt` | Added `Nexus Companion` |
 | `digitz_ai_nexus/nexus_companion/` | New module — all DocTypes and services |
-| `digitz_ai_nexus/nexus_companion/services/signal_classifier.py` | New — LLM signal classification |
-| `digitz_ai_nexus/nexus_companion/doctype/nexus_companion_enquiry/*.json` | Added identity fields, signal fields, 5 new stages |
+| `digitz_ai_nexus/nexus_companion/services/signal_classifier.py` | New — LLM signal classification (14 types) |
+| `digitz_ai_nexus/nexus_companion/services/business_companion_controller.py` | **New** — controller-led companion runtime: milestone resolution, external intent classification, discovery extraction, steering, grounding, short-circuit handlers, realtime publish |
+| `digitz_ai_nexus/nexus_companion/services/companion_intent_service.py` | **New** — external intent classification (15 types, keyword-first + LLM fallback) |
+| `digitz_ai_nexus/nexus_companion/doctype/nexus_companion_enquiry/*.json` | Added `companion_milestone` field (Select, 8 options) to Qualification section |
 | `digitz_ai_nexus/nexus_companion/doctype/nexus_companion_product/*.json` | Added conversion config fields, chat_category, disqualification_criteria |
 | `digitz_ai_nexus/nexus_companion/doctype/nexus_companion_service/*.json` | Same as Product |
-| `digitz_ai_nexus/nexus_companion/services/enquiry_service.py` | Rewritten — signal-driven stage machine, update_enquiry with signal param |
+| `digitz_ai_nexus/nexus_companion/services/enquiry_service.py` | Added milestone sync in `update_enquiry()`; realtime emit in `_set_stage()`; signal-driven stage machine; `update_enquiry` with signal param |
 | `digitz_ai_nexus/nexus_companion/services/companion_context_service.py` | Updated — 11 stage focus entries, richer products block, email verification awareness |
-| `digitz_ai_nexus/nexus_companion/api/companion_dashboard.py` | Updated — 11 stages, converted count instead of qualified |
+| `digitz_ai_nexus/nexus_companion/api/companion_dashboard.py` | Added `companion_milestone` to `get_enquiry_detail` and `_get_recent_enquiries` |
+| `digitz_ai_nexus/nexus_companion/page/nexus_companion_dashboard/*.js` | Added Milestone column to enquiry table, Milestone row in detail panel, `_subscribe_realtime()` for live badge/funnel updates, `_milestone_label()` helper, milestone badge styles |
 | `digitz_ai_nexus/engine/prompt.py` | Redesigned `_build_companion_block()` — directive NEXY COMPANION ENGINE framing |
 | `digitz_ai_nexus/engine/response_mode.py` | Updated `companion_advisor` instruction |
 | `digitz_ai_nexus_live/.../nexus_ai_agent_profile.json` | Added companion settings section |
-| `digitz_ai_nexus_live/.../nexus_live_conversation.json` | Added companion journey section |
+| `digitz_ai_nexus_live/.../nexus_live_conversation.json` | Added companion journey section; added `companion_milestone` Select field |
 | `digitz_ai_nexus_live/services/live_chat_service.py` | Signal classification, update_enquiry with signal, signal-driven + score-based stage advancement |
+| `digitz_ai_nexus_agentic/.../nexus_sales_playbook/` | **Removed** — DocType folder, DB table, registry entry, `get_playbook_for_stage()` from strategy_service, `tool_get_playbook()` from tools.py |
 
 ---
 

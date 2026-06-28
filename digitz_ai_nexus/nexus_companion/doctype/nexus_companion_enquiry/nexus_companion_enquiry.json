@@ -22,6 +22,7 @@
   "persona_confidence",
   "column_break_2",
   "section_qualification",
+  "companion_milestone",
   "recommended_next_step",
   "product_fit_json",
   "section_discovery",
@@ -134,6 +135,15 @@
    "fieldname": "section_qualification",
    "fieldtype": "Section Break",
    "label": "Qualification"
+  },
+  {
+   "fieldname": "companion_milestone",
+   "fieldtype": "Select",
+   "label": "Companion Milestone",
+   "options": "\nonboarding_business\nbusiness_discovery\npain_discovery\nsolution_mapping\nevidence_building\ndemo_arrangement\nquotation\nconversion",
+   "read_only": 1,
+   "in_list_view": 0,
+   "description": "Synced from the conversation's controller milestone each turn."
   },
   {
    "fieldname": "recommended_next_step",

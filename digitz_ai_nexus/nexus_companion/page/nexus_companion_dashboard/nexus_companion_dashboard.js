@@ -23,6 +23,7 @@ class NexusCompanionDashboard {
 		this._inject_styles();
 		this._build_toolbar();
 		this._build_skeleton();
+		this._subscribe_realtime();
 		this._load();
 	}
 
@@ -105,6 +106,21 @@ class NexusCompanionDashboard {
 .ncd-badge-CONVERTED         { background:#c7f1d2; color:#145c29; }
 .ncd-badge-DECLINED          { background:#f3f4f6; color:#6b7280; }
 .ncd-badge-ESCALATED         { background:#fde8e8; color:#b91c1c; }
+
+/* ── Milestone badges ── */
+.ncd-milestone {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 0.70rem; font-weight: 600; background: #f0f2f8; color: #374151;
+  text-transform: lowercase; letter-spacing: .02em; white-space: nowrap;
+}
+.ncd-milestone-onboarding_business   { background:#e8f4fd; color:#1a6fa3; }
+.ncd-milestone-business_discovery    { background:#fef3cd; color:#856404; }
+.ncd-milestone-pain_discovery        { background:#fff0d9; color:#a35c00; }
+.ncd-milestone-solution_mapping      { background:#f0e6ff; color:#6b21a8; }
+.ncd-milestone-evidence_building     { background:#d9f0d8; color:#1a6b29; }
+.ncd-milestone-demo_arrangement      { background:#e0f2fe; color:#0369a1; }
+.ncd-milestone-quotation             { background:#fde8e8; color:#b91c1c; }
+.ncd-milestone-conversion            { background:#c7f1d2; color:#145c29; }
 
 /* ── Score bar ── */
 .ncd-score-wrap { display: flex; align-items: center; gap: 8px; }
@@ -349,6 +365,9 @@ class NexusCompanionDashboard {
 				: `<span style="color:#d1d5e0;font-size:0.78rem;">—</span>`;
 			const score = e.enquiry_score || 0;
 			const badge = `<span class="ncd-badge ncd-badge-${e.enquiry_stage}">${this._stage_label(e.enquiry_stage)}</span>`;
+			const milestoneBadge = e.companion_milestone
+				? `<span class="ncd-milestone ncd-milestone-${e.companion_milestone}">${this._milestone_label(e.companion_milestone)}</span>`
+				: `<span style="color:#d1d5e0;font-size:0.75rem;">—</span>`;
 			const scoreBar = `
 				<div class="ncd-score-wrap">
 					<div class="ncd-score-bar-bg">
@@ -363,6 +382,7 @@ class NexusCompanionDashboard {
 				<tr class="ncd-row" data-name="${e.name}">
 					<td>${name}${flag}</td>
 					<td>${badge}</td>
+					<td>${milestoneBadge}</td>
 					<td>${scoreBar}</td>
 					<td>${persona}</td>
 					<td style="font-size:0.78rem;color:#9ca3af;">${age}</td>
@@ -375,6 +395,7 @@ class NexusCompanionDashboard {
 					<tr>
 						<th>Visitor</th>
 						<th>Stage</th>
+						<th>Milestone</th>
 						<th style="min-width:110px;">Score</th>
 						<th>Persona</th>
 						<th>When</th>
@@ -542,6 +563,14 @@ class NexusCompanionDashboard {
 								<span class="ncd-detail-val"><span class="ncd-badge ncd-badge-${enq.enquiry_stage}">${this._stage_label(enq.enquiry_stage)}</span></span>
 							</div>
 							<div class="ncd-detail-row">
+								<span class="ncd-detail-key">Milestone</span>
+								<span class="ncd-detail-val">
+									${enq.companion_milestone
+										? `<span class="ncd-milestone ncd-milestone-${enq.companion_milestone}">${this._milestone_label(enq.companion_milestone)}</span>`
+										: `<span style="color:#9ca3af;">Not started</span>`}
+								</span>
+							</div>
+							<div class="ncd-detail-row">
 								<span class="ncd-detail-key">Enquiry Score</span>
 								<span class="ncd-detail-val">
 									<div class="ncd-score-wrap">
@@ -686,5 +715,78 @@ class NexusCompanionDashboard {
 			DECLINED: "Declined", ESCALATED: "Escalated",
 		};
 		return labels[stage] || stage;
+	}
+
+	_milestone_label(milestone) {
+		const labels = {
+			onboarding_business: "Onboarding",
+			business_discovery:  "Discovery",
+			pain_discovery:      "Pain Discovery",
+			solution_mapping:    "Solution Mapping",
+			evidence_building:   "Evidence",
+			demo_arrangement:    "Demo Arrange",
+			quotation:           "Quotation",
+			conversion:          "Conversion",
+		};
+		return labels[milestone] || milestone;
+	}
+
+	_subscribe_realtime() {
+		frappe.realtime.on("companion_progress_update", (data) => {
+			if (!data || !data.enquiry) return;
+
+			// Update the matching table row badge in-place
+			const row = $(`.ncd-row[data-name="${data.enquiry}"]`);
+			if (row.length) {
+				if (data.stage) {
+					row.find("td:nth-child(2)").html(
+						`<span class="ncd-badge ncd-badge-${data.stage}">${this._stage_label(data.stage)}</span>`
+					);
+				}
+				if (data.milestone) {
+					row.find("td:nth-child(3)").html(
+						`<span class="ncd-milestone ncd-milestone-${data.milestone}">${this._milestone_label(data.milestone)}</span>`
+					);
+				}
+				// Update the cached data array so funnel filter re-renders correctly
+				if (this.data && this.data.recent_enquiries) {
+					const entry = this.data.recent_enquiries.find(e => e.name === data.enquiry);
+					if (entry) {
+						if (data.stage)     entry.enquiry_stage = data.stage;
+						if (data.milestone) entry.companion_milestone = data.milestone;
+					}
+				}
+			}
+
+			// Refresh the funnel counts without a full reload
+			if (data.stage) {
+				this._refresh_funnel_counts(data.stage);
+			}
+		});
+	}
+
+	_refresh_funnel_counts(new_stage) {
+		// Recount from cached data (already updated above)
+		if (!this.data || !this.data.recent_enquiries) return;
+		const countMap = {};
+		this.data.recent_enquiries.forEach(e => {
+			countMap[e.enquiry_stage] = (countMap[e.enquiry_stage] || 0) + 1;
+		});
+		// Also update the stage_funnel cache
+		if (this.data.stage_funnel) {
+			this.data.stage_funnel.forEach(f => {
+				f.count = countMap[f.stage] || f.count;
+			});
+		}
+		const max = Math.max(...(this.data.stage_funnel || []).map(f => f.count), 1);
+		$(`.ncd-funnel-stage`).each((_, el) => {
+			const stage = $(el).data("stage");
+			const entry = (this.data.stage_funnel || []).find(f => f.stage === stage);
+			if (entry) {
+				$(el).find(".ncd-funnel-count").text(entry.count);
+				const pct = Math.round((entry.count / max) * 100);
+				$(el).find("div[style]").css("width", pct + "%");
+			}
+		});
 	}
 }

@@ -75,6 +75,8 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         signal.get("signal_type", "CURIOUS"),
     )
 
+    _publish_progress_update(conversation)
+
     # conversation.reload()
     # advance_journey_stage(conversation)
 
@@ -317,16 +319,12 @@ def _response_goal_for_steering(steering):
 
 def _get_current_milestone(conversation):
     """
-    Resolve controller milestone from conversation state.
-
-    IMPORTANT:
-    companion_journey_stage is a funnel/reporting stage.
-    intent is currently being used as the controller milestone.
-
-    Later, replace this with a dedicated companion_milestone field.
+    Resolve controller milestone from the dedicated companion_milestone field.
+    Falls back to deriving from journey stage for conversations started before
+    the field was introduced.
     """
 
-    intent = (getattr(conversation, "intent", None) or "").strip()
+    milestone = (getattr(conversation, "companion_milestone", None) or "").strip()
 
     business_milestones = {
         "onboarding_business",
@@ -339,8 +337,8 @@ def _get_current_milestone(conversation):
         "conversion",
     }
 
-    if intent in business_milestones:
-        return intent
+    if milestone in business_milestones:
+        return milestone
 
     stage = (getattr(conversation, "companion_journey_stage", None) or "").strip()
 
@@ -769,8 +767,9 @@ Draft the next response.
 
 def _maybe_advance_milestone(conversation):
     """
-    Initial basic milestone advancement rule.
-    Later move to Milestone Engine.
+    Advance companion_milestone when discovery criteria are met.
+    Writes companion_milestone on the conversation (and syncs to enquiry via
+    _publish_progress_update so the desk reflects it immediately).
     """
     try:
         current_milestone = _get_current_milestone(conversation)
@@ -796,19 +795,65 @@ def _maybe_advance_milestone(conversation):
         required = ["industry", "current_challenges"]
 
         if all(discovery.get(k) for k in required):
+            new_milestone = "business_discovery"
             frappe.db.set_value(
                 "Nexus Live Conversation",
                 conversation.name,
-                "intent",
-                "business_discovery",
+                "companion_milestone",
+                new_milestone,
                 update_modified=False,
             )
+            if enquiry_name:
+                frappe.db.set_value(
+                    "Nexus Companion Enquiry",
+                    enquiry_name,
+                    "companion_milestone",
+                    new_milestone,
+                    update_modified=False,
+                )
+            _publish_progress_update(conversation, new_milestone=new_milestone)
 
     except Exception:
         frappe.log_error(
             frappe.get_traceback(),
             "Companion Controller: milestone advancement failed",
-        )        
+        )
+
+
+def _publish_progress_update(conversation, new_milestone=None):
+    """
+    Push a realtime event to the desk so the Companion Dashboard can update
+    the funnel count and enquiry row without a full page refresh.
+    """
+    try:
+        enquiry_name = getattr(conversation, "companion_enquiry", None)
+        stage = frappe.db.get_value(
+            "Nexus Live Conversation",
+            conversation.name,
+            "companion_journey_stage",
+        ) or ""
+        milestone = new_milestone or frappe.db.get_value(
+            "Nexus Live Conversation",
+            conversation.name,
+            "companion_milestone",
+        ) or ""
+        frappe.publish_realtime(
+            "companion_progress_update",
+            {
+                "enquiry": enquiry_name,
+                "conversation": conversation.name,
+                "stage": stage,
+                "milestone": milestone,
+            },
+            doctype="Nexus Companion Enquiry",
+            docname=enquiry_name,
+            after_commit=True,
+        )
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Companion Controller: realtime publish failed",
+        )
         
 def _detect_pending_action(conversation_context):
     """

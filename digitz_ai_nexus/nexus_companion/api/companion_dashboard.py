@@ -53,6 +53,7 @@ def get_enquiry_detail(name):
     return {
         "name": enq.name,
         "enquiry_stage": enq.enquiry_stage,
+        "companion_milestone": enq.companion_milestone or "",
         "enquiry_score": enq.enquiry_score,
         "escalation_recommended": enq.escalation_recommended,
         "recommended_next_step": enq.recommended_next_step,
@@ -189,9 +190,9 @@ def _get_recent_enquiries(tenant, limit=20):
         "Nexus Companion Enquiry",
         filters=filters,
         fields=[
-            "name", "enquiry_stage", "enquiry_score", "matched_persona",
-            "persona_confidence", "recommended_next_step", "conversation",
-            "escalation_recommended", "creation",
+            "name", "enquiry_stage", "companion_milestone", "enquiry_score",
+            "matched_persona", "persona_confidence", "recommended_next_step",
+            "conversation", "escalation_recommended", "creation",
         ],
         order_by="creation desc",
         limit_page_length=limit,

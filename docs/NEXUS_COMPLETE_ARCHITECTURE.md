@@ -1,6 +1,6 @@
 # DIGITZ AI Nexus — Complete Implementation Architecture
 
-> Last updated: 2026-06-25 (profile-scoped public retrieval). Source of truth for all five Nexus apps.
+> Last updated: 2026-06-28 (business companion controller, companion_milestone field, realtime dashboard, Nexus Sales Playbook removed). Source of truth for all five Nexus apps.
 
 ---
 
@@ -37,7 +37,7 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | `nexus_ai` | LLM provider configuration |
 | `nexus_operations` | Tenant configuration, query logging, user context |
 | `nexus_security` | Security utilities (no DocTypes) |
-| `nexus_companion` | Intent-driven LLM conversion engine — journey stages, signal classification, enquiry lifecycle, persona matching, reference matching, dashboard |
+| `nexus_companion` | Controller-led LLM conversion engine — business milestones, external intent classification, journey stages, signal classification, enquiry lifecycle, persona matching, reference matching, realtime desk dashboard |
 
 ### 2.2 DocTypes
 
@@ -109,7 +109,7 @@ digitz_ai_nexus_agentic   → Agentic Runtime (autonomous agents, Sales + Purcha
 | `Nexus Companion Outcome` | `outcome_label`, `outcome_category`, `tenant`, `approved`, `detail` | Discrete reusable outcome statement |
 | `Nexus Companion Outcome Product` | (child) `product` | Links outcome to products |
 | `Nexus Companion Outcome Persona` | (child) `persona` | Links outcome to personas |
-| `Nexus Companion Enquiry` | `visitor`, `visitor_email`, `verification_status`, `web_session`, `conversation`, `tenant`, `enquiry_stage`, `enquiry_score`, `matched_persona`, `stage_signal`, `signal_log`, `discovery_data`, `recommended_next_step`, `escalation_recommended` | Full journey record for a visitor — created automatically when companion mode is active; updated in real time |
+| `Nexus Companion Enquiry` | `visitor`, `visitor_email`, `verification_status`, `web_session`, `conversation`, `tenant`, `enquiry_stage`, `companion_milestone`, `enquiry_score`, `matched_persona`, `stage_signal`, `signal_log`, `discovery_data`, `recommended_next_step`, `escalation_recommended` | Full journey record for a visitor — created automatically when companion mode is active; updated in real time. `companion_milestone` synced from the conversation each turn. |
 | `Nexus Companion Enquiry Product` | (child) `product`, `product_name`, `fit_score` | Recommended product rows on an enquiry |
 | `Nexus Companion Enquiry Service` | (child) `service`, `service_name`, `fit_score` | Recommended service rows on an enquiry |
 
@@ -175,20 +175,44 @@ The companion is a horizontal capability layered across the existing chat pipeli
 
 **Activation:** Set `companion_mode = 1` on a `Nexus AI Agent Profile`. All conversations on that profile enter companion mode automatically.
 
+**Architecture — Controller-Led Mode**
+
+The companion has two operating modes, selected per turn:
+
+| Mode | Trigger | Description |
+|---|---|---|
+| `controlled_companion` | `business_companion_controller.handle_companion_turn()` | Controller owns all decisions; LLM only drafts within controller constraints. Active when the controller is invoked. |
+| `companion_advisor` (prompt-injection) | Legacy path via `_build_companion_block()` in `prompt.py` | LLM drives the conversation guided by a structured context block. Used when the controller is not in the call path. |
+
 **Services:**
 
 | File | Responsibility |
 |---|---|
+| `nexus_companion/services/business_companion_controller.py` | **Controller** — owns milestone, steering, grounding, and response goal every turn. Classifies external intent, extracts discovery data, updates enquiry, advances journey stage, decides whether the LLM may use knowledge/tools/escalation. Three decisions bypass the LLM entirely (demo confirm, demo reject, next-step explain). |
+| `nexus_companion/services/companion_intent_service.py` | LLM-powered **external intent** classification per message (15 intent types; fast keyword rules first, LLM as fallback). Returns `{intent, confidence, reason}`. |
 | `nexus_companion/services/companion_context_service.py` | Assembles full companion context dict per AI turn (stage, persona, products block, references block, playbook guidelines) |
-| `nexus_companion/services/enquiry_service.py` | Enquiry lifecycle — create/update/score/stage advance; signal-driven stage machine + score-based fallback |
-| `nexus_companion/services/signal_classifier.py` | LLM-powered per-message buying signal classification (14 signal types; falls back to CURIOUS on failure) |
+| `nexus_companion/services/enquiry_service.py` | Enquiry lifecycle — create/update/score/stage advance; signal-driven stage machine + score-based fallback. Also syncs `companion_milestone` from conversation to enquiry each turn and emits `companion_progress_update` realtime on stage change. |
+| `nexus_companion/services/signal_classifier.py` | LLM-powered per-message **buying signal** classification (14 signal types; falls back to CURIOUS on failure). Distinct from external intent — signals describe visitor behaviour, intents describe what the visitor wants to do. |
 | `nexus_companion/services/persona_matching_service.py` | Keyword/weighted scoring against persona fields to identify visitor archetype |
 | `nexus_companion/services/reference_matching_service.py` | Retrieves relevant Stories, Testimonials, and Outcomes based on industry and persona |
 
-**Journey Stages (11):**
+**Controller Milestones (8) — written to `companion_milestone`:**
+`onboarding_business → business_discovery → pain_discovery → solution_mapping → evidence_building → demo_arrangement → quotation → conversion`
+
+Milestones are the controller's current objective. They are independent from journey stages (which are the funnel/reporting state). The controller reads `companion_milestone` directly; falls back to deriving from `companion_journey_stage` for conversations started before the field was introduced.
+
+**Journey Stages (11) — written to `companion_journey_stage`:**
 `ARRIVED → GREETING → DISCOVERY → ENGAGED → PRESENTING ⇌ OBJECTION_HANDLING → INTERESTED → CONVERTING → CONVERTED / DECLINED / ESCALATED`
 
 Stage transitions are signal-driven. Every visitor message is classified as one of 14 signal types by the LLM. The signal type determines stage transition. Score-based advancement (0–100 composite score) is retained as a safety-net fallback.
+
+**Grounding modes (set by `_apply_grounding_policy`):**
+
+| Mode | Meaning |
+|---|---|
+| `nexus_knowledge_only` | Knowledge is fetched before LLM call; LLM must answer from confirmed chunks only |
+| `controller_only` | LLM drafts freely within controller steering and response_goal |
+| `no_llm_direct` | Controller returns a fixed hardcoded response — LLM not called |
 
 **Prompt injection:** `engine/prompt.py` → `_build_companion_block()` injects a `--- NEXY COMPANION ENGINE ---` block after APPROVED KNOWLEDGE. Block structure: IDENTITY → OBJECTIVE → CURRENT SITUATION → AVAILABLE SOLUTIONS → REFERENCES → GUIDELINES → DIRECTIVE → LANGUAGE RULES.
 
@@ -196,7 +220,7 @@ Stage transitions are signal-driven. Every visitor message is classified as one 
 
 **API endpoints:** `nexus_companion/api/companion_dashboard.py` — `get_dashboard_data()`, `get_enquiry_detail()`, `get_tenants()`
 
-**Dashboard page:** `nexus_companion/page/nexus_companion_dashboard/` — stage funnel, conversion stats, enquiry list, persona frequency, config summary
+**Dashboard page:** `nexus_companion/page/nexus_companion_dashboard/` — stage funnel (11 stages), milestone column, conversion stats, enquiry list, persona frequency, config summary. Subscribes to `companion_progress_update` realtime events for live badge and funnel updates without page refresh.
 
 ---
 
@@ -256,7 +280,7 @@ Stage transitions are signal-driven. Every visitor message is classified as one 
 
 | DocType | Key Fields | Purpose |
 |---|---|---|
-| `Nexus Live Conversation` | `conversation_id`, `conversation_type`, `channel`, `chat_category`, `resolved_identity_type`, `identity_registry`, `visitor_name`, `visitor_email`, `user_type`, `assigned_agent`, `assigned_ai_agent_profile`, `status`, `intent`, `confidence`, `escalation_status`, `escalated_at`, `human_agent`, `started_on`, `nexy_handover_category` | Central session record for every chat. `nexy_handover_category` is set during Nexy handover detection and cleared once the handover completes. |
+| `Nexus Live Conversation` | `conversation_id`, `conversation_type`, `channel`, `chat_category`, `resolved_identity_type`, `identity_registry`, `visitor_name`, `visitor_email`, `user_type`, `assigned_agent`, `assigned_ai_agent_profile`, `status`, `intent`, `confidence`, `escalation_status`, `escalated_at`, `human_agent`, `started_on`, `nexy_handover_category`, `companion_journey_stage`, `companion_milestone`, `companion_persona`, `companion_enquiry` | Central session record for every chat. `companion_milestone` is written by the Business Companion Controller each turn (8 milestones). `nexy_handover_category` is set during Nexy handover detection and cleared once the handover completes. |
 | `Nexus Live Message` | `conversation`, `sender_type`, `sender_name`, `message`, `response_type`, `sent_at` | Individual message within a conversation |
 | `Nexus Conversation Feedback` | `conversation`, `rating`, `comment`, `submitted_at` | Visitor satisfaction rating |
 | `Nexus Conversation Participant` | (child) `user`, `role` | Tracks multiple participants in a session |
@@ -422,9 +446,11 @@ Stage transitions are signal-driven. Every visitor message is classified as one 
 | Goal Types | 18 | 9 per pack |
 | Agent Tools | 27 | 15 Sales + 12 Purchase |
 
-### 4.4 Sales DocTypes (13 DocTypes)
+### 4.4 Sales DocTypes (12 DocTypes)
 
-`Nexus Sales Strategy`, `Nexus Sales Campaign`, `Nexus Sales Audience Segment`, `Nexus Sales Lead Source`, `Nexus Sales Lead Score`, `Nexus Sales Outreach Draft`, `Nexus Sales Outreach Event`, `Nexus Sales Follow Up Rule`, `Nexus Sales Reply Classification`, `Nexus Sales Objection Library`, `Nexus Sales Playbook`, `Nexus Sales Notification Rule`, `Nexus Sales Suppression List`
+`Nexus Sales Strategy`, `Nexus Sales Campaign`, `Nexus Sales Audience Segment`, `Nexus Sales Lead Source`, `Nexus Sales Lead Score`, `Nexus Sales Outreach Draft`, `Nexus Sales Outreach Event`, `Nexus Sales Follow Up Rule`, `Nexus Sales Reply Classification`, `Nexus Sales Objection Library`, `Nexus Sales Notification Rule`, `Nexus Sales Suppression List`
+
+> `Nexus Sales Playbook` was removed 2026-06-28 — zero records, `build_outreach_context` was never implemented, and no code outside the agentic app referenced it.
 
 ### 4.5 Purchase DocTypes (6 DocTypes)
 
@@ -597,6 +623,7 @@ Nav links: `Home | Experience | Nexus Platform | Apps | Nexus Architecture | Cha
 | `nexus_chat_typing` | `chat_realtime.publish_chat_typing()` | Chat widget | Typing indicator before AI reply |
 | `nexus_escalation_alert` | `chat_realtime.publish_escalation_alert()` | Live console (global) | Alerts assigned human agents of new escalation |
 | `nexus_escalation_claimed` | `agent_console.claim_conversation()` | Live console (global) | Notifies other agents a conversation was claimed |
+| `companion_progress_update` | `business_companion_controller._publish_progress_update()` and `enquiry_service._set_stage()` | Companion Dashboard page | `{enquiry, conversation, stage, milestone}` — emitted after every journey stage change and every controller milestone advance. Dashboard JS patches table row badges and funnel counts in-place without a full reload. |
 
 **Room:** All events broadcast to the `all` room (site room). Only System Users join `all`. Visitors receive via their own socket connection.
 

@@ -127,6 +127,13 @@ def update_enquiry(conversation, discovery_delta: dict, signal: dict | None = No
             enquiry.visitor_email = live_email
             enquiry.verification_status = "OTP Verified"
 
+    # Sync controller milestone from conversation → enquiry every turn
+    live_milestone = getattr(conversation, "companion_milestone", None) or frappe.db.get_value(
+        "Nexus Live Conversation", conversation.name, "companion_milestone"
+    ) or ""
+    if live_milestone:
+        enquiry.companion_milestone = live_milestone
+
     # Merge discovery data
     try:
         existing = json.loads(enquiry.discovery_data or "{}")
@@ -442,12 +449,28 @@ def _stage_idx(stage: str) -> int:
 def _set_stage(conversation, stage: str) -> str:
     """Write the new stage to the conversation and the linked enquiry."""
     conversation.db_set("companion_journey_stage", stage, update_modified=False)
-    if conversation.companion_enquiry:
+    enquiry_name = conversation.companion_enquiry
+    if enquiry_name:
         frappe.db.set_value(
             "Nexus Companion Enquiry",
-            conversation.companion_enquiry,
+            enquiry_name,
             "enquiry_stage",
             stage,
+        )
+        milestone = frappe.db.get_value(
+            "Nexus Live Conversation", conversation.name, "companion_milestone"
+        ) or ""
+        frappe.publish_realtime(
+            "companion_progress_update",
+            {
+                "enquiry": enquiry_name,
+                "conversation": conversation.name,
+                "stage": stage,
+                "milestone": milestone,
+            },
+            doctype="Nexus Companion Enquiry",
+            docname=enquiry_name,
+            after_commit=True,
         )
     return stage
 
