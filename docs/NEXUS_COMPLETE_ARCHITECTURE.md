@@ -173,7 +173,20 @@ The companion is a horizontal capability layered across the existing chat pipeli
 
 **Purpose:** Intent-driven LLM conversion engine. Default intent is Sales — guide visitors from discovery to a completed conversion (enquiry captured, meeting booked, subscription activated). The LLM itself drives the conversion process; the platform supplies structured context, not a rule engine.
 
-**Activation:** Set `companion_mode = 1` on a `Nexus AI Agent Profile`. All conversations on that profile enter companion mode automatically.
+**Activation:** Set `companion_mode = 1` on a `Nexus AI Agent Profile`. All conversations on that profile enter companion mode automatically. The specific Nexy role (and therefore controller) is determined by `companion_controller_type` on the `Nexus Chat Category`.
+
+**Multi-Role Nexy Architecture**
+
+Nexy is a brand and persona, not a single capability. Each Nexy role has its own controller module, playbook, and `Nexus AI Agent Profile`. The live chat dispatcher selects the correct controller per conversation based on `companion_controller_type` frozen in the snapshot at category selection time.
+
+| Category `companion_controller_type` | Controller module | Role |
+|---|---|---|
+| `business_companion` | `business_companion_controller.py` | B2B sales discovery → demo arrangement |
+| `customer_support` | `support_companion_controller.py` *(planned)* | Issue triage → resolution |
+
+The dispatcher `_dispatch_companion_controller()` in `live_chat_service.py` reads the controller type from the AI profile snapshot and imports the correct module. Any unknown value falls back to `business_companion`.
+
+Each Nexy role requires a **separate `Nexus AI Agent Profile`** with `companion_mode = 1`, a role-specific `behavior_prompt`, a dedicated `companion_playbook`, and appropriate knowledge access. Both profiles display as "Nexy" to visitors (`display_name = "Nexy"`); the distinction is internal.
 
 **Architecture — Controller-Led Mode**
 
@@ -181,7 +194,7 @@ The companion has two operating modes, selected per turn:
 
 | Mode | Trigger | Description |
 |---|---|---|
-| `controlled_companion` | `business_companion_controller.handle_companion_turn()` | Controller owns all decisions; LLM only drafts within controller constraints. Active when the controller is invoked. |
+| `controlled_companion` | `_dispatch_companion_controller()` → correct `handle_companion_turn()` | Controller owns all decisions; LLM only drafts within controller constraints. Active when the controller is invoked. |
 | `companion_advisor` (prompt-injection) | Legacy path via `_build_companion_block()` in `prompt.py` | LLM drives the conversation guided by a structured context block. Used when the controller is not in the call path. |
 
 **Services:**
@@ -260,7 +273,7 @@ Stage transitions are signal-driven. Every visitor message is classified as one 
 | DocType | Key Fields | Purpose |
 |---|---|---|
 | `Nexus Live Channel` | `channel_code`, `tenant`, `channel_name`, `channel_type`, `enabled`, `default_agent`, `requires_visitor_email` | Logical entry point/context — website chat, mobile, desk, API, campaign, support surface |
-| `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `use_for_nexy`, `faq_questions` | Visitor-facing topic/service. Belongs to one channel, so selecting the category implies the channel. `use_for_nexy` flags this as a Nexy-exclusive category — must have identity verification and a published route (validated on save). |
+| `Nexus Chat Category` | `category_code`, `category_label`, `channel`, `tenant`, `enabled`, `published`, `visibility`, `identity_verification_mode`, `allow_public_fallback`, `enable_escalation`, `use_for_nexy`, `companion_controller_type`, `faq_questions` | Visitor-facing topic/service. `use_for_nexy` flags Nexy categories. `companion_controller_type` (Select: `business_companion` / `customer_support`) determines which Nexy controller handles the conversation — frozen into the AI profile snapshot at category selection. |
 | `Nexus Chat Category FAQ` | (child) `question`, `answer` | Pre-built FAQ answers for a category |
 | `Nexus Identity Type` | `type_code`, `type_label`, `description` | Named identity classes (e.g. Employee, Customer, Partner) — intentionally global, not tenant-scoped |
 | `Nexus Identity Registry` | `registry_name`, `description`, `enabled` | Registry of verified identities — intentionally global |

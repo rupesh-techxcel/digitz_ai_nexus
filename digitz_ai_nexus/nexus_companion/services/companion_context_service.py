@@ -50,9 +50,10 @@ _STAGE_DIRECTIVES = {
     },
     "GREETING": {
         "PROGRESSING": (
-            "You are building the first connection. Invite the visitor to share their "
-            "business context. Ask about their role, their team, or what they are "
-            "working on. One conversational question only."
+            "The visitor has just chosen to connect. Skip the platform introduction — "
+            "do not describe what Nexus Orbit or Nexy is. Ask one direct, focused question: "
+            "what does their business do, and what's the main challenge they want to solve? "
+            "Be brief and genuine."
         ),
         "RESISTANT": (
             "The visitor seems hesitant. Shift from asking questions to briefly sharing "

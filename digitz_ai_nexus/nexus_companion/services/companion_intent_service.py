@@ -7,6 +7,7 @@ from digitz_ai_nexus.engine.llm import generate_answer
 _ALLOWED_INTENTS = {
     "business_context_answer",
     "business_scale_question",
+    "pain_context_answer",
     "pricing_question",
     "demo_interest",
     "demo_confirmation",
@@ -236,6 +237,33 @@ def classify_external_intent(
     if any(
         k in text
         for k in [
+            "challenges with",
+            "challenge with",
+            "struggling with",
+            "struggle with",
+            "issues with",
+            "issue with",
+            "problem with",
+            "problems with",
+            "difficulty with",
+            "difficulties with",
+            "pain point",
+            "facing challenges",
+            "facing issues",
+            "facing problem",
+            "have trouble with",
+            "trouble with",
+        ]
+    ):
+        return {
+            "intent": "pain_context_answer",
+            "confidence": 0.9,
+            "reason": "visitor sharing a specific business challenge or pain point",
+        }
+
+    if any(
+        k in text
+        for k in [
             "how can you help",
             "how you can help",
             "how nexus can help",
@@ -282,7 +310,10 @@ Visitor message:
 Choose exactly one intent:
 
 - business_context_answer
-  The visitor is answering about their business, company, industry, work, services, current situation, goal, or challenge.
+  The visitor is answering about their business, company, industry, work, services, current situation, or goal — without stating a specific pain or challenge.
+
+- pain_context_answer
+  The visitor is sharing a specific challenge, pain point, problem, or difficulty they are currently facing in their business operations (e.g. "we have challenges with lead generation", "struggling with customer retention").
 
 - business_scale_question
   The visitor is asking about scale, volume, size, daily operations, how many customers/jobs/users/transactions/businesses are handled, or asking "how much do you run" in an operational sense.

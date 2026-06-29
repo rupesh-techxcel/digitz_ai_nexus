@@ -768,7 +768,7 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
 
             return {
                 "status": "success",
-                "access_status": "no_context",
+                "access_status": "controlled_no_context",
                 "answer": _knowledge_required_fallback(payload, controller_plan),
                 "confidence": 0.0,
                 "sources": [],
@@ -778,6 +778,7 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
                 "chat_mode": "controlled_companion_loop",
                 "companion_controller": True,
                 "conversion_action": None,
+                "verification_prompt_allowed": False,
             }
 
         all_retrieved_chunks.extend(chunks)
@@ -861,7 +862,8 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
 
         if choice.finish_reason == "stop":
             answer = _clean_companion_answer(choice.message.content or "")
-            
+            answer = _apply_nexy_summary_guard(answer, controller_plan)
+
             print("\n\n========== FINAL CONTROLLED ANSWER DEBUG ==========")
             print("grounding_mode:", controller_plan.get("grounding_mode"))
             print("knowledge_needed:", controller_plan.get("knowledge_needed"))
@@ -1016,6 +1018,11 @@ def _build_controlled_companion_messages(payload, controller_plan):
         or "You are Nexy, a helpful business companion."
     )
 
+    # Strip the retrieval query before embedding the plan — the LLM must not
+    # treat candidate search terms as confirmed product knowledge.
+    safe_controller_plan = dict(controller_plan or {})
+    safe_controller_plan.pop("knowledge_query", None)
+
     system_prompt = f"""
     {behavior_prompt}
 
@@ -1025,31 +1032,38 @@ def _build_controlled_companion_messages(payload, controller_plan):
     You must follow the controller plan exactly.
 
     CONTROLLER PLAN:
-    {json.dumps(controller_plan, indent=2)}
+    {json.dumps(safe_controller_plan, indent=2)}
     
     RESPONSE GOAL:
     {controller_plan.get("response_goal") or ""}
 
     STRICT RULES:
-    1. Do not decide the business journey yourself.
-    2. Do not move to demo, quotation, representative handoff, or meeting unless the controller plan allows it.
-    3. Do not call tools unless they are listed in allowed_tools.
-    4. If knowledge_needed is false, do not call search_knowledge.
-    5. If the visitor asks something outside the current milestone, acknowledge briefly and follow the steering decision.
-    6. Ask only one question unless the controller plan says otherwise.
-    7. Never mention controller, internal intent, milestone, steering, or tool policy to the visitor.
-    8. Keep the response concise, natural, and business-friendly.
-    9. Do not invent product facts, pricing, commitments, guarantees, or implementation details.
-    10. If the controller plan includes discovery_delta, use it as known visitor context.
-    11. Do not ask the visitor to submit a demo request unless allow_conversion_action is true.
-    12. If allow_conversion_action is false, continue discovery or answer the current question only.
-    13. If the visitor already confirmed a demo or next step, do not ask for confirmation again.
-    14. If product or technical implementation details are not available from permitted knowledge, say clearly that the exact details are not confirmed.
-    15. Do not use phrases like "typically enables", "usually supports", or "can automate" to imply confirmed product capability unless the knowledge tool confirms it.
-    16. Do not prefix the response with "AI Agent:", "Assistant:", "Nexy:", or any speaker name.
-    17. If the visitor asks how Nexus can help with ads, lead generation, recruitment, or operations, do not explain process categories unless those categories are clearly present in the permitted Nexus Orbit knowledge. Do not infer customer profiling, lead capture, qualification, follow-up, routing, tracking, automation, dashboards, or decision support from general platform knowledge.
-    18. If grounding_mode is "nexus_knowledge_only", answer only from permitted Nexus Orbit knowledge provided in this turn. If no knowledge is provided, do not answer from assumption. Do not provide advisory guesses, product capabilities, pricing, integrations, automation claims, dashboards, or implementation details from general LLM knowledge.
-    19. If grounding_mode is "controller_only", you may draft natural wording only within the controller plan. Do not make product, pricing, technical, integration, automation, or capability claims.
+    1. Never open a response with "It's [adjective]" (e.g. "It's great", "It's wonderful", "It's interesting", "It's good", "It's exciting"), "That's [adjective]" (e.g. "That's great", "That's a fair concern"), "How [adjective]", or "I appreciate". These hollow openers add no value. Also do not append hollow qualifiers mid-sentence such as "— that sounds like a unique and essential service", "— how interesting", or "— what a fascinating industry". Start responses directly with the relevant content or observation.
+    2. Do not decide the business journey yourself.
+    3. Do not move to demo, quotation, representative handoff, or meeting unless the controller plan allows it.
+    4. Do not call tools unless they are listed in allowed_tools.
+    5. If knowledge_needed is false, do not call search_knowledge.
+    6. If the visitor asks something outside the current milestone, acknowledge briefly and follow the steering decision.
+    7. Ask only one question unless the controller plan says otherwise.
+    8. Never mention controller, internal intent, milestone, steering, or tool policy to the visitor.
+    9. Keep the response concise, natural, and business-friendly.
+    10. Do not invent product facts, pricing, commitments, guarantees, or implementation details.
+    11. If the controller plan includes discovery_delta, use it as known visitor context.
+    12. Do not ask the visitor to submit a demo request unless allow_conversion_action is true.
+    13. If allow_conversion_action is false, continue discovery or answer the current question only.
+    14. If the visitor already confirmed a demo or next step, do not ask for confirmation again.
+    15. If product or technical implementation details are not available from permitted knowledge, say clearly that the exact details are not confirmed.
+    16. Do not use phrases like "typically enables", "usually supports", or "can automate" to imply confirmed product capability unless the knowledge tool confirms it.
+    17. Do not prefix the response with "AI Agent:", "Assistant:", "Nexy:", or any speaker name.
+    18. If the visitor asks how Nexus can help with ads, lead generation, recruitment, or operations, do not explain process categories unless those categories are clearly present in the permitted Nexus Orbit knowledge. Do not infer customer profiling, lead capture, qualification, follow-up, routing, tracking, automation, dashboards, or decision support from general platform knowledge.
+    19. If grounding_mode is "nexus_knowledge_only", answer only from permitted Nexus Orbit knowledge provided in this turn. If no knowledge is provided, do not answer from assumption. Do not provide advisory guesses, product capabilities, pricing, integrations, automation claims, dashboards, or implementation details from general LLM knowledge.
+    20. If grounding_mode is "controller_only", you may ask discovery questions only. Do not say Nexus can enhance, improve, automate, optimise, assist with, or support any specific business outcome (ads, lead generation, recruitment, operations, etc.) unless grounding_mode is "nexus_knowledge_only" AND the permitted knowledge explicitly confirms it. For discovery questions use safe phrasing such as "understand your situation and check what confirmed Nexus guidance is available" or "understand the area you want to improve before connecting it to confirmed guidance." Never write "how Nexus can enhance your lead generation", "how Nexus can help with Facebook ads", "Nexus can assist you with", or similar implied capability claims.
+    21. When greeting a visitor who has just selected a topic, skip the platform self-introduction. Do not recite what Nexus Orbit or Nexy is. Get directly to understanding their business situation.
+    22. After the visitor has answered two or more discovery questions, your response must include at least one concrete observation or recognized pattern about their situation before asking the next question. The conversation must not feel like a one-sided interview.
+    23. When the steering decision is "answer_solution_fit", do NOT ask any question about the visitor's existing tool, platform, or methodology (e.g. do not ask about their Facebook ads performance, their CRM results, their current process challenges, or any metrics of their existing approach). If you need to ask a question, ask only which aspect of their stated challenge they most want to address first — nothing about the tool they are currently using.
+    24. Never refer to yourself in the third person. Do not say "Nexy is designed to...", "Nexy helps by...", "Nexy can...", or "Nexy is...". Always use "I" — for example "I'm designed to...", "I can help by...", "I score each conversation...". When rephrasing permitted knowledge that uses third-person "Nexy", convert it to first-person before including it in your response.
+    25. When explaining Nexus capabilities from permitted knowledge, always frame them in the context of the visitor's specific situation — their industry and stated challenge. Do not describe the platform generically. Connect each capability directly to how it addresses their stated problem.
+    26. Never append a list of options after a question. Do not add "Is it X, Y, or Z?", "Such as A, B, C, or D?", or any similar sub-options after asking a question. Ask one question, then stop. One question mark, then end the turn or move to the next sentence — never use "Is it..." to enumerate choices.
     """
 
     user_prompt = f"""
@@ -1100,6 +1114,50 @@ def _clean_companion_answer(answer):
 
     return text
 
+def _apply_nexy_summary_guard(answer, controller_plan):
+    """
+    Lightweight deterministic guard for present_nexy_capability_summary responses.
+    Prevents forbidden ad-platform claims from reaching the visitor and appends
+    a positioning clarifier if the methodology name appears without a "not replacing" caveat.
+    """
+    decision = (controller_plan or {}).get("steering_decision")
+    if decision != "present_nexy_capability_summary":
+        return answer
+
+    methodology = (controller_plan.get("current_methodology") or "").strip()
+    entry_point = (controller_plan.get("lead_entry_point") or "the enquiry channel").strip()
+
+    forbidden_markers = [
+        "optimize your ads",
+        "manage your ads",
+        "improve your google ads",
+        "improve your facebook ads",
+        "ad targeting",
+        "campaign setup",
+        "creative optimization",
+        "budget optimization",
+    ]
+
+    lower_answer = (answer or "").lower()
+
+    if any(marker in lower_answer for marker in forbidden_markers):
+        return (
+            f"Based on the confirmed Nexus knowledge, Nexy is positioned after the enquiry arrives through {entry_point}. "
+            "Nexy can support the conversation and qualification journey, but I should not claim direct "
+            "ad-platform optimization or campaign management without confirmed knowledge. "
+            "Would you like me to map your current lead journey into a simple Nexy flow?"
+        )
+
+    if methodology and methodology.lower() in lower_answer and "not replacing" not in lower_answer:
+        answer = (
+            f"{answer}\n\n"
+            f"To be clear, Nexy is not being positioned here as a replacement or optimizer for {methodology}; "
+            f"the confirmed role is supporting the conversion journey after the enquiry arrives through {entry_point}."
+        )
+
+    return answer
+
+
 def _knowledge_required_fallback(payload, controller_plan):
     """
     Safe fallback when grounding_mode is nexus_knowledge_only
@@ -1117,10 +1175,49 @@ def _knowledge_required_fallback(payload, controller_plan):
         )
 
     if decision in ["answer_solution_fit", "explain_solution_method"]:
+        current_methodology = (controller_plan.get("current_methodology") or "").strip()
+        pain_point = (controller_plan.get("pain_point_challenges") or "your stated challenge").strip()
+
+        if current_methodology:
+            return (
+                f"Nexus doesn't currently have specific capabilities for {current_methodology}. "
+                f"For {pain_point}, Nexus takes a different approach — through a governed knowledge and AI platform. "
+                "Would you like me to walk you through what Nexus can specifically offer for that challenge?"
+            )
         return (
-            "I don't have confirmed Nexus Orbit knowledge available for that specific capability yet, "
-            "so I should not claim exactly how Nexus handles it. "
-            "I can capture your requirement clearly and help route it for the right confirmed guidance."
+            "I don't have confirmed Nexus Orbit knowledge for that specific area yet, "
+            "so I won't make assumptions about how Nexus handles it. "
+            "To help point you in the right direction — what aspect of this challenge matters most to you right now: "
+            "capturing more leads, qualifying them faster, improving follow-up, or tracking what converts?"
+        )
+
+    if decision == "check_methodology_knowledge":
+        current_methodology = (controller_plan.get("current_methodology") or "").strip()
+        mref = current_methodology or "that methodology"
+        return (
+            f"I don't have confirmed Nexus Orbit knowledge about {mref}. "
+            "Checking what approved Nexus capabilities exist for your broader challenge instead."
+        )
+
+    if decision == "present_alternative_solution":
+        current_methodology = (controller_plan.get("current_methodology") or "").strip()
+        pain_point = (controller_plan.get("pain_point_challenges") or "your business challenge").strip()
+        mref = current_methodology or "that approach"
+        return (
+            f"I don't have confirmed Nexus Orbit capabilities for {pain_point} at this time "
+            f"that I can recommend as an alternative to {mref}. "
+            "I should not guess or invent solutions. "
+            "I can note your requirement and route it to the right team for confirmed guidance — "
+            "would you like me to do that?"
+        )
+
+    if decision == "present_nexy_capability_summary":
+        entry_point = (controller_plan.get("lead_entry_point") or "that channel").strip()
+        return (
+            f"I don't have confirmed Nexus Orbit knowledge about handling enquiries through {entry_point} at this time. "
+            "I should not claim capabilities without confirmed knowledge. "
+            "I can note your requirement and route it to the right team for a confirmed answer — "
+            "would you like me to do that?"
         )
 
     if decision == "answer_with_orbit":
@@ -1202,6 +1299,98 @@ def _has_specific_grounding_for_intent(chunks, controller_plan, payload=None):
             "commercial",
         ]
 
+        return any(k in text for k in required_any)
+
+    if decision == "answer_solution_fit":
+        current_methodology = (controller_plan.get("current_methodology") or "").lower().strip()
+        if current_methodology:
+            # If the visitor named a specific tool/platform, Nexus knowledge must
+            # mention it — otherwise Nexus has no capability there and the fallback
+            # should fire to avoid giving generic LLM advice about the tool.
+            return current_methodology in text
+        # For conversion-specific queries, require conversion knowledge — not just
+        # any Nexus knowledge (e.g. "structured conversations" should not satisfy "how to improve conversion").
+        if any(kw in visitor_query for kw in ["conversion", "convert", "closing", "close rate", "follow-up", "follow up"]):
+            return any(kw in text for kw in [
+                "conversion", "convert", "lead conversion",
+                "follow-up", "follow up", "qualification",
+                "enquiry handling", "inquiry handling",
+                "quotation follow", "appointment booking", "closing",
+            ])
+        return bool(chunks)
+
+    if decision == "check_methodology_knowledge":
+        methodology = (controller_plan.get("current_methodology") or "").lower().strip()
+        if not methodology:
+            return bool(text.strip())
+        if "facebook" in methodology or "meta" in methodology:
+            # Require explicit Facebook/Meta Ads terminology — broad lead generation
+            # knowledge must NOT pass as confirmation of Facebook Ads capability.
+            required_any = [
+                "facebook ads",
+                "facebook ad",
+                "facebook lead ads",
+                "facebook lead",
+                "meta ads",
+                "meta lead ads",
+                "facebook integration",
+                "meta integration",
+                "ad campaign",
+                "campaign leads",
+            ]
+            return any(k in text for k in required_any)
+        if "google" in methodology:
+            required_any = [
+                "google ads", "google ad", "google lead", "adwords", "google campaign",
+            ]
+            return any(k in text for k in required_any)
+        # Generic: require the methodology phrase itself in retrieved text
+        return bool(methodology) and methodology in text
+
+    if decision == "present_alternative_solution":
+        # Must contain specific alternative capability terms.
+        # Broad growth/operational language alone is not enough.
+        required_any = [
+            "website visitor",
+            "website visitors",
+            "whatsapp",
+            "qualified lead",
+            "qualified leads",
+            "visitor conversation",
+            "chat approach",
+            "conversation transcript",
+            "discovery data",
+            "lead capture",
+            "enquiry handling",
+            "inquiry handling",
+            "qualification",
+            "human handoff",
+            "confirmed next step",
+        ]
+        return any(k in text for k in required_any)
+
+    if decision == "present_nexy_capability_summary":
+        # Post-enquiry capability terms — do NOT require ad-platform terms here.
+        required_any = [
+            "nexy",
+            "visitor conversation",
+            "website visitor",
+            "website visitors",
+            "whatsapp",
+            "qualified lead",
+            "qualified leads",
+            "requirement discovery",
+            "discovery data",
+            "conversation transcript",
+            "confirmed next step",
+            "human handoff",
+            "routing",
+            "crm",
+            "enquiry",
+            "inquiry",
+            "structured conversation",
+            "guided next step",
+        ]
         return any(k in text for k in required_any)
 
     if decision == "answer_with_orbit":

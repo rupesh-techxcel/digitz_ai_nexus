@@ -139,7 +139,30 @@ def update_enquiry(conversation, discovery_delta: dict, signal: dict | None = No
         existing = json.loads(enquiry.discovery_data or "{}")
     except Exception:
         existing = {}
-    existing.update({k: v for k, v in (discovery_delta or {}).items() if v})
+    for k, v in (discovery_delta or {}).items():
+        if not v:
+            continue
+        if k == "discovery_facts" and isinstance(v, list):
+            # Merge facts: update same (context_area, fact_type) or append new.
+            # Latest value wins so the visitor can correct a previous answer.
+            existing_facts = existing.get("discovery_facts") or []
+            if not isinstance(existing_facts, list):
+                existing_facts = []
+            for fact in v:
+                if not fact.get("fact_value"):
+                    continue
+                ca, ft = fact.get("context_area"), fact.get("fact_type")
+                updated = False
+                for i, ef in enumerate(existing_facts):
+                    if ef.get("context_area") == ca and ef.get("fact_type") == ft:
+                        existing_facts[i] = fact
+                        updated = True
+                        break
+                if not updated:
+                    existing_facts.append(fact)
+            existing["discovery_facts"] = existing_facts
+        else:
+            existing[k] = v
     enquiry.discovery_data = json.dumps(existing)
 
     # Record the signal
@@ -170,6 +193,7 @@ def update_enquiry(conversation, discovery_delta: dict, signal: dict | None = No
     _resolve_recommended_products(enquiry, conversation)
 
     enquiry.save(ignore_permissions=True)
+    return existing
 
 
 def advance_journey_stage_from_signal(conversation, signal_type: str) -> str:

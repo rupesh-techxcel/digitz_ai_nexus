@@ -1,6 +1,6 @@
 # Nexus Companion Framework
 
-> Last updated: 2026-06-28 (Business Companion Controller, companion_milestone, realtime dashboard updates)
+> Last updated: 2026-06-28 (Business Companion Controller, companion_milestone, realtime dashboard updates, multi-role Nexy dispatcher)
 > Module: `nexus_companion` inside `digitz_ai_nexus`
 > App spans: `digitz_ai_nexus`, `digitz_ai_nexus_live`
 
@@ -51,7 +51,8 @@ _process_ai_response()  [background job]
         │        └── _build_ai_profile_dict() — companion_mode, companion_playbook
         │
         ├── if companion_mode:
-        │       handle_companion_turn(conversation, agent, payload, core_payload)
+        │       _dispatch_companion_controller(companion_controller_type, ...)
+        │           └── routes to the correct handle_companion_turn() per controller type
         │           ├── 1. Resolve current_milestone from companion_milestone field
         │           ├── 2. Detect pending_action (demo_request / human_handoff etc.)
         │           ├── 3. get_or_create_enquiry()
@@ -98,7 +99,79 @@ _process_ai_response()
 
 ---
 
-## 3. Module Structure
+## 3. Multi-Role Nexy Architecture
+
+Nexy is a **brand and persona**, not a single capability. The companion framework is designed to support multiple Nexy roles, each with its own controller, playbook, and AI Agent Profile. The current implemented role is Business Companion. Customer Support and further roles are planned.
+
+### 3.1 Role Selection: `companion_controller_type` on Nexus Chat Category
+
+Each chat category marked `use_for_nexy = 1` carries a `companion_controller_type` field (Select) that declares which Nexy role handles conversations in that category:
+
+| Value | Controller | Purpose |
+|---|---|---|
+| `business_companion` | `business_companion_controller.py` | B2B sales discovery, solution mapping, demo arrangement |
+| `customer_support` | `support_companion_controller.py` *(planned)* | Issue triage, diagnosis, resolution |
+
+The value is frozen into `ai_profile_snapshot_json` at category selection time, so controller type is **stable per conversation** regardless of later category config changes.
+
+### 3.2 Dispatcher in `live_chat_service.py`
+
+`_dispatch_companion_controller()` reads `companion_controller_type` from the core payload and imports the correct module:
+
+```python
+def _dispatch_companion_controller(controller_type, conversation, agent, payload, core_payload):
+    if controller_type == "customer_support":
+        from ...support_companion_controller import handle_companion_turn
+    else:
+        from ...business_companion_controller import handle_companion_turn  # default
+    return handle_companion_turn(conversation, agent, payload, core_payload)
+```
+
+Any unknown or missing value falls back to `business_companion` — all existing conversations are unaffected.
+
+### 3.3 Two AI Agent Profiles — One Per Nexy Role
+
+Each Nexy role requires its own `Nexus AI Agent Profile` with `companion_mode = 1`. The profiles are separate because they carry **role-specific configuration**:
+
+| Profile | Role | `behavior_prompt` | `companion_playbook` | Knowledge |
+|---|---|---|---|---|
+| Nexy - Business | B2B sales discovery | Sales/discovery oriented | Business Discovery Playbook | Nexus capability knowledge |
+| Nexy - Support *(planned)* | Issue resolution | Triage/empathy oriented | Support Resolution Playbook | Troubleshooting docs, known issues |
+
+Both profiles display as **"Nexy"** to the visitor (`display_name = "Nexy"`) — the role distinction is internal only.
+
+### 3.4 Category → Route → Profile → Controller Mapping
+
+```
+Nexus Chat Category: "Business Discovery"
+├── use_for_nexy: true
+├── companion_controller_type: "business_companion"   ← controller selector
+└── (via Nexus Category Identity Route)
+    └── Nexus AI Agent Profile: "Nexy - Business"    ← persona/playbook/knowledge
+            ↓
+    business_companion_controller.handle_companion_turn()
+
+Nexus Chat Category: "Customer Support"  (planned)
+├── use_for_nexy: true
+├── companion_controller_type: "customer_support"
+└── (via Nexus Category Identity Route)
+    └── Nexus AI Agent Profile: "Nexy - Support"
+            ↓
+    support_companion_controller.handle_companion_turn()
+```
+
+### 3.5 Adding a New Nexy Role
+
+1. Add a new option to `Nexus Chat Category.companion_controller_type` (DocType JSON + migrate)
+2. Create `<role>_companion_controller.py` in `digitz_ai_nexus/nexus_companion/services/`
+3. Add an `elif` branch in `_dispatch_companion_controller()` in `live_chat_service.py`
+4. Create a new `Nexus AI Agent Profile` with `companion_mode = 1` and a role-specific `behavior_prompt` + playbook
+5. Create a new `Nexus Chat Category` with `use_for_nexy = 1` and the new `companion_controller_type`
+6. Link the category to the new profile via a `Nexus Category Identity Route`
+
+---
+
+## 5. Module Structure
 
 ```
 digitz_ai_nexus/nexus_companion/
@@ -140,7 +213,7 @@ digitz_ai_nexus/nexus_companion/
 
 ---
 
-## 4. DocType Reference
+## 6. DocType Reference
 
 ### 4.1 Nexus Companion Product
 *Autoname: `NCP-.#####`*
