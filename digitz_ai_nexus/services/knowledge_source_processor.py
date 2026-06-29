@@ -115,12 +115,11 @@ def process_knowledge_source(source_name):
         else:
             final_diagnostics_status = "Critical"
 
-        retrieval_ready = (
-            source.status == "Published"
-            and created_count > 0
-            and final_embedding_status == "Completed"
-            and final_diagnostics_status == "Healthy"
-        )
+        # Processing invalidates any previous retrieval_ready state — tests must be
+        # re-run after new chunks/embeddings are created. The full gate is enforced
+        # via _sync_source_retrieval_ready_from_answer_approvals (called from
+        # run_source_test_cases and publish_knowledge_source).
+        retrieval_ready = False
 
         source.db_set("processing_version", next_version)
         source.db_set("generated_knowledge_unit", knowledge_unit)
@@ -128,7 +127,7 @@ def process_knowledge_source(source_name):
         source.db_set("active_chunk_count", created_count if source.status == "Published" else 0)
         source.db_set("embedding_status", final_embedding_status)
         source.db_set("diagnostics_status", final_diagnostics_status)
-        source.db_set("retrieval_ready", 1 if retrieval_ready else 0)
+        source.db_set("retrieval_ready", 0)
         source.db_set("processing_status", "Processed")
         source.db_set("last_processed_on", now())
         source.db_set("extracted_text_preview", text[:5000])

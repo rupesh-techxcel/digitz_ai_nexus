@@ -863,6 +863,16 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
         if choice.finish_reason == "stop":
             answer = _clean_companion_answer(choice.message.content or "")
             answer = _apply_nexy_summary_guard(answer, controller_plan)
+            if controller_plan.get("steering_decision") in (
+                "present_nexy_capability_visibility",
+                "present_nexy_capability_summary",
+                "answer_nexy_capability_clarification",
+                "drill_nexy_capability_area",
+                "knowledge_gap_offer_consultant",
+                "ask_more_clarification_or_consultancy",
+                "bounce_back_to_nexy_capabilities",
+            ):
+                answer = _sanitize_visitor_facing_jargon(answer)
 
             print("\n\n========== FINAL CONTROLLED ANSWER DEBUG ==========")
             print("grounding_mode:", controller_plan.get("grounding_mode"))
@@ -1116,16 +1126,22 @@ def _clean_companion_answer(answer):
 
 def _apply_nexy_summary_guard(answer, controller_plan):
     """
-    Lightweight deterministic guard for present_nexy_capability_summary responses.
-    Prevents forbidden ad-platform claims from reaching the visitor and appends
-    a positioning clarifier if the methodology name appears without a "not replacing" caveat.
+    Deterministic guard for capability-summary and clarification decisions.
+    Blocks forbidden ad-platform claims and adds a positioning clarifier when
+    the methodology name appears without a "not replacing" caveat.
     """
     decision = (controller_plan or {}).get("steering_decision")
-    if decision != "present_nexy_capability_summary":
+    if decision not in (
+        "present_nexy_capability_summary",
+        "present_nexy_capability_visibility",
+        "answer_nexy_capability_clarification",
+        "drill_nexy_capability_area",
+        "knowledge_gap_offer_consultant",
+    ):
         return answer
 
     methodology = (controller_plan.get("current_methodology") or "").strip()
-    entry_point = (controller_plan.get("lead_entry_point") or "the enquiry channel").strip()
+    entry_point = (controller_plan.get("lead_entry_point") or "your enquiry channel").strip()
 
     forbidden_markers = [
         "optimize your ads",
@@ -1136,23 +1152,40 @@ def _apply_nexy_summary_guard(answer, controller_plan):
         "campaign setup",
         "creative optimization",
         "budget optimization",
+        "campaign management",
+        "ad performance",
     ]
 
     lower_answer = (answer or "").lower()
 
     if any(marker in lower_answer for marker in forbidden_markers):
+        methodology_ref = f"your {methodology} campaigns" if methodology else "your campaigns"
         return (
-            f"Based on the confirmed Nexus knowledge, Nexy is positioned after the enquiry arrives through {entry_point}. "
-            "Nexy can support the conversation and qualification journey, but I should not claim direct "
-            "ad-platform optimization or campaign management without confirmed knowledge. "
-            "Would you like me to map your current lead journey into a simple Nexy flow?"
+            f"Based on confirmed Nexus knowledge, my focus is on what happens after the enquiry arrives "
+            f"through {entry_point} — not on {methodology_ref} themselves. "
+            "I should not claim ad-platform optimization or campaign management without confirmed knowledge. "
+            "Which Nexy capability area would you like to understand better?"
         )
 
-    if methodology and methodology.lower() in lower_answer and "not replacing" not in lower_answer:
+    # Append a clean positioning clarifier when the methodology name appears but no
+    # "not replacing / not managing" statement is already present.
+    # IMPORTANT: keep this sentence free of all jargon that _sanitize_visitor_facing_jargon
+    # would mangle ("confirmed role", "qualification journey", "enquiry channel", etc.)
+    if (
+        methodology
+        and methodology.lower() in lower_answer
+        and "not replacing" not in lower_answer
+        and "not managing" not in lower_answer
+        and "not optimizing" not in lower_answer
+        and "not optimising" not in lower_answer
+        and "does not replace" not in lower_answer
+        and "does not manage" not in lower_answer
+    ):
         answer = (
             f"{answer}\n\n"
-            f"To be clear, Nexy is not being positioned here as a replacement or optimizer for {methodology}; "
-            f"the confirmed role is supporting the conversion journey after the enquiry arrives through {entry_point}."
+            f"To be clear, Nexy does not replace or manage {methodology}. "
+            f"{methodology} may bring people in — Nexy focuses on the conversation "
+            "after someone contacts your business."
         )
 
     return answer
@@ -1220,6 +1253,35 @@ def _knowledge_required_fallback(payload, controller_plan):
             "would you like me to do that?"
         )
 
+    if decision == "present_nexy_capability_visibility":
+        challenges = (controller_plan.get("pain_point_challenges") or "your business challenge").strip()
+        return (
+            f"I don't have enough confirmed Nexus knowledge to present a Nexy capability summary "
+            f"for {challenges} at this time. "
+            "I should not claim capabilities without confirmed knowledge. "
+            "Would you like to leave a note or question for a Nexy representative to review?"
+        )
+
+    if decision in ("answer_nexy_capability_clarification", "drill_nexy_capability_area"):
+        selected_area = (controller_plan.get("selected_capability_area") or "that area").strip()
+        return (
+            f"I don't have enough confirmed Nexus knowledge to explain {selected_area} in detail at this time. "
+            "I should not invent features or workflows. "
+            "I can save this as a question for a Nexy representative. "
+            "Would you also like to book a short consultation so they can walk through this with you directly?"
+        )
+
+    if decision == "knowledge_gap_offer_consultant":
+        selected_area = (controller_plan.get("selected_capability_area") or "").strip()
+        challenges = (controller_plan.get("pain_point_challenges") or "your question").strip()
+        ref = selected_area or challenges
+        return (
+            f"I don't have enough confirmed Nexus knowledge to answer that specific point about {ref} safely. "
+            "I should not guess or invent capabilities. "
+            "I can save this as a question for a Nexy representative. "
+            "Would you like to book a short consultation so they can review your case directly?"
+        )
+
     if decision == "answer_with_orbit":
         return (
             "I don't have confirmed Nexus Orbit knowledge available for that specific question yet. "
@@ -1230,6 +1292,108 @@ def _knowledge_required_fallback(payload, controller_plan):
         "I don't have confirmed Nexus Orbit knowledge available for that specific question yet, "
         "so I should not answer from assumption."
     )
+
+def _sanitize_visitor_facing_jargon(answer):
+    """
+    Remove or replace internal/system phrasing that leaks into visitor-facing responses.
+    Applied only for capability-visibility decisions where plain business language is required.
+
+    Rules:
+    - Simple word/phrase substitutions for internal labels (e.g. "confirmed role" → "main focus").
+    - Whole-sentence removal for risky ad-platform claims and industry hallucinations —
+      fragment replacement is avoided because it produces grammatically broken sentences
+      ("This approach can support what happens after a visitor contacts your business efforts…").
+    """
+    import re as _re
+
+    if not answer:
+        return answer
+
+    # ── 1. Simple label substitutions ───────────────────────────────────────
+    replacements = {
+        "confirmed role": "main focus",
+        "qualification journey": "qualification process",
+        "enquiry channel": "contact channel",
+        "conversion journey": "steps after the visitor shows interest",
+        "post-enquiry": "after someone contacts your business",
+        "methodology": "current approach",
+        "permitted Nexus Orbit knowledge": "available Nexus knowledge",
+        "permitted knowledge": "available knowledge",
+        "nexus orbit knowledge": "available Nexus knowledge",
+        "grounding": "confirmed information",
+        "controlled flow": "guided process",
+        "capability visibility flow": "Nexy capability overview",
+    }
+
+    cleaned = str(answer)
+    for old, new in replacements.items():
+        cleaned = cleaned.replace(old, new)
+        cleaned = cleaned.replace(old.title(), new)
+        cleaned = cleaned.replace(old.upper(), new)
+
+    # ── 2. Risky ad-platform / campaign claims → whole-sentence removal ─────
+    # Fragment replacement causes broken sentences; remove the entire sentence instead.
+    risky_sentence_markers = [
+        "enhance your outreach efforts",
+        "streamline your approach",
+        "improve your google ads",
+        "optimize your google ads",
+        "optimise your google ads",
+        "boost your google ads",
+        "improve your facebook ads",
+        "optimize your facebook ads",
+        "optimise your facebook ads",
+        "improve your campaign",
+        "optimize your campaign",
+        "optimise your campaign",
+        "improve your targeting",
+        "optimize your targeting",
+        "optimise your targeting",
+        "streamline your lead generation",
+        "enhance your lead generation",
+        "refine your marketing strategy",
+        "no lead falls through the cracks",
+        "automatic follow-up",
+        "automated follow-up",
+        "automatic crm update",
+        "lead scoring",
+    ]
+
+    # Split into lines, filter sentence-by-sentence within each line,
+    # and preserve markdown bullet structure.
+    def _remove_risky_sentences(text):
+        lines = text.split("\n")
+        out = []
+        for line in lines:
+            # Check if the whole line contains a risky marker — if so, drop the line.
+            low = line.lower()
+            if any(marker in low for marker in risky_sentence_markers):
+                continue
+            out.append(line)
+        return "\n".join(out)
+
+    cleaned = _remove_risky_sentences(cleaned)
+
+    # ── 3. Industry hallucination phrases → whole-sentence removal ──────────
+    industry_hallucinations = [
+        "regular maintenance",
+        "maintenance package",
+        "installation services",
+        "repair services",
+        "quotation flow",
+        "consultation for ",
+        "target audience preferences",
+    ]
+    for phrase in industry_hallucinations:
+        if phrase in cleaned.lower():
+            pattern = _re.compile(
+                r'[^.!?\n]*' + _re.escape(phrase) + r'[^.!?\n]*[.!?\n]?',
+                _re.IGNORECASE,
+            )
+            cleaned = pattern.sub("", cleaned).strip()
+
+    return cleaned
+
 
 def _has_specific_grounding_for_intent(chunks, controller_plan, payload=None):
     """
@@ -1370,7 +1534,6 @@ def _has_specific_grounding_for_intent(chunks, controller_plan, payload=None):
         return any(k in text for k in required_any)
 
     if decision == "present_nexy_capability_summary":
-        # Post-enquiry capability terms — do NOT require ad-platform terms here.
         required_any = [
             "nexy",
             "visitor conversation",
@@ -1392,6 +1555,58 @@ def _has_specific_grounding_for_intent(chunks, controller_plan, payload=None):
             "guided next step",
         ]
         return any(k in text for k in required_any)
+
+    if decision == "present_nexy_capability_visibility":
+        # Require Nexy/Companion and at least one confirmed capability concept.
+        nexy_terms = [
+            "nexy", "companion", "visitor companion", "business companion",
+        ]
+        capability_terms = [
+            "conversation", "enquiry", "inquiry", "lead", "requirement",
+            "qualification", "qualified", "context", "handoff", "next step",
+            "appointment", "representative", "discovery", "capture", "routing",
+            "crm", "structured", "guided", "transcript", "journey",
+        ]
+        has_nexy = any(k in text for k in nexy_terms)
+        has_capability = any(k in text for k in capability_terms)
+        return has_nexy and has_capability
+
+    if decision == "answer_nexy_capability_clarification":
+        selected_area = (controller_plan.get("selected_capability_area") or "").lower()
+        nexy_terms = [
+            "nexy", "companion", "visitor companion", "business companion",
+            "conversation", "enquiry", "inquiry", "lead", "requirement",
+            "qualification", "context", "handoff", "next step", "appointment",
+            "representative", "discovery", "capture", "routing", "crm",
+        ]
+        area_terms = {
+            "requirement_discovery": ["requirement", "discovery", "capture", "context"],
+            "enquiry_qualification": ["qualification", "qualify", "lead", "enquiry", "inquiry"],
+            "context_capture": ["context", "capture", "transcript", "data"],
+            "appointment_readiness": ["appointment", "booking", "next step", "schedule"],
+            "representative_handoff": ["handoff", "representative", "human", "agent"],
+            "routing_or_crm_update": ["routing", "crm", "update", "record"],
+            "website_visitor_flow": ["website", "visitor", "chat", "web"],
+            "whatsapp_enquiry_flow": ["whatsapp", "whats app", "messaging"],
+            "visitor_conversation": ["conversation", "visitor", "chat"],
+        }
+        if selected_area in area_terms:
+            specific_terms = area_terms[selected_area]
+            return any(k in text for k in nexy_terms) and any(k in text for k in specific_terms)
+        return any(k in text for k in nexy_terms)
+
+    if decision == "drill_nexy_capability_area":
+        nexy_terms = [
+            "nexy", "companion", "conversation", "enquiry", "inquiry", "lead",
+            "requirement", "qualification", "context", "handoff", "discovery",
+        ]
+        return any(k in text for k in nexy_terms)
+
+    if decision == "knowledge_gap_offer_consultant":
+        # Always treat knowledge as insufficient for this decision — the gap response is the right answer.
+        # Return True only if there IS partial knowledge that can be surfaced honestly.
+        nexy_terms = ["nexy", "companion", "nexus", "enquiry", "inquiry", "lead", "visitor"]
+        return any(k in text for k in nexy_terms)
 
     if decision == "answer_with_orbit":
         return bool(text.strip())

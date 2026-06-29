@@ -1382,6 +1382,80 @@ class NexusStudioPage {
                 word-break: break-word;
             }
 
+            .nks-readiness-info-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                border: 1px solid #16a34a;
+                background: #f0fdf4;
+                color: #16a34a;
+                font-size: 11px;
+                cursor: pointer;
+                padding: 0;
+                line-height: 1;
+                transition: background 0.15s;
+            }
+            .nks-readiness-info-btn:hover {
+                background: #dcfce7;
+            }
+            .nks-readiness-popup {
+                position: absolute;
+                z-index: 9999;
+                background: #ffffff;
+                border: 1px solid #bbf7d0;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(22, 163, 74, 0.13);
+                padding: 14px 16px;
+                min-width: 300px;
+                max-width: 420px;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+            .nks-readiness-popup-title {
+                font-weight: 600;
+                color: #1e293b;
+                font-size: 12px;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            .nks-readiness-step-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 4px 0;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            .nks-readiness-step-row:last-child {
+                border-bottom: none;
+            }
+            .nks-readiness-step-icon {
+                font-size: 12px;
+                flex-shrink: 0;
+                width: 16px;
+                text-align: center;
+                margin-top: 1px;
+            }
+            .nks-readiness-step-icon.pass { color: #16a34a; }
+            .nks-readiness-step-icon.fail { color: #dc2626; }
+            .nks-readiness-step-icon.pending { color: #9ca3af; }
+            .nks-readiness-step-icon.warn { color: #d97706; }
+            .nks-readiness-step-label {
+                font-weight: 500;
+                color: #374151;
+                min-width: 138px;
+                flex-shrink: 0;
+                font-size: 12px;
+            }
+            .nks-readiness-step-detail {
+                color: #64748b;
+                font-size: 11px;
+                word-break: break-word;
+            }
+
 
             .nks-source-item-body {
                 display: grid;
@@ -1999,6 +2073,21 @@ class NexusStudioPage {
         $(document).on('click.nks-classification', (e) => {
             if (!$(e.target).closest('.nks-classification-popup, .nks-classification-info-btn').length) {
                 $('.nks-classification-popup').remove();
+            }
+        });
+
+        this.body[0].addEventListener('click', (e) => {
+            const btn = e.target.closest('.nks-readiness-info-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            this.show_readiness_popup(btn);
+        }, true /* capture phase */);
+
+        $(document).on('click.nks-readiness', (e) => {
+            if (!$(e.target).closest('.nks-readiness-popup, .nks-readiness-info-btn').length) {
+                $('.nks-readiness-popup').remove();
             }
         });
 
@@ -4136,6 +4225,7 @@ class NexusStudioPage {
                         <div class="nks-source-title-tags">
                             ${compact_tags.map((tag) => `<span class="nks-badge nks-badge-compact">${frappe.utils.escape_html(tag)}</span>`).join('')}
                             <button class="nks-classification-info-btn" data-source="${frappe.utils.escape_html(row.name || '')}" title="View full classification">ⓘ</button>
+                            <button class="nks-readiness-info-btn" data-source="${frappe.utils.escape_html(row.name || '')}" title="View readiness status">◉</button>
                         </div>
                     </div>
                     <div class="nks-source-item-head-footer">
@@ -4836,6 +4926,121 @@ class NexusStudioPage {
 
         // Keep within viewport
         const popupWidth = 340;
+        if (left + popupWidth > window.innerWidth + scrollLeft - 12) {
+            left = window.innerWidth + scrollLeft - popupWidth - 12;
+        }
+
+        $popup.css({ top, left, position: 'absolute' });
+    }
+
+    show_readiness_popup(triggerEl) {
+        const sourceName = $(triggerEl).data('source');
+
+        const $existing = $('.nks-readiness-popup');
+        if ($existing.length && $existing.data('source') === sourceName) {
+            $existing.remove();
+            return;
+        }
+        $existing.remove();
+
+        const row = (this.sources || []).find(s => s.name === sourceName);
+        if (!row) return;
+
+        const approvalSummary = row.answer_approval_summary || {};
+
+        const mkStep = (label, state, detail) => {
+            const iconMap = { pass: '✓', fail: '✗', pending: '○', warn: '⚠' };
+            return `<div class="nks-readiness-step-row">
+                <span class="nks-readiness-step-icon ${state}">${iconMap[state] || '○'}</span>
+                <span class="nks-readiness-step-label">${frappe.utils.escape_html(label)}</span>
+                <span class="nks-readiness-step-detail">${frappe.utils.escape_html(detail)}</span>
+            </div>`;
+        };
+
+        // Step 1: Process & Embed
+        const embStatus = row.embedding_status || '';
+        const diagStatus = row.diagnostics_status || '';
+        const step1Pass = embStatus === 'Completed' && (diagStatus === 'Healthy' || diagStatus === 'Warning');
+        const step1Fail = embStatus === 'Failed' || diagStatus === 'Critical';
+        const step1State = step1Pass ? 'pass' : step1Fail ? 'fail' : 'pending';
+        const step1Detail = embStatus
+            ? `Embedding: ${embStatus} · Diagnostics: ${diagStatus || 'Pending'}`
+            : 'Not processed yet';
+
+        // Step 2: Index Entries
+        const indexCount = parseInt(row.semantic_index_count || 0);
+        const step2State = indexCount > 0 ? 'pass' : 'pending';
+        const step2Detail = indexCount > 0 ? `${indexCount} index entr${indexCount !== 1 ? 'ies' : 'y'} created` : 'No index entries yet';
+
+        // Step 3: Q&A Review
+        const qaApproved = parseInt(approvalSummary.approved || 0);
+        const qaPending = parseInt(approvalSummary.pending || 0);
+        const qaRejected = parseInt(approvalSummary.rejected || 0);
+        const qaTotal = parseInt(approvalSummary.total || 0);
+        const step3Pass = qaTotal > 0 && qaPending === 0;
+        const step3State = step3Pass ? 'pass' : qaPending > 0 ? 'warn' : qaTotal === 0 ? 'pending' : 'pass';
+        const step3Detail = qaTotal > 0
+            ? `${qaApproved}/${qaTotal} approved${qaPending ? ' · ' + qaPending + ' pending' : ''}${qaRejected ? ' · ' + qaRejected + ' rejected' : ''}`
+            : 'No Q&A entries yet';
+
+        // Step 4: Validation
+        const valStatus = row.validation_status || '';
+        const step4Pass = valStatus === 'Passed';
+        const step4Fail = valStatus === 'Failed';
+        const step4State = step4Pass ? 'pass' : step4Fail ? 'fail' : 'pending';
+        const valConf = row.validation_confidence ? ' (conf: ' + parseFloat(row.validation_confidence).toFixed(2) + ')' : '';
+        const step4Detail = valStatus ? `${valStatus}${valConf}` : 'Not validated yet';
+
+        // Step 5: Test Cases Exist
+        const tcCount = parseInt(row.test_case_count || 0);
+        const step5State = tcCount > 0 ? 'pass' : 'pending';
+        const step5Detail = tcCount > 0 ? `${tcCount} test case${tcCount !== 1 ? 's' : ''} created` : 'No test cases yet';
+
+        // Step 6: Run Tests
+        const tcTotal = parseInt(row.test_total_count || 0);
+        const tcPassed = parseInt(row.test_passed_count || 0);
+        const tcFailed = parseInt(row.test_failed_count || 0);
+        const tcNotRun = tcTotal - tcPassed - tcFailed;
+        const step6Pass = tcTotal > 0 && tcFailed === 0 && tcPassed === tcTotal;
+        const step6Fail = tcFailed > 0;
+        const step6State = step6Pass ? 'pass' : step6Fail ? 'fail' : tcNotRun > 0 ? 'warn' : 'pending';
+        const step6Detail = tcTotal > 0
+            ? `${tcPassed}/${tcTotal} passed${tcFailed ? ' · ' + tcFailed + ' failed' : ''}${tcNotRun > 0 && !step6Fail ? ' · ' + tcNotRun + ' not run' : ''}`
+            : 'Tests not run yet';
+
+        // Step 7: Published & Retrieval Ready
+        const isPublished = row.status === 'Published';
+        const isReady = isPublished && (row.retrieval_ready == 1 || row.retrieval_ready === true);
+        const step7State = isReady ? 'pass' : isPublished ? 'warn' : 'pending';
+        const step7Detail = isReady ? 'Published · retrieval ready' : isPublished ? 'Published · retrieval not ready' : 'Not published yet';
+
+        const stepsHtml = [
+            mkStep('1. Process & Embed',  step1State, step1Detail),
+            mkStep('2. Index Entries',    step2State, step2Detail),
+            mkStep('3. Q&A Review',       step3State, step3Detail),
+            mkStep('4. Validation',       step4State, step4Detail),
+            mkStep('5. Test Cases',       step5State, step5Detail),
+            mkStep('6. Run Tests',        step6State, step6Detail),
+            mkStep('7. Published',        step7State, step7Detail),
+        ].join('');
+
+        const $popup = $(`
+            <div class="nks-readiness-popup">
+                <div class="nks-readiness-popup-title">Readiness Status — ${frappe.utils.escape_html(row.readiness_label || row.status || '')}</div>
+                ${stepsHtml}
+            </div>
+        `).data('source', sourceName);
+
+        $(document.body).append($popup);
+
+        const rect = triggerEl.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+
+        let top = rect.bottom + scrollTop + 6;
+        let left = rect.left + scrollLeft;
+
+        const popupWidth = 420;
         if (left + popupWidth > window.innerWidth + scrollLeft - 12) {
             left = window.innerWidth + scrollLeft - popupWidth - 12;
         }

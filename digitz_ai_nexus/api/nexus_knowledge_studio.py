@@ -811,7 +811,31 @@ def _sync_source_retrieval_ready_from_answer_approvals(source_name):
     has_chunks = cint(source_doc.get("active_chunk_count") or source_doc.get("chunk_count") or 0) > 0
     strict_ready = bool(approval_summary.get("strict_ready"))
 
-    retrieval_ready = 1 if is_published and embedding_ready and diagnostics_ready and has_chunks and strict_ready else 0
+    # Step 2: index entries exist
+    has_index_entries = (
+        frappe.db.count("Nexus Knowledge Index Entry", {"knowledge_source": source_name}) > 0
+        if frappe.db.exists("DocType", "Nexus Knowledge Index Entry")
+        else True
+    )
+
+    # Steps 5 & 6: test cases generated and all passing (none Failed or Not Run)
+    has_test_cases = False
+    all_tests_passing = False
+    if frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        _tc_count = frappe.db.count("Nexus Knowledge Test Case", {"knowledge_source": source_name})
+        has_test_cases = _tc_count > 0
+        if has_test_cases:
+            _unresolved = frappe.db.count(
+                "Nexus Knowledge Test Case",
+                {"knowledge_source": source_name, "last_run_status": ["in", ["Failed", "Not Run"]]},
+            )
+            all_tests_passing = _unresolved == 0
+
+    retrieval_ready = 1 if (
+        is_published and embedding_ready and diagnostics_ready and
+        has_chunks and strict_ready and
+        has_index_entries and has_test_cases and all_tests_passing
+    ) else 0
 
     _set_if_exists(source_doc, "retrieval_ready", retrieval_ready)
 
@@ -1015,6 +1039,26 @@ def _build_source_readiness_payload(row):
         or preparation_failed
     )
 
+    _source_name = row.get("name")
+    tc_total = 0
+    tc_passed = 0
+    tc_failed = 0
+    has_test_cases = False
+    all_tests_passing = False
+    if _source_name and frappe.db.exists("DocType", "Nexus Knowledge Test Case"):
+        tc_total = frappe.db.count("Nexus Knowledge Test Case", {"knowledge_source": _source_name})
+        has_test_cases = tc_total > 0
+        if has_test_cases:
+            tc_passed = frappe.db.count(
+                "Nexus Knowledge Test Case",
+                {"knowledge_source": _source_name, "last_run_status": "Passed"},
+            )
+            tc_failed = frappe.db.count(
+                "Nexus Knowledge Test Case",
+                {"knowledge_source": _source_name, "last_run_status": "Failed"},
+            )
+            all_tests_passing = tc_failed == 0 and tc_passed == tc_total
+
     if disabled:
         readiness_status = "disabled"
         readiness_label = "Disabled"
@@ -1069,10 +1113,27 @@ def _build_source_readiness_payload(row):
         next_action = "review_answers"
         next_action_label = "Review generated answers"
 
+    elif is_prepared and strict_answer_ready and not has_test_cases:
+        readiness_status = "needs_test_cases"
+        readiness_label = "Needs Test Cases"
+        readiness_message = "Generate and run test cases to verify retrieval before publishing."
+        next_action = "generate_test_cases"
+        next_action_label = "Generate test cases"
+
+    elif is_prepared and strict_answer_ready and has_test_cases and not all_tests_passing:
+        readiness_status = "tests_not_passing"
+        readiness_label = "Tests Not Passing"
+        readiness_message = (
+            f"{tc_failed} test case(s) are failing ({tc_passed}/{tc_total} passed). "
+            "Review and fix before publishing."
+        )
+        next_action = "review_tests"
+        next_action_label = "Review test cases"
+
     elif published:
         readiness_status = "published"
         readiness_label = "Published"
-        readiness_message = "Published and answer approvals are complete."
+        readiness_message = "Published and all quality checks complete."
         next_action = "none"
         next_action_label = "No action needed"
 
@@ -1106,7 +1167,12 @@ def _build_source_readiness_payload(row):
 
     can_prepare = readiness_status == "ready"
     can_validate = readiness_status == "ready_for_validation"
-    can_publish = readiness_status == "ready_to_publish" and strict_answer_ready
+    can_publish = (
+        readiness_status == "ready_to_publish"
+        and strict_answer_ready
+        and has_test_cases
+        and all_tests_passing
+    )
     can_unpublish = published
 
     return {
@@ -1124,6 +1190,9 @@ def _build_source_readiness_payload(row):
         "has_content": 1 if has_content else 0,
         "has_classification": 1 if has_classification else 0,
         "answer_approval_summary": answer_approval_summary,
+        "test_passed_count": tc_passed,
+        "test_failed_count": tc_failed,
+        "test_total_count": tc_total,
         "technical_status": {
         "status": status,
         "processing_status": processing_status,
@@ -1138,7 +1207,7 @@ def _build_source_readiness_payload(row):
         "validation_status": validation_status,
         "last_error": row.get("last_error") or row.get("error_log"),
     },
-        
+
     }
 
 
@@ -5124,7 +5193,7 @@ def _source_found_in_sources(expected_source, sources):
     expected = str(expected_source or "").strip().lower()
 
     try:
-        source_text = json.dumps(sources, default=str).lower()
+        source_text = json.dumps(sources, default=str, ensure_ascii=False).lower()
     except Exception:
         source_text = str(sources or "").lower()
 
@@ -5602,30 +5671,46 @@ def run_source_test_cases(
             "results": [],
         }
 
+    # Temporarily ensure retrieval_ready=1 so this source's chunks are visible to the
+    # answer service during the test run. Without this, sources with retrieval_ready=0
+    # (e.g. because a previous test run failed) would return zero results, creating a
+    # deadlock where tests always fail because chunks are excluded from retrieval.
+    # After all tests complete we re-sync the flag based on the new results.
+    _was_retrieval_ready = frappe.db.get_value("Nexus Knowledge Source", source_name, "retrieval_ready")
+    if not cint(_was_retrieval_ready):
+        frappe.db.set_value("Nexus Knowledge Source", source_name, "retrieval_ready", 1, update_modified=False)
+        frappe.db.commit()
+
     results = []
     passed = 0
     failed = 0
     warning = 0
     error = 0
 
-    for test_case in test_cases:
-        result = run_knowledge_test_case(
-            test_case=test_case,
-            execution_mode="Source Suite",
-        )
+    try:
+        for test_case in test_cases:
+            result = run_knowledge_test_case(
+                test_case=test_case,
+                execution_mode="Source Suite",
+            )
 
-        results.append(result)
+            results.append(result)
 
-        status = str(result.get("run_status") or "").strip().lower()
+            status = str(result.get("run_status") or "").strip().lower()
 
-        if status == "passed":
-            passed += 1
-        elif status == "failed":
-            failed += 1
-        elif status == "warning":
-            warning += 1
-        elif status == "error":
-            error += 1
+            if status == "passed":
+                passed += 1
+            elif status == "failed":
+                failed += 1
+            elif status == "warning":
+                warning += 1
+            elif status == "error":
+                error += 1
+
+    finally:
+        # Re-sync retrieval_ready based on actual test results now that all tests have run.
+        _sync_source_retrieval_ready_from_answer_approvals(source_name)
+        frappe.db.commit()
 
     return {
         "success": True,
