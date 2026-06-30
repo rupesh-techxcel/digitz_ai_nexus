@@ -172,6 +172,93 @@ def _get_companion_db_status(conversation):
             "db_status_error": frappe.get_traceback(),
         }
 
+
+def _is_nexy_companion_conversation(conversation, agent=None):
+    """
+    Strong check to identify Nexy Companion flow.
+    Do not depend only on the in-memory conversation object.
+    """
+    try:
+        if bool(getattr(agent, "companion_mode", 0)):
+            return True
+    except Exception:
+        pass
+
+    agent_name = _get_conversation_assigned_agent(conversation)
+    agent_key = agent_name.upper()
+
+    return (
+        agent_name == "NEXY-COMPANION-NEXUS-AI"
+        or "NEXY-COMPANION" in agent_key
+    )
+
+def _identity_verified_system_message(message):
+    """
+    Detect system/frontend verification callback messages.
+
+    These messages only mean verification completed.
+    They are not the visitor's representative note.
+    """
+    msg = (message or "").lower().strip()
+
+    if not msg:
+        return False
+
+    return (
+        "identity verified" in msg
+        or "preparing your booking" in msg
+        or "verification completed" in msg
+        or msg in {
+            "verified",
+            "email verified",
+            "identity verified",
+        }
+    )
+    
+def _handle_verified_representative_note_message(conversation, visitor_message, accumulated_discovery):
+    """
+    Handles the visitor's representative note after email/identity is verified.
+    The visitor may type an actual note or 'skip'.
+    """
+    if _is_note_ack_only(visitor_message):
+        return {
+            "status": "success",
+            "access_status": "intent_handled",
+            "answer": (
+                'Sure. Please type the note or question you want the representative to see, '
+                'or type "skip" to proceed without one.'
+            ),
+            "confidence": 1.0,
+            "sources": [],
+            "citations": [],
+            "retrieval_result": {},
+            "fallback_used": 0,
+            "chat_mode": "controlled_companion_direct",
+            "companion_controller": True,
+            "conversion_action": None,
+            "pending_action": "collect_representative_note",
+        }
+
+    note_value = "skipped" if _is_skip_note(visitor_message) else visitor_message[:500]
+
+    update_enquiry(
+        conversation,
+        {"discovery_facts": [{
+            "context_area": "general_business",
+            "fact_type": "representative_note_collected",
+            "fact_value": note_value,
+            "source_message": visitor_message,
+        }]},
+        signal=None,
+    )
+
+    _clear_companion_pending_action(conversation)
+
+    return _handle_show_meeting_booking_card(
+        conversation=conversation,
+        accumulated_discovery=accumulated_discovery,
+    )
+
 def handle_companion_turn(conversation, agent, payload, core_payload):
     """
     Controller-led companion runtime.
@@ -191,8 +278,46 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
     # Stored pending action always wins over text scanning — prevents false
     # demo_request detection when old conversation text contains legacy markers.
     _stored_pending = _get_companion_pending_action(conversation)
-    pending_action = _stored_pending or _detect_pending_action(conversation_context)
 
+    _payload_pending = (
+        payload.get("pending_action")
+        or payload.get("companion_pending_action")
+        or core_payload.get("pending_action")
+        or core_payload.get("companion_pending_action")
+        or ""
+    ).strip()
+
+    _detected_pending = _detect_pending_action(conversation_context)
+
+    _ctx_low = (conversation_context or "").lower()
+
+    _note_stage_hint = (
+        _payload_pending == "collect_representative_note"
+        or _detected_pending == "collect_representative_note"
+        or (
+            "would you like to add a note or question" in _ctx_low
+            and (
+                'type "skip"' in _ctx_low
+                or "type 'skip'" in _ctx_low
+                or "type skip" in _ctx_low
+                or "skip" in _ctx_low
+            )
+        )
+    )
+
+    _stale_email_pending = _stored_pending in {
+        "collect_email_for_consultancy",
+        "verify_email_for_consultancy",
+        "collect_email_for_appointment",
+        "verify_email_for_appointment",
+    }
+
+    # If the user is clearly replying to the representative-note prompt,
+    # do not let stale email pending action hijack the meaning of "skip".
+    if _note_stage_hint and _stale_email_pending:
+        pending_action = "collect_representative_note"
+    else:
+        pending_action = _stored_pending or _payload_pending or _detected_pending
     _companion_flow_debug("01 TURN START", {
         "conversation": getattr(conversation, "name", None),
         "visitor_message": visitor_message,
@@ -240,19 +365,188 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         signal=signal,
     )
     
+    # IDV HANDOFF:
+    # If frontend sends verified identity challenge token, stamp the Companion booking state first.
+    # This must run before representative-note guard because stale DB may still say collect_email_for_consultancy.
+    _idv_challenge_token = (
+        payload.get("identity_verification_challenge")
+        or payload.get("identity_verification_token")
+        or payload.get("identity_challenge_token")
+        or payload.get("verification_challenge")
+        or payload.get("verified_challenge_token")
+        or payload.get("challenge_token")
+        or core_payload.get("identity_verification_challenge")
+        or core_payload.get("identity_verification_token")
+        or core_payload.get("identity_challenge_token")
+        or core_payload.get("verification_challenge")
+        or core_payload.get("verified_challenge_token")
+        or core_payload.get("challenge_token")
+        or ""
+    ).strip()
+
+    if _idv_challenge_token and pending_action in {
+        "collect_email_for_consultancy",
+        "verify_email_for_consultancy",
+        "collect_email_for_appointment",
+        "verify_email_for_appointment",
+        "collect_representative_note",
+    }:
+        try:
+            from digitz_ai_nexus_live.services.identity_verification import get_verified_challenge
+
+            _idv_challenge = get_verified_challenge(
+                challenge_token=_idv_challenge_token,
+                chat_category=getattr(conversation, "chat_category", None),
+            )
+
+            if _idv_challenge:
+                _verified_context = {
+                    "email": _idv_challenge.email,
+                    "verified_via": "idv_challenge",
+                }
+
+                frappe.db.set_value(
+                    "Nexus Live Conversation",
+                    conversation.name,
+                    {
+                        "visitor_email": _idv_challenge.email,
+                        "companion_email_verified": 1,
+                        "companion_pending_action": "collect_representative_note",
+                        "companion_pending_context_json": json.dumps(_verified_context, default=str),
+                    },
+                    update_modified=False,
+                )
+
+                # Mirror DB state to current in-memory doc also.
+                try:
+                    conversation.visitor_email = _idv_challenge.email
+                    conversation.companion_email_verified = 1
+                    conversation.companion_pending_action = "collect_representative_note"
+                    conversation.companion_pending_context_json = json.dumps(_verified_context, default=str)
+                except Exception:
+                    pass
+
+                update_enquiry(
+                    conversation,
+                    {"discovery_facts": [{
+                        "context_area": "general_business",
+                        "fact_type": "email_verification_status",
+                        "fact_value": "verified",
+                        "source_message": _idv_challenge.email,
+                    }]},
+                    signal=None,
+                )
+
+                pending_action = "collect_representative_note"
+
+                _set_companion_pending_action(
+                    conversation,
+                    "collect_representative_note",
+                    {
+                        "email": _idv_challenge.email,
+                        "verified_via": "idv_challenge",
+                    },
+                )
+
+                frappe.db.commit()
+
+                # If this request is only the frontend/system verification callback,
+                # show the note prompt.
+                if _identity_verified_system_message(visitor_message):
+                    return {
+                        "status": "success",
+                        "access_status": "intent_handled",
+                        "answer": (
+                            'Before I proceed, would you like to add a note or question for the Nexy representative? '
+                            'This helps them understand what you want reviewed. You can also type "skip".'
+                        ),
+                        "confidence": 1.0,
+                        "sources": [],
+                        "citations": [],
+                        "retrieval_result": {},
+                        "fallback_used": 0,
+                        "chat_mode": "controlled_companion_direct",
+                        "companion_controller": True,
+                        "conversion_action": None,
+                        "verification_stage": "verified",
+                        "pending_action": "collect_representative_note",
+                        "companion_email_verified": True,
+                    }
+
+                # If this request contains the actual visitor note/skip,
+                # process it immediately instead of asking again.
+                return _handle_verified_representative_note_message(
+                    conversation=conversation,
+                    visitor_message=visitor_message,
+                    accumulated_discovery=accumulated_discovery,
+                )
+
+        except Exception:
+            frappe.log_error(
+                frappe.get_traceback(),
+                "Companion: challenge token verification failed",
+            )
+    
+    # HARD GUARD:
+    # If email is already verified and we are in the representative-note stage,
+    # do not allow old demo_request / legacy confirmation routing.
+    # This must run before normal steering.
+    if (
+        _is_booking_email_verified(conversation)
+        and _is_verified_note_turn(
+            conversation=conversation,
+            conversation_context=conversation_context,
+            pending_action=pending_action,
+            payload=payload,
+            core_payload=core_payload,
+        )
+    ):
+        if _is_note_ack_only(visitor_message):
+            return {
+                "status": "success",
+                "access_status": "intent_handled",
+                "answer": (
+                    'Sure. Please type the note or question you want the representative to see, '
+                    'or type "skip" to proceed without one.'
+                ),
+                "confidence": 1.0,
+                "sources": [],
+                "citations": [],
+                "retrieval_result": {},
+                "fallback_used": 0,
+                "chat_mode": "controlled_companion_direct",
+                "companion_controller": True,
+                "conversion_action": None,
+                "pending_action": "collect_representative_note",
+            }
+
+        _note_value = "skipped" if _is_skip_note(visitor_message) else visitor_message[:500]
+
+        update_enquiry(
+            conversation,
+            {"discovery_facts": [{
+                "context_area": "general_business",
+                "fact_type": "representative_note_collected",
+                "fact_value": _note_value,
+                "source_message": visitor_message,
+            }]},
+            signal=None,
+        )
+
+        _clear_companion_pending_action(conversation)
+
+        return _handle_show_meeting_booking_card(
+            conversation=conversation,
+            accumulated_discovery=accumulated_discovery,
+        )
+    
     # _companion_flow_debug("03 DISCOVERY + SIGNAL", {
     #     "signal": signal,
     #     "discovery_delta": _summarise_discovery(discovery_delta),
     #     "accumulated_discovery": _summarise_discovery(accumulated_discovery),
     # })
 
-    # If the frontend sends back a verified IDV challenge token, advance directly to
-    # collect_representative_note without waiting for another LLM turn.
-    _idv_challenge_token = (
-        payload.get("identity_verification_challenge")
-        or core_payload.get("identity_verification_challenge")
-        or ""
-    ).strip()
+    
     if _idv_challenge_token and pending_action in (
         "collect_email_for_consultancy",
         "verify_email_for_consultancy",
@@ -264,10 +558,20 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
                 chat_category=getattr(conversation, "chat_category", None),
             )
             if _idv_challenge:
+                _verified_context = {
+                    "email": _idv_challenge.email,
+                    "verified_via": "idv_challenge",
+                }
+
                 frappe.db.set_value(
                     "Nexus Live Conversation",
                     conversation.name,
-                    {"visitor_email": _idv_challenge.email, "companion_email_verified": 1},
+                    {
+                        "visitor_email": _idv_challenge.email,
+                        "companion_email_verified": 1,
+                        "companion_pending_action": "collect_representative_note",
+                        "companion_pending_context_json": json.dumps(_verified_context, default=str),
+                    },
                     update_modified=False,
                 )
                 update_enquiry(
@@ -280,12 +584,15 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
                     }]},
                     signal=None,
                 )
+                
                 pending_action = "collect_representative_note"
                 _set_companion_pending_action(
                     conversation,
                     "collect_representative_note",
                     {"email": _idv_challenge.email, "verified_via": "idv_challenge"},
                 )
+                frappe.db.commit()
+                
                 return {
                     "status": "success",
                     "access_status": "intent_handled",
@@ -334,6 +641,32 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
     
     steering = _apply_grounding_policy(steering)
     
+    # Defensive override:
+    # Once email is verified and note stage is active, never allow legacy demo_request.
+    if (        
+        _is_booking_email_verified(conversation)
+            and _is_verified_note_turn(
+                conversation=conversation,
+                conversation_context=conversation_context,
+                pending_action=pending_action,
+                payload=payload,
+                core_payload=core_payload,
+            )
+            and steering.get("decision") in {
+            "confirm_demo_request",
+            "collect_email_for_consultancy",
+            "collect_email_for_appointment",
+            "verify_email_for_consultancy",
+            "verify_email_for_appointment",
+            "close_conversation",
+        }
+    ):
+        steering["decision"] = "show_meeting_booking_card"
+        steering["knowledge_needed"] = False
+        steering["grounding_mode"] = "controller_only"
+        steering["internal_intent"] = "force_booking_card_after_verified_note_stage"
+        steering["milestone_policy"] = "appointment_booking"
+    
     _companion_flow_debug("04 STEERING DECISION", {
     "decision_reason": _explain_steering_reason(
         visitor_message=visitor_message,
@@ -371,12 +704,27 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         return _handle_show_meeting_booking_card(conversation, accumulated_discovery)
 
     from digitz_ai_nexus.engine.chat_agent_loop import run_controlled_companion_loop
-
+    
+    
     if steering.get("decision") == "confirm_demo_request":
-        if pending_action == "collect_representative_note":
+        # Nexy Companion must never use the old legacy demo confirmation flow.
+        # If email is already verified, show the Calendly booking card directly.
+        # If not verified, continue with email verification.
+       
+        if _is_nexy_companion_conversation(conversation, agent):
+            if _is_booking_email_verified(conversation):
+                _clear_companion_pending_action(conversation)
+                return _handle_show_meeting_booking_card(conversation, accumulated_discovery)
+
+            steering["decision"] = "collect_email_for_consultancy"
+            steering["knowledge_needed"] = False
+            steering["grounding_mode"] = "controller_only"
+
+        elif pending_action == "collect_representative_note":
             steering["decision"] = "collect_representative_note"
             steering["knowledge_needed"] = False
             steering["grounding_mode"] = "controller_only"
+
         elif pending_action in {
             "collect_email_for_consultancy",
             "verify_email_for_consultancy",
@@ -384,6 +732,7 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
             steering["decision"] = "collect_email_for_consultancy"
             steering["knowledge_needed"] = False
             steering["grounding_mode"] = "controller_only"
+
         elif pending_action in {
             "ask_more_clarification_or_consultancy",
             "appointment_declined_collect_note",
@@ -393,6 +742,7 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
             steering["decision"] = "collect_email_for_consultancy"
             steering["knowledge_needed"] = False
             steering["grounding_mode"] = "controller_only"
+
         else:
             return _handle_demo_confirmation(conversation)
 
@@ -489,7 +839,10 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         payload=loop_payload,
         controller_plan=controller_plan,
     )
-    
+
+    if steering.get("decision") == "present_nexy_capability_visibility":
+        response = _ensure_nexy_capability_visibility_response(response, steering)
+
     _companion_flow_debug("06 CONTROLLED LOOP RESPONSE", {
         "steering_decision": steering.get("decision"),
         "answer": _preview_text(response.get("answer") if isinstance(response, dict) else None, 700),
@@ -1637,6 +1990,140 @@ def _detect_context_area_from_challenge(challenge_text):
         return "operations"
     return "general_business"
 
+def _is_verified_note_turn(conversation, conversation_context, pending_action, payload=None, core_payload=None):
+    payload = payload or {}
+    core_payload = core_payload or {}
+
+    if pending_action == "collect_representative_note":
+        return True
+
+    try:
+        db_pending = (
+            frappe.db.get_value(
+                "Nexus Live Conversation",
+                conversation.name,
+                "companion_pending_action",
+            )
+            or ""
+        ).strip()
+
+        if db_pending == "collect_representative_note":
+            return True
+    except Exception:
+        pass
+
+    payload_pending = (
+        payload.get("pending_action")
+        or payload.get("companion_pending_action")
+        or core_payload.get("pending_action")
+        or core_payload.get("companion_pending_action")
+        or ""
+    ).strip()
+
+    if payload_pending == "collect_representative_note":
+        return True
+
+    return _is_representative_note_stage(conversation_context, pending_action)
+
+def _is_booking_email_verified(conversation):
+    """
+    Strong verification check used before showing the booking card.
+
+    Primary source:
+    - companion_email_verified = 1
+
+    Defensive fallback:
+    - visitor_email exists
+    - pending context says verified_via idv_challenge/email_code
+
+    This avoids closing the booking flow when the previous verification turn
+    saved context but the conversation doc/cache is stale.
+    """
+    try:
+        row = frappe.db.get_value(
+            "Nexus Live Conversation",
+            conversation.name,
+            [
+                "visitor_email",
+                "companion_email_verified",
+                "companion_pending_action",
+                "companion_pending_context_json",
+            ],
+            as_dict=True,
+        ) or {}
+
+        if bool(row.get("companion_email_verified")):
+            return True
+
+        visitor_email = (row.get("visitor_email") or "").strip()
+        pending_action = (row.get("companion_pending_action") or "").strip()
+        raw_ctx = row.get("companion_pending_context_json") or "{}"
+
+        try:
+            ctx = json.loads(raw_ctx) if isinstance(raw_ctx, str) else (raw_ctx or {})
+        except Exception:
+            ctx = {}
+
+        verified_via = (ctx.get("verified_via") or "").strip()
+
+        if (
+            visitor_email
+            and pending_action == "collect_representative_note"
+            and verified_via in {"idv_challenge", "email_code"}
+        ):
+            return True
+
+        return False
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Companion Controller: booking email verification check failed",
+        )
+        return False
+
+def _is_representative_note_stage(conversation_context, pending_action=None):
+    text = str(conversation_context or "").lower()
+
+    if pending_action == "collect_representative_note":
+        return True
+
+    markers = [
+        "add a note or question for the nexy representative",
+        "note or question for the nexy representative",
+        "this helps them understand what you want reviewed",
+        "you can also type \"skip\"",
+        "you can also type 'skip'",
+        "type \"skip\"",
+        "type 'skip'",
+        "type skip",
+    ]
+
+    return any(marker in text for marker in markers)
+
+
+def _is_note_ack_only(visitor_message):
+    text = str(visitor_message or "").strip().lower()
+    return text in {
+        "yes",
+        "y",
+        "sure",
+        "ok",
+        "okay",
+        "yep",
+        "yeah",
+        "alright",
+        "go ahead",
+        "proceed",
+    }
+
+
+def _is_skip_note(visitor_message):
+    text = str(visitor_message or "").strip().lower()
+    return (
+        text in {"skip", "no", "no thanks", "no thank you", "nope", "pass", "not now"}
+        or "skip" in text
+    )
 
 def _looks_like_methodology_answer(visitor_message):
     text = str(visitor_message or "").lower().strip()
@@ -1646,12 +2133,14 @@ def _looks_like_methodology_answer(visitor_message):
         "referrals", "referral",
         "seo",
         "website enquiries", "website inquiries", "website leads",
+        "website", "contact form",
+        "whatsapp", "whats app",
+        "phone call", "phone calls", "calls",
         "cold calling", "cold call",
         "social media",
-        "walk in", "walk-in",
+        "walk in", "walk-in", "other", "custom", "none", "not sure", "unclear", "unknown",
     ]
     return any(k in text for k in keywords)
-
 
 def _normalise_methodology_answer(visitor_message):
     text = str(visitor_message or "").strip()
@@ -2435,11 +2924,11 @@ def _decide_steering(
             }]},
             signal=None,
         )
-        _nf_g_email_verified = bool(
-            frappe.db.get_value(
-                "Nexus Live Conversation", conversation.name, "companion_email_verified"
-            )
-        )
+        
+        _nf_g_email_verified = _is_booking_email_verified(conversation)
+        
+        print(f"DEBUG: _decide_steering: representative_note_collected, email_verified={_nf_g_email_verified}")
+        
         if _nf_g_email_verified:
             return {
                 "decision": "show_meeting_booking_card",
@@ -2451,13 +2940,13 @@ def _decide_steering(
                 "milestone_policy": "appointment_booking",
             }
         return {
-            "decision": "close_conversation",
+            "decision": "collect_email_for_consultancy",
             "knowledge_needed": False,
             "redirect_to_milestone": False,
             "visitor_external_intent": intent,
             "external_intent_confidence": confidence,
-            "internal_intent": "close_after_note_collected",
-            "milestone_policy": "closing",
+            "internal_intent": "collect_email_after_note_collected",
+            "milestone_policy": "appointment_booking",
         }
 
     if intent == "demo_confirmation" and pending_action == "demo_request" and not _consultancy_pending:
@@ -2567,6 +3056,51 @@ def _decide_steering(
         _pctx = _get_companion_pending_context(conversation)
         _cm_context_area = _pctx.get("context_area") or _nf_context_area or "lead_generation"
         _cm_challenge = _pctx.get("challenge") or _nf_challenge_text or ""
+
+        # Deterministic fast path for common source/method answers.
+        # This prevents "Facebook ads" from falling into result-discovery.
+        if _looks_like_methodology_answer(visitor_message):
+            _cm_value = _normalise_methodology_answer(visitor_message)
+            _cm_status = "known"
+
+            update_enquiry(
+                conversation,
+                {
+                    "discovery_facts": [
+                        {
+                            "context_area": _cm_context_area,
+                            "fact_type": "current_methodology",
+                            "fact_value": _cm_value,
+                            "source_message": visitor_message,
+                        },
+                        {
+                            "context_area": _cm_context_area,
+                            "fact_type": "current_methodology_status",
+                            "fact_value": _cm_status,
+                            "related_value": _cm_value,
+                            "source_message": "deterministic_methodology_match",
+                        },
+                    ]
+                },
+                signal=None,
+            )
+
+            _clear_companion_pending_action(conversation)
+
+            return {
+                "decision": "present_nexy_capability_visibility",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": "methodology_answer",
+                "external_intent_confidence": 1.0,
+                "internal_intent": "present_nexy_value_after_methodology_capture",
+                "milestone_policy": "solution_mapping",
+                "methodology_context_area": _cm_context_area,
+                "current_methodology": _cm_value,
+                "current_methodology_status": _cm_status,
+                "pain_point_challenges": _cm_challenge,
+                "business_context": _nf.get("industry") or _nf.get("business_type") or "",
+            }
 
         slot = _classify_current_methodology_slot_answer(
             visitor_message=visitor_message,
@@ -3525,6 +4059,67 @@ def _decide_steering(
         "milestone_policy": "default",
     }
 
+
+def _looks_like_wrong_nexy_capability_visibility_answer(answer):
+    text = str(answer or "").lower()
+
+    wrong_markers = [
+        "how effective",
+        "how effective have you found",
+        "what kind of results",
+        "what results",
+        "are you getting from",
+        "how are your ads performing",
+        "ad performance",
+        "campaign performance",
+        "specific aspects of your lead generation process",
+        "what could be improved",
+        "what do you feel could be improved",
+    ]
+
+    return any(marker in text for marker in wrong_markers)
+
+
+def _build_safe_nexy_capability_visibility_answer(steering):
+    methodology = (steering.get("current_methodology") or "your current lead source").strip()
+
+    return (
+        f"Got it — {methodology} is how you are currently bringing people in.\n\n"
+        "From here, Nexy focuses on what happens after an enquiry comes in: understanding the visitor, "
+        "capturing the requirement, qualifying the opportunity, and guiding the next step.\n\n"
+        "**Nexy Capability Summary:**\n"
+        "- **Structured visitor conversation:** Nexy can guide visitors through a focused conversation instead of leaving them in an open-ended chat.\n"
+        "- **Requirement discovery:** Nexy can capture what the visitor is looking for, their challenge, and their business context.\n"
+        "- **Buying signal understanding:** Nexy can identify engagement signals from the conversation and help highlight visitors who may need priority follow-up.\n"
+        "- **Guided next step:** Nexy can guide interested visitors toward a demo, consultation, or representative handoff when appropriate.\n"
+        "- **Knowledge-grounded answers:** Nexy answers from approved Nexus knowledge instead of guessing product or service details.\n\n"
+        f"To be clear, Nexy does not replace or manage {methodology}. "
+        f"{methodology} may bring people in — Nexy focuses on the conversation after someone contacts your business.\n\n"
+        "Which area would you like to understand better?"
+    )
+
+
+def _ensure_nexy_capability_visibility_response(response, steering):
+    if not isinstance(response, dict):
+        response = {}
+
+    if response.get("access_status") in ("controlled_no_context", "restricted"):
+        return response
+
+    answer = response.get("answer") or ""
+
+    if (
+        "nexy capability summary" not in answer.lower()
+        or _looks_like_wrong_nexy_capability_visibility_answer(answer)
+    ):
+        response["answer"] = _build_safe_nexy_capability_visibility_answer(steering)
+        response["access_status"] = response.get("access_status") or "intent_handled"
+        response["fallback_used"] = 0
+        response["nexy_capability_visibility_guard_applied"] = True
+
+    return response
+
+
 def _apply_grounding_policy(steering):
     """
     Apply mandatory grounding mode for every controller decision.
@@ -3909,58 +4504,163 @@ def _detect_pending_action(conversation_context):
 
     return None
 
-def _handle_show_meeting_booking_card(conversation, accumulated_discovery=None):
+def _get_conversation_assigned_agent(conversation):
     """
-    Fires after email verified + representative note captured/skipped.
-    If a scheduling link is configured → show booking card with UI metadata.
-    If not → create a consultancy request and tell the visitor a rep will follow up.
+    Resolve assigned agent from object first, then DB.
+    Avoids stale/incomplete conversation doc issues.
     """
-    # Agent profile is the primary source for the Calendly link.
-    scheduling_link = ""
     try:
-        _agent_name = getattr(conversation, "assigned_agent", None)
-        if _agent_name:
-            scheduling_link = (
-                frappe.db.get_value("Nexus AI Agent Profile", _agent_name, "calendly_link") or ""
-            )
+        agent_name = (getattr(conversation, "assigned_agent", None) or "").strip()
+        if agent_name:
+            return agent_name
     except Exception:
         pass
 
-    # Fall back to the global Nexus Settings link when the agent has none.
+    try:
+        return (
+            frappe.db.get_value(
+                "Nexus Live Conversation",
+                conversation.name,
+                "assigned_agent",
+            )
+            or ""
+        ).strip()
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Companion Controller: failed to read assigned_agent from conversation",
+        )
+        return ""
+
+
+def _safe_get_existing_field_value(doctype, docname, fieldnames):
+    """
+    Reads the first available field from a DocType safely.
+    Works even if some candidate fields do not exist.
+    """
+    try:
+        meta = frappe.get_meta(doctype)
+        existing_fields = {df.fieldname for df in meta.fields}
+
+        for fieldname in fieldnames:
+            if fieldname not in existing_fields:
+                continue
+
+            value = ""
+            if docname:
+                value = frappe.db.get_value(doctype, docname, fieldname) or ""
+            else:
+                value = frappe.db.get_single_value(doctype, fieldname) or ""
+
+            value = str(value or "").strip()
+            if value:
+                return value
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            f"Companion Controller: failed to read booking link from {doctype}",
+        )
+
+    return ""
+
+
+def _resolve_meeting_booking_link(conversation):
+    """
+    Resolve the meeting booking link from:
+    1. Assigned Nexus AI Agent Profile
+    2. Nexus Settings
+    3. Emergency configured fallback
+    """
+
+    agent_name = _get_conversation_assigned_agent(conversation)
+
+    scheduling_link = ""
+
+    if agent_name:
+        scheduling_link = _safe_get_existing_field_value(
+            "Nexus AI Agent Profile",
+            agent_name,
+            [
+                "calendly_link",
+                "calendly_url",
+                "meeting_scheduling_link",
+                "meeting_booking_link",
+                "booking_link",
+                "appointment_link",
+            ],
+        )
+
     if not scheduling_link:
-        try:
-            settings = frappe.get_single("Nexus Settings")
-            scheduling_link = getattr(settings, "meeting_scheduling_link", None) or ""
-        except Exception:
-            scheduling_link = ""
+        scheduling_link = _safe_get_existing_field_value(
+            "Nexus Settings",
+            None,
+            [
+                "meeting_scheduling_link",
+                "calendly_link",
+                "calendly_url",
+                "meeting_booking_link",
+                "booking_link",
+                "appointment_link",
+            ],
+        )
 
-    if scheduling_link:
-        return {
-            "status": "success",
-            "access_status": "intent_handled",
-            "answer": (
-                "Your email has been verified. You can now choose a suitable time to meet with "
-                "a Nexy representative using the booking option below."
-            ),
-            "confidence": 1.0,
-            "sources": [],
-            "citations": [],
-            "retrieval_result": {},
-            "fallback_used": 0,
-            "chat_mode": "controlled_companion_direct",
-            "companion_controller": True,
-            "conversion_action": {
-                "type": "meeting_booking",
-                "status": "ready",
-                "title": "Book a Demo / Consultation",
-                "button_label": "Book a Meeting",
-                "description": "Choose a suitable time with a Nexy representative.",
-                "booking_url": scheduling_link,
-            },
-        }
+    # Emergency fallback to stop the broken demo-request path.
+    # Later you can remove this after confirming settings/agent lookup is stable.
+    if not scheduling_link:
+        scheduling_link = "https://calendly.com/rupesh-techxcel/nexus-ai-consultancy"
 
-    return _handle_create_consultancy_request(conversation, accumulated_discovery)
+    return scheduling_link
 
+
+def _build_meeting_booking_response(conversation, scheduling_link):
+    return {
+        "status": "success",
+        "access_status": "intent_handled",
+        "answer": (
+            "Your email has been verified. You can now choose a suitable time to meet with "
+            "a Nexy representative using the booking link below.\n\n"
+            f"{scheduling_link}"
+        ),
+        "confidence": 1.0,
+        "sources": [],
+        "citations": [],
+        "retrieval_result": {},
+        "fallback_used": 0,
+        "chat_mode": "controlled_companion_direct",
+        "companion_controller": True,
+        "conversion_action": {
+            "type": "meeting_booking",
+            "status": "ready",
+            "title": "Book a Demo / Consultation",
+            "button_label": "Book a Meeting",
+            "description": "Choose a suitable time with a Nexy representative.",
+            "booking_url": scheduling_link,
+            "url": scheduling_link,
+        },
+        "booking_url": scheduling_link,
+    }
+
+
+def _handle_show_meeting_booking_card(conversation, accumulated_discovery=None):
+    """
+    Fires after email verified + representative note captured/skipped.
+
+    Important:
+    This function must NEVER fall back to legacy demo request wording for Nexy Companion.
+    It must either show a booking link/card or clearly expose a booking-link configuration issue.
+    """
+
+    scheduling_link = _resolve_meeting_booking_link(conversation)
+
+    _companion_flow_debug("09 BOOKING LINK CHECK", {
+        "conversation": getattr(conversation, "name", None),
+        "assigned_agent": _get_conversation_assigned_agent(conversation),
+        "scheduling_link_found": bool(scheduling_link),
+        "scheduling_link_preview": scheduling_link[:120] if scheduling_link else "",
+    })
+
+    return _build_meeting_booking_response(conversation, scheduling_link)
 
 def _handle_create_consultancy_request(conversation, accumulated_discovery=None):
     """
@@ -4009,6 +4709,29 @@ def _handle_demo_confirmation(conversation):
     """
     Demo accepted. Do not ask again.
     """
+    
+    # Final safety: Nexy Companion must not use the legacy demo confirmation path.
+    if _is_nexy_companion_conversation(conversation):
+        if _is_booking_email_verified(conversation):
+            _clear_companion_pending_action(conversation)
+            return _handle_show_meeting_booking_card(conversation, {})
+
+        response = {
+            "status": "success",
+            "access_status": "intent_handled",
+            "answer": (
+                "Sure. Please share your email address so I can verify it before booking the meeting."
+            ),
+            "confidence": 1.0,
+            "sources": [],
+            "citations": [],
+            "retrieval_result": {},
+            "fallback_used": 0,
+            "chat_mode": "controlled_companion_direct",
+            "companion_controller": True,
+            "conversion_action": None,
+        }
+        return _decorate_email_collection_response(response, conversation)
 
     try:
         frappe.db.set_value(

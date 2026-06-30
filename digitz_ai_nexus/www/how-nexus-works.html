@@ -1653,17 +1653,19 @@
 
 </div>
 
+<!-- ── Nexus AI Chat Widget ── -->
+<script>window.frappe = window.frappe || {};</script>
+<!-- csrf_token -->
 <script>
-  window.NexusChatConfig = {};
-  window.dev_server    = 1;
-  window.socketio_port = 9512;
-  window.frappe = window.frappe || {};
-  frappe.boot = { sitename: 'digitz_ai_nexus_live_test.site', socketio_port: 9512 };
-  frappe.ready_events = [];
-  frappe.ready = function(fn){ frappe.ready_events.push(fn); };
+    window.NexusChatConfig = { widget_code: "{{ site_widget_code }}" };
+    window.dev_server    = {{ dev_server }};
+    window.socketio_port = {{ socketio_port }};
+    frappe.boot = { sitename: '{{ sitename }}', socketio_port: {{ socketio_port }} };
+    frappe.ready_events = [];
+    frappe.ready = function(fn){ frappe.ready_events.push(fn); };
 </script>
-<script src="/assets/frappe/dist/js/frappe-web.bundle.RGYFHIMP.js"></script>
-<script src="/assets/digitz_ai_nexus_live/dist/js/nexus_chat_widget.bundle.WAX5PEHK.js"></script>
+{{ include_script('frappe-web.bundle.js') }}
+{{ include_script('nexus_chat_widget.bundle.js') }}
 
 </body>
 </html>
