@@ -15,6 +15,163 @@ from digitz_ai_nexus.nexus_companion.services.companion_intent_service import (
     classify_external_intent,
 )
 
+
+def _companion_flow_debug(stage, data=None):
+    """
+    Compact debug for Nexy Companion flow.
+    Shows intent, steering, decision reason, and response state only.
+    """
+    try:
+        print("\n\n========== NEXY FLOW:", stage, "==========")
+        if data is not None:
+            print(json.dumps(data, indent=2, default=str))
+        print("=========================================\n\n")
+
+        try:
+            frappe.logger("nexus_debug").info({
+                "stage": stage,
+                "data": data,
+            })
+        except Exception:
+            pass
+
+    except Exception:
+        print("\n\n========== NEXY FLOW DEBUG FAILED ==========")
+        print(stage)
+        print(str(data))
+        print("===========================================\n\n")
+
+
+def _preview_text(value, limit=350):
+    value = str(value or "").strip()
+    if len(value) > limit:
+        return value[:limit] + "..."
+    return value
+
+
+def _summarise_discovery(discovery):
+    discovery = discovery or {}
+    facts = discovery.get("discovery_facts") or []
+
+    fact_summary = []
+    if isinstance(facts, list):
+        for fact in facts[:8]:
+            fact_summary.append({
+                "context_area": fact.get("context_area"),
+                "fact_type": fact.get("fact_type"),
+                "fact_value": fact.get("fact_value"),
+                "related_value": fact.get("related_value"),
+            })
+
+    return {
+        "company_name": discovery.get("company_name"),
+        "industry": discovery.get("industry"),
+        "business_type": discovery.get("business_type"),
+        "current_challenges": discovery.get("current_challenges"),
+        "goals": discovery.get("goals"),
+        "existing_systems": discovery.get("existing_systems"),
+        "timeline": discovery.get("timeline"),
+        "fact_summary": fact_summary,
+    }
+
+
+def _explain_steering_reason(
+    visitor_message,
+    current_milestone,
+    pending_action,
+    signal,
+    external_intent,
+    steering,
+):
+    """
+    Human-readable reason for why the controller selected a decision.
+    This is debug-only and should not affect runtime behaviour.
+    """
+    external_intent = external_intent or {}
+    steering = steering or {}
+    signal = signal or {}
+
+    decision = steering.get("decision")
+    ext_intent = external_intent.get("intent")
+    ext_conf = external_intent.get("confidence")
+    signal_type = signal.get("signal_type")
+
+    if pending_action:
+        reason = (
+            f"Existing pending_action='{pending_action}' influenced the next move. "
+            f"External intent was '{ext_intent}' with confidence {ext_conf}."
+        )
+    elif ext_intent and ext_intent != "unknown":
+        reason = (
+            f"External intent classifier detected '{ext_intent}' with confidence {ext_conf}. "
+            f"Controller mapped it to decision='{decision}'."
+        )
+    else:
+        reason = (
+            f"No strong external intent. Controller continued based on milestone='{current_milestone}', "
+            f"signal='{signal_type}', and discovery state."
+        )
+
+    return {
+        "reason": reason,
+        "visitor_message": visitor_message,
+        "current_milestone": current_milestone,
+        "pending_action": pending_action,
+        "signal_type": signal_type,
+        "external_intent": ext_intent,
+        "external_intent_confidence": ext_conf,
+        "steering_decision": decision,
+        "internal_intent": steering.get("internal_intent"),
+        "milestone_policy": steering.get("milestone_policy"),
+        "knowledge_needed": steering.get("knowledge_needed"),
+        "grounding_mode": steering.get("grounding_mode"),
+    }
+
+def _get_companion_db_status(conversation):
+    """
+    Reads current DB state directly, so we can confirm whether conversation doc cache is stale.
+    Does not print OTP/hash value directly.
+    """
+    try:
+        row = frappe.db.get_value(
+            "Nexus Live Conversation",
+            conversation.name,
+            [
+                "visitor_email",
+                "companion_email_verified",
+                "companion_pending_action",
+                "companion_pending_context_json",
+                "companion_email_verification_hash",
+                "companion_email_verification_expires_on",
+                "companion_email_verification_retry_count",
+                "companion_milestone",
+                "companion_journey_stage",
+                "chat_category",
+                "assigned_agent",
+            ],
+            as_dict=True,
+        ) or {}
+
+        return {
+            "conversation": conversation.name,
+            "visitor_email": row.get("visitor_email"),
+            "companion_email_verified": row.get("companion_email_verified"),
+            "companion_pending_action": row.get("companion_pending_action"),
+            "companion_pending_context_json": row.get("companion_pending_context_json"),
+            "has_email_verification_hash": bool((row.get("companion_email_verification_hash") or "").strip()),
+            "companion_email_verification_expires_on": row.get("companion_email_verification_expires_on"),
+            "companion_email_verification_retry_count": row.get("companion_email_verification_retry_count"),
+            "companion_milestone": row.get("companion_milestone"),
+            "companion_journey_stage": row.get("companion_journey_stage"),
+            "chat_category": row.get("chat_category"),
+            "assigned_agent": row.get("assigned_agent"),
+        }
+    except Exception:
+        return {
+            "conversation": getattr(conversation, "name", None),
+            "db_status_error": frappe.get_traceback(),
+        }
+
 def handle_companion_turn(conversation, agent, payload, core_payload):
     """
     Controller-led companion runtime.
@@ -27,7 +184,7 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
 
     The LLM only helps classify, extract, and draft.
     """
-
+    
     visitor_message = payload.get("message") or core_payload.get("query") or ""
     conversation_context = core_payload.get("conversation_context") or ""
     current_milestone = _get_current_milestone(conversation)
@@ -36,6 +193,16 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
     _stored_pending = _get_companion_pending_action(conversation)
     pending_action = _stored_pending or _detect_pending_action(conversation_context)
 
+    _companion_flow_debug("01 TURN START", {
+        "conversation": getattr(conversation, "name", None),
+        "visitor_message": visitor_message,
+        "current_milestone": current_milestone,
+        "stored_pending_action": _stored_pending,
+        "detected_pending_action": _detect_pending_action(conversation_context),
+        "pending_action_used": pending_action,
+        "conversation_context_tail": _preview_text(conversation_context[-1000:], 1000),
+    })
+    
     enquiry_name = get_or_create_enquiry(conversation)
 
     signal = classify_signal(
@@ -72,6 +239,12 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         discovery_delta=discovery_delta,
         signal=signal,
     )
+    
+    # _companion_flow_debug("03 DISCOVERY + SIGNAL", {
+    #     "signal": signal,
+    #     "discovery_delta": _summarise_discovery(discovery_delta),
+    #     "accumulated_discovery": _summarise_discovery(accumulated_discovery),
+    # })
 
     # If the frontend sends back a verified IDV challenge token, advance directly to
     # collect_representative_note without waiting for another LLM turn.
@@ -113,6 +286,25 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
                     "collect_representative_note",
                     {"email": _idv_challenge.email, "verified_via": "idv_challenge"},
                 )
+                return {
+                    "status": "success",
+                    "access_status": "intent_handled",
+                    "answer": (
+                        'Before I proceed, would you like to add a note or question for the Nexy representative? '
+                        'This helps them understand what you want reviewed. You can also type "skip".'
+                    ),
+                    "confidence": 1.0,
+                    "sources": [],
+                    "citations": [],
+                    "retrieval_result": {},
+                    "fallback_used": 0,
+                    "chat_mode": "controlled_companion_direct",
+                    "companion_controller": True,
+                    "conversion_action": None,
+                    "verification_stage": "verified",
+                    "pending_action": "collect_representative_note",
+                    "companion_email_verified": True,
+                }
         except Exception:
             frappe.log_error(
                 frappe.get_traceback(),
@@ -142,6 +334,31 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
     
     steering = _apply_grounding_policy(steering)
     
+    _companion_flow_debug("04 STEERING DECISION", {
+    "decision_reason": _explain_steering_reason(
+        visitor_message=visitor_message,
+        current_milestone=current_milestone,
+        pending_action=pending_action,
+        signal=signal,
+        external_intent=external_intent,
+        steering=steering,
+    ),
+    "steering": {
+        "decision": steering.get("decision"),
+        "visitor_external_intent": steering.get("visitor_external_intent"),
+        "external_intent_confidence": steering.get("external_intent_confidence"),
+        "internal_intent": steering.get("internal_intent"),
+        "milestone_policy": steering.get("milestone_policy"),
+        "knowledge_needed": steering.get("knowledge_needed"),
+        "grounding_mode": steering.get("grounding_mode"),
+        "current_methodology": steering.get("current_methodology"),
+        "methodology_context_area": steering.get("methodology_context_area"),
+        "pain_point_challenges": steering.get("pain_point_challenges"),
+        "lead_entry_point": steering.get("lead_entry_point"),
+        "selected_capability_area": steering.get("selected_capability_area"),
+    },
+})
+    
     frappe.logger("nexus_debug").info({
         "visitor_message": visitor_message,
         "external_intent": external_intent,
@@ -154,6 +371,30 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         return _handle_show_meeting_booking_card(conversation, accumulated_discovery)
 
     from digitz_ai_nexus.engine.chat_agent_loop import run_controlled_companion_loop
+
+    if steering.get("decision") == "confirm_demo_request":
+        if pending_action == "collect_representative_note":
+            steering["decision"] = "collect_representative_note"
+            steering["knowledge_needed"] = False
+            steering["grounding_mode"] = "controller_only"
+        elif pending_action in {
+            "collect_email_for_consultancy",
+            "verify_email_for_consultancy",
+        }:
+            steering["decision"] = "collect_email_for_consultancy"
+            steering["knowledge_needed"] = False
+            steering["grounding_mode"] = "controller_only"
+        elif pending_action in {
+            "ask_more_clarification_or_consultancy",
+            "appointment_declined_collect_note",
+            "email_declined_collect_note",
+            "capture_closing_feedback",
+        }:
+            steering["decision"] = "collect_email_for_consultancy"
+            steering["knowledge_needed"] = False
+            steering["grounding_mode"] = "controller_only"
+        else:
+            return _handle_demo_confirmation(conversation)
 
     allowed_tools = _build_allowed_tools(steering)
 
@@ -202,37 +443,61 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
             if isinstance((mv := steering.get("current_methodology") or ""), list)
             else str(mv)
         ),
+        "current_methodology_status": steering.get("current_methodology_status") or "",
         "lead_entry_point": steering.get("lead_entry_point") or "",
         "selected_capability_area": steering.get("selected_capability_area") or "",
         "business_context": steering.get("business_context") or "",
     }
     
-    if steering.get("decision") == "confirm_demo_request":
-        # Never fire the legacy demo confirmation when the consultancy flow is active —
-        # the stored pending action or the D-branch should have redirected already.
-        _consultancy_active = pending_action in {
-            "collect_email_for_consultancy",
-            "verify_email_for_consultancy",
-            "collect_representative_note",
-            "ask_more_clarification_or_consultancy",
-        }
-        if not _consultancy_active:
-            return _handle_demo_confirmation(conversation)
-        # Fallthrough: consultancy flow is active — redirect to email collection instead
-        steering["decision"] = "collect_email_for_consultancy"
-        steering["knowledge_needed"] = False
-        steering["grounding_mode"] = "controller_only"
-
+    # _companion_flow_debug("05 CONTROLLER PLAN", {
+    #     "steering_decision": controller_plan.get("steering_decision"),
+    #     "external_intent": controller_plan.get("external_intent"),
+    #     "external_intent_confidence": controller_plan.get("external_intent_confidence"),
+    #     "internal_intent": controller_plan.get("internal_intent"),
+    #     "milestone_policy": controller_plan.get("milestone_policy"),
+    #     "knowledge_needed": controller_plan.get("knowledge_needed"),
+    #     "grounding_mode": controller_plan.get("grounding_mode"),
+    #     "allowed_tools": controller_plan.get("allowed_tools"),
+    #     "allow_escalation": controller_plan.get("allow_escalation"),
+    #     "allow_conversion_action": controller_plan.get("allow_conversion_action"),
+    #     "knowledge_query": _preview_text(controller_plan.get("knowledge_query"), 700),
+    #     "response_goal": _preview_text(controller_plan.get("response_goal"), 700),
+    # })
+    
     if steering.get("decision") == "demo_rejected":
         return _handle_demo_rejection(conversation)
 
     if steering.get("decision") == "answer_next_step":
         return _handle_next_step_question(conversation, pending_action)
 
+    # Persist collect_current_methodology BEFORE the LLM responds so the next
+    # visitor turn always reads it from DB, even if the response path is async.
+    if steering.get("decision") == "discover_current_methodology":
+        _set_companion_pending_action(
+            conversation,
+            "collect_current_methodology",
+            {
+                "decision": "discover_current_methodology",
+                "context_area": steering.get("methodology_context_area") or "lead_generation",
+                "expected_slot": "current_methodology",
+                "challenge": steering.get("pain_point_challenges") or "",
+                "asked_by_decision": "discover_current_methodology",
+            },
+        )
+
     response = run_controlled_companion_loop(
         payload=loop_payload,
         controller_plan=controller_plan,
     )
+    
+    _companion_flow_debug("06 CONTROLLED LOOP RESPONSE", {
+        "steering_decision": steering.get("decision"),
+        "answer": _preview_text(response.get("answer") if isinstance(response, dict) else None, 700),
+        "access_status": response.get("access_status") if isinstance(response, dict) else None,
+        "fallback_used": response.get("fallback_used") if isinstance(response, dict) else None,
+        "chat_mode": response.get("chat_mode") if isinstance(response, dict) else None,
+        "companion_controller": response.get("companion_controller") if isinstance(response, dict) else None,
+    })
     
     # When the methodology knowledge check finds no Nexus Orbit knowledge for the named
     # methodology, transparently pivot to a second search for approved alternatives.
@@ -306,12 +571,47 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
     if steering.get("decision") == "collect_email_for_consultancy":
         response = _decorate_email_collection_response(response, conversation)
 
+        _companion_flow_debug("07 EMAIL COLLECTION DECORATED", {
+        "answer": _preview_text(response.get("answer"), 700),
+        "access_status": response.get("access_status"),
+        "requires_email_verification": response.get("requires_email_verification"),
+        "identity_verification_offer": response.get("identity_verification_offer"),
+        "verification_prompt_allowed": response.get("verification_prompt_allowed"),
+        "verification_stage": response.get("verification_stage"),
+        "verification_purpose": response.get("verification_purpose"),
+        "pending_action": response.get("pending_action"),
+    })
+        
     response["companion_controller"] = True
     response["conversion_action"] = None
 
-    _sync_pending_action_from_decision(conversation, steering.get("decision"), steering)
+    # For present_nexy_capability_visibility, only set confirm_nexy_companion_interest
+    # when the LLM actually returned a value response. If the response was a
+    # knowledge-gap fallback (controlled_no_context), set ask_more_clarification_or_consultancy
+    # instead so a later "yes" is not misrouted as a confirmed booking interest.
+    _sync_decision = steering.get("decision")
+    if (
+        _sync_decision == "present_nexy_capability_visibility"
+        and isinstance(response, dict)
+        and response.get("access_status") == "controlled_no_context"
+    ):
+        _sync_decision = "ask_more_clarification_or_consultancy"
+
+    _sync_pending_action_from_decision(conversation, _sync_decision, steering)
 
     _maybe_advance_milestone(conversation)
+    
+    _companion_flow_debug("08 FINAL COMPANION RESPONSE", {
+        "decision": steering.get("decision"),
+        "external_intent": steering.get("visitor_external_intent"),
+        "internal_intent": steering.get("internal_intent"),
+        "answer": _preview_text(response.get("answer") if isinstance(response, dict) else None, 900),
+        "access_status": response.get("access_status") if isinstance(response, dict) else None,
+        "verification_stage": response.get("verification_stage") if isinstance(response, dict) else None,
+        "pending_action_response": response.get("pending_action") if isinstance(response, dict) else None,
+        "companion_controller": response.get("companion_controller") if isinstance(response, dict) else None,
+        "conversion_action": response.get("conversion_action") if isinstance(response, dict) else None,
+    })
 
     return response
   
@@ -923,16 +1223,33 @@ def _response_goal_for_steering(steering):
 
     if decision == "present_nexy_capability_visibility":
         methodology = (steering.get("current_methodology") or "your current source").strip()
+        methodology_status = (steering.get("current_methodology_status") or "known").strip()
+
+        if methodology_status == "none":
+            ack_example = "Got it — you do not have a clear lead source in place yet."
+        elif methodology_status == "unclear":
+            ack_example = "Got it — your current lead source is not clearly defined yet."
+        elif methodology_status == "unknown":
+            ack_example = f"Got it — {methodology} is currently part of how leads come in for you."
+        else:
+            ack_example = f"Got it — {methodology} is how you are currently bringing people in."
+
         return (
-            "Start with a light acknowledgement of the visitor's current source using simple language. "
-            f"For example: 'Got it — {methodology} is how you are currently bringing people in.' "
-            "Then smoothly transition to Nexy's competency before the summary. "
+            "The visitor has already answered the current methodology/source question. "
+            "Do NOT ask how effective it is. "
+            "Do NOT ask what results they are getting. "
+            "Do NOT ask which area they want to improve as a discovery question. "
+            f"Start with a brief acknowledgement — for example: '{ack_example}' "
+            "If the method is unknown or custom, acknowledge it as their current approach without judging it. "
+            "If the method is none or unclear, acknowledge that naturally and proceed. "
+            "Then transition: 'From here, I can focus on what happens after an enquiry comes in: "
+            "understanding the visitor, capturing the requirement, qualifying the opportunity, and guiding the next step.' "
             "Do NOT use technical or internal phrases like: 'grounding', 'methodology', 'qualification journey', "
             "'enquiry channel', 'controlled flow', 'permitted knowledge', 'Nexus Orbit knowledge says', "
             "'confirmed role', 'conversion journey', 'post-enquiry', 'capability visibility flow'. "
             "Use natural, plain business language. "
-            "Do NOT say Nexy improves, enhances, optimizes, streamlines, or boosts ads, campaigns, targeting, "
-            "budget, creatives, or the visitor's current lead source. "
+            f"Do NOT say Nexy improves, enhances, optimizes, streamlines, or boosts {methodology}, "
+            "ads, campaigns, targeting, budget, creatives, or the visitor's current lead source. "
             "Do NOT invent industry-specific examples, service categories, quote processes, consultation steps, "
             "marketing strategy outcomes, or follow-up workflows unless explicitly present in permitted Nexus knowledge "
             "or stated by the visitor. "
@@ -942,9 +1259,9 @@ def _response_goal_for_steering(steering):
             "Do not create or invent missing capabilities. "
             "If no confirmed capability knowledge is available, say simply that there is not enough confirmed "
             "information available yet, then ask the visitor to leave a note or question for a Nexy representative. "
-            "End by asking: 'Which area would you like to understand better?' "
-            "Offer only the capability areas actually presented in the summary. "
-            "Do NOT ask for email or suggest a meeting in this first summary turn."
+            "End with a single CTA: 'Would you like to explore this further or book a short session with a Nexy representative?' "
+            "Do NOT ask which area they want to understand better as the closing question. "
+            "Do NOT ask for email directly in this turn."
         )
 
     if decision == "answer_nexy_capability_clarification":
@@ -1039,6 +1356,13 @@ def _response_goal_for_steering(steering):
         )
 
     if decision == "collect_representative_note":
+        if steering.get("internal_intent") == "re_ask_for_note_after_acknowledgment":
+            return (
+                "The visitor said yes to leaving a note. "
+                "Ask them to type it now. Keep it brief. "
+                "Example: 'Sure. Please type the note or question you want the representative to see, "
+                "or type \"skip\" to proceed without one.'"
+            )
         return (
             "Ask the visitor to leave a note, question, or context for the Nexy representative before the "
             "meeting request is finalised. "
@@ -1169,6 +1493,56 @@ def _build_allowed_tools(steering):
 
     return tools
 
+def _repair_lead_entry_as_methodology(data, visitor_message):
+    """
+    If the LLM extracted a lead_entry_point fact but no current_methodology fact,
+    promote the entry point to current_methodology so the methodology slot is filled.
+    This covers WhatsApp, website, contact form, phone call, etc.
+    """
+    data = data or {}
+    facts = data.get("discovery_facts") or []
+    if not isinstance(facts, list):
+        facts = []
+
+    has_lead_methodology = any(
+        str(f.get("context_area") or "").strip() == "lead_generation"
+        and str(f.get("fact_type") or "").strip() in {
+            "current_methodology", "current_approach", "current_tool",
+        }
+        and str(f.get("fact_value") or "").strip()
+        for f in facts
+    )
+
+    lead_entry_fact = next(
+        (
+            f for f in facts
+            if str(f.get("context_area") or "").strip() == "lead_generation"
+            and str(f.get("fact_type") or "").strip() == "lead_entry_point"
+            and str(f.get("fact_value") or "").strip()
+        ),
+        None,
+    )
+
+    if not has_lead_methodology and lead_entry_fact:
+        value = str(lead_entry_fact.get("fact_value") or "").strip()
+        facts.append({
+            "context_area": "lead_generation",
+            "fact_type": "current_methodology",
+            "fact_value": value,
+            "source_message": lead_entry_fact.get("source_message") or visitor_message,
+        })
+        facts.append({
+            "context_area": "lead_generation",
+            "fact_type": "current_methodology_status",
+            "fact_value": "known",
+            "related_value": value,
+            "source_message": "lead_entry_repair",
+        })
+
+    data["discovery_facts"] = facts
+    return data
+
+
 def _extract_discovery_data(visitor_message, current_milestone, conversation):
     prompt = f"""
 Extract business discovery information from the visitor message.
@@ -1200,11 +1574,12 @@ Examples:
 - "Facebook ads are doing well but conversion is low" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_result", "fact_value": "Facebook ads doing well but conversion is low", "source_message": "Facebook ads are doing well but conversion is low"}}]}}
 - "We are lagging with lead generation" → {{"current_challenges": "lead generation", "discovery_facts": []}}
 - "We do Google ads and also get referrals" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "Google ads and referrals", "source_message": "We do Google ads and also get referrals"}}]}}
-- "Mostly WhatsApp" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "WhatsApp", "source_message": "Mostly WhatsApp"}}]}}
-- "They come to our website" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "Website", "source_message": "They come to our website"}}]}}
-- "They fill a contact form" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "Contact form", "source_message": "They fill a contact form"}}]}}
-- "Mostly calls" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "Phone call", "source_message": "Mostly calls"}}]}}
-- "WhatsApp and website" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "WhatsApp and website", "source_message": "WhatsApp and website"}}]}}
+- "Mostly WhatsApp" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "WhatsApp", "source_message": "Mostly WhatsApp"}}, {{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "WhatsApp", "source_message": "Mostly WhatsApp"}}]}}
+- "They come to our website" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "Website enquiries", "source_message": "They come to our website"}}, {{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "Website", "source_message": "They come to our website"}}]}}
+- "They fill a contact form" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "Website enquiries", "source_message": "They fill a contact form"}}, {{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "Contact form", "source_message": "They fill a contact form"}}]}}
+- "Mostly calls" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "Phone call", "source_message": "Mostly calls"}}, {{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "Phone call", "source_message": "Mostly calls"}}]}}
+- "WhatsApp and website" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "WhatsApp and website", "source_message": "WhatsApp and website"}}, {{"context_area": "lead_generation", "fact_type": "lead_entry_point", "fact_value": "WhatsApp and website", "source_message": "WhatsApp and website"}}]}}
+- "Referrals" → {{"discovery_facts": [{{"context_area": "lead_generation", "fact_type": "current_methodology", "fact_value": "Referrals", "source_message": "Referrals"}}]}}
 
 Only extract facts clearly stated. Do not infer. If nothing found, return {{}}.
 """
@@ -1214,7 +1589,9 @@ Only extract facts clearly stated. Do not infer. If nothing found, return {{}}.
         if raw.startswith("```"):
             raw = raw.strip("`").replace("json", "", 1).strip()
         data = json.loads(raw)
-        return data if isinstance(data, dict) else {}
+        if isinstance(data, dict):
+            return _repair_lead_entry_as_methodology(data, visitor_message)
+        return {}
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Companion Controller: discovery extraction failed")
         return {}
@@ -1303,11 +1680,16 @@ def _normalise_methodology_answer(visitor_message):
 
 
 def _get_current_methodology_value(accumulated, context_area):
+    accumulated = accumulated or {}
     mfact = (
         _find_fact(accumulated, context_area, "current_methodology")
         or _find_fact(accumulated, context_area, "current_approach")
         or _find_fact(accumulated, context_area, "current_tool")
     )
+    # For lead generation, the visitor's channel/source answer (WhatsApp, website,
+    # contact form, calls) also satisfies the current-methodology slot.
+    if not mfact and context_area == "lead_generation":
+        mfact = _find_fact(accumulated, context_area, "lead_entry_point")
     if mfact:
         return str(mfact.get("fact_value") or "").strip()
     raw_sys = accumulated.get("existing_systems") or ""
@@ -1316,6 +1698,11 @@ def _get_current_methodology_value(accumulated, context_area):
         if isinstance(raw_sys, list)
         else str(raw_sys)
     ).strip()
+
+
+def _get_current_methodology_status(accumulated, context_area):
+    status = _get_fact_value(accumulated or {}, context_area, "current_methodology_status")
+    return status or "known"
 
 def _is_leaving_signal(visitor_message):
     text = str(visitor_message or "").lower().strip()
@@ -1424,6 +1811,271 @@ def _looks_like_consultancy_interest(visitor_message):
     return any(t in text for t in terms)
 
 
+# ---------------------------------------------------------------------------
+# Methodology slot classifier helpers
+# ---------------------------------------------------------------------------
+
+def _is_generic_confirmation(text):
+    return str(text or "").strip().lower() in {
+        "yes", "y", "yeah", "yep", "ok", "okay", "sure", "please", "alright", "fine",
+    }
+
+
+def _looks_like_new_question(text):
+    t = str(text or "").strip().lower()
+    return "?" in t or t.startswith((
+        "what ", "how ", "why ", "can ", "do ", "does ", "is ", "are ",
+        "will ", "would ", "could ", "should ", "when ", "where ", "who ",
+    ))
+
+
+def _looks_like_new_non_methodology_intent(text):
+    """
+    Returns True only when the message is clearly a new non-methodology intent
+    (pricing, demo, booking, human request, product question) rather than an
+    answer to "what are you currently using?"
+
+    Narrower than _looks_like_new_question so that answers such as
+    "I think we use people outreach, is that what you mean?" still pass as
+    methodology answers.
+    """
+    t = str(text or "").strip().lower()
+    markers = [
+        "price", "pricing", "cost", "how much", "package", "subscription", "plan",
+        "demo", "meeting", "book a", "appointment", "schedule a",
+        "human", "person", "representative", "team member", "speak to",
+        "what is nexy", "how does nexy", "what can you do", "how can you help",
+        "what do you do", "tell me about nexy", "what nexy",
+    ]
+    return any(m in t for m in markers)
+
+
+def _looks_like_no_methodology(text):
+    t = str(text or "").strip().lower()
+    markers = [
+        "nothing", "none", "no system", "not using", "don't use",
+        "dont use", "no idea", "not sure", "i don't know", "i dont know",
+        "not currently", "haven't started", "have not started", "not yet",
+        "no method", "no process", "nothing yet", "nothing in place",
+    ]
+    return any(m in t for m in markers)
+
+
+def _get_current_challenge_value(accumulated_discovery, context_area):
+    discovery = accumulated_discovery or {}
+    challenge = discovery.get("current_challenges") or ""
+    if isinstance(challenge, list):
+        challenge = ", ".join(str(c) for c in challenge if c)
+    return str(challenge).strip()
+
+
+def _build_business_context(accumulated_discovery):
+    discovery = accumulated_discovery or {}
+    return (
+        discovery.get("industry")
+        or discovery.get("business_type")
+        or ""
+    )
+
+
+def _classify_current_methodology_slot_answer(visitor_message, pending_context=None):
+    """
+    Decide whether the visitor message is a valid answer to:
+    'What are you currently using for this business challenge?'
+
+    Returns:
+    {
+        "is_methodology_answer": bool,
+        "methodology_value": str,
+        "methodology_status": "known" | "unknown" | "none" | "unclear",
+        "reason": str
+    }
+    """
+    text = str(visitor_message or "").strip()
+    low = text.lower()
+
+    if not text:
+        return {
+            "is_methodology_answer": False,
+            "methodology_value": "",
+            "methodology_status": "unclear",
+            "reason": "empty message",
+        }
+
+    # Generic confirmation (yes, ok, sure) — not a methodology answer
+    if _is_generic_confirmation(text):
+        return {
+            "is_methodology_answer": False,
+            "methodology_value": "",
+            "methodology_status": "unclear",
+            "reason": "generic confirmation, not a methodology answer",
+        }
+
+    # Clear non-methodology intent (pricing, demo, booking, human handoff, product question)
+    # Use the narrower check so "I think we use outreach, is that what you mean?" still passes.
+    if _looks_like_new_non_methodology_intent(text):
+        return {
+            "is_methodology_answer": False,
+            "methodology_value": "",
+            "methodology_status": "unclear",
+            "reason": "visitor expressed a new non-methodology intent instead of answering the slot",
+        }
+
+    # No current method stated
+    if _looks_like_no_methodology(text):
+        return {
+            "is_methodology_answer": True,
+            "methodology_value": "None currently",
+            "methodology_status": "none",
+            "reason": "visitor indicated they have no current methodology",
+        }
+
+    # Known platforms — deterministic match
+    _known_map = [
+        (["facebook ads", "facebook ad", "meta ads", "meta ad"], "Facebook Ads"),
+        (["google ads", "google ad", "adwords"], "Google Ads"),
+        (["instagram ads", "instagram ad"], "Instagram Ads"),
+        (["whatsapp"], "WhatsApp"),
+        (["seo"], "SEO"),
+        (["referral", "referrals", "word of mouth", "word-of-mouth"], "Referrals"),
+        (["website enquir", "website inquir", "website lead", "contact form", "web form"], "Website enquiries"),
+        (["cold call", "cold calling"], "Cold calling"),
+        (["social media"], "Social media"),
+        (["walk in", "walk-in", "walkin", "footfall"], "Walk-ins"),
+        (["linkedin"], "LinkedIn"),
+        (["email campaign", "email marketing", "newsletter"], "Email marketing"),
+        (["youtube"], "YouTube"),
+        (["telegram"], "Telegram"),
+        (["twitter", "x.com"], "Twitter/X"),
+        (["tiktok"], "TikTok"),
+        # Unknown / custom but valid — stored as-is
+        (["broker", "brokers", "agent ", "agents "], None),
+        (["sales team", "sales person", "salesperson", "sales rep"], None),
+        (["marketing team", "marketing person"], None),
+        (["old customer", "existing customer", "repeat customer", "past customer"], None),
+        (["flyer", "flyers", "brochure", "pamphlet", "poster"], None),
+        (["event", "exhibition", "trade show", "expo"], None),
+        (["radio", "newspaper", "print ad", "billboard", "outdoor ad"], None),
+    ]
+    for keywords, canonical in _known_map:
+        if any(k in low for k in keywords):
+            value = canonical if canonical else text
+            return {
+                "is_methodology_answer": True,
+                "methodology_value": value,
+                "methodology_status": "known" if canonical else "unknown",
+                "reason": "matched known or custom methodology keyword",
+            }
+
+    # Informal / vague / custom methodology phrases
+    _informal_map = [
+        (["connect with people", "talk to people", "meeting people", "meet people"], "Direct people outreach", "informal"),
+        (["other strategies", "other strategy", "different strategies", "different strategy"], "Other strategies", "informal"),
+        (["something else", "other things", "other stuff"], "Other / unspecified strategy", "unknown"),
+        (["networking", "network with"], "Networking", "informal"),
+        (["old customers", "existing customers", "past customers", "current customers"], "Existing customer referrals", "informal"),
+        (["local agents", "local agent"], "Local agents", "informal"),
+        (["brokers", "broker"], "Brokers", "informal"),
+        (["word of mouth", "word-of-mouth"], "Word of mouth", "informal"),
+        (["direct outreach", "outreach"], "Direct outreach", "informal"),
+        (["friends", "family", "personal contacts", "personal network"], "Personal network", "informal"),
+        (["door to door", "door-to-door"], "Door-to-door", "informal"),
+    ]
+    for _inf_keywords, _inf_value, _inf_status in _informal_map:
+        if any(k in low for k in _inf_keywords):
+            return {
+                "is_methodology_answer": True,
+                "methodology_value": _inf_value,
+                "methodology_status": _inf_status,
+                "reason": "matched informal/custom methodology answer",
+            }
+
+    # Visitor declined to disclose — store politely, proceed to Nexy value without pressure
+    _private_markers = [
+        "not to mention", "prefer not to say", "don't want to say", "dont want to say",
+        "can't say", "cannot say", "confidential", "private", "not disclose",
+    ]
+    if any(k in low for k in _private_markers):
+        return {
+            "is_methodology_answer": True,
+            "methodology_value": "Not disclosed",
+            "methodology_status": "not_disclosed",
+            "reason": "visitor declined to disclose methodology",
+        }
+
+    # Broad ads / advertising without specifying the platform
+    if low in {"ads", "ad", "advertising", "advertisements", "advertisement"}:
+        return {
+            "is_methodology_answer": True,
+            "methodology_value": "Ads / advertising",
+            "methodology_status": "broad_known",
+            "reason": "broad ads methodology answer — do not ask what type",
+        }
+    if "online ads" in low or "digital ads" in low or "paid ads" in low or "online advertising" in low:
+        return {
+            "is_methodology_answer": True,
+            "methodology_value": "Online ads",
+            "methodology_status": "broad_known",
+            "reason": "broad online ads methodology answer",
+        }
+
+    # Short answers (1-4 words) while slot is active — treat as methodology answer
+    word_count = len(text.split())
+    if word_count <= 4:
+        return {
+            "is_methodology_answer": True,
+            "methodology_value": text,
+            "methodology_status": "unknown",
+            "reason": "short answer while methodology slot is active — treated as current approach",
+        }
+
+    # Longer ambiguous messages — use LLM classifier
+    try:
+        _llm_prompt = f"""You are classifying whether the visitor message answers the current question:
+"What are you currently using for this business challenge?"
+
+Visitor message: {text}
+
+Return JSON only:
+{{
+  "is_methodology_answer": true/false,
+  "methodology_value": "...",
+  "methodology_status": "known" | "unknown" | "none" | "unclear",
+  "reason": "short reason"
+}}
+
+Classify as true if the visitor gives any tool, source, process, person, channel, platform, or current approach.
+Classify as true even if the method is unknown or informal.
+Classify as true for "nothing", "none", "not sure", or "I don't know"; use methodology_status "none" or "unknown".
+Classify as false for generic confirmation like "yes", "ok", "sure".
+Classify as false for a new question like pricing, demo request, human handoff, or "what is Nexy?"
+"""
+        _raw = (generate_answer(_llm_prompt) or "").strip()
+        if _raw.startswith("```"):
+            _raw = _raw.strip("`").replace("json", "", 1).strip()
+        _result = json.loads(_raw)
+        if isinstance(_result, dict) and "is_methodology_answer" in _result:
+            return {
+                "is_methodology_answer": bool(_result.get("is_methodology_answer")),
+                "methodology_value": str(_result.get("methodology_value") or text).strip(),
+                "methodology_status": str(_result.get("methodology_status") or "unknown").strip(),
+                "reason": str(_result.get("reason") or "llm_classified").strip(),
+            }
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Companion Controller: methodology slot LLM classifier failed",
+        )
+
+    # Fallback: treat as methodology when slot is active and no clear disqualifier
+    return {
+        "is_methodology_answer": True,
+        "methodology_value": text,
+        "methodology_status": "unknown",
+        "reason": "slot active, no disqualifier found — stored as current approach",
+    }
+
+
 def send_companion_email_verification(conversation, email):
     """
     Generate a 6-digit OTP, store its SHA-256 hash with a 10-minute expiry, and
@@ -1463,6 +2115,7 @@ def send_companion_email_verification(conversation, email):
                 "<p>This code expires in 10 minutes.</p>"
                 "<p>If you did not request this, please ignore this email.</p>"
             ),
+            now=True,
         )
         frappe.logger("nexus_debug").info(
             f"Companion email verification sent to {email} for conversation {conversation.name}"
@@ -1561,6 +2214,21 @@ def _get_companion_pending_action(conversation):
         return (getattr(conversation, "companion_pending_action", None) or "").strip()
 
 
+def _get_companion_pending_context(conversation):
+    """Read the stored pending context JSON from the conversation record."""
+    try:
+        val = frappe.db.get_value(
+            "Nexus Live Conversation",
+            conversation.name,
+            "companion_pending_context_json",
+        )
+        if not val:
+            return {}
+        return json.loads(val) if isinstance(val, str) else {}
+    except Exception:
+        return {}
+
+
 def _set_companion_pending_action(conversation, action, context=None):
     """Persist the current pending action to the conversation record."""
     try:
@@ -1573,8 +2241,26 @@ def _set_companion_pending_action(conversation, action, context=None):
             update_data,
             update_modified=False,
         )
+        # Commit immediately so the next visitor turn (which may arrive via a separate
+        # realtime/background worker request) reads the stored pending action from DB.
+        frappe.db.commit()
+        # Mirror to the in-memory object so same-request reads stay consistent.
+        try:
+            conversation.companion_pending_action = action or ""
+            if context is not None:
+                conversation.companion_pending_context_json = json.dumps(context or {}, default=str)
+        except Exception:
+            pass
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Companion Controller: set pending action failed")
+        return
+
+    _companion_flow_debug("PENDING ACTION SET", {
+        "conversation": getattr(conversation, "name", None),
+        "action": action,
+        "context": context,
+        "db_status": _get_companion_db_status(conversation),
+    })
 
 
 def _clear_companion_pending_action(conversation):
@@ -1616,6 +2302,23 @@ def _sync_pending_action_from_decision(conversation, decision, steering=None):
         _set_companion_pending_action(conversation, action_map[decision], ctx)
     elif decision in clear_decisions:
         _clear_companion_pending_action(conversation)
+    elif decision == "discover_current_methodology":
+        ctx = {
+            "decision": decision,
+            "context_area": (steering or {}).get("methodology_context_area") or "lead_generation",
+            "expected_slot": "current_methodology",
+            "challenge": (steering or {}).get("pain_point_challenges") or "",
+            "asked_by_decision": "discover_current_methodology",
+        }
+        _set_companion_pending_action(conversation, "collect_current_methodology", ctx)
+    elif decision == "present_nexy_capability_visibility":
+        ctx = {
+            "decision": decision,
+            "methodology_context_area": (steering or {}).get("methodology_context_area"),
+            "current_methodology": (steering or {}).get("current_methodology"),
+            "pain_point_challenges": (steering or {}).get("pain_point_challenges"),
+        }
+        _set_companion_pending_action(conversation, "confirm_nexy_companion_interest", ctx)
 
 
 def _decorate_email_collection_response(response, conversation, purpose="demo_or_consultancy_booking"):
@@ -1692,6 +2395,71 @@ def _decide_steering(
         "capture_closing_feedback",
     }
 
+    # ------------------------------------------------------------------
+    # High-priority guard: collect_representative_note
+    # Runs before all other routing to prevent visitor replies such as
+    # "Yes" from being misrouted to demo confirmation or other intents.
+    # Replaces B1 below — do not duplicate processing there.
+    # ------------------------------------------------------------------
+    if pending_action == "collect_representative_note":
+        _nf_g = _accumulated or {}
+        _nf_g_challenge = _nf_g.get("current_challenges") or ""
+        if isinstance(_nf_g_challenge, list):
+            _nf_g_challenge = ", ".join(str(c) for c in _nf_g_challenge if c)
+        _nf_g_context_area = _detect_context_area_from_challenge(_nf_g_challenge)
+
+        _msg_low_g = visitor_message.lower().strip()
+        _skip_words_g = ["skip", "no thanks", "no thank you", "nope", "pass", "not now", "maybe later"]
+        _is_skip_g = any(w in _msg_low_g for w in _skip_words_g) or _msg_low_g in {"no", "skip"}
+        _ack_only_g = {"yes", "y", "sure", "ok", "okay", "yep", "yeah", "alright", "go ahead", "proceed"}
+        _is_ack_g = _msg_low_g in _ack_only_g
+
+        if _is_ack_g:
+            return {
+                "decision": "collect_representative_note",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "re_ask_for_note_after_acknowledgment",
+                "milestone_policy": "conversion_preparation",
+            }
+
+        update_enquiry(
+            conversation,
+            {"discovery_facts": [{
+                "context_area": _nf_g_context_area,
+                "fact_type": "representative_note_collected",
+                "fact_value": "skipped" if _is_skip_g else visitor_message[:500],
+                "source_message": visitor_message,
+            }]},
+            signal=None,
+        )
+        _nf_g_email_verified = bool(
+            frappe.db.get_value(
+                "Nexus Live Conversation", conversation.name, "companion_email_verified"
+            )
+        )
+        if _nf_g_email_verified:
+            return {
+                "decision": "show_meeting_booking_card",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "show_booking_card_after_note",
+                "milestone_policy": "appointment_booking",
+            }
+        return {
+            "decision": "close_conversation",
+            "knowledge_needed": False,
+            "redirect_to_milestone": False,
+            "visitor_external_intent": intent,
+            "external_intent_confidence": confidence,
+            "internal_intent": "close_after_note_collected",
+            "milestone_policy": "closing",
+        }
+
     if intent == "demo_confirmation" and pending_action == "demo_request" and not _consultancy_pending:
         return {
             "decision": "confirm_demo_request",
@@ -1757,9 +2525,9 @@ def _decide_steering(
         )
 
     _nf_methodology_known = bool(_nf_methodology)
+    _nf_methodology_status = _get_current_methodology_status(_nf, _nf_context_area)
     _nf_capability_summary_shown = _capability_summary_presented(_nf, _nf_context_area)
     _nf_representative_note_collected = _has_fact(_nf, _nf_context_area, "representative_note_collected")
-    _nf_email_verification_status = _get_fact_value(_nf, _nf_context_area, "email_verification_status")
 
     # ------------------------------------------------------------------
     # A. Leaving signal
@@ -1789,42 +2557,180 @@ def _decide_steering(
         }
 
     # ------------------------------------------------------------------
-    # B1. Pending: collect representative note
+    # B1. Pending: collect current methodology slot
+    # The controller asked "what are you currently using?" and is waiting
+    # for the visitor's answer. Classify the reply and fill the slot.
+    # Falls through to normal intent routing if the visitor asked a new
+    # question (pricing, demo, product) instead of answering the slot.
     # ------------------------------------------------------------------
-    if pending_action == "collect_representative_note":
-        _msg_low = visitor_message.lower().strip()
-        _skip_words = ["skip", "no thanks", "no thank you", "nope", "pass", "not now", "maybe later"]
-        _is_skip = any(w in _msg_low for w in _skip_words) or _msg_low in {"no", "skip"}
-        update_enquiry(
-            conversation,
-            {"discovery_facts": [{
-                "context_area": _nf_context_area,
-                "fact_type": "representative_note_collected",
-                "fact_value": "skipped" if _is_skip else visitor_message[:500],
-                "source_message": visitor_message,
-            }]},
-            signal=None,
+    if pending_action == "collect_current_methodology":
+        _pctx = _get_companion_pending_context(conversation)
+        _cm_context_area = _pctx.get("context_area") or _nf_context_area or "lead_generation"
+        _cm_challenge = _pctx.get("challenge") or _nf_challenge_text or ""
+
+        slot = _classify_current_methodology_slot_answer(
+            visitor_message=visitor_message,
+            pending_context=_pctx,
         )
-        # If email is verified (regardless of note skip), proceed to meeting booking
-        if _nf_email_verification_status == "verified":
+
+        if slot.get("is_methodology_answer"):
+            _cm_value = (slot.get("methodology_value") or visitor_message).strip()
+            _cm_status = slot.get("methodology_status") or "unknown"
+            update_enquiry(
+                conversation,
+                {
+                    "discovery_facts": [
+                        {
+                            "context_area": _cm_context_area,
+                            "fact_type": "current_methodology",
+                            "fact_value": _cm_value,
+                            "source_message": visitor_message,
+                        },
+                        {
+                            "context_area": _cm_context_area,
+                            "fact_type": "current_methodology_status",
+                            "fact_value": _cm_status,
+                            "related_value": _cm_value,
+                            "source_message": "slot_classifier",
+                        },
+                    ]
+                },
+                signal=None,
+            )
+            _clear_companion_pending_action(conversation)
             return {
-                "decision": "show_meeting_booking_card",
+                "decision": "present_nexy_capability_visibility",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": "methodology_answer",
+                "external_intent_confidence": 1.0,
+                "internal_intent": "present_nexy_value_after_methodology_capture",
+                "milestone_policy": "solution_mapping",
+                "methodology_context_area": _cm_context_area,
+                "current_methodology": _cm_value,
+                "current_methodology_status": _cm_status,
+                "pain_point_challenges": _cm_challenge,
+                "business_context": _nf.get("industry") or _nf.get("business_type") or "",
+                "grounding_mode": "nexus_knowledge_only",
+            }
+
+        # Not a methodology answer — handle recognised intents directly so the
+        # E/F challenge-methodology routing cannot intercept and re-ask methodology.
+        # The pending action stays stored so the next substantive reply fills the slot.
+        if intent == "pricing_question":
+            return {
+                "decision": "answer_with_orbit_or_policy",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "handle_pricing_question_during_methodology_collection",
+                "milestone_policy": "allowed",
+            }
+
+        if intent == "human_request":
+            return {
+                "decision": "offer_escalation",
                 "knowledge_needed": False,
                 "redirect_to_milestone": False,
                 "visitor_external_intent": intent,
                 "external_intent_confidence": confidence,
-                "internal_intent": "show_booking_card_after_note",
-                "milestone_policy": "appointment_booking",
+                "internal_intent": "offer_human_assistance_during_methodology_collection",
+                "milestone_policy": "hard_interrupt",
             }
-        return {
-            "decision": "close_conversation",
-            "knowledge_needed": False,
-            "redirect_to_milestone": False,
-            "visitor_external_intent": intent,
-            "external_intent_confidence": confidence,
-            "internal_intent": "close_after_note_collected",
-            "milestone_policy": "closing",
-        }
+
+        if intent == "product_question":
+            return {
+                "decision": "answer_with_orbit",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "answer_product_question_during_methodology_collection",
+                "milestone_policy": "allowed",
+            }
+
+        if intent == "demo_interest":
+            return {
+                "decision": "consider_next_step",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "acknowledge_demo_interest_during_methodology_collection",
+                "milestone_policy": "allowed",
+            }
+
+        # Unknown or ambiguous — fall through to re-ask / unknown-and-proceed logic
+        else:
+            # Re-ask once; if already re-asked, store as unknown and proceed.
+            _cm_ask_count = int(
+                _get_fact_value(_nf, _cm_context_area, "methodology_slot_ask_count") or "0"
+            )
+            if _cm_ask_count >= 1:
+                # Asked twice — store as unknown and show Nexy value anyway
+                _cm_value_fb = "Unknown current methodology"
+                update_enquiry(
+                    conversation,
+                    {
+                        "discovery_facts": [
+                            {
+                                "context_area": _cm_context_area,
+                                "fact_type": "current_methodology",
+                                "fact_value": _cm_value_fb,
+                                "source_message": visitor_message,
+                            },
+                            {
+                                "context_area": _cm_context_area,
+                                "fact_type": "current_methodology_status",
+                                "fact_value": "unclear",
+                                "related_value": _cm_value_fb,
+                                "source_message": "slot_classifier",
+                            },
+                        ]
+                    },
+                    signal=None,
+                )
+                _clear_companion_pending_action(conversation)
+                return {
+                    "decision": "present_nexy_capability_visibility",
+                    "knowledge_needed": True,
+                    "redirect_to_milestone": False,
+                    "visitor_external_intent": "methodology_answer",
+                    "external_intent_confidence": 0.5,
+                    "internal_intent": "present_nexy_value_after_unclear_methodology",
+                    "milestone_policy": "solution_mapping",
+                    "methodology_context_area": _cm_context_area,
+                    "current_methodology": _cm_value_fb,
+                    "current_methodology_status": "unclear",
+                    "pain_point_challenges": _cm_challenge,
+                    "business_context": _nf.get("industry") or _nf.get("business_type") or "",
+                    "grounding_mode": "nexus_knowledge_only",
+                }
+            # First unclear — re-ask the methodology question once
+            update_enquiry(
+                conversation,
+                {
+                    "discovery_facts": [{
+                        "context_area": _cm_context_area,
+                        "fact_type": "methodology_slot_ask_count",
+                        "fact_value": str(_cm_ask_count + 1),
+                        "source_message": "slot_classifier",
+                    }]
+                },
+                signal=None,
+            )
+            return {
+                "decision": "discover_current_methodology",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "re_ask_current_methodology_slot",
+                "milestone_policy": "pain_discovery",
+                "pain_point_challenges": _cm_challenge,
+                "methodology_context_area": _cm_context_area,
+            }
 
     # ------------------------------------------------------------------
     # B2. Pending: collect email for appointment
@@ -2141,6 +3047,81 @@ def _decide_steering(
         }
 
     # ------------------------------------------------------------------
+    # B0. Pending: confirm Nexy companion interest
+    # Set after present_nexy_capability_visibility is shown.
+    # Generic "yes" or explicit booking interest → collect email.
+    # Capability question → clarification path.
+    # Decline → note collection.
+    # ------------------------------------------------------------------
+    if pending_action == "confirm_nexy_companion_interest":
+        _msg_low_ci = visitor_message.lower().strip()
+        _generic_yes_ci = {"yes", "y", "yeah", "yep", "ok", "okay", "sure", "alright", "go ahead", "proceed"}
+        if _msg_low_ci in _generic_yes_ci or _looks_like_consultancy_interest(visitor_message):
+            return {
+                "decision": "collect_email_for_consultancy",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "collect_email_after_nexy_interest_confirmed",
+                "milestone_policy": "appointment_booking",
+                "current_methodology": _nf_methodology,
+                "methodology_context_area": _nf_context_area,
+                "pain_point_challenges": _nf_challenge_text,
+            }
+        if _looks_like_meeting_decline(visitor_message):
+            return {
+                "decision": "appointment_declined_collect_note",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "collect_note_after_meeting_declined",
+                "milestone_policy": "note_collection",
+                "current_methodology": _nf_methodology,
+                "methodology_context_area": _nf_context_area,
+            }
+        if _looks_like_capability_clarification(visitor_message):
+            _selected_area_ci = _normalise_capability_area(visitor_message)
+            update_enquiry(
+                conversation,
+                {"discovery_facts": [{
+                    "context_area": _nf_context_area,
+                    "fact_type": "selected_capability_area",
+                    "fact_value": _selected_area_ci,
+                    "source_message": visitor_message,
+                }]},
+                signal=None,
+            )
+            return {
+                "decision": "answer_nexy_capability_clarification",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "answer_capability_clarification_from_nexus_knowledge",
+                "milestone_policy": "solution_mapping",
+                "current_methodology": _nf_methodology,
+                "methodology_context_area": _nf_context_area,
+                "pain_point_challenges": _nf_challenge_text,
+                "selected_capability_area": _selected_area_ci,
+                "business_context": _nf.get("industry") or _nf.get("business_type") or "",
+            }
+        # Unclear response — bounce back and repeat the CTA
+        return {
+            "decision": "bounce_back_to_nexy_capabilities",
+            "knowledge_needed": False,
+            "redirect_to_milestone": False,
+            "visitor_external_intent": intent,
+            "external_intent_confidence": confidence,
+            "internal_intent": "bounce_back_after_unclear_interest_response",
+            "milestone_policy": "solution_mapping",
+            "current_methodology": _nf_methodology,
+            "methodology_context_area": _nf_context_area,
+            "pain_point_challenges": _nf_challenge_text,
+        }
+
+    # ------------------------------------------------------------------
     # C. Explicit methodology-support question → check_methodology_knowledge (exception path only)
     # Normal "Google Ads" answers do NOT go here.
     # ------------------------------------------------------------------
@@ -2276,6 +3257,7 @@ def _decide_steering(
             "internal_intent": "present_nexy_capability_visibility_after_methodology",
             "milestone_policy": "solution_mapping",
             "current_methodology": _nf_methodology,
+            "current_methodology_status": _nf_methodology_status,
             "methodology_context_area": _nf_context_area,
             "pain_point_challenges": _nf_challenge_text,
             "business_context": _nf.get("industry") or _nf.get("business_type") or "",
@@ -2808,6 +3790,20 @@ def _detect_pending_action(conversation_context):
     """
 
     text = (conversation_context or "").lower()
+
+    # Current-methodology slot: Nexy asked what the visitor is currently using.
+    # Must be checked before any other marker so the answer is routed correctly.
+    if any(marker in text for marker in [
+        "what are you currently using to generate leads",
+        "what are you currently using for lead generation",
+        "what are you using to generate leads",
+        "currently using to get leads",
+        "currently using for that challenge",
+        "facebook ads, google ads, referrals, website enquiries, whatsapp, or something else",
+        "facebook ads, google ads, referrals, website enquiries, or something else",
+        "referrals, website enquiries, whatsapp, or something else",
+    ]):
+        return "collect_current_methodology"
 
     # Consultancy flow: ask more clarification or book
     if any(marker in text for marker in [

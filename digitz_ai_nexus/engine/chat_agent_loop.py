@@ -149,10 +149,6 @@ _CHAT_TOOL_SCHEMAS = [
 
 def run_chat_agent_loop(payload, retrieval_fn=None):
     
-    print("from run_chat_agent_loop")
-    frappe.logger("nexus_debug").info("from run_chat_agent_loop")
-    
-    
     """
     LLM-driven tool-calling loop for chat mode.
 
@@ -715,15 +711,21 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
     
     grounding_mode = controller_plan.get("grounding_mode") or "controller_only"
     
-    print("\n\n========== CONTROLLED LOOP DEBUG ==========")
-    print("grounding_mode:", grounding_mode)
-    print("knowledge_needed:", controller_plan.get("knowledge_needed"))
-    print("allowed_tools:", controller_plan.get("allowed_tools"))
-    print("knowledge_query:", controller_plan.get("knowledge_query"))
-    print("visitor_query:", payload.get("query") or payload.get("original_query"))
-    print("steering_decision:", controller_plan.get("steering_decision"))
-    print("external_intent:", controller_plan.get("external_intent"))
-    print("==========================================\n\n")
+    # print("\n\n========== NEXY LLM LOOP PLAN ==========")
+    # print(json.dumps({
+    #     "visitor_query": payload.get("query") or payload.get("original_query"),
+    #     "steering_decision": controller_plan.get("steering_decision"),
+    #     "external_intent": controller_plan.get("external_intent"),
+    #     "external_intent_confidence": controller_plan.get("external_intent_confidence"),
+    #     "internal_intent": controller_plan.get("internal_intent"),
+    #     "milestone_policy": controller_plan.get("milestone_policy"),
+    #     "grounding_mode": grounding_mode,
+    #     "knowledge_needed": controller_plan.get("knowledge_needed"),
+    #     "allowed_tools": controller_plan.get("allowed_tools"),
+    #     "knowledge_query": _debug_preview(controller_plan.get("knowledge_query"), 600),
+    #     "response_goal": _debug_preview(controller_plan.get("response_goal"), 600),
+    # }, indent=2, default=str))
+    # print("========================================\n\n")
 
     if grounding_mode == "nexus_knowledge_only":
         search_query = (
@@ -748,23 +750,23 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
             payload=payload,
         )
 
-        print("\n\n========== SPECIFIC GROUNDING DEBUG ==========")
-        print("grounding_mode:", grounding_mode)
-        print("external_intent:", controller_plan.get("external_intent"))
-        print("steering_decision:", controller_plan.get("steering_decision"))
-        print("retrieved_chunk_count:", len(chunks or []))
-        print("specific_grounding:", specific_grounding)
-        print("=============================================\n\n")
+        # print("\n\n========== SPECIFIC GROUNDING DEBUG ==========")
+        # print("grounding_mode:", grounding_mode)
+        # print("external_intent:", controller_plan.get("external_intent"))
+        # print("steering_decision:", controller_plan.get("steering_decision"))
+        # print("retrieved_chunk_count:", len(chunks or []))
+        # print("specific_grounding:", specific_grounding)
+        # print("=============================================\n\n")
 
         if not chunks or not specific_grounding:
-            print("\n\n========== GOVERNED FALLBACK DEBUG ==========")
-            print("Nexus Orbit knowledge was missing or too general.")
-            print("grounding_mode:", grounding_mode)
-            print("external_intent:", controller_plan.get("external_intent"))
-            print("steering_decision:", controller_plan.get("steering_decision"))
-            print("visitor_query:", payload.get("query") or payload.get("original_query"))
-            print("knowledge_query:", controller_plan.get("knowledge_query"))
-            print("============================================\n\n")
+            # print("\n\n========== GOVERNED FALLBACK DEBUG ==========")
+            # print("Nexus Orbit knowledge was missing or too general.")
+            # print("grounding_mode:", grounding_mode)
+            # print("external_intent:", controller_plan.get("external_intent"))
+            # print("steering_decision:", controller_plan.get("steering_decision"))
+            # print("visitor_query:", payload.get("query") or payload.get("original_query"))
+            # print("knowledge_query:", controller_plan.get("knowledge_query"))
+            # print("============================================\n\n")
 
             return {
                 "status": "success",
@@ -783,13 +785,13 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
 
         all_retrieved_chunks.extend(chunks)
         
-        print("\n\n========== NEXUS KNOWLEDGE SEARCH DEBUG ==========")
-        print("search_query:", search_query)
-        print("retrieved_chunk_count:", len(chunks or []))
-        print("retrieval_result:", json.dumps(retrieval_result or {}, indent=2, default=str))
-        print("result_for_llm:")
-        print(json.dumps(result or {}, indent=2, default=str)[:3000])
-        print("=================================================\n\n")
+        # print("\n\n========== NEXUS KNOWLEDGE SEARCH DEBUG ==========")
+        # print("search_query:", search_query)
+        # print("retrieved_chunk_count:", len(chunks or []))
+        # print("retrieval_result:", json.dumps(retrieval_result or {}, indent=2, default=str))
+        # print("result_for_llm:")
+        # print(json.dumps(result or {}, indent=2, default=str)[:3000])
+        # print("=================================================\n\n")
 
         last_retrieval_result = retrieval_result or {}
 
@@ -873,15 +875,6 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
                 "bounce_back_to_nexy_capabilities",
             ):
                 answer = _sanitize_visitor_facing_jargon(answer)
-
-            print("\n\n========== FINAL CONTROLLED ANSWER DEBUG ==========")
-            print("grounding_mode:", controller_plan.get("grounding_mode"))
-            print("knowledge_needed:", controller_plan.get("knowledge_needed"))
-            print("retrieved_chunk_count:", len(all_retrieved_chunks or []))
-            print("access_status:", "allowed" if all_retrieved_chunks else "conversational")
-            print("answer:")
-            print(answer)
-            print("=================================================\n\n")
 
             if not answer:
                 answer = (
@@ -997,7 +990,13 @@ def run_controlled_companion_loop(payload, controller_plan, retrieval_fn=None):
         "companion_controller": True,
         "conversion_action": None,
     }
-     
+
+def _debug_preview(value, limit=500):
+    value = str(value or "").strip()
+    if len(value) > limit:
+        return value[:limit] + "..."
+    return value
+
 def _build_controlled_companion_messages(payload, controller_plan):
     """
     Build messages for controller-owned companion agent loop.
@@ -1164,7 +1163,7 @@ def _apply_nexy_summary_guard(answer, controller_plan):
             f"Based on confirmed Nexus knowledge, my focus is on what happens after the enquiry arrives "
             f"through {entry_point} — not on {methodology_ref} themselves. "
             "I should not claim ad-platform optimization or campaign management without confirmed knowledge. "
-            "Which Nexy capability area would you like to understand better?"
+            "Would you like to explore this further or book a short session with a Nexy representative?"
         )
 
     # Append a clean positioning clarifier when the methodology name appears but no

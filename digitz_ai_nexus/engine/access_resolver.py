@@ -161,16 +161,15 @@ def resolve_allowed_policies(query_contract):
         public_policies = set(resolve_primitive_public_policies(tenant=tenant))
 
         # When the route has a specific public_knowledge_profile configured, scope
-        # retrieval to only the public policies inside that profile. The intersection
+        # retrieval strictly to the public policies inside that profile. The intersection
         # with primitive_public_policies is an unconditional safety ceiling — a
         # misconfigured profile containing non-public policies cannot leak through.
-        # Falls back to all primitive public policies if the intersection is empty.
+        # No fallback: an empty intersection means no public knowledge from this profile
+        # is accessible, which is intentional (fail-closed, not fail-open).
         kp_names = ai_profile.get("knowledge_profile_names") or []
         if kp_names:
             profile_policies = resolve_knowledge_profiles_policy_names(kp_names)
-            scoped = public_policies.intersection(profile_policies)
-            if scoped:
-                public_policies = scoped
+            public_policies = public_policies.intersection(profile_policies)
             cap_label = "force_public_only+profile_scoped"
         else:
             cap_label = "force_public_only"
@@ -218,10 +217,9 @@ def resolve_allowed_policies(query_contract):
 
     if knowledge_profile_names:
         profile_policies = resolve_knowledge_profiles_policy_names(knowledge_profile_names)
-        # Primitive public policies are always accessible regardless of identity — union them in
-        # so that knowledge sources marked Public-NEXUS-AI are retrievable by registered users too.
-        public_policies = set(resolve_primitive_public_policies(tenant=tenant))
-        profile_policies = profile_policies | public_policies
+        # Profile defines the full access scope. Public knowledge sources are accessible only
+        # when the profile explicitly includes a public Access Category — no automatic global
+        # public union. The identity-type cap below still applies on top of this scope.
         safeguard_policies = resolve_access_categories_policy_names(safeguard_access_categories)
         identity_policies = resolve_identity_policy_cap(identity_type, tenant=tenant)
         effective_cap = _intersect_caps(safeguard_policies, identity_policies)
