@@ -54,13 +54,14 @@
     .nci-hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 6px 14px; border-radius: 999px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.18);
-      color: rgba(255,255,255,.80);
+      background: rgba(124,58,237,.20);
+      border: 1px solid rgba(165,148,252,.38);
+      color: #c4b5fd;
       font-size: 11px; font-weight: 800;
       letter-spacing: .12em; text-transform: uppercase;
       margin-bottom: 20px;
     }
+    .nci-hero-eyebrow svg { opacity: .85; }
     .nci-hero-h1 {
       font-family: 'Exo 2', Inter, sans-serif;
       font-size: clamp(28px, 5vw, 52px);
@@ -436,30 +437,323 @@
 
   <!-- ═══════════════════════════════════════ HERO ══ -->
   <section class="nci-hero">
+  <style>
+    /* ── NCI Hero: two-column redesign ── */
+    .nci-hero-top { position: relative; z-index: 2; padding: 52px 0 44px; }
+    .nci-hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 52px; align-items: center;
+    }
+    .nci-hero-role-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 20px; }
+    .nci-role-vc {
+      padding: 5px 14px; border-radius: 999px;
+      background: rgba(124,58,237,.28); border: 1.5px solid rgba(165,148,252,.35);
+      color: #c4b5fd; font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .nci-role-sep { color: rgba(255,255,255,.25); font-size: 15px; }
+    .nci-role-go { color: rgba(255,255,255,.48); font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .nci-hero-intro {
+      font-size: clamp(.90rem, 1.15vw, 1rem);
+      color: rgba(255,255,255,.72); line-height: 1.74; margin: 0 0 28px; max-width: 500px;
+    }
+    .nci-hero-intro strong { color: rgba(255,255,255,.92); font-weight: 700; }
+    .nci-hero-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+    .nci-pill-violet {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; border-radius: 999px;
+      background: linear-gradient(135deg, #6d28d9, #7c3aed);
+      color: #fff; font-size: 13px; font-weight: 800; text-decoration: none;
+      box-shadow: 0 4px 16px rgba(109,40,217,.40);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .nci-pill-violet:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(109,40,217,.50); }
+    .nci-pill-ghost-v {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; border-radius: 999px;
+      background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.22);
+      color: rgba(255,255,255,.80); font-size: 13px; font-weight: 700; text-decoration: none;
+      transition: background .2s;
+    }
+    .nci-pill-ghost-v:hover { background: rgba(255,255,255,.14); }
+
+    /* ── NCI Flow Visual ── */
+    .nci-hero-visual-wrap { display: flex; align-items: center; justify-content: center; }
+    .nci-flow-visual { display: flex; flex-direction: column; align-items: center; width: 400px; }
+
+    .nci-flow-inputs, .nci-flow-outputs {
+      display: flex; gap: 8px; width: 400px;
+    }
+    .nci-fin-card {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px 10px; border-radius: 14px; text-align: center;
+      background: rgba(79,70,229,.14); border: 1px solid rgba(165,148,252,.28);
+    }
+    .nci-fin-card-mid { background: rgba(37,99,235,.16); border-color: rgba(96,165,250,.36); }
+    .nci-fin-card-teal { background: rgba(13,148,136,.16); border-color: rgba(45,212,191,.35); }
+    .nci-fin-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .nci-fin-icon-a { background: rgba(165,148,252,.20); }
+    .nci-fin-icon-b { background: rgba(109,40,217,.30); }
+    .nci-fin-icon-blue { background: rgba(37,99,235,.32); }
+    .nci-fin-icon-teal { background: rgba(13,148,136,.30); }
+    .nci-fin-label {
+      font-size: 9.5px; font-weight: 800; letter-spacing: .07em;
+      text-transform: uppercase; color: #c4b5fd; line-height: 1.25;
+    }
+    .nci-fin-label-blue { color: #93c5fd; }
+    .nci-fin-label-teal { color: #5eead4; }
+    .nci-fin-sub { font-size: 8px; color: rgba(255,255,255,.40); font-weight: 500; }
+
+    /* Converging / diverging SVGs */
+    .nci-flow-svg { width: 400px; height: 44px; overflow: visible; display: block; }
+
+    /* Hub */
+    .nci-hub-wrap {
+      position: relative; width: 310px; height: 72px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nci-hub-ring {
+      position: absolute; inset: 0; border-radius: 18px;
+      border: 1.5px solid rgba(165,148,252,.58);
+      animation: nci-ring-pulse 3s ease-in-out infinite;
+    }
+    .nci-hub-ring-2 {
+      position: absolute; inset: -9px; border-radius: 22px;
+      border: 1px solid rgba(165,148,252,.22);
+      animation: nci-ring-pulse 3s ease-in-out infinite .85s;
+    }
+    @keyframes nci-ring-pulse {
+      0%,100% { opacity: .65; }
+      50%      { opacity: 1; }
+    }
+    .nci-hub-core {
+      position: absolute; inset: 0; border-radius: 18px;
+      background: linear-gradient(135deg, rgba(55,48,163,.85) 0%, rgba(109,40,217,.75) 100%);
+      box-shadow: 0 0 44px rgba(109,40,217,.60), 0 0 90px rgba(79,70,229,.25);
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 7px;
+    }
+    .nci-hub-title {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 7.5px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,.62);
+    }
+    .nci-hub-chips { display: flex; gap: 5px; }
+    .nci-hub-chip {
+      padding: 2.5px 8px; border-radius: 999px;
+      background: rgba(165,148,252,.22); border: .8px solid rgba(165,148,252,.38);
+      font-size: 8.5px; font-weight: 700; color: #c4b5fd; font-family: Inter, sans-serif;
+    }
+
+    /* Output cards */
+    .nci-fout-card {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px 10px; border-radius: 14px; text-align: center;
+    }
+    .nci-fout-profile {
+      background: rgba(79,70,229,.20); border: 1px solid rgba(165,148,252,.36);
+    }
+    .nci-fout-fit {
+      background: rgba(109,40,217,.24); border: 1px solid rgba(165,148,252,.42);
+      animation: nci-fit-glow 3.2s ease-in-out infinite;
+    }
+    @keyframes nci-fit-glow {
+      0%,100% { box-shadow: 0 0 8px rgba(109,40,217,.22); }
+      50%      { box-shadow: 0 0 22px rgba(109,40,217,.50); }
+    }
+    .nci-fout-nexy {
+      background: rgba(244,160,36,.12); border: 1.5px solid rgba(244,160,36,.50);
+      animation: nci-nexy-glow 2.8s ease-in-out infinite .5s;
+    }
+    @keyframes nci-nexy-glow {
+      0%,100% { box-shadow: 0 0 8px rgba(244,160,36,.20); }
+      50%      { box-shadow: 0 0 22px rgba(244,160,36,.48); }
+    }
+    .nci-fout-label-vi { font-size: 9.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #c4b5fd; }
+    .nci-fout-label-am { font-size: 11px; font-weight: 900; letter-spacing: .05em; color: #f4a024; font-family: 'Exo 2', Inter, sans-serif; }
+    .nci-fout-sub-vi { font-size: 8px; color: rgba(165,148,252,.60); font-weight: 500; }
+    .nci-fout-sub-am { font-size: 8px; color: rgba(244,178,60,.62); font-weight: 500; }
+
+    @media (max-width: 900px) {
+      .nci-hero-grid { grid-template-columns: 1fr; gap: 36px; }
+      .nci-hero-visual-wrap { display: none; }
+      .nci-hero-top { padding: 44px 0 36px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nci-hub-ring, .nci-hub-ring-2, .nci-fout-fit, .nci-fout-nexy { animation: none; }
+    }
+  </style>
+
+  <div class="nci-hero-top">
     <div class="container">
-      <div class="nci-hero-inner">
-        <span class="nci-hero-eyebrow">
-          <svg viewBox="0 0 16 16" fill="none" width="12" height="12"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3 2.69-5.5 6-5.5s6 2.5 6 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Nexus Contacts Intelligence
-        </span>
-        <h1 class="nci-hero-h1">Where Every Contact Becomes<br><em>Context-Aware, Product-Fit Mapped,<br>and Action-Ready.</em></h1>
-        <p class="nci-hero-tagline">Contacts · Context · Product Fit Intelligence · Outreach</p>
-        <p class="nci-hero-lead">Nexus Contacts Intelligence is the centralised relationship intelligence layer of the Nexus platform. It brings all contacts, leads, prospects, customers, and business relationships into one intelligent system — enriched with context, mapped to relevant products or services, and orchestrated by Nexy across WhatsApp, email, chat, and future communication channels.</p>
-        <div class="nci-hero-callout">
-          <p><strong>Nexus Contacts Intelligence is not a contact list.</strong> It is the relationship intelligence layer that equips Nexy with contact context, product-fit recommendations, and next-best actions — so Nexy knows who to engage, what to present, when to follow up, and how to respond.</p>
+      <div class="nci-hero-grid">
+
+        <!-- ── Left: headline + content ── -->
+        <div>
+          <span class="nci-hero-eyebrow">
+            <svg viewBox="0 0 16 16" fill="none" width="12" height="12">
+              <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 14c0-3 2.69-5.5 6-5.5s6 2.5 6 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Nexus Intelligence Layer
+          </span>
+          <h1 class="nci-hero-h1">NEXUS CONTACTS<br><em>INTELLIGENCE</em></h1>
+          <div class="nci-hero-role-row">
+            <span class="nci-role-vc">Relationship Intelligence Layer</span>
+            <span class="nci-role-sep">·</span>
+            <span class="nci-role-go">Context · Fit · Journey · Action</span>
+          </div>
+          <p class="nci-hero-intro">Nexus Contacts Intelligence is the centralised intelligence layer that prepares every contact for action. It collects, enriches, and maps every contact through <strong>Product Fit Intelligence</strong> — so that <strong>Nexy</strong> always knows who to engage, what to present, and what happens next. No guesswork. No cold outreach without context.</p>
+          <div class="nci-hero-pills">
+            <a href="#nci-capabilities" class="nci-pill-violet">
+              Core Capabilities
+              <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="/nexy" class="nci-pill-ghost-v">
+              Explore Nexy
+              <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
         </div>
-        <div class="nci-hero-btns">
-          <a href="#nci-capabilities" class="nci-btn-hero-primary">
-            See Core Capabilities
-            <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
-          <a href="/nexy" class="nci-btn-hero-ghost">
-            Explore Nexy Outreach
-            <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
-        </div>
-      </div>
-    </div>
+
+        <!-- ── Right: intelligence flow diagram ── -->
+        <div class="nci-hero-visual-wrap" aria-hidden="true">
+        <div class="nci-flow-visual">
+
+          <!-- Row 1: 3 data source inputs -->
+          <div class="nci-flow-inputs">
+
+            <div class="nci-fin-card">
+              <div class="nci-fin-icon nci-fin-icon-a">
+                <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                  <circle cx="8" cy="8" r="3" stroke="#c4b5fd" stroke-width="1.5"/>
+                  <circle cx="17" cy="8" r="2.5" stroke="#a5b4fc" stroke-width="1.3" opacity=".7"/>
+                  <path d="M2 19c0-3.3 2.69-6 6-6h3.5" stroke="#c4b5fd" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M17 13a3.5 3.5 0 013.5 3.5" stroke="#a5b4fc" stroke-width="1.2" stroke-linecap="round" opacity=".6"/>
+                </svg>
+              </div>
+              <span class="nci-fin-label">All Contacts</span>
+              <span class="nci-fin-sub">Leads · CRM · Prospects</span>
+            </div>
+
+            <div class="nci-fin-card nci-fin-card-mid">
+              <div class="nci-fin-icon nci-fin-icon-blue">
+                <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                  <rect x="3" y="5" width="18" height="13" rx="2.5" stroke="#93c5fd" stroke-width="1.5"/>
+                  <path d="M3 9h18" stroke="#60a5fa" stroke-width="1.2" opacity=".55"/>
+                  <path d="M7 13h10M7 16h6" stroke="#93c5fd" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+                </svg>
+              </div>
+              <span class="nci-fin-label nci-fin-label-blue">Website Activity</span>
+              <span class="nci-fin-sub">Visits · Forms · Intent</span>
+            </div>
+
+            <div class="nci-fin-card nci-fin-card-teal">
+              <div class="nci-fin-icon nci-fin-icon-teal">
+                <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                  <path d="M20 5H4a1 1 0 00-1 1v9a1 1 0 001 1h3l2.5 2.5L12 17h8a1 1 0 001-1V6a1 1 0 00-1-1z" stroke="#5eead4" stroke-width="1.5" stroke-linejoin="round"/>
+                  <path d="M7 10h10M7 13h6" stroke="#2dd4bf" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+                </svg>
+              </div>
+              <span class="nci-fin-label nci-fin-label-teal">Comms History</span>
+              <span class="nci-fin-sub">Email · WhatsApp · Replies</span>
+            </div>
+
+          </div><!-- /.nci-flow-inputs -->
+
+          <!-- Converging animated paths -->
+          <svg class="nci-flow-svg" viewBox="0 0 400 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path id="nci-pi1" d="M 64 0 C 64 22, 200 22, 200 44" stroke="rgba(165,148,252,.50)" stroke-width="1.8" fill="none"/>
+            <path id="nci-pi2" d="M 200 0 C 200 16, 200 28, 200 44" stroke="rgba(96,165,250,.60)" stroke-width="1.8" fill="none"/>
+            <path id="nci-pi3" d="M 336 0 C 336 22, 200 22, 200 44" stroke="rgba(45,212,191,.52)" stroke-width="1.8" fill="none"/>
+            <!-- Dots: left path (violet) -->
+            <circle r="3" fill="#c4b5fd" opacity=".90"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0s"><mpath href="#nci-pi1"/></animateMotion></circle>
+            <circle r="1.8" fill="#c4b5fd" opacity=".42"><animateMotion dur="1.8s" repeatCount="indefinite" begin="0.9s"><mpath href="#nci-pi1"/></animateMotion></circle>
+            <!-- Dots: center path (blue) -->
+            <circle r="3" fill="#60a5fa" opacity=".85"><animateMotion dur="1.4s" repeatCount="indefinite" begin="0.3s"><mpath href="#nci-pi2"/></animateMotion></circle>
+            <circle r="1.8" fill="#60a5fa" opacity=".42"><animateMotion dur="1.4s" repeatCount="indefinite" begin="1.0s"><mpath href="#nci-pi2"/></animateMotion></circle>
+            <!-- Dots: right path (teal) -->
+            <circle r="3" fill="#2dd4bf" opacity=".90"><animateMotion dur="2.0s" repeatCount="indefinite" begin="0.15s"><mpath href="#nci-pi3"/></animateMotion></circle>
+            <circle r="1.8" fill="#2dd4bf" opacity=".42"><animateMotion dur="2.0s" repeatCount="indefinite" begin="1.15s"><mpath href="#nci-pi3"/></animateMotion></circle>
+          </svg>
+
+          <!-- NCI Intelligence Hub (rectangular, not circular) -->
+          <div class="nci-hub-wrap">
+            <div class="nci-hub-ring-2"></div>
+            <div class="nci-hub-ring"></div>
+            <div class="nci-hub-core">
+              <span class="nci-hub-title">Nexus Contacts Intelligence</span>
+              <div class="nci-hub-chips">
+                <span class="nci-hub-chip">Context</span>
+                <span class="nci-hub-chip">Fit Score</span>
+                <span class="nci-hub-chip">Journey</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diverging animated paths -->
+          <svg class="nci-flow-svg" viewBox="0 0 400 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path id="nci-po1" d="M 200 0 C 200 22, 64 22, 64 44" stroke="rgba(165,148,252,.48)" stroke-width="1.8" fill="none"/>
+            <path id="nci-po2" d="M 200 0 C 200 16, 200 28, 200 44" stroke="rgba(165,148,252,.62)" stroke-width="1.8" fill="none"/>
+            <path id="nci-po3" d="M 200 0 C 200 22, 336 22, 336 44" stroke="rgba(244,160,36,.62)" stroke-width="1.8" fill="none"/>
+            <!-- Dots: left (violet) -->
+            <circle r="3" fill="#c4b5fd" opacity=".90"><animateMotion dur="1.6s" repeatCount="indefinite" begin="0s"><mpath href="#nci-po1"/></animateMotion></circle>
+            <circle r="1.8" fill="#c4b5fd" opacity=".42"><animateMotion dur="1.6s" repeatCount="indefinite" begin="0.8s"><mpath href="#nci-po1"/></animateMotion></circle>
+            <!-- Dots: center (indigo) -->
+            <circle r="3" fill="#a5b4fc" opacity=".85"><animateMotion dur="1.4s" repeatCount="indefinite" begin="0.25s"><mpath href="#nci-po2"/></animateMotion></circle>
+            <circle r="1.8" fill="#a5b4fc" opacity=".42"><animateMotion dur="1.4s" repeatCount="indefinite" begin="0.95s"><mpath href="#nci-po2"/></animateMotion></circle>
+            <!-- Dots: right (amber → NEXY) -->
+            <circle r="3.5" fill="#f4a024" opacity=".92"><animateMotion dur="1.9s" repeatCount="indefinite" begin="0.1s"><mpath href="#nci-po3"/></animateMotion></circle>
+            <circle r="2" fill="#fbbf24" opacity=".48"><animateMotion dur="1.9s" repeatCount="indefinite" begin="1.05s"><mpath href="#nci-po3"/></animateMotion></circle>
+          </svg>
+
+          <!-- Row 3: 3 intelligence outputs -->
+          <div class="nci-flow-outputs">
+
+            <div class="nci-fout-card nci-fout-profile">
+              <div class="nci-fin-icon nci-fin-icon-a">
+                <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+                  <circle cx="12" cy="8" r="3.5" stroke="#c4b5fd" stroke-width="1.5"/>
+                  <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#c4b5fd" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+                </svg>
+              </div>
+              <span class="nci-fout-label-vi">Contact Profile</span>
+              <span class="nci-fout-sub-vi">Context + Stage + History</span>
+            </div>
+
+            <div class="nci-fout-card nci-fout-fit">
+              <div class="nci-fin-icon nci-fin-icon-b">
+                <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+                  <path d="M12 3l2.5 5H20l-4 3 1.5 5-5.5-3.5L6.5 16 8 11 4 8h5.5L12 3z" stroke="#c4b5fd" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="nci-fout-label-vi">Fit Recommendation</span>
+              <span class="nci-fout-sub-vi">Product · Score · Action</span>
+            </div>
+
+            <div class="nci-fout-card nci-fout-nexy">
+              <div class="nci-fin-icon" style="background:rgba(244,160,36,.22);">
+                <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+                  <circle cx="12" cy="12" r="8.5" stroke="#f4a024" stroke-width="1.5"/>
+                  <path d="M9 12h6M13.5 9.5l3 2.5-3 2.5" stroke="#f4a024" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="nci-fout-label-am">→ NEXY</span>
+              <span class="nci-fout-sub-am">Execute · Outreach · Act</span>
+            </div>
+
+          </div><!-- /.nci-flow-outputs -->
+
+        </div><!-- /.nci-flow-visual -->
+        </div><!-- /.nci-hero-visual-wrap -->
+
+      </div><!-- /.nci-hero-grid -->
+    </div><!-- /.container -->
+  </div><!-- /.nci-hero-top -->
+
   </section>
 
   <!-- ═══════════════════════════════════════ THE PROBLEM ══ -->
