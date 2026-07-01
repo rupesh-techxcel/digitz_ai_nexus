@@ -57,32 +57,52 @@
       position: relative; z-index: 2;
       max-width: 1280px; margin: 0 auto; padding: 0 20px;
       display: grid; grid-template-columns: 1.05fr 0.95fr;
-      gap: 56px; align-items: center;
+      gap: 56px; align-items: stretch;
     }
-    .ndoc-hero-left { text-align: left; }
-    .ndoc-hero-kicker {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 7px 16px; border-radius: 999px;
-      background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.20);
-      color: rgba(255,255,255,.85); font-family: var(--nx-h);
-      font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-      margin-bottom: 26px;
+    .ndoc-hero-left {
+      text-align: left; padding-top: 6px;
+      display: flex; flex-direction: column; justify-content: space-between;
     }
-    .ndoc-hero-kicker svg { opacity: .7; }
     .ndoc-hero h1 {
-      font-family: var(--nx-h); font-size: clamp(26px, 3.4vw, 48px);
-      font-weight: 900; color: #fff; line-height: 1.06; margin: 0 0 22px;
+      font-family: var(--nx-h);
+      font-size: clamp(1.82rem, 3.5vw, 3.08rem);
+      font-weight: 900; color: #fff; line-height: 1.0;
+      letter-spacing: -1px; margin: 0;
     }
-    .ndoc-hero h1 em { color: #7eb8ff; font-style: normal; }
+    .ndoc-hero h1 em { font-style: normal; color: #5dfbca; }
+    .ndoc-hero-tagline {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--nx-h);
+      font-size: 13px; font-weight: 800; letter-spacing: .04em;
+      color: #7eb8ff; margin: 24px 0 24px !important; line-height: 1;
+      padding: 6px 14px; border-radius: 999px;
+      background: rgba(33,77,187,.20); border: 1px solid rgba(126,184,255,.35);
+    }
     .ndoc-hero-sub {
-      color: #f5c97a; font-size: clamp(14px, 1.2vw, 16px);
-      line-height: 1.68; margin: 0; max-width: 540px;
+      color: rgba(255,255,255,.80); font-size: clamp(14px, 1.2vw, 16px);
+      line-height: 1.9; margin: 0 0 40px !important; max-width: 540px;
     }
+    .ndoc-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .ndoc-hero-cta-teal, .ndoc-hero-cta-ghost {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 11px 22px; border-radius: 999px;
+      font-family: var(--nx-b); font-size: 14px; font-weight: 600;
+      text-decoration: none; transition: background .18s, border-color .18s;
+    }
+    .ndoc-hero-cta-teal {
+      background: rgba(22,163,127,.22); border: 1.5px solid rgba(22,163,127,.48); color: #5dfbca !important;
+    }
+    .ndoc-hero-cta-teal:hover { background: rgba(22,163,127,.36); }
+    .ndoc-hero-cta-ghost {
+      background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.20); color: #fff !important;
+    }
+    .ndoc-hero-cta-ghost:hover { background: rgba(255,255,255,.12); }
     /* Right: TOC navigation panel */
     .ndoc-hero-nav {
       background: rgba(255,255,255,.07);
       border: 1px solid rgba(255,255,255,.13);
       border-radius: 20px; padding: 26px 28px;
+      margin-top: 6px;
     }
     .ndoc-hero-nav-title {
       font-size: .68rem; font-weight: 800; letter-spacing: .10em;
@@ -525,6 +545,9 @@
       <a href="/" class="logo nexus-logo-wrap" aria-label="Nexus AI Home">
         <img src="/assets/digitz_ai_nexus/images/nexus-ai.png" alt="Nexus AI" class="nexus-logo-img"/>
       </a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
       <nav class="nav" aria-label="Primary Navigation">
         <a href="/">HOME</a>
         <div class="nav-has-sub nav-child-active">
@@ -550,12 +573,24 @@
 
       <!-- Left: title + description -->
       <div class="ndoc-hero-left">
-        <div class="ndoc-hero-kicker">
-          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5L10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          NEXUS ORBIT
+        <div class="ndoc-hero-copy">
+          <h1>NEXUS <em>ORBIT</em></h1>
+          <p class="ndoc-hero-tagline">
+            <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5L10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            How it works?
+          </p>
+          <p class="ndoc-hero-sub">A complete walkthrough of every layer of NEXUS ORBIT — from the moment knowledge enters the platform to the moment a governed AI response reaches the right person through the right channel, and how NEXUS AGENTIC builds autonomous workflows on top.</p>
         </div>
-        <h1>How <em>NEXUS ORBIT</em> Works</h1>
-        <p class="ndoc-hero-sub">A complete walkthrough of every layer of NEXUS ORBIT — from the moment knowledge enters the platform to the moment a governed AI response reaches the right person through the right channel, and how NEXUS AGENTIC builds autonomous workflows on top.</p>
+        <div class="ndoc-hero-ctas">
+          <a href="#knowledge" class="ndoc-hero-cta-teal">
+            Start with Knowledge Foundation
+            <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="/nexus-platform" class="ndoc-hero-cta-ghost">
+            Explore Nexus Platform
+            <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
       </div>
 
       <!-- Right: section navigation panel -->
@@ -1669,5 +1704,6 @@
 {{ include_script('frappe-web.bundle.js') }}
 {{ include_script('nexus_chat_widget.bundle.js') }}
 
+<script src="/assets/digitz_ai_nexus/js/digitz_ai_nexus_nav.js"></script>
 </body>
 </html>

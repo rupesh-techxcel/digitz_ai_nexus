@@ -23,6 +23,9 @@
         />
       </a>
 
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
       <nav class="nav" aria-label="Primary Navigation">
         <a href="#home">HOME</a>
         <div class="nav-has-sub">
@@ -3259,15 +3262,17 @@
       align-items: center; gap: 7px; flex-shrink: 0;
     }
     .nxci-flow-icon {
-      width: 46px; height: 46px; border-radius: 13px;
+      width: 60px; height: 60px; border-radius: 17px;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(79,70,229,.09);
-      border: 1px solid rgba(79,70,229,.18);
+      background: linear-gradient(135deg, rgba(79,70,229,.14), rgba(109,40,217,.09));
+      border: 1px solid rgba(79,70,229,.22);
+      box-shadow: 0 4px 14px rgba(79,70,229,.14);
     }
+    .nxci-flow-icon svg { width: 26px; height: 26px; }
     .nxci-flow-icon.featured {
       background: linear-gradient(135deg, #4338ca, #6d28d9);
       border-color: transparent;
-      box-shadow: 0 4px 16px rgba(79,70,229,.38);
+      box-shadow: 0 6px 20px rgba(79,70,229,.42);
     }
     .nxci-flow-label {
       font-size: 10.5px; font-weight: 700;
@@ -3278,7 +3283,7 @@
     .nxci-flow-arrow {
       width: 30px; flex-shrink: 0;
       display: flex; align-items: center;
-      padding-bottom: 22px; color: rgba(79,70,229,.30);
+      padding-bottom: 26px; color: rgba(79,70,229,.30);
     }
     /* Value cards */
     .nxci-cards-grid {
@@ -3298,11 +3303,13 @@
       border-color: rgba(79,70,229,.28);
     }
     .nxci-vc-icon {
-      width: 40px; height: 40px; border-radius: 11px;
-      background: rgba(79,70,229,.10);
-      border: 1px solid rgba(79,70,229,.16);
+      width: 54px; height: 54px; border-radius: 15px;
+      background: linear-gradient(135deg, rgba(79,70,229,.16), rgba(109,40,217,.10));
+      border: 1px solid rgba(79,70,229,.22);
+      box-shadow: 0 4px 12px rgba(79,70,229,.12);
       display: flex; align-items: center; justify-content: center;
     }
+    .nxci-vc-icon svg { width: 26px; height: 26px; }
     .nxci-vc-title { font-size: 13.5px; font-weight: 800; color: #1e1b4b; line-height: 1.35; }
     .nxci-vc-body { font-size: 12.5px; color: #4b5680; line-height: 1.60; margin: 0; flex: 1; }
     .nxci-vc-micro {
@@ -4104,11 +4111,102 @@
     }
     .nexy-plink-go:hover { background: rgba(33,77,187,.14); box-shadow: 0 4px 12px rgba(33,77,187,.12); }
 
+    /* ── Support Companion panel (full-width, violet accent) ── */
+    .nexy-panel-full { margin-top: 20px; }
+    .nexy-panel.support .nexy-panel-hero {
+      background: linear-gradient(130deg, #f5f0ff 0%, #faf8ff 60%, #ede8ff 100%);
+      border-bottom: 1px solid rgba(109,40,217,.14);
+    }
+    .nexy-panel.support .nexy-panel-hero::after { background: rgba(109,40,217,.08); }
+    .nexy-panel.support .nexy-panel-title { color: #2e1065; }
+    .nexy-panel.support .nexy-panel-sub { color: #5b21b6; }
+    .nexy-panel.support .nexy-panel-value { border: 1px solid rgba(109,40,217,.20); }
+    .nexy-panel.support .nexy-panel-value strong { color: #4c1d95; font-weight: 800; }
+    .nexy-panel.support .nexy-companion-item::before {
+      background-color: #5b21b6;
+      box-shadow: 0 0 0 4px rgba(109,40,217,.12);
+    }
+    .nexy-panel.support .nexy-companion-item { border-bottom-color: rgba(109,40,217,.08); }
+
+    .nexy-support-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 13px; border-radius: 999px;
+      background: #5b21b6; color: #fff;
+      font-size: 11px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      position: relative; z-index: 2;
+    }
+
+    .nexy-support-body {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+      padding: 8px 24px 4px;
+      align-items: start;
+    }
+
+    .nexy-support-flow-card {
+      background: linear-gradient(135deg, #2e1065 0%, #4c1d95 55%, #5b21b6 100%);
+      border-radius: 16px;
+      padding: 20px 20px 18px;
+      border: 1px solid rgba(139,92,246,.35);
+      box-shadow: 0 8px 26px rgba(76,29,149,.22);
+      margin: 8px 0 16px;
+    }
+    .nexy-support-flow-title {
+      font-size: 12.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+      color: #d8b4fe; margin: 0 0 16px;
+    }
+    .nexy-support-flow-steps { display: flex; flex-direction: column; gap: 14px; }
+    .nexy-support-flow-step { display: flex; gap: 12px; align-items: flex-start; }
+    .nexy-support-flow-num {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(255,255,255,.14); border: 1px solid rgba(216,180,254,.45);
+      color: #fff; font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nexy-support-flow-step strong {
+      display: block; color: #fff; font-size: 13.5px; font-weight: 800; margin-bottom: 3px;
+    }
+    .nexy-support-flow-step p {
+      margin: 0; color: rgba(255,255,255,.72); font-size: 12px; line-height: 1.5;
+    }
+
+    .nexy-support-pills {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 4px 24px 20px;
+    }
+    .nexy-support-pill {
+      padding: 7px 14px; border-radius: 999px;
+      background: rgba(109,40,217,.08); border: 1px solid rgba(109,40,217,.22);
+      color: #4c1d95; font-size: 12px; font-weight: 700;
+    }
+
+    .nexy-support-highlight {
+      margin: 0 24px 22px;
+      padding: 18px 22px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2e1065 0%, #4c1d95 60%, #5b21b6 100%);
+      border: 1px solid rgba(139,92,246,.35);
+      box-shadow: 0 8px 24px rgba(76,29,149,.20);
+    }
+    .nexy-support-highlight p {
+      margin: 0; color: #fff; font-size: 14px; font-weight: 600; line-height: 1.6;
+    }
+
+    .nexy-plink-support {
+      color: #5b21b6;
+      background: rgba(109,40,217,.07); border: 1px solid rgba(109,40,217,.26);
+    }
+    .nexy-plink-support:hover { background: rgba(109,40,217,.14); box-shadow: 0 4px 12px rgba(109,40,217,.12); }
+
     @media (max-width: 960px) {
       .nexy-dual { grid-template-columns: 1fr; }
       .nexy-caps-grid { grid-template-columns: 1fr; }
       .nexy-hdr-row { flex-direction: column; align-items: flex-start; gap: 20px; }
       .nexy-card-body { padding: 28px 24px 36px; }
+      .nexy-support-body { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
       .nexy-card-cap { padding: 20px 20px 18px; gap: 12px; }
@@ -4116,6 +4214,9 @@
       .nexy-panel-hero { padding: 24px 20px 20px; }
       .nexy-companion-item { padding: 12px 18px; }
       .nexy-caps-grid { padding: 16px 16px; }
+      .nexy-support-body { padding: 8px 16px 4px; gap: 16px; }
+      .nexy-support-pills { padding: 4px 16px 18px; }
+      .nexy-support-highlight { margin: 0 16px 18px; padding: 16px 18px; }
     }
   </style>
 
@@ -4291,6 +4392,102 @@
       </div>
 
         </div><!-- /.nexy-dual -->
+
+        <!-- Panel 3 (FULL WIDTH): Support Companion -->
+        <div class="nexy-panel support nexy-panel-full">
+          <div class="nexy-panel-hero">
+            <span class="nexy-support-badge">
+              <svg viewBox="0 0 16 16" fill="none" width="12" height="12"><path d="M8 1.5l5.5 2v3.8c0 3.4-2.3 6.4-5.5 7.2-3.2-.8-5.5-3.8-5.5-7.2V3.5L8 1.5z" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.7 8l1.6 1.6L10.4 6" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Identity-Aware Support Candidate
+            </span>
+            <h2 class="nexy-panel-title">Nexy as Support Companion</h2>
+            <p class="nexy-panel-sub">Identity-aware AI support that verifies registered users, understands their concern, and connects them to the right support action.</p>
+            <div class="nexy-panel-value">
+              <p>Nexy as Support Companion helps registered identities start support in a structured and trusted way. After verifying the user, Nexy initiates the support flow, asks relevant questions, refers to governed <strong>Nexus Orbit</strong> knowledge, and prepares the issue for the right resolution path.</p>
+            </div>
+          </div>
+
+          <div class="nexy-support-body">
+            <!-- Left: core bullet points -->
+            <div class="nexy-companion-list">
+              <div class="nexy-companion-item">Verifies registered identities before starting the support journey.</div>
+              <div class="nexy-companion-item">Understands the user's concern through guided, relevant questions.</div>
+              <div class="nexy-companion-item">Captures issue category, urgency, product or service context, and key references.</div>
+              <div class="nexy-companion-item">Uses governed Nexus Orbit knowledge to provide approved guidance where possible.</div>
+              <div class="nexy-companion-item">Raises a support ticket with structured context when action is required.</div>
+              <div class="nexy-companion-item">Connects the user to the right desk/support team member when human assistance is needed.</div>
+              <div class="nexy-companion-item">Passes the conversation summary and collected details to reduce repeated questioning.</div>
+              <div class="nexy-companion-item">Helps support teams respond faster with better background and clearer issue context.</div>
+            </div>
+
+            <!-- Right: flow card -->
+            <div class="nexy-support-flow-card">
+              <div class="nexy-support-flow-title">How Nexy Support Companion Works</div>
+              <div class="nexy-support-flow-steps">
+                <div class="nexy-support-flow-step">
+                  <span class="nexy-support-flow-num">1</span>
+                  <div>
+                    <strong>Registered Identity</strong>
+                    <p>User starts support as a known customer, partner, employee, or approved contact.</p>
+                  </div>
+                </div>
+                <div class="nexy-support-flow-step">
+                  <span class="nexy-support-flow-num">2</span>
+                  <div>
+                    <strong>Identity Verification</strong>
+                    <p>Nexy verifies the identity before accessing the support path.</p>
+                  </div>
+                </div>
+                <div class="nexy-support-flow-step">
+                  <span class="nexy-support-flow-num">3</span>
+                  <div>
+                    <strong>Issue Understanding</strong>
+                    <p>Nexy asks relevant questions to understand the concern clearly.</p>
+                  </div>
+                </div>
+                <div class="nexy-support-flow-step">
+                  <span class="nexy-support-flow-num">4</span>
+                  <div>
+                    <strong>Guided Assistance</strong>
+                    <p>Nexy uses approved Nexus Orbit knowledge to guide the user where possible.</p>
+                  </div>
+                </div>
+                <div class="nexy-support-flow-step">
+                  <span class="nexy-support-flow-num">5</span>
+                  <div>
+                    <strong>Ticket or Desk Handoff</strong>
+                    <p>Nexy raises a support ticket or connects the user to the right desk user with full context.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Capability pills -->
+          <div class="nexy-support-pills">
+            <span class="nexy-support-pill">Identity Verification</span>
+            <span class="nexy-support-pill">Guided Issue Collection</span>
+            <span class="nexy-support-pill">Knowledge-Based Support</span>
+            <span class="nexy-support-pill">Ticket Creation</span>
+            <span class="nexy-support-pill">Desk User Handoff</span>
+            <span class="nexy-support-pill">Priority Capture</span>
+            <span class="nexy-support-pill">Context Summary</span>
+            <span class="nexy-support-pill">Faster Resolution</span>
+          </div>
+
+          <!-- Highlight box -->
+          <div class="nexy-support-highlight">
+            <p>Support starts with clarity, not confusion. Nexy ensures every support request begins with verified identity, structured issue details, and the right context before it reaches the support team.</p>
+          </div>
+
+          <div class="nexy-panel-foot">
+            <p>Nexy Support Companion is not a chatbot bolted onto a help widget — it is an agentic capability of Nexy, grounded in identity verification and Nexus Orbit knowledge, built to get every support request to the right outcome faster.</p>
+            <a href="/nexy" class="nexy-panel-link nexy-plink-support">
+              Explore Support Companion
+              <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+        </div>
 
       </div><!-- /.nexy-card-body -->
     </div><!-- /.nexy-card -->
@@ -5365,5 +5562,6 @@
 {{ include_script('frappe-web.bundle.js') }}
 {{ include_script('nexus_chat_widget.bundle.js') }}
 
+<script src="/assets/digitz_ai_nexus/js/digitz_ai_nexus_nav.js"></script>
 </body>
 </html>
