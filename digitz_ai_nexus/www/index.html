@@ -35,6 +35,7 @@
         </div>
         <a href="/pricing">PRICING</a>
         <a href="/nexy">NEXY — AGENTIC CANDIDATE</a>
+        <a href="/nexus-contacts-intelligence">CONTACTS INTELLIGENCE</a>
         <a href="/nexus-knowledge-browser">NEXUS BROWSER</a>
         <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">CHAT with<br>NEXY</a>
       </nav>
@@ -1189,6 +1190,406 @@
 		</div><!-- /nx-platform-wrap -->
 	</div>
   </section>
+
+  <!-- ═══════════════════════════════════════════════════ NEXUS AGENTIC SECTION ══ -->
+  <section id="nexus-agentic-section" aria-label="Nexus Agentic Platform">
+  <style>
+    #nexus-agentic-section {
+      position: relative;
+      background: #eef4ff;
+      padding: 40px 0 56px;
+      font-family: Inter, Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    #nexus-agentic-section * { box-sizing: border-box; }
+
+    .nxag-wrap {
+      width: min(1320px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .nxag-card {
+      background: transparent;
+      border: 1px solid rgba(33,77,187,.14);
+      border-radius: 24px;
+      box-shadow: 0 18px 50px rgba(16,43,103,.16);
+      overflow: visible;
+    }
+
+    .nxag-card-cap {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 28px 36px 26px;
+      border-bottom: 1px solid rgba(33,77,187,.10);
+      background: linear-gradient(90deg, rgba(33,77,187,.05) 0%, transparent 60%);
+      border-radius: 24px 24px 0 0;
+    }
+
+    .nxag-cap-rule {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(33,77,187,.18), transparent);
+    }
+
+    .nxag-cap-sub {
+      font-size: 13px;
+      font-weight: 700;
+      color: #8a9ab8;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .nxag-card-body {
+      padding: 40px 40px 48px;
+    }
+
+    .nxag-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 24px 11px 16px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 100%);
+      color: #fff;
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      box-shadow: 0 8px 24px rgba(11,43,114,.30), inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    .nxag-label::before {
+      content: "";
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
+      box-shadow: 0 0 0 3px rgba(244,160,36,.32), 0 0 12px rgba(244,160,36,.55);
+      flex: 0 0 auto;
+    }
+
+    .nxag-header-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+    .nxag-header-left { max-width: 620px; }
+
+    .nxag-title {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: clamp(30px, 3.2vw, 48px);
+      font-weight: 950;
+      color: #0e1e42;
+      line-height: 1.08;
+      margin: 0 0 18px;
+      letter-spacing: -.03em;
+    }
+    .nxag-title em {
+      font-style: normal;
+      background: linear-gradient(90deg, #214dbb 0%, #16A37F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nxag-sub {
+      font-size: 15.5px;
+      color: #53688f;
+      line-height: 1.68;
+      margin: 0;
+      max-width: 540px;
+    }
+
+    .nxag-header-right {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nxag-stat {
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid rgba(33,77,187,.14);
+      border-radius: 18px;
+      padding: 18px 22px 16px;
+      box-shadow: 0 4px 18px rgba(33,77,187,.08);
+      min-width: 108px;
+    }
+    .nxag-stat strong {
+      display: block;
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 28px;
+      font-weight: 950;
+      color: #214dbb;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .nxag-stat span {
+      font-size: 11px;
+      font-weight: 700;
+      color: #8a9ab8;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .nxag-features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .nxag-feature-card {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid rgba(33,77,187,.15);
+      border-radius: 22px;
+      padding: 30px 24px 26px;
+      box-shadow: 0 6px 24px rgba(33,77,187,.09);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+      transition: transform .28s ease, box-shadow .28s ease;
+    }
+    .nxag-feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 44px rgba(33,77,187,.14);
+    }
+    .nxag-feature-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 18px; right: 18px;
+      height: 4px;
+      border-radius: 0 0 99px 99px;
+    }
+    .nxag-feature-card[data-feat="0"]::before,
+    .nxag-feature-card[data-feat="3"]::before { background: linear-gradient(90deg, #214dbb, #4472e6); }
+    .nxag-feature-card[data-feat="1"]::before,
+    .nxag-feature-card[data-feat="4"]::before { background: linear-gradient(90deg, #16A37F, #0ecb9b); }
+    .nxag-feature-card[data-feat="2"]::before,
+    .nxag-feature-card[data-feat="5"]::before { background: linear-gradient(90deg, #e5a200, #f4bc44); }
+
+    .nxag-feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px;
+    }
+    .nxag-feature-card[data-feat="0"] .nxag-feature-icon,
+    .nxag-feature-card[data-feat="3"] .nxag-feature-icon { background: rgba(33,77,187,.08); }
+    .nxag-feature-card[data-feat="1"] .nxag-feature-icon,
+    .nxag-feature-card[data-feat="4"] .nxag-feature-icon { background: rgba(22,163,127,.10); }
+    .nxag-feature-card[data-feat="2"] .nxag-feature-icon,
+    .nxag-feature-card[data-feat="5"] .nxag-feature-icon { background: rgba(229,162,0,.10); }
+
+    .nxag-feat-num {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+    .nxag-feature-card[data-feat="0"] .nxag-feat-num,
+    .nxag-feature-card[data-feat="3"] .nxag-feat-num { color: #214dbb; }
+    .nxag-feature-card[data-feat="1"] .nxag-feat-num,
+    .nxag-feature-card[data-feat="4"] .nxag-feat-num { color: #16A37F; }
+    .nxag-feature-card[data-feat="2"] .nxag-feat-num,
+    .nxag-feature-card[data-feat="5"] .nxag-feat-num { color: #c47f00; }
+
+    .nxag-feature-card h3 {
+      font-family: 'Exo 2', Inter, sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      color: #0e1e42;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .nxag-feature-card p {
+      font-size: 14px;
+      color: #53688f;
+      line-height: 1.62;
+      margin: 0;
+      flex: 1;
+    }
+
+    .nxag-feat-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .nxag-feat-tags span {
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+    .nxag-feature-card[data-feat="0"] .nxag-feat-tags span,
+    .nxag-feature-card[data-feat="3"] .nxag-feat-tags span {
+      background: rgba(33,77,187,.08); color: #1a3fa8; border: 1px solid rgba(33,77,187,.18);
+    }
+    .nxag-feature-card[data-feat="1"] .nxag-feat-tags span,
+    .nxag-feature-card[data-feat="4"] .nxag-feat-tags span {
+      background: rgba(22,163,127,.09); color: #0b6e5a; border: 1px solid rgba(22,163,127,.22);
+    }
+    .nxag-feature-card[data-feat="2"] .nxag-feat-tags span,
+    .nxag-feature-card[data-feat="5"] .nxag-feat-tags span {
+      background: rgba(229,162,0,.09); color: #8a5b00; border: 1px solid rgba(229,162,0,.22);
+    }
+
+    @media (max-width: 1024px) {
+      .nxag-features { grid-template-columns: repeat(2, 1fr); }
+      .nxag-header-row { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 600px) {
+      .nxag-features { grid-template-columns: 1fr; }
+      .nxag-header-right { display: none; }
+    }
+  </style>
+
+  <div class="nxag-wrap">
+    <div class="nxag-card">
+      <div class="nxag-card-cap">
+        <span class="nxag-label">NEXUS AGENTIC</span>
+        <span class="nxag-cap-rule"></span>
+        <span class="nxag-cap-sub">Autonomous Workflow Runtime</span>
+      </div>
+      <div class="nxag-card-body">
+
+        <div class="nxag-header-row">
+          <div class="nxag-header-left">
+            <h2 class="nxag-title">The Core AI Layer.<br><em>Built on Nexus Orbit.</em></h2>
+            <p class="nxag-sub">Nexus Agentic is the autonomous workflow runtime built on top of Nexus Orbit. Agents reason, select tools, draft messages, and pause for human approval — with every decision logged, every action audited, and nothing sent without explicit sign-off.</p>
+          </div>
+          <div class="nxag-header-right">
+            <div class="nxag-stat">
+              <strong>2</strong>
+              <span>Capability Packs</span>
+            </div>
+            <div class="nxag-stat">
+              <strong>27</strong>
+              <span>Registered Tools</span>
+            </div>
+            <div class="nxag-stat">
+              <strong>18</strong>
+              <span>Goal Types</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="nxag-features">
+
+          <div class="nxag-feature-card" data-feat="0">
+            <div class="nxag-feature-icon">
+              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                <rect x="3" y="6" width="10" height="16" rx="3" fill="rgba(33,77,187,.14)" stroke="#214dbb" stroke-width="1.6"/>
+                <rect x="15" y="6" width="10" height="16" rx="3" fill="rgba(33,77,187,.08)" stroke="#214dbb" stroke-width="1.4" stroke-dasharray="3 2"/>
+                <path d="M6 11h4M6 14h3" stroke="#214dbb" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M18 11h4M18 14h3" stroke="#214dbb" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="2 2"/>
+              </svg>
+            </div>
+            <span class="nxag-feat-num">Pillar 01</span>
+            <h3>Capability Packs</h3>
+            <p>Modular domain bundles — Sales Outreach and Purchase Coordination — each carrying its own goal types, tools, approval rules, and memory configuration. Plug in a pack; the agent inherits the full workflow contract for that domain.</p>
+            <div class="nxag-feat-tags">
+              <span>Sales Outreach</span><span>Purchase Coordination</span>
+            </div>
+          </div>
+
+          <div class="nxag-feature-card" data-feat="1">
+            <div class="nxag-feature-icon">
+              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                <circle cx="14" cy="14" r="9" stroke="#16A37F" stroke-width="1.6"/>
+                <path d="M14 7v7l3.5 2" stroke="#16A37F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 10a9 9 0 0 0-2.5-3.8" stroke="#16A37F" stroke-width="1.4" stroke-linecap="round"/>
+                <path d="M22 10l2-2.5-3.2-.4" stroke="#16A37F" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="nxag-feat-num">Pillar 02</span>
+            <h3>LLM Agent Loop</h3>
+            <p>The runtime operates as an iterative LLM reasoning loop — the model selects which tools to call, processes results, and decides the next step, continuing until the goal is resolved or human approval is required. Up to 25 reasoning steps per run.</p>
+            <div class="nxag-feat-tags">
+              <span>Reasoning</span><span>Tool Selection</span><span>Multi-step</span>
+            </div>
+          </div>
+
+          <div class="nxag-feature-card" data-feat="2">
+            <div class="nxag-feature-icon">
+              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                <rect x="4" y="5" width="20" height="13" rx="3" fill="rgba(229,162,0,.14)" stroke="#c47f00" stroke-width="1.6"/>
+                <path d="M9 10l3 3 7-5" stroke="#c47f00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 18h20" stroke="#c47f00" stroke-width="1.2"/>
+                <path d="M10 22h8" stroke="#c47f00" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="nxag-feat-num">Pillar 03</span>
+            <h3>Human Approval Gates</h3>
+            <p>Every outbound action — customer emails, vendor messages, follow-ups — is drafted by the agent and paused for human review. The agent resumes only after explicit approval, with full conversation context preserved across the wait.</p>
+            <div class="nxag-feat-tags">
+              <span>Draft → Review</span><span>Approve → Act</span>
+            </div>
+          </div>
+
+          <div class="nxag-feature-card" data-feat="3">
+            <div class="nxag-feature-icon">
+              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                <path d="M7 9a5 5 0 0 1 10 0v2H7V9z" fill="rgba(33,77,187,.12)" stroke="#214dbb" stroke-width="1.6" stroke-linejoin="round"/>
+                <rect x="5" y="11" width="18" height="13" rx="3" fill="rgba(33,77,187,.08)" stroke="#214dbb" stroke-width="1.6"/>
+                <circle cx="14" cy="17" r="2" fill="#214dbb"/>
+                <path d="M14 19v2.5" stroke="#214dbb" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="nxag-feat-num">Pillar 04</span>
+            <h3>Governed Tool Registry</h3>
+            <p>All actions are pre-registered as typed tools — read-only, draft-only, internal-write, or customer-facing. The LLM never touches the database directly; every state change flows through a registered, type-safe, audited tool handler.</p>
+            <div class="nxag-feat-tags">
+              <span>No Direct Writes</span><span>Type-safe</span><span>Audited</span>
+            </div>
+          </div>
+
+          <div class="nxag-feature-card" data-feat="4">
+            <div class="nxag-feature-icon">
+              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                <ellipse cx="14" cy="9" rx="9" ry="4" fill="rgba(22,163,127,.12)" stroke="#16A37F" stroke-width="1.6"/>
+                <path d="M5 9v5.5c0 2.2 4 4 9 4s9-1.8 9-4V9" stroke="#16A37F" stroke-width="1.6"/>
+                <path d="M5 14.5v5c0 2.2 4 4 9 4s9-1.8 9-4v-5" stroke="#16A37F" stroke-width="1.4" stroke-dasharray="3 2"/>
+              </svg>
+            </div>
+            <span class="nxag-feat-num">Pillar 05</span>
+            <h3>Persistent Agent Memory</h3>
+            <p>Agents store and retrieve key-value state across runs — scoped per candidate, per capability pack, and per tenant. Conversation history is persisted through approval pauses so agents resume mid-reasoning exactly where they left off.</p>
+            <div class="nxag-feat-tags">
+              <span>Cross-run State</span><span>Tenant Scoped</span><span>Resume-safe</span>
+            </div>
+          </div>
+
+          <div class="nxag-feature-card" data-feat="5">
+            <div class="nxag-feature-icon">
+              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                <rect x="4" y="3" width="20" height="22" rx="3" fill="rgba(229,162,0,.10)" stroke="#c47f00" stroke-width="1.6"/>
+                <path d="M8 9h12M8 13h10M8 17h7M8 21h4" stroke="#c47f00" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="nxag-feat-num">Pillar 06</span>
+            <h3>Full Audit Trail</h3>
+            <p>Every decision, tool call, and approval event is written to structured log records — reasoning text, outcome, tool inputs and outputs, timestamps. A complete, queryable history of what the agent did and why, for every run, for every tenant.</p>
+            <div class="nxag-feat-tags">
+              <span>Decision Log</span><span>Tool Call Log</span><span>Compliance-ready</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  </section>
+  <!-- End Nexus Agentic Section ══════════════════════════════════════════════════ -->
 
   <!-- Nexus AI Governance Story Section -->
   <section id="nexus-commercial-flow" class="nxcom-section" data-stage="0" aria-label="Nexus AI governed delivery visual story">
@@ -2758,405 +3159,331 @@
   </section>
   <!-- End Nexus AI Governance Story Section -->
 
-  <!-- ═══════════════════════════════════════════════════ NEXUS AGENTIC SECTION ══ -->
-  <section id="nexus-agentic-section" aria-label="Nexus Agentic Platform">
+  <!-- ══════════════════════════════════════════ NEXUS CONTACTS INTELLIGENCE SECTION ══ -->
+  <section id="nexus-contacts-section" aria-label="Nexus Contacts Intelligence">
   <style>
-    #nexus-agentic-section {
+    #nexus-contacts-section {
       position: relative;
-      background: #eef4ff;
-      padding: 40px 0 56px;
+      background: linear-gradient(180deg, #f4f0ff 0%, #f8f7ff 50%, #eef4ff 100%);
+      padding: 44px 0 60px;
       font-family: Inter, Arial, sans-serif;
       box-sizing: border-box;
     }
-    #nexus-agentic-section * { box-sizing: border-box; }
-
-    .nxag-wrap {
+    #nexus-contacts-section * { box-sizing: border-box; }
+    .nxci-wrap {
       width: min(1320px, calc(100% - 40px));
       margin: 0 auto;
     }
-
-    .nxag-card {
-      background: transparent;
-      border: 1px solid rgba(33,77,187,.14);
+    .nxci-card {
+      background: #ffffff;
+      border: 1px solid rgba(79,70,229,.18);
       border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(16,43,103,.16);
-      overflow: visible;
+      box-shadow: 0 18px 50px rgba(55,48,163,.12), 0 6px 18px rgba(79,70,229,.06);
+      overflow: hidden;
     }
-
-    .nxag-card-cap {
+    .nxci-card-cap {
       display: flex;
       align-items: center;
       gap: 20px;
       padding: 28px 36px 26px;
-      border-bottom: 1px solid rgba(33,77,187,.10);
-      background: linear-gradient(90deg, rgba(33,77,187,.05) 0%, transparent 60%);
-      border-radius: 24px 24px 0 0;
+      border-bottom: 1px solid rgba(79,70,229,.10);
+      background: linear-gradient(90deg, rgba(79,70,229,.05) 0%, transparent 60%);
     }
-
-    .nxag-cap-rule {
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(33,77,187,.18), transparent);
+    .nxci-cap-rule {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(79,70,229,.22), transparent);
     }
-
-    .nxag-cap-sub {
-      font-size: 13px;
-      font-weight: 700;
-      color: #8a9ab8;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      white-space: nowrap;
+    .nxci-cap-sub {
+      font-size: 12px; font-weight: 700;
+      color: #8a9ab8; letter-spacing: .06em;
+      text-transform: uppercase; white-space: nowrap;
     }
-
-    .nxag-card-body {
-      padding: 40px 40px 48px;
-    }
-
-    .nxag-label {
+    .nxci-label {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      padding: 11px 24px 11px 16px;
+      gap: 10px;
+      padding: 10px 22px 10px 14px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 100%);
+      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
       color: #fff;
       font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 15px;
-      font-weight: 950;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      box-shadow: 0 8px 24px rgba(11,43,114,.30), inset 0 1px 0 rgba(255,255,255,.14);
+      font-size: 14px; font-weight: 900;
+      letter-spacing: .18em; text-transform: uppercase;
+      box-shadow: 0 8px 24px rgba(55,48,163,.32), inset 0 1px 0 rgba(255,255,255,.14);
     }
-    .nxag-label::before {
+    .nxci-label::before {
       content: "";
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #ffd38a, #f4a024 70%);
-      box-shadow: 0 0 0 3px rgba(244,160,36,.32), 0 0 12px rgba(244,160,36,.55);
+      width: 9px; height: 9px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #c4b5fd, #7c3aed 70%);
+      box-shadow: 0 0 0 3px rgba(124,58,237,.28), 0 0 10px rgba(124,58,237,.5);
       flex: 0 0 auto;
     }
-
-    .nxag-header-row {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 40px;
-      margin-bottom: 48px;
+    .nxci-card-body { padding: 44px 48px 52px; }
+    .nxci-caption {
+      font-size: 10.5px; font-weight: 800;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: #6d63e8; margin: 0 0 12px;
     }
-    .nxag-header-left { max-width: 620px; }
-
-    .nxag-title {
+    .nxci-heading {
       font-family: 'Exo 2', Inter, sans-serif;
-      font-size: clamp(30px, 3.2vw, 48px);
-      font-weight: 950;
-      color: #0e1e42;
-      line-height: 1.08;
-      margin: 0 0 18px;
-      letter-spacing: -.03em;
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 900; line-height: 1.18;
+      color: #1e1b4b; margin: 0 0 16px;
     }
-    .nxag-title em {
-      font-style: normal;
-      background: linear-gradient(90deg, #214dbb 0%, #16A37F 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .nxci-desc {
+      font-size: 15px; line-height: 1.68;
+      color: #4b5680; margin: 0 0 28px;
+      max-width: 760px;
     }
-
-    .nxag-sub {
-      font-size: 15.5px;
-      color: #53688f;
-      line-height: 1.68;
-      margin: 0;
-      max-width: 540px;
-    }
-
-    .nxag-header-right {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .nxag-stat {
-      text-align: center;
-      background: #ffffff;
-      border: 1px solid rgba(33,77,187,.14);
-      border-radius: 18px;
-      padding: 18px 22px 16px;
-      box-shadow: 0 4px 18px rgba(33,77,187,.08);
-      min-width: 108px;
-    }
-    .nxag-stat strong {
-      display: block;
-      font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 28px;
-      font-weight: 950;
-      color: #214dbb;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .nxag-stat span {
-      font-size: 11px;
-      font-weight: 700;
-      color: #8a9ab8;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .nxag-features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .nxag-feature-card {
-      position: relative;
-      background: #ffffff;
-      border: 1px solid rgba(33,77,187,.15);
-      border-radius: 22px;
-      padding: 30px 24px 26px;
-      box-shadow: 0 6px 24px rgba(33,77,187,.09);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow: hidden;
-      transition: transform .28s ease, box-shadow .28s ease;
-    }
-    .nxag-feature-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 18px 44px rgba(33,77,187,.14);
-    }
-    .nxag-feature-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 18px; right: 18px;
-      height: 4px;
-      border-radius: 0 0 99px 99px;
-    }
-    .nxag-feature-card[data-feat="0"]::before,
-    .nxag-feature-card[data-feat="3"]::before { background: linear-gradient(90deg, #214dbb, #4472e6); }
-    .nxag-feature-card[data-feat="1"]::before,
-    .nxag-feature-card[data-feat="4"]::before { background: linear-gradient(90deg, #16A37F, #0ecb9b); }
-    .nxag-feature-card[data-feat="2"]::before,
-    .nxag-feature-card[data-feat="5"]::before { background: linear-gradient(90deg, #e5a200, #f4bc44); }
-
-    .nxag-feature-icon {
-      width: 48px; height: 48px;
+    .nxci-highlight {
+      margin: 0 0 36px;
+      padding: 20px 24px;
       border-radius: 14px;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+      border-left: 4px solid #6d28d9;
+    }
+    .nxci-highlight p {
+      margin: 0;
+      font-size: 14.5px; line-height: 1.65;
+      color: #3730a3; font-weight: 500;
+    }
+    .nxci-highlight strong { color: #1e1b4b; font-weight: 800; }
+    /* Flow diagram */
+    .nxci-flow {
+      display: flex; align-items: center;
+      gap: 0; margin: 0 0 40px;
+      overflow-x: auto; padding-bottom: 4px;
+    }
+    .nxci-flow-node {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 7px; flex-shrink: 0;
+    }
+    .nxci-flow-icon {
+      width: 46px; height: 46px; border-radius: 13px;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 4px;
+      background: rgba(79,70,229,.09);
+      border: 1px solid rgba(79,70,229,.18);
     }
-    .nxag-feature-card[data-feat="0"] .nxag-feature-icon,
-    .nxag-feature-card[data-feat="3"] .nxag-feature-icon { background: rgba(33,77,187,.08); }
-    .nxag-feature-card[data-feat="1"] .nxag-feature-icon,
-    .nxag-feature-card[data-feat="4"] .nxag-feature-icon { background: rgba(22,163,127,.10); }
-    .nxag-feature-card[data-feat="2"] .nxag-feature-icon,
-    .nxag-feature-card[data-feat="5"] .nxag-feature-icon { background: rgba(229,162,0,.10); }
-
-    .nxag-feat-num {
+    .nxci-flow-icon.featured {
+      background: linear-gradient(135deg, #4338ca, #6d28d9);
+      border-color: transparent;
+      box-shadow: 0 4px 16px rgba(79,70,229,.38);
+    }
+    .nxci-flow-label {
+      font-size: 10.5px; font-weight: 700;
+      color: #4b5680; text-align: center;
+      max-width: 82px; line-height: 1.3;
+    }
+    .nxci-flow-label.featured { color: #4338ca; font-weight: 800; }
+    .nxci-flow-arrow {
+      width: 30px; flex-shrink: 0;
+      display: flex; align-items: center;
+      padding-bottom: 22px; color: rgba(79,70,229,.30);
+    }
+    /* Value cards */
+    .nxci-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 36px;
+    }
+    .nxci-value-card {
+      padding: 22px 22px 20px; border-radius: 16px;
+      background: linear-gradient(135deg, #fafafe 0%, #f5f3ff 100%);
+      border: 1px solid rgba(79,70,229,.14);
+      display: flex; flex-direction: column; gap: 10px;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    .nxci-value-card:hover {
+      box-shadow: 0 8px 28px rgba(79,70,229,.12);
+      border-color: rgba(79,70,229,.28);
+    }
+    .nxci-vc-icon {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: rgba(79,70,229,.10);
+      border: 1px solid rgba(79,70,229,.16);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nxci-vc-title { font-size: 13.5px; font-weight: 800; color: #1e1b4b; line-height: 1.35; }
+    .nxci-vc-body { font-size: 12.5px; color: #4b5680; line-height: 1.60; margin: 0; flex: 1; }
+    .nxci-vc-micro {
+      font-size: 11px; font-weight: 700; color: #6d28d9;
+      border-top: 1px solid rgba(79,70,229,.10); padding-top: 8px;
+    }
+    /* CTA block */
+    .nxci-cta-block {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 24px;
+      padding: 28px 32px; border-radius: 18px;
+      background: linear-gradient(135deg, #3730a3 0%, #4f46e5 60%, #6d28d9 100%);
+      position: relative; overflow: hidden;
+    }
+    .nxci-cta-block::before {
+      content: ''; position: absolute;
+      right: -40px; top: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(255,255,255,.06); pointer-events: none;
+    }
+    .nxci-cta-text { flex: 1; }
+    .nxci-cta-heading {
       font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: .16em;
-      text-transform: uppercase;
+      font-size: 18px; font-weight: 900;
+      color: #ffffff; margin: 0 0 6px;
     }
-    .nxag-feature-card[data-feat="0"] .nxag-feat-num,
-    .nxag-feature-card[data-feat="3"] .nxag-feat-num { color: #214dbb; }
-    .nxag-feature-card[data-feat="1"] .nxag-feat-num,
-    .nxag-feature-card[data-feat="4"] .nxag-feat-num { color: #16A37F; }
-    .nxag-feature-card[data-feat="2"] .nxag-feat-num,
-    .nxag-feature-card[data-feat="5"] .nxag-feat-num { color: #c47f00; }
-
-    .nxag-feature-card h3 {
-      font-family: 'Exo 2', Inter, sans-serif;
-      font-size: 19px;
-      font-weight: 900;
-      color: #0e1e42;
-      margin: 0;
-      line-height: 1.2;
+    .nxci-cta-desc {
+      font-size: 13px; color: rgba(255,255,255,.75);
+      margin: 0; line-height: 1.55; max-width: 520px;
     }
-
-    .nxag-feature-card p {
-      font-size: 14px;
-      color: #53688f;
-      line-height: 1.62;
-      margin: 0;
-      flex: 1;
+    .nxci-cta-btns { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+    .nxci-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 700;
+      text-decoration: none; white-space: nowrap;
+      transition: background .2s, box-shadow .2s;
     }
-
-    .nxag-feat-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .nxag-feat-tags span {
-      padding: 4px 11px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .04em;
-    }
-    .nxag-feature-card[data-feat="0"] .nxag-feat-tags span,
-    .nxag-feature-card[data-feat="3"] .nxag-feat-tags span {
-      background: rgba(33,77,187,.08); color: #1a3fa8; border: 1px solid rgba(33,77,187,.18);
-    }
-    .nxag-feature-card[data-feat="1"] .nxag-feat-tags span,
-    .nxag-feature-card[data-feat="4"] .nxag-feat-tags span {
-      background: rgba(22,163,127,.09); color: #0b6e5a; border: 1px solid rgba(22,163,127,.22);
-    }
-    .nxag-feature-card[data-feat="2"] .nxag-feat-tags span,
-    .nxag-feature-card[data-feat="5"] .nxag-feat-tags span {
-      background: rgba(229,162,0,.09); color: #8a5b00; border: 1px solid rgba(229,162,0,.22);
-    }
-
-    @media (max-width: 1024px) {
-      .nxag-features { grid-template-columns: repeat(2, 1fr); }
-      .nxag-header-row { flex-direction: column; align-items: flex-start; }
+    .nxci-btn-primary { background: #ffffff; color: #3730a3; box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+    .nxci-btn-primary:hover { background: #f5f3ff; }
+    .nxci-btn-ghost { background: rgba(255,255,255,.12); color: #ffffff; border: 1px solid rgba(255,255,255,.25); }
+    .nxci-btn-ghost:hover { background: rgba(255,255,255,.20); }
+    @media (max-width: 860px) {
+      .nxci-card-body { padding: 28px 24px 36px; }
+      .nxci-cta-block { flex-direction: column; align-items: flex-start; }
+      .nxci-cta-btns { width: 100%; }
     }
     @media (max-width: 600px) {
-      .nxag-features { grid-template-columns: 1fr; }
-      .nxag-header-right { display: none; }
+      .nxci-cards-grid { grid-template-columns: 1fr; }
+      .nxci-cap-sub { display: none; }
     }
   </style>
 
-  <div class="nxag-wrap">
-    <div class="nxag-card">
-      <div class="nxag-card-cap">
-        <span class="nxag-label">NEXUS AGENTIC</span>
-        <span class="nxag-cap-rule"></span>
-        <span class="nxag-cap-sub">Autonomous Workflow Runtime</span>
-      </div>
-      <div class="nxag-card-body">
+  <div class="nxci-wrap">
+    <div class="nxci-card">
 
-        <div class="nxag-header-row">
-          <div class="nxag-header-left">
-            <h2 class="nxag-title">The Core AI Layer.<br><em>Built on Nexus Orbit.</em></h2>
-            <p class="nxag-sub">Nexus Agentic is the autonomous workflow runtime built on top of Nexus Orbit. Agents reason, select tools, draft messages, and pause for human approval — with every decision logged, every action audited, and nothing sent without explicit sign-off.</p>
+      <!-- Card cap -->
+      <div class="nxci-card-cap">
+        <div class="nxci-label">Nexus Contacts Intelligence</div>
+        <div class="nxci-cap-rule"></div>
+        <div class="nxci-cap-sub">Contacts &nbsp;·&nbsp; Context &nbsp;·&nbsp; Product Mapping &nbsp;·&nbsp; Outreach</div>
+      </div>
+
+      <!-- Card body -->
+      <div class="nxci-card-body">
+
+        <!-- Heading block -->
+        <p class="nxci-caption">Contacts · Context · Product Mapping · Outreach</p>
+        <h2 class="nxci-heading">Turn Every Contact Into a<br>Context-Aware Growth Opportunity.</h2>
+        <p class="nxci-desc">Nexus Contacts Intelligence brings every lead, prospect, customer, and business contact into one intelligent relationship layer. It understands who they are, maps them to the right products or services, and enables Nexy to communicate through WhatsApp, email, and future channels — grounded by Nexus Orbit knowledge.</p>
+
+        <!-- Highlight statement -->
+        <div class="nxci-highlight">
+          <p><strong>Contacts are not just records.</strong> In Nexus, every contact becomes a business context, every context becomes a product opportunity, and every opportunity can be intelligently orchestrated by Nexy.</p>
+        </div>
+
+        <!-- Flow diagram -->
+        <div class="nxci-flow">
+          <div class="nxci-flow-node">
+            <div class="nxci-flow-icon">
+              <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><circle cx="10" cy="7" r="3" stroke="#4f46e5" stroke-width="1.6"/><path d="M3.5 17c0-3 2.91-5.5 6.5-5.5s6.5 2.5 6.5 5.5" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="nxci-flow-label">Contact / Lead</div>
           </div>
-          <div class="nxag-header-right">
-            <div class="nxag-stat">
-              <strong>2</strong>
-              <span>Capability Packs</span>
+          <div class="nxci-flow-arrow"><svg viewBox="0 0 20 10" fill="none" width="28" height="14"><path d="M0 5h16M11 1l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="nxci-flow-node">
+            <div class="nxci-flow-icon featured">
+              <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><rect x="3" y="4" width="14" height="12" rx="2.5" stroke="#fff" stroke-width="1.6"/><path d="M7 8h6M7 11h4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
-            <div class="nxag-stat">
-              <strong>27</strong>
-              <span>Registered Tools</span>
+            <div class="nxci-flow-label featured">Contacts<br>Intelligence</div>
+          </div>
+          <div class="nxci-flow-arrow"><svg viewBox="0 0 20 10" fill="none" width="28" height="14"><path d="M0 5h16M11 1l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="nxci-flow-node">
+            <div class="nxci-flow-icon">
+              <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><path d="M10 2l2.2 4.5 5 .73-3.6 3.5.85 4.95L10 13.4l-4.45 2.28.85-4.95L2.8 7.23l5-.73L10 2z" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"/></svg>
             </div>
-            <div class="nxag-stat">
-              <strong>18</strong>
-              <span>Goal Types</span>
+            <div class="nxci-flow-label">Product &amp;<br>Service Mapping</div>
+          </div>
+          <div class="nxci-flow-arrow"><svg viewBox="0 0 20 10" fill="none" width="28" height="14"><path d="M0 5h16M11 1l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="nxci-flow-node">
+            <div class="nxci-flow-icon">
+              <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><circle cx="10" cy="10" r="7" stroke="#4f46e5" stroke-width="1.6"/><ellipse cx="10" cy="10" rx="3.5" ry="7" stroke="#4f46e5" stroke-width="1.2"/><line x1="3" y1="10" x2="17" y2="10" stroke="#4f46e5" stroke-width="1.2"/></svg>
             </div>
+            <div class="nxci-flow-label">Nexus Orbit<br>Knowledge</div>
+          </div>
+          <div class="nxci-flow-arrow"><svg viewBox="0 0 20 10" fill="none" width="28" height="14"><path d="M0 5h16M11 1l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="nxci-flow-node">
+            <div class="nxci-flow-icon">
+              <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><circle cx="10" cy="7.5" r="3" stroke="#4f46e5" stroke-width="1.5"/><path d="M4 18c0-3 2.7-5 6-5s6 2 6 5" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round"/><path d="M14.5 10.5l2.5 1-1 2.5" stroke="#6d28d9" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="nxci-flow-label">Nexy<br>Orchestration</div>
+          </div>
+          <div class="nxci-flow-arrow"><svg viewBox="0 0 20 10" fill="none" width="28" height="14"><path d="M0 5h16M11 1l5 4-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="nxci-flow-node">
+            <div class="nxci-flow-icon">
+              <svg viewBox="0 0 20 20" fill="none" width="20" height="20"><rect x="2" y="5" width="16" height="11" rx="2" stroke="#4f46e5" stroke-width="1.5"/><path d="M2 7l8 5 8-5" stroke="#4f46e5" stroke-width="1.4"/></svg>
+            </div>
+            <div class="nxci-flow-label">WhatsApp · Email<br>· Chat · CRM</div>
           </div>
         </div>
 
-        <div class="nxag-features">
-
-          <div class="nxag-feature-card" data-feat="0">
-            <div class="nxag-feature-icon">
-              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-                <rect x="3" y="6" width="10" height="16" rx="3" fill="rgba(33,77,187,.14)" stroke="#214dbb" stroke-width="1.6"/>
-                <rect x="15" y="6" width="10" height="16" rx="3" fill="rgba(33,77,187,.08)" stroke="#214dbb" stroke-width="1.4" stroke-dasharray="3 2"/>
-                <path d="M6 11h4M6 14h3" stroke="#214dbb" stroke-width="1.4" stroke-linecap="round"/>
-                <path d="M18 11h4M18 14h3" stroke="#214dbb" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="2 2"/>
-              </svg>
+        <!-- 4 value cards -->
+        <div class="nxci-cards-grid">
+          <div class="nxci-value-card">
+            <div class="nxci-vc-icon">
+              <svg viewBox="0 0 22 22" fill="none" width="20" height="20"><circle cx="8.5" cy="7.5" r="3" stroke="#4f46e5" stroke-width="1.6"/><path d="M2 18c0-3 2.5-5 6.5-5" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round"/><circle cx="14.5" cy="8.5" r="2.5" stroke="#6d28d9" stroke-width="1.4"/><path d="M14.5 13.5c3 .5 4.5 2 4.5 4.5" stroke="#6d28d9" stroke-width="1.4" stroke-linecap="round"/></svg>
             </div>
-            <span class="nxag-feat-num">Pillar 01</span>
-            <h3>Capability Packs</h3>
-            <p>Modular domain bundles — Sales Outreach and Purchase Coordination — each carrying its own goal types, tools, approval rules, and memory configuration. Plug in a pack; the agent inherits the full workflow contract for that domain.</p>
-            <div class="nxag-feat-tags">
-              <span>Sales Outreach</span><span>Purchase Coordination</span>
-            </div>
+            <div class="nxci-vc-title">Unified Contact Intelligence</div>
+            <p class="nxci-vc-body">Bring website leads, WhatsApp contacts, email enquiries, imported lists, CRM contacts, and customer records into one intelligent contact layer.</p>
+            <div class="nxci-vc-micro">One relationship memory across every channel.</div>
           </div>
-
-          <div class="nxag-feature-card" data-feat="1">
-            <div class="nxag-feature-icon">
-              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-                <circle cx="14" cy="14" r="9" stroke="#16A37F" stroke-width="1.6"/>
-                <path d="M14 7v7l3.5 2" stroke="#16A37F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M22 10a9 9 0 0 0-2.5-3.8" stroke="#16A37F" stroke-width="1.4" stroke-linecap="round"/>
-                <path d="M22 10l2-2.5-3.2-.4" stroke="#16A37F" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+          <div class="nxci-value-card">
+            <div class="nxci-vc-icon">
+              <svg viewBox="0 0 22 22" fill="none" width="20" height="20"><path d="M11 2l2.3 4.7 5.2.75-3.75 3.65.88 5.15L11 13.7l-4.63 2.55.88-5.15L3.5 7.45l5.2-.75L11 2z" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"/></svg>
             </div>
-            <span class="nxag-feat-num">Pillar 02</span>
-            <h3>LLM Agent Loop</h3>
-            <p>The runtime operates as an iterative LLM reasoning loop — the model selects which tools to call, processes results, and decides the next step, continuing until the goal is resolved or human approval is required. Up to 25 reasoning steps per run.</p>
-            <div class="nxag-feat-tags">
-              <span>Reasoning</span><span>Tool Selection</span><span>Multi-step</span>
-            </div>
+            <div class="nxci-vc-title">Product &amp; Service Mapping</div>
+            <p class="nxci-vc-body">Map each contact to the most relevant product, service, use case, or pain point based on business profile, persona, interest, and engagement.</p>
+            <div class="nxci-vc-micro">Know what to present, to whom, and why.</div>
           </div>
-
-          <div class="nxag-feature-card" data-feat="2">
-            <div class="nxag-feature-icon">
-              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-                <rect x="4" y="5" width="20" height="13" rx="3" fill="rgba(229,162,0,.14)" stroke="#c47f00" stroke-width="1.6"/>
-                <path d="M9 10l3 3 7-5" stroke="#c47f00" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4 18h20" stroke="#c47f00" stroke-width="1.2"/>
-                <path d="M10 22h8" stroke="#c47f00" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
+          <div class="nxci-value-card">
+            <div class="nxci-vc-icon">
+              <svg viewBox="0 0 22 22" fill="none" width="20" height="20"><path d="M18.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15s-.77.97-.94 1.16c-.17.2-.35.22-.64.08-1.69-.85-2.8-1.76-3.9-3.57-.3-.5.3-.46.86-1.56a.55.55 0 00-.03-.52c-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41a.56.56 0 00-.57-.35z" stroke="#4f46e5" stroke-width=".3" fill="#4f46e5" fill-opacity=".15"/><circle cx="11" cy="11" r="8.5" stroke="#4f46e5" stroke-width="1.4"/><path d="M15 6l-2 6-4-2" stroke="#6d28d9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
-            <span class="nxag-feat-num">Pillar 03</span>
-            <h3>Human Approval Gates</h3>
-            <p>Every outbound action — customer emails, vendor messages, follow-ups — is drafted by the agent and paused for human review. The agent resumes only after explicit approval, with full conversation context preserved across the wait.</p>
-            <div class="nxag-feat-tags">
-              <span>Draft → Review</span><span>Approve → Act</span>
-            </div>
+            <div class="nxci-vc-title">Nexy Outreach Orchestration</div>
+            <p class="nxci-vc-body">Nexy prepares personalised WhatsApp messages, email campaigns, cold outreach drafts, follow-ups, and reply responses using approved Nexus knowledge.</p>
+            <div class="nxci-vc-micro">Communication powered by context, not guesswork.</div>
           </div>
-
-          <div class="nxag-feature-card" data-feat="3">
-            <div class="nxag-feature-icon">
-              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-                <path d="M7 9a5 5 0 0 1 10 0v2H7V9z" fill="rgba(33,77,187,.12)" stroke="#214dbb" stroke-width="1.6" stroke-linejoin="round"/>
-                <rect x="5" y="11" width="18" height="13" rx="3" fill="rgba(33,77,187,.08)" stroke="#214dbb" stroke-width="1.6"/>
-                <circle cx="14" cy="17" r="2" fill="#214dbb"/>
-                <path d="M14 19v2.5" stroke="#214dbb" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
+          <div class="nxci-value-card">
+            <div class="nxci-vc-icon">
+              <svg viewBox="0 0 22 22" fill="none" width="20" height="20"><path d="M11 3l8 3.5v4.5c0 4-3 7-8 8.5C6 18 3 15 3 11V6.5L11 3z" stroke="#4f46e5" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 11l2 2 4-4" stroke="#4f46e5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
-            <span class="nxag-feat-num">Pillar 04</span>
-            <h3>Governed Tool Registry</h3>
-            <p>All actions are pre-registered as typed tools — read-only, draft-only, internal-write, or customer-facing. The LLM never touches the database directly; every state change flows through a registered, type-safe, audited tool handler.</p>
-            <div class="nxag-feat-tags">
-              <span>No Direct Writes</span><span>Type-safe</span><span>Audited</span>
-            </div>
+            <div class="nxci-vc-title">Governed Growth Communication</div>
+            <p class="nxci-vc-body">Every message is controlled with approval rules, consent checks, suppression lists, human review, and knowledge-grounded response generation.</p>
+            <div class="nxci-vc-micro">Intelligent outreach with safety and governance.</div>
           </div>
-
-          <div class="nxag-feature-card" data-feat="4">
-            <div class="nxag-feature-icon">
-              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-                <ellipse cx="14" cy="9" rx="9" ry="4" fill="rgba(22,163,127,.12)" stroke="#16A37F" stroke-width="1.6"/>
-                <path d="M5 9v5.5c0 2.2 4 4 9 4s9-1.8 9-4V9" stroke="#16A37F" stroke-width="1.6"/>
-                <path d="M5 14.5v5c0 2.2 4 4 9 4s9-1.8 9-4v-5" stroke="#16A37F" stroke-width="1.4" stroke-dasharray="3 2"/>
-              </svg>
-            </div>
-            <span class="nxag-feat-num">Pillar 05</span>
-            <h3>Persistent Agent Memory</h3>
-            <p>Agents store and retrieve key-value state across runs — scoped per candidate, per capability pack, and per tenant. Conversation history is persisted through approval pauses so agents resume mid-reasoning exactly where they left off.</p>
-            <div class="nxag-feat-tags">
-              <span>Cross-run State</span><span>Tenant Scoped</span><span>Resume-safe</span>
-            </div>
-          </div>
-
-          <div class="nxag-feature-card" data-feat="5">
-            <div class="nxag-feature-icon">
-              <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
-                <rect x="4" y="3" width="20" height="22" rx="3" fill="rgba(229,162,0,.10)" stroke="#c47f00" stroke-width="1.6"/>
-                <path d="M8 9h12M8 13h10M8 17h7M8 21h4" stroke="#c47f00" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="nxag-feat-num">Pillar 06</span>
-            <h3>Full Audit Trail</h3>
-            <p>Every decision, tool call, and approval event is written to structured log records — reasoning text, outcome, tool inputs and outputs, timestamps. A complete, queryable history of what the agent did and why, for every run, for every tenant.</p>
-            <div class="nxag-feat-tags">
-              <span>Decision Log</span><span>Tool Call Log</span><span>Compliance-ready</span>
-            </div>
-          </div>
-
         </div>
-      </div>
-    </div>
-  </div>
+
+        <!-- CTA block -->
+        <div class="nxci-cta-block">
+          <div class="nxci-cta-text">
+            <div class="nxci-cta-heading">From Contact Data to Growth Action.</div>
+            <p class="nxci-cta-desc">Nexus Contacts Intelligence gives Nexy the relationship context needed to identify opportunities, start meaningful conversations, handle replies, and move contacts toward qualified business outcomes.</p>
+          </div>
+          <div class="nxci-cta-btns">
+            <a href="/nexus-contacts-intelligence" class="nxci-btn nxci-btn-primary">
+              Explore Contacts Intelligence
+              <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="/nexy" class="nxci-btn nxci-btn-ghost">
+              See Nexy Orchestration
+              <svg viewBox="0 0 14 14" fill="none" width="11" height="11"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /.nxci-card-body -->
+    </div><!-- /.nxci-card -->
+  </div><!-- /.nxci-wrap -->
+
   </section>
-  <!-- End Nexus Agentic Section ══════════════════════════════════════════════════ -->
+  <!-- End Nexus Contacts Intelligence Section -->
 
   <!-- ═══════════════════════════════════════════════════════ NEXY SECTION ══ -->
   <section id="nexus-nexy-section" aria-label="Nexy — AI-Governed Business Growth Orchestrator">
@@ -3261,8 +3588,38 @@
     }
     .nexy-main-sub {
       font-size: 15px; color: #53688f;
-      line-height: 1.68; margin: 0; max-width: 520px;
+      line-height: 1.68; margin: 0 0 20px; max-width: 520px;
     }
+    .nexy-main-highlight {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-width: 520px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(22,163,127,.05) 0%, rgba(33,77,187,.05) 100%);
+      border: 1px solid rgba(33,77,187,.10);
+    }
+    .nexy-main-highlight span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #2a3f6a;
+      line-height: 1.45;
+      padding-left: 14px;
+      position: relative;
+    }
+    .nexy-main-highlight span::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #16A37F;
+    }
+    .nexy-main-highlight span:nth-child(2)::before { background: #214dbb; }
+    .nexy-main-highlight span:nth-child(3)::before { background: #f4a024; }
     .nexy-hdr-right { flex-shrink: 0; }
     .nexy-explore-link {
       display: inline-flex; align-items: center; gap: 8px;
@@ -3390,8 +3747,6 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 9px;
-      flex: 1;
-      align-content: start;
     }
 
     .nexy-cap-chip {
@@ -3579,8 +3934,144 @@
     }
     @media (max-width: 480px) { .nexy-cold-grid { grid-template-columns: 1fr; } }
 
+    /* ── Email outreach block ── */
+    .nexy-email-block {
+      margin: 0 20px 16px;
+      padding: 18px 20px 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+      border: 1px solid rgba(33,77,187,.22);
+      box-shadow: 0 4px 16px rgba(33,77,187,.08);
+    }
+    .nexy-email-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: #214dbb;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .nexy-email-head {
+      margin: 0 0 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #0d2260;
+      line-height: 1.35;
+    }
+    .nexy-email-body {
+      margin: 0 0 12px;
+      font-size: 13px;
+      line-height: 1.62;
+      color: #2a3f6a;
+    }
+    .nexy-email-body strong { color: #0f2466; font-weight: 700; }
+    .nexy-email-chips {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+    .nexy-email-chip {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      background: rgba(33,77,187,.08);
+      border: 1px solid rgba(33,77,187,.14);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #1e3878;
+      line-height: 1.4;
+    }
+    .nexy-email-chip::before {
+      content: '→';
+      color: #214dbb;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .nexy-email-note {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0c1c52 0%, #1a33a0 70%, #1e3dba 100%);
+      border: 1px solid rgba(138,177,255,.22);
+      font-size: 12px;
+      line-height: 1.62;
+      color: rgba(255,255,255,.75);
+      font-style: italic;
+    }
+    @media (max-width: 480px) { .nexy-email-chips { grid-template-columns: 1fr; } }
+
+    /* ── Email marketing integrations block ── */
+    .nexy-int-block {
+      margin: 0 20px 16px;
+      padding: 16px 20px 14px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f5f0ff 0%, #ede8ff 100%);
+      border: 1px solid rgba(109,40,217,.18);
+      box-shadow: 0 4px 14px rgba(109,40,217,.06);
+    }
+    .nexy-int-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: #5b21b6;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 9px;
+    }
+    .nexy-int-head {
+      margin: 0 0 6px;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #2e1065;
+      line-height: 1.35;
+    }
+    .nexy-int-body {
+      margin: 0 0 11px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #4c3a7a;
+    }
+    .nexy-int-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .nexy-int-tool {
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(109,40,217,.09);
+      border: 1px solid rgba(109,40,217,.18);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #4c1d95;
+    }
+    .nexy-int-note {
+      padding: 9px 12px;
+      border-radius: 9px;
+      background: rgba(109,40,217,.07);
+      border: 1px solid rgba(109,40,217,.12);
+      font-size: 11.5px;
+      line-height: 1.56;
+      color: #5b21b6;
+      font-style: italic;
+    }
+
     /* ── positioning footer ── */
     .nexy-panel-foot {
+      margin-top: auto;
       padding: 16px 24px 22px;
       border-top: 1px solid rgba(33,77,187,.07);
       background: linear-gradient(90deg, rgba(33,77,187,.03) 0%, transparent 70%);
@@ -3644,8 +4135,13 @@
 
         <div class="nexy-hdr-row">
           <div class="nexy-hdr-left">
-            <h2 class="nexy-main-title">From Visitor to Growth.<br><em>One AI Candidate.</em></h2>
-            <p class="nexy-main-sub">Nexy is an AI Business Companion — drawing on your governed knowledge base to understand visitor intent, match the right communication persona, track journey milestones, detect buying signals, and guide visitors toward a confident buying decision. As your business grows, Nexy extends into a full Business Growth Orchestrator — connecting enquiry scoring, customer personas, CRM context, and engagement behaviour into coordinated growth actions.</p>
+            <h2 class="nexy-main-title">NEXY — <em>Agentic Growth Candidate.</em></h2>
+            <p class="nexy-main-sub">Nexy uses <strong>Nexus Contacts Intelligence</strong> to understand every contact's context, product-fit recommendations, lead stage, and next-best action — and <strong>Nexus Orbit</strong> to ground every response in approved business knowledge. With those two intelligence layers, Nexy conducts conversations, prepares outreach, handles replies, updates contact journeys, and moves opportunities forward across website chat, WhatsApp, email, and CRM.</p>
+            <div class="nexy-main-highlight">
+              <span>Contacts Intelligence identifies the opportunity.</span>
+              <span>Nexus Orbit provides the knowledge.</span>
+              <span>Nexy carries the conversation forward.</span>
+            </div>
           </div>
           <div class="nexy-hdr-right">
             <a href="/nexy" class="nexy-explore-link">
@@ -3662,9 +4158,9 @@
       <div class="nexy-panel visitor">
         <div class="nexy-panel-hero">
           <h2 class="nexy-panel-title">Nexy as Visitor Companion</h2>
-          <p class="nexy-panel-sub">Helps your visitors buy from your business</p>
+          <p class="nexy-panel-sub">Engages every website visitor through governed intelligence</p>
           <div class="nexy-panel-value">
-            <p>Nexy draws from your <strong>Nexus Orbit knowledge base</strong> — products, services, value propositions, and AI personas — and combines this with real-time visitor signals to understand intent, <strong>match the right communication persona</strong>, track journey milestones, and guide visitors confidently toward buying from your business.</p>
+            <p>Nexy draws from your <strong>Nexus Orbit knowledge base</strong> — products, services, value propositions, and AI personas — and combines this with real-time visitor signals to understand intent, <strong>match the right communication persona</strong>, track journey milestones, detect buying signals, and guide visitors confidently toward a buying decision. Every response is knowledge-grounded — no hallucinations, no off-brand answers.</p>
           </div>
         </div>
         <div class="nexy-companion-list">
@@ -3712,7 +4208,7 @@
         </div>
 
         <div class="nexy-panel-foot teal-foot">
-          <p>Nexy gives any business an AI companion that knows your offerings, reads visitor signals, tracks journey milestones, matches personas, and guides every visitor toward a confident buying decision — all within your governed knowledge boundary.</p>
+          <p>Nexy gives any business an AI companion that knows your offerings, reads visitor signals, tracks journey milestones, matches personas, and guides every visitor toward a confident buying decision — all within your governed knowledge boundary. Every conversation becomes a captured contact, ready for Nexy's outreach orchestration.</p>
           <a href="/nexy" class="nexy-panel-link nexy-plink-vc">
             Explore Visitor Companion
             <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -3720,31 +4216,75 @@
         </div>
       </div>
 
-      <!-- Panel 2 (RIGHT): Business Growth Orchestrator -->
+      <!-- Panel 2 (RIGHT): Relationship & Outreach Orchestrator -->
       <div class="nexy-panel growth">
         <div class="nexy-panel-hero">
-          <h2 class="nexy-panel-title">Nexy as Business Growth Orchestrator</h2>
-          <p class="nexy-panel-sub">Connects every signal into coordinated business growth</p>
+          <h2 class="nexy-panel-title">Nexy as Relationship &amp; Outreach Orchestrator</h2>
+          <p class="nexy-panel-sub">Turns contact intelligence into meaningful, governed communication</p>
           <div class="nexy-panel-value">
-            <p>Nexy brings together <strong>product knowledge, customer personas, journey milestones, buying signals, and enquiry scores</strong> into one AI-governed layer — identifying the highest-value opportunities and orchestrating <strong>the right actions at the right moment</strong> across every customer touchpoint.</p>
+            <p>Nexy is the agentic execution layer that acts on <strong>Nexus Contacts Intelligence</strong> (contact context, product-fit recommendations, next-best actions) and draws from <strong>Nexus Orbit</strong> (approved knowledge) to prepare personalised outreach, carry reply conversations, and <strong>move every contact through the relationship journey</strong> — from first message to qualified opportunity — across WhatsApp, email, and future channels.</p>
           </div>
         </div>
         <div class="nexy-caps-grid">
-          <div class="nexy-cap-chip">Product &amp; service knowledge grounding</div>
-          <div class="nexy-cap-chip">Customer persona &amp; profile matching</div>
-          <div class="nexy-cap-chip">Visitor journey milestone tracking</div>
-          <div class="nexy-cap-chip">Buying signal detection &amp; scoring</div>
-          <div class="nexy-cap-chip">Enquiry quality &amp; intent scoring</div>
-          <div class="nexy-cap-chip">Human escalation &amp; desk handoff</div>
-          <div class="nexy-cap-chip">Meeting &amp; consultation booking</div>
-          <div class="nexy-cap-chip">AI persona &amp; playbook delivery</div>
-          <div class="nexy-cap-chip">CRM-connected opportunity tracking</div>
-          <div class="nexy-cap-chip">Governed multi-channel communication</div>
+          <div class="nexy-cap-chip">Acts on contact &amp; relationship intelligence</div>
+          <div class="nexy-cap-chip">Product-fit recommendations per contact</div>
+          <div class="nexy-cap-chip">Personalised WhatsApp outreach preparation</div>
+          <div class="nexy-cap-chip">Cold email &amp; campaign message drafting</div>
+          <div class="nexy-cap-chip">Reply classification &amp; intent understanding</div>
+          <div class="nexy-cap-chip">Knowledge-grounded response generation</div>
+          <div class="nexy-cap-chip">Meeting booking within the conversation thread</div>
+          <div class="nexy-cap-chip">Scored lead handoff to your sales team</div>
+          <div class="nexy-cap-chip">Governed approval &amp; consent management</div>
+          <div class="nexy-cap-chip">Human handover with full relationship context</div>
         </div>
+
+        <!-- Email Outreach block -->
+        <div class="nexy-email-block">
+          <div>
+            <span class="nexy-email-badge">
+              <svg viewBox="0 0 24 24" fill="none" width="13" height="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M2 8l10 6 10-6"/>
+              </svg>
+              Email Outreach
+            </span>
+          </div>
+          <p class="nexy-email-head">Cold Email, Follow-Ups &amp; Reply Handling</p>
+          <p class="nexy-email-body">Nexy Email Outreach turns <strong>product-fit recommendations from Nexus Contacts Intelligence</strong> into personalised cold emails, follow-up sequences, reply drafts, and qualified lead movement. Every message is grounded by <strong>Nexus Orbit</strong>, so outreach stays relevant, approved, and business-aligned.</p>
+          <div class="nexy-email-chips">
+            <div class="nexy-email-chip">Product-fit based cold emails</div>
+            <div class="nexy-email-chip">Automated follow-up sequences</div>
+            <div class="nexy-email-chip">Knowledge-grounded email drafts</div>
+            <div class="nexy-email-chip">Reply classification and routing</div>
+            <div class="nexy-email-chip">Demo and proposal follow-up</div>
+            <div class="nexy-email-chip">Human approval for sensitive cases</div>
+          </div>
+          <div class="nexy-email-note">From first cold email to qualified opportunity, Nexy keeps every email action connected to contact context, approved knowledge, and the next best business step.</div>
+        </div>
+
+        <!-- Email Marketing Integrations block -->
+        <div class="nexy-int-block">
+          <div><span class="nexy-int-badge">
+            <svg viewBox="0 0 16 16" fill="none" width="11" height="11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z"/><path d="M2 5l6 4 6-4"/></svg>
+            Email Marketing · Integrations
+          </span></div>
+          <p class="nexy-int-head">Works With Your Email Marketing Stack</p>
+          <p class="nexy-int-body">Nexy connects to the email platforms your team already uses — syncing contacts, triggering sequences, and logging replies without replacing your existing stack. Every send is governed by Nexus Orbit so outreach stays on-brand and human-approved.</p>
+          <div class="nexy-int-tools">
+            <span class="nexy-int-tool">Mailchimp</span>
+            <span class="nexy-int-tool">HubSpot</span>
+            <span class="nexy-int-tool">Zoho Campaigns</span>
+            <span class="nexy-int-tool">ActiveCampaign</span>
+            <span class="nexy-int-tool">Klaviyo</span>
+            <span class="nexy-int-tool">SendGrid</span>
+          </div>
+          <div class="nexy-int-note">Nexy triggers, logs, and classifies across your email marketing tools — contact sync, sequence enrolment, and reply handling all flow back into the Nexus Contacts journey.</div>
+        </div>
+
         <div class="nexy-panel-foot">
-          <p>Nexy connects product knowledge, visitor journey milestones, buying signals, enquiry scores, and persona context into one AI-governed orchestration layer — helping businesses understand intent, surface high-value opportunities, and coordinate growth-focused actions across every channel.</p>
-          <a href="/nexy" class="nexy-panel-link nexy-plink-go">
-            Explore Growth Orchestrator
+          <p>Nexus Contacts Intelligence gives Nexy the context. Nexus Orbit gives Nexy the knowledge. WhatsApp and email give Nexy the channels. Together, they make Nexy an intelligent growth communication system — not a chatbot, but an orchestrator that understands every contact and acts with purpose.</p>
+          <a href="/nexus-contacts-intelligence" class="nexy-panel-link nexy-plink-go">
+            Explore Contacts Intelligence
             <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
         </div>
@@ -4626,6 +5166,7 @@
             <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">ORBIT ARCHITECTURE</a>
             <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">PRICING</a>
             <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXY</a>
+            <a href="/nexus-contacts-intelligence" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">CONTACTS INTELLIGENCE</a>
             <a href="/nexus-knowledge-browser" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXUS BROWSER</a>
           </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>

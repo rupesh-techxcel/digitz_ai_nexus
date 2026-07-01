@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEXY — AI Business Companion | Nexus AI</title>
-  <meta name="description" content="Nexy is an AI Business Companion built on Nexus Orbit — engaging visitors through knowledge-grounded conversations that track journey milestones, detect buying signals, match personas, score enquiries, and guide every interaction toward a confident buying decision.">
+  <title>NEXY — Agentic Growth Candidate | Nexus AI</title>
+  <meta name="description" content="Nexy is an agentic growth candidate in the Nexus ecosystem. It uses Nexus Contacts Intelligence and Nexus Orbit to conduct conversations, prepare outreach, handle replies, update contact journeys, and move business opportunities forward.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -88,8 +88,26 @@
     .nxy-hero-lead {
       font-size: clamp(.92rem, 1.2vw, 1.02rem);
       color: rgba(255,255,255,.76);
-      line-height: 1.76; margin: 0 0 40px; max-width: 520px;
+      line-height: 1.76; margin: 0 0 28px; max-width: 520px;
     }
+
+    /* Hero 3-line highlight callout */
+    .nxy-hero-highlight {
+      display: flex; flex-direction: column; gap: 7px;
+      padding: 16px 20px; margin: 0 0 36px;
+      border-left: 3px solid rgba(22,163,127,.70);
+      background: rgba(22,163,127,.10);
+      border-radius: 0 12px 12px 0;
+      max-width: 480px;
+    }
+    .nxy-hero-highlight span {
+      font-size: 13px; font-weight: 600; color: rgba(165,200,255,.90);
+      line-height: 1.5;
+    }
+    .nxy-hero-highlight span:last-child {
+      color: #5dfbca; font-weight: 700;
+    }
+
     .nxy-hero-pills {
       display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
@@ -111,7 +129,7 @@
     }
     .nxy-pill-blue:hover { background: rgba(68,114,230,.55); }
 
-    /* ── Hero role row (Visitor Companion readable label) ── */
+    /* Hero role row */
     .nxy-hero-role-row {
       display: flex; align-items: center; gap: 10px;
       margin: 6px 0 22px; flex-wrap: wrap;
@@ -251,7 +269,7 @@
     .nxy-os-arr-vc { color: rgba(93,251,202,.80); }
     .nxy-os-arr-go { color: rgba(138,177,255,.70); }
 
-    /* Visitor Companion steps */
+    /* Output steps — teal */
     .nxy-os-vc {
       background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28);
     }
@@ -270,7 +288,7 @@
     }
     .nxy-os-vc-sub .nxy-os-lbl { color: #5dfbca; font-weight: 800; }
 
-    /* Growth Orchestrator steps */
+    /* Output steps — blue */
     .nxy-os-go {
       background: rgba(33,77,187,.28); border: 1px solid rgba(138,177,255,.45);
     }
@@ -310,6 +328,10 @@
       color: #214dbb;
       background: rgba(33,77,187,.08); border: 1px solid rgba(33,77,187,.20);
     }
+    .nxy-badge-gold {
+      color: #92580a;
+      background: rgba(244,160,36,.10); border: 1px solid rgba(244,160,36,.28);
+    }
 
     /* Pulsing live dot */
     .nxy-live-dot {
@@ -327,14 +349,14 @@
     }
 
     /* ── Section layouts ── */
-    .nxy-section-vc {
+    .nxy-section-white {
       background: #fff;
-      border-bottom: 1px solid rgba(33,77,187,.10);
+      border-bottom: 1px solid rgba(33,77,187,.08);
       padding: 72px 0 80px;
     }
-    .nxy-section-go {
+    .nxy-section-light {
       background: #f8faff;
-      border-bottom: 1px solid rgba(33,77,187,.10);
+      border-bottom: 1px solid rgba(33,77,187,.08);
       padding: 72px 0 80px;
     }
 
@@ -370,7 +392,23 @@
       font-size: .96rem; color: #2a5040; line-height: 1.72; margin: 0;
     }
 
-    /* Feature blocks — uses shared nxpl-feat-block classes + overrides */
+    /* "Not another intelligence layer" highlight box */
+    .nxy-intel-box {
+      background: linear-gradient(135deg, rgba(33,77,187,.07) 0%, rgba(22,163,127,.06) 100%);
+      border: 1.5px solid rgba(33,77,187,.20);
+      border-radius: 16px;
+      padding: 26px 32px;
+      margin: 40px 0 0;
+    }
+    .nxy-intel-box p {
+      font-size: .98rem; color: #1a2e6a; line-height: 1.70; margin: 0;
+    }
+    .nxy-intel-box strong {
+      display: block; font-family: 'Exo 2', sans-serif;
+      font-size: 1.05rem; font-weight: 900; color: #0f2650; margin-bottom: 8px;
+    }
+
+    /* Feature blocks — uses shared nxpl-feat-block classes */
     .nxy-feat-blocks-teal .nxpl-feat-block {
       border-color: rgba(22,163,127,.14);
       box-shadow: 0 2px 12px rgba(22,163,127,.06);
@@ -398,7 +436,7 @@
       color: #214dbb;
     }
 
-    /* Two-column feature grid for GO section */
+    /* Two-column feature grid */
     .nxy-feat-blocks-2col {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -408,16 +446,168 @@
     @media (max-width: 760px) {
       .nxy-feat-blocks-2col { grid-template-columns: 1fr; }
     }
-    /* Override shared nxpl-feat-blocks stacking for 2col context */
-    .nxy-feat-blocks-2col .nxpl-feat-block {
-      margin: 0;
+    .nxy-feat-blocks-2col .nxpl-feat-block { margin: 0; }
+
+    /* ── Ecosystem flow (dark section) ── */
+    .nxy-flow-dark {
+      background: linear-gradient(160deg, #070e2a 0%, #0d1e52 40%, #0a1840 70%, #061028 100%);
+      padding: 72px 0 80px; position: relative; overflow: hidden;
+    }
+    .nxy-flow-dark::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .nxy-flow-dark-inner { position: relative; z-index: 2; }
+    .nxy-flow-dark .nxy-section-h2 { color: #fff; }
+    .nxy-flow-dark .nxy-section-badge { color: #5dfbca; background: rgba(22,163,127,.18); border-color: rgba(22,163,127,.40); }
+    .nxy-flow-dark .nxy-section-lead p { color: rgba(255,255,255,.66); }
+
+    .nxy-ecosystem-flow {
+      max-width: 680px; margin: 0 auto 48px;
+      display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    }
+    .nxy-flow-node {
+      display: flex; align-items: flex-start; gap: 18px;
+      padding: 18px 22px; border-radius: 16px;
+    }
+    .nxy-flow-arrow {
+      text-align: center; color: rgba(255,255,255,.28);
+      font-size: 1.3rem; padding: 6px 0; line-height: 1;
+    }
+    .nxy-fn-icon {
+      width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nxy-fn-body { flex: 1; }
+    .nxy-fn-label {
+      font-family: 'Exo 2', sans-serif;
+      font-size: .68rem; font-weight: 800; letter-spacing: .10em;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .nxy-fn-title {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 1rem; font-weight: 800; margin: 0 0 4px; line-height: 1.2;
+    }
+    .nxy-fn-desc {
+      font-size: .86rem; line-height: 1.55; margin: 0;
+    }
+    /* Node color variants */
+    .nxy-fn-contact { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.20); }
+    .nxy-fn-contact .nxy-fn-icon { background: rgba(255,255,255,.18); }
+    .nxy-fn-contact .nxy-fn-label, .nxy-fn-contact .nxy-fn-title { color: rgba(255,255,255,.80); }
+    .nxy-fn-contact .nxy-fn-desc { color: rgba(255,255,255,.55); }
+
+    .nxy-fn-ci { background: rgba(33,77,187,.30); border: 1.5px solid rgba(138,177,255,.45); }
+    .nxy-fn-ci .nxy-fn-icon { background: rgba(33,77,187,.55); box-shadow: 0 0 14px rgba(68,114,230,.50); }
+    .nxy-fn-ci .nxy-fn-label { color: #a5c8ff; }
+    .nxy-fn-ci .nxy-fn-title { color: #ddeaff; }
+    .nxy-fn-ci .nxy-fn-desc { color: rgba(165,200,255,.75); }
+
+    .nxy-fn-orbit { background: rgba(22,163,127,.20); border: 1.5px solid rgba(22,163,127,.50); }
+    .nxy-fn-orbit .nxy-fn-icon { background: rgba(22,163,127,.50); box-shadow: 0 0 14px rgba(22,163,127,.60); }
+    .nxy-fn-orbit .nxy-fn-label { color: #5dfbca; }
+    .nxy-fn-orbit .nxy-fn-title { color: #b3ffec; }
+    .nxy-fn-orbit .nxy-fn-desc { color: rgba(93,251,202,.70); }
+
+    .nxy-fn-nexy { background: rgba(22,163,127,.35); border: 2px solid rgba(22,163,127,.80); }
+    .nxy-fn-nexy .nxy-fn-icon { background: rgba(22,163,127,.60); box-shadow: 0 0 20px rgba(22,163,127,.70); }
+    .nxy-fn-nexy .nxy-fn-label { color: #5dfbca; }
+    .nxy-fn-nexy .nxy-fn-title { color: #fff; }
+    .nxy-fn-nexy .nxy-fn-desc { color: rgba(93,251,202,.80); }
+
+    .nxy-fn-channels { background: rgba(33,77,187,.18); border: 1px solid rgba(138,177,255,.30); }
+    .nxy-fn-channels .nxy-fn-icon { background: rgba(33,77,187,.40); }
+    .nxy-fn-channels .nxy-fn-label { color: #a5c8ff; }
+    .nxy-fn-channels .nxy-fn-title { color: #c4daff; }
+    .nxy-fn-channels .nxy-fn-desc { color: rgba(165,200,255,.65); }
+
+    .nxy-fn-reply { background: rgba(33,77,187,.14); border: 1px solid rgba(138,177,255,.25); }
+    .nxy-fn-reply .nxy-fn-icon { background: rgba(33,77,187,.35); }
+    .nxy-fn-reply .nxy-fn-label, .nxy-fn-reply .nxy-fn-title { color: rgba(165,200,255,.85); }
+    .nxy-fn-reply .nxy-fn-desc { color: rgba(165,200,255,.55); }
+
+    .nxy-fn-update { background: rgba(22,163,127,.14); border: 1px solid rgba(22,163,127,.40); }
+    .nxy-fn-update .nxy-fn-icon { background: rgba(22,163,127,.40); }
+    .nxy-fn-update .nxy-fn-label, .nxy-fn-update .nxy-fn-title { color: rgba(93,251,202,.85); }
+    .nxy-fn-update .nxy-fn-desc { color: rgba(93,251,202,.60); }
+
+    .nxy-fn-outcome { background: rgba(244,160,36,.14); border: 1.5px solid rgba(244,160,36,.40); }
+    .nxy-fn-outcome .nxy-fn-icon { background: rgba(244,160,36,.30); box-shadow: 0 0 14px rgba(244,160,36,.40); }
+    .nxy-fn-outcome .nxy-fn-label { color: #f4bc60; }
+    .nxy-fn-outcome .nxy-fn-title { color: #ffe5a0; }
+    .nxy-fn-outcome .nxy-fn-desc { color: rgba(244,188,96,.70); }
+
+    /* Flow supporting description */
+    .nxy-flow-support {
+      max-width: 680px; margin: 0 auto;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px; padding: 24px 28px;
+    }
+    .nxy-flow-support p {
+      font-size: .95rem; color: rgba(255,255,255,.68); line-height: 1.72; margin: 0;
     }
 
-    /* Positioning callout box */
+    /* ── Channel cards ── */
+    .nxy-channel-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 24px; margin-bottom: 40px;
+    }
+    @media (max-width: 680px) { .nxy-channel-grid { grid-template-columns: 1fr; } }
+    .nxy-channel-card {
+      border-radius: 16px; padding: 28px 26px;
+      background: #fff; border: 1px solid rgba(33,77,187,.10);
+      box-shadow: 0 2px 14px rgba(33,77,187,.06);
+      transition: box-shadow .2s;
+    }
+    .nxy-channel-card:hover { box-shadow: 0 6px 28px rgba(33,77,187,.11); }
+    .nxy-ch-icon {
+      width: 50px; height: 50px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .nxy-ch-label {
+      font-family: 'Exo 2', sans-serif;
+      font-size: .68rem; font-weight: 800; letter-spacing: .10em;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .nxy-channel-card h3 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 1.1rem; font-weight: 900; color: #0f2650;
+      margin: 0 0 12px; line-height: 1.2;
+    }
+    .nxy-channel-card p {
+      font-size: .93rem; color: #4a5e72; line-height: 1.72; margin: 0;
+    }
+
+    /* Channel icon variants */
+    .nxy-ch-web  { background: rgba(33,77,187,.12); color: #214dbb; }
+    .nxy-ch-wa   { background: rgba(22,163,127,.14); color: #0d8460; }
+    .nxy-ch-email { background: rgba(244,160,36,.12); color: #7c5000; }
+    .nxy-ch-crm  { background: rgba(111,63,196,.12); color: #5b30a0; }
+    .nxy-ch-web  .nxy-ch-label { color: #214dbb; }
+    .nxy-ch-wa   .nxy-ch-label { color: #0d8460; }
+    .nxy-ch-email .nxy-ch-label { color: #7c5000; }
+    .nxy-ch-crm  .nxy-ch-label { color: #5b30a0; }
+
+    /* ── Reply handling ── */
+    .nxy-reply-chips {
+      display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 32px;
+    }
+    .nxy-reply-chip {
+      padding: 8px 18px; border-radius: 999px;
+      font-size: 13px; font-weight: 700;
+      background: rgba(33,77,187,.08); border: 1px solid rgba(33,77,187,.18);
+      color: #214dbb;
+    }
+
+    /* ── Positioning callout box ── */
     .nxy-position-box {
-      border-radius: 16px;
-      padding: 26px 32px;
-      margin: 40px 0 0;
+      border-radius: 16px; padding: 26px 32px; margin: 40px 0 0;
     }
     .nxy-position-box-teal {
       background: linear-gradient(135deg, rgba(22,163,127,.08) 0%, rgba(11,43,114,.05) 100%);
@@ -434,49 +624,38 @@
     .nxy-position-box-teal p { color: #1a5e4a; }
     .nxy-position-box-blue p { color: #1a2e6a; }
 
-    /* Orbit connection callout */
-    .nxy-orbit-callout {
+    /* ── Closing dark CTA ── */
+    .nxy-closing-dark {
       background: linear-gradient(135deg, #0b2b72 0%, #1a3fa8 55%, #16A37F 100%);
-      padding: 52px 0;
+      padding: 64px 0;
     }
-    .nxy-orbit-callout-inner {
+    .nxy-closing-inner {
       display: flex; align-items: center;
       justify-content: space-between;
       gap: 32px; flex-wrap: wrap;
     }
-    .nxy-orbit-callout-label {
+    .nxy-closing-label {
       font-size: 11px; font-weight: 800; letter-spacing: .12em;
       color: rgba(255,255,255,.55); text-transform: uppercase; margin-bottom: 10px;
     }
-    .nxy-orbit-callout h2 {
+    .nxy-closing-dark h2 {
       font-family: 'Exo 2', sans-serif;
-      font-size: clamp(1.2rem, 2.2vw, 1.7rem);
-      font-weight: 900; color: #fff; margin: 0 0 10px; line-height: 1.25;
+      font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+      font-weight: 900; color: #fff; margin: 0 0 10px; line-height: 1.22;
     }
-    .nxy-orbit-callout p {
+    .nxy-closing-dark p {
       font-size: 15px; color: rgba(255,255,255,.72);
-      margin: 0; max-width: 520px; line-height: 1.6;
+      margin: 0; max-width: 540px; line-height: 1.62;
     }
-    .nxy-orbit-callout-link {
+    .nxy-closing-cta {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.30);
       color: #fff; font-size: 14px; font-weight: 700;
       padding: 13px 24px; border-radius: 10px;
       text-decoration: none; white-space: nowrap; flex-shrink: 0;
-      transition: background .2s;
+      transition: background .2s; cursor: pointer;
     }
-    .nxy-orbit-callout-link:hover { background: rgba(255,255,255,.22); }
-
-    /* Override heading colour in GO section */
-    .nxy-section-go .nxy-section-h2 { color: #0f2650; }
-    .nxy-section-go .nxpl-ws-head-copy h2 { color: #0f2650; }
-
-    /* Ensure section desc paragraphs in GO section don't inherit from nxpl */
-    .nxy-go-desc p {
-      font-size: .97rem; color: #4a5e72; line-height: 1.78; margin: 0 0 16px;
-    }
-    .nxy-go-desc p:last-child { margin-bottom: 0; }
-
+    .nxy-closing-cta:hover { background: rgba(255,255,255,.22); }
   </style>
 </head>
 <body>
@@ -500,11 +679,13 @@
         </div>
         <a href="/pricing">PRICING</a>
         <a href="/nexy" class="nav-active">NEXY — AGENTIC CANDIDATE</a>
+        <a href="/nexus-contacts-intelligence">CONTACTS INTELLIGENCE</a>
         <a href="/nexus-knowledge-browser">NEXUS BROWSER</a>
         <a href="#" class="nav-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">CHAT with<br>NEXY</a>
       </nav>
     </div>
   </header>
+
 
   <!-- ═══════════════ HERO ═══════════════ -->
   <section class="nxy-hero">
@@ -523,29 +704,44 @@
           </span>
           <h1 class="nxy-hero-h1">NEXY</h1>
           <div class="nxy-hero-role-row">
-            <span class="nxy-role-vc">AI Business Companion</span>
+            <span class="nxy-role-vc">Agentic Growth Candidate</span>
             <span class="nxy-role-sep">·</span>
-            <span class="nxy-role-go">Website &amp; WhatsApp</span>
+            <span class="nxy-role-go">Website · WhatsApp · Email · CRM</span>
           </div>
-          <p class="nxy-hero-lead">Nexy is an AI Business Companion built on Nexus Orbit. It engages visitors through knowledge-grounded, intelligence-driven conversations — tracking journey milestones, detecting buying signals, matching communication personas, scoring enquiry quality, and guiding every interaction toward a confident buying decision. When human expertise is needed, Nexy hands over with full context. When a meeting is the next step, Nexy books it directly within the conversation.</p>
+          <p class="nxy-hero-lead">Nexy is an agentic growth candidate in the Nexus ecosystem. It uses Nexus Contacts Intelligence to understand contact context, product-fit recommendations, lead stage, and next-best actions. It uses Nexus Orbit to ground every message in approved business knowledge.<br><br>With these two intelligence layers behind it, Nexy conducts conversations, prepares outreach, handles replies, follows up with contacts, updates the contact journey, and moves opportunities toward qualified business outcomes across website chat, WhatsApp, email, CRM, and connected workflows.</p>
+          <div class="nxy-hero-highlight">
+            <span>Contacts Intelligence identifies the opportunity.</span>
+            <span>Nexus Orbit provides the knowledge.</span>
+            <span>Nexy carries the conversation forward.</span>
+          </div>
           <div class="nxy-hero-pills">
-            <a href="#nexy-visitor-companion" class="nxy-pill-teal">
-              Companion Capabilities
+            <a href="#nexy-what" class="nxy-pill-teal">
+              Agentic Capabilities
               <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a href="#nexy-intelligence-engine" class="nxy-pill-blue">
-              Intelligence Engine
+            <a href="#nexy-flow" class="nxy-pill-blue">
+              How Nexy Works
               <svg viewBox="0 0 14 14" fill="none" width="12" height="12"><path d="M7 3v8M3 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
           </div>
         </div>
 
-        <!-- Right: flow visual (structure unchanged) -->
+        <!-- Right: flow visual -->
         <div class="nxy-hero-visual" aria-hidden="true">
           <div class="nxy-flow-visual">
 
-            <!-- Row 1: Two knowledge inputs -->
+            <!-- Row 1: Two intelligence inputs -->
             <div class="nxy-flow-inputs">
+              <div class="nxy-fin-card nxy-fin-comm">
+                <div class="nxy-fin-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
+                    <circle cx="12" cy="8" r="3.5" stroke="#a5c8ff" stroke-width="1.6"/>
+                    <path d="M4 20c0-4.4 3.58-8 8-8s8 3.6 8 8" stroke="#a5c8ff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+                    <path d="M19 9l2 2-2 2M5 9l-2 2 2 2" stroke="#a5c8ff" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+                  </svg>
+                </div>
+                <span class="nxy-fin-label">Nexus Contacts<br>Intelligence</span>
+              </div>
               <div class="nxy-fin-card nxy-fin-orbit">
                 <div class="nxy-fin-icon">
                   <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
@@ -556,32 +752,22 @@
                 </div>
                 <span class="nxy-fin-label">Nexus Orbit<br>Knowledge</span>
               </div>
-              <div class="nxy-fin-card nxy-fin-comm">
-                <div class="nxy-fin-icon">
-                  <svg viewBox="0 0 24 24" fill="none" width="26" height="26">
-                    <path d="M12 3C7.03 3 3 6.58 3 11c0 2.18.92 4.16 2.42 5.62L4 21l4.76-1.54A9.4 9.4 0 0012 19c4.97 0 9-3.58 9-8s-4.03-8-9-8Z" stroke="#a5c8ff" stroke-width="1.5" stroke-linejoin="round"/>
-                    <path d="M8 10.5h8M8 13.5h5" stroke="#a5c8ff" stroke-width="1.4" stroke-linecap="round" opacity=".65"/>
-                    <circle cx="17" cy="10.5" r="1" fill="#a5c8ff" opacity=".5"/>
-                  </svg>
-                </div>
-                <span class="nxy-fin-label">Visitor<br>Signals</span>
-              </div>
             </div>
 
             <!-- Converging animated path -->
             <svg class="nxy-flow-svg" viewBox="0 0 380 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path id="nxy-pl" d="M 101 0 C 101 26, 190 26, 190 52" stroke="rgba(93,251,202,.55)" stroke-width="2" fill="none"/>
-              <path id="nxy-pr" d="M 279 0 C 279 26, 190 26, 190 52" stroke="rgba(138,177,255,.50)" stroke-width="2" fill="none"/>
-              <circle r="3.5" fill="#5dfbca" opacity=".9">
+              <path id="nxy-pl" d="M 101 0 C 101 26, 190 26, 190 52" stroke="rgba(138,177,255,.55)" stroke-width="2" fill="none"/>
+              <path id="nxy-pr" d="M 279 0 C 279 26, 190 26, 190 52" stroke="rgba(93,251,202,.50)" stroke-width="2" fill="none"/>
+              <circle r="3.5" fill="#a5c8ff" opacity=".9">
                 <animateMotion dur="1.9s" repeatCount="indefinite" begin="0s"><mpath href="#nxy-pl"/></animateMotion>
               </circle>
-              <circle r="2" fill="#5dfbca" opacity=".45">
+              <circle r="2" fill="#a5c8ff" opacity=".45">
                 <animateMotion dur="1.9s" repeatCount="indefinite" begin="0.95s"><mpath href="#nxy-pl"/></animateMotion>
               </circle>
-              <circle r="3.5" fill="#a5c8ff" opacity=".85">
+              <circle r="3.5" fill="#5dfbca" opacity=".85">
                 <animateMotion dur="2.1s" repeatCount="indefinite" begin="0.3s"><mpath href="#nxy-pr"/></animateMotion>
               </circle>
-              <circle r="2" fill="#a5c8ff" opacity=".45">
+              <circle r="2" fill="#5dfbca" opacity=".45">
                 <animateMotion dur="2.1s" repeatCount="indefinite" begin="1.35s"><mpath href="#nxy-pr"/></animateMotion>
               </circle>
             </svg>
@@ -616,18 +802,17 @@
             <!-- Two output mode columns -->
             <div class="nxy-flow-outputs">
 
-              <!-- Left: Website Chat (teal) -->
+              <!-- Left: Conversation & Outreach (teal) -->
               <div class="nxy-out-col">
-                <div class="nxy-out-mode nxy-out-mode-vc">Website Chat</div>
+                <div class="nxy-out-mode nxy-out-mode-vc">Outreach</div>
                 <div class="nxy-out-steps">
                   <div class="nxy-out-step nxy-os-vc">
                     <div class="nxy-os-icon">
                       <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
-                        <circle cx="12" cy="8" r="3.8" stroke="rgba(255,255,255,.65)" stroke-width="1.6"/>
-                        <path d="M4.5 20c0-3.8 3.36-6.5 7.5-6.5s7.5 2.7 7.5 6.5" stroke="rgba(255,255,255,.65)" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="rgba(255,255,255,.65)" stroke-width="1.6" stroke-linejoin="round"/>
                       </svg>
                     </div>
-                    <span class="nxy-os-lbl">Visitor Arrives</span>
+                    <span class="nxy-os-lbl">Message Prepared</span>
                   </div>
                   <div class="nxy-os-arr nxy-os-arr-vc">↓</div>
                   <div class="nxy-out-step nxy-os-vc-sub">
@@ -637,22 +822,23 @@
                         <path d="M8.5 12.5l2.5 2.5 4.5-5" stroke="#5dfbca" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </div>
-                    <span class="nxy-os-lbl">Decision Made</span>
+                    <span class="nxy-os-lbl">Outreach Sent</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Right: WhatsApp (blue) -->
+              <!-- Right: Contact Journey (blue) -->
               <div class="nxy-out-col">
-                <div class="nxy-out-mode nxy-out-mode-go">WhatsApp</div>
+                <div class="nxy-out-mode nxy-out-mode-go">Journey</div>
                 <div class="nxy-out-steps">
                   <div class="nxy-out-step nxy-os-go">
                     <div class="nxy-os-icon">
                       <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" fill="#a5c8ff" opacity=".7"/>
+                        <path d="M3 10l2-2m0 0l7-7 7 7M5 8v12a1 1 0 001 1h4m4-1v-9" stroke="rgba(165,200,255,.65)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 21h6M18 18v6" stroke="rgba(165,200,255,.55)" stroke-width="1.4" stroke-linecap="round"/>
                       </svg>
                     </div>
-                    <span class="nxy-os-lbl">Contact Reaches Out</span>
+                    <span class="nxy-os-lbl">Reply Handled</span>
                   </div>
                   <div class="nxy-os-arr nxy-os-arr-go">↓</div>
                   <div class="nxy-out-step nxy-os-go-result">
@@ -661,7 +847,7 @@
                         <path d="M12 3L14.5 8.5H20.5L15.8 12.2L17.7 18L12 14.5L6.3 18L8.2 12.2L3.5 8.5H9.5L12 3Z" stroke="#a5c8ff" stroke-width="1.5" stroke-linejoin="round" fill="rgba(68,114,230,.30)"/>
                       </svg>
                     </div>
-                    <span class="nxy-os-lbl">Lead Qualified</span>
+                    <span class="nxy-os-lbl">Opportunity Moved</span>
                   </div>
                 </div>
               </div>
@@ -672,36 +858,57 @@
         </div>
 
       </div>
-    </div><!-- /.container -->
-
+    </div>
   </section>
 
 
-  <!-- ═══════════════ SECTION 1: COMPANION CAPABILITIES ═══════════════ -->
-  <section class="nxy-section-vc" id="nexy-visitor-companion">
+  <!-- ═══════════════ SECTION: WHAT NEXY DOES ═══════════════ -->
+  <section class="nxy-section-white" id="nexy-what">
     <div class="container">
 
       <div class="nxy-section-head">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-          <span class="nxy-section-badge nxy-badge-teal">AI Business Companion · Active</span>
-          <span class="nxy-live-dot" title="Active"></span>
-        </div>
-        <h2 class="nxy-section-h2">What Nexy Does in Every Conversation</h2>
+        <span class="nxy-section-badge nxy-badge-blue">Agentic Growth Action</span>
+        <h2 class="nxy-section-h2">Nexy Turns Contact Intelligence Into Real Business Conversations.</h2>
         <div class="nxy-section-lead">
-          <p>Nexy engages every visitor through a conversation that is simultaneously grounded in your approved business knowledge and informed by a live intelligence layer that reads what each visitor is signalling through their questions, language, and behaviour. It is not a scripted chatbot — it reasons about each visitor's position in their buying journey and responds with the precision and tone appropriate to that moment.</p>
-          <p>From the very first message, Nexy draws from your published knowledge base — your products, services, value propositions, AI personas, and playbooks — to hold conversations that represent your business accurately and persuasively. Every answer is grounded in what you have approved. Nothing is invented.</p>
-          <p>Across each message, Nexy continuously updates its understanding of the visitor: where they are in their journey, what signals they are expressing, which communication persona fits them best, and how serious their enquiry is. This intelligence shapes every response — making each conversation feel relevant, timely, and genuinely helpful to the visitor's actual situation.</p>
+          <p>Nexy does not replace Nexus Contacts Intelligence. Instead, Nexy activates it.</p>
+          <p>Nexus Contacts Intelligence identifies who the contact is, what they may need, which product or service fits them, and what action should happen next. Nexus Orbit provides the approved business knowledge that can be used in the communication.</p>
+          <p>Nexy takes those recommendations and carries the conversation forward. It prepares the right message, adapts it for the right channel, responds to replies, asks follow-up questions, triggers human review when needed, and updates the contact journey after every interaction.</p>
         </div>
       </div>
 
-      <!-- Key mechanism highlight -->
-      <div class="nxy-mech-box">
-        <h3>The Per-Message Intelligence Loop</h3>
-        <p>With every message a visitor sends, Nexy re-evaluates their journey milestone, re-checks for buying signals, re-confirms the matched persona, and updates the enquiry score. This happens before each response is generated — meaning Nexy always responds from the most current understanding of who this visitor is and where they are in their decision process. No response is generic. Each one is calibrated to this visitor, at this moment.</p>
+      <div class="nxy-intel-box">
+        <strong>Nexy is not another intelligence layer.</strong>
+        Nexy is the agentic candidate that converts intelligence into communication, action, and business movement. Contacts Intelligence decides the fit. Nexus Orbit supplies the proof. Nexy carries the conversation.
       </div>
 
-      <!-- 8 Capabilities -->
-      <div class="nxpl-feat-blocks nxy-feat-blocks-teal">
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ SECTION: CORE CAPABILITIES ═══════════════ -->
+  <section class="nxy-section-light" id="nexy-capabilities">
+    <div class="container">
+
+      <div class="nxy-section-head">
+        <span class="nxy-section-badge nxy-badge-teal">Core Capabilities</span>
+        <h2 class="nxy-section-h2">What Nexy Does Across Every Contact and Channel.</h2>
+      </div>
+
+      <div class="nxy-feat-blocks-2col nxy-feat-blocks-blue">
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="14" cy="10" r="5"/>
+              <path d="M6 24c0-4 3.58-7 8-7s8 3 8 7"/>
+              <path d="M21 6l3 3-3 3" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Uses Contact Recommendations</h3>
+            <p>Nexy receives contact insights, product-fit results, buying stage, lead score, communication eligibility, and next-best-action recommendations from Nexus Contacts Intelligence. It acts on these inputs. It does not produce them.</p>
+          </div>
+        </div>
 
         <div class="nxpl-feat-block">
           <div class="nxpl-feat-icon nxy-fi-teal">
@@ -712,53 +919,50 @@
             </svg>
           </div>
           <div class="nxpl-feat-body">
-            <h3>Knowledge-grounded responses from your approved content</h3>
-            <p>Every answer Nexy gives is drawn from your published knowledge base — products, services, pricing, value propositions, and business policies. Nothing is hallucinated. Every response is accurate, on-brand, and backed by content you have reviewed and approved.</p>
+            <h3>Grounds Every Message With Orbit</h3>
+            <p>Nexy uses Nexus Orbit to access approved product knowledge, service details, FAQs, pricing notes, references, objection handling, and communication rules. Every message Nexy sends is knowledge-grounded, not assumed.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="7" width="10" height="14" rx="2"/>
+              <path d="M13 10h8a2 2 0 012 2v3a2 2 0 01-2 2h-8" opacity=".5"/>
+              <path d="M17 14h4" opacity=".4"/>
+              <circle cx="8" cy="14" r="2" fill="currentColor" stroke="none"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Prepares Channel-Specific Communication</h3>
+            <p>Nexy converts recommendations into WhatsApp messages, email drafts, chat replies, follow-up notes, proposal reminders, demo invitations, and CRM handover messages adapted to each channel's format and tone.</p>
           </div>
         </div>
 
         <div class="nxpl-feat-block">
           <div class="nxpl-feat-icon nxy-fi-teal">
             <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="14" cy="10" r="5"/>
-              <path d="M6 24c0-4 3.58-7 8-7s8 3 8 7"/>
-              <path d="M20 8l3 3-3 3" opacity=".5"/>
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              <path d="M9 9h10M9 12.5h6"/>
             </svg>
           </div>
           <div class="nxpl-feat-body">
-            <h3>AI personas and playbooks govern tone, depth, and approach</h3>
-            <p>Nexy operates through configurable AI personas — each with its own communication style, discovery approach, and playbook. The right persona activates based on the visitor's profile, ensuring that every conversation is delivered with the appropriate tone and depth for that visitor type.</p>
+            <h3>Conducts the Conversation</h3>
+            <p>Nexy manages the live communication flow. It can ask relevant questions, clarify requirements, answer from approved knowledge, and keep the conversation aligned with the contact's stage and product-fit recommendation.</p>
           </div>
         </div>
 
         <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-teal">
+          <div class="nxpl-feat-icon nxy-fi-blue">
             <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 22l5-9 4 5 4-7 5 3"/>
-              <circle cx="4" cy="22" r="1.5" fill="currentColor" stroke="none"/>
-              <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
-              <circle cx="13" cy="18" r="1.5" fill="currentColor" stroke="none"/>
-              <circle cx="17" cy="11" r="1.5" fill="currentColor" stroke="none"/>
-              <circle cx="22" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+              <path d="M4 14l6-5 4 4 6-7"/>
+              <path d="M22 21H6a2 2 0 01-2-2V5"/>
+              <circle cx="22" cy="8" r="3"/>
             </svg>
           </div>
           <div class="nxpl-feat-body">
-            <h3>Journey milestone tracking across seven stages</h3>
-            <p>Nexy tracks where each visitor sits in their buying journey across seven defined milestones: Awareness, Consideration, Intent, Decision, Action, Loyalty, and Advocacy. The milestone is re-evaluated with each message and directly shapes the content, tone, and direction of every response.</p>
-          </div>
-        </div>
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-teal">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 20l6-9 4 5 4-7 4 2"/>
-              <circle cx="22" cy="7" r="3"/>
-              <path d="M19.5 7h-16" opacity=".3"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Buying signal detection in real time</h3>
-            <p>Nexy detects buying signals as they surface in conversation — pricing interest, direct comparison questions, timeline expressions, urgency language, and readiness cues. Each detected signal updates the visitor's signal profile and informs how urgently and directly Nexy steers the conversation toward a decision.</p>
+            <h3>Handles Replies and Objections</h3>
+            <p>When a contact replies, Nexy prepares suitable responses based on the reply type, contact context, product-fit recommendation, and approved knowledge from Nexus Orbit. It carries the conversation without losing thread continuity.</p>
           </div>
         </div>
 
@@ -766,6 +970,34 @@
           <div class="nxpl-feat-icon nxy-fi-teal">
             <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="10" cy="10" r="5"/>
+              <circle cx="20" cy="20" r="4"/>
+              <path d="M13.5 11.5L16.5 16.5"/>
+              <path d="M8 14v5h5" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Updates the Contact Journey</h3>
+            <p>After each interaction, Nexy writes back the outcome, reply status, interest level, next action, and handover requirement to Nexus Contacts Intelligence. Nexy updates the contact journey. It does not define it.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4l2 5h5l-4 3 1.5 5L14 14l-4.5 3 1.5-5-4-3h5z"/>
+              <path d="M14 14v8" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Moves Opportunities Forward</h3>
+            <p>Nexy helps move contacts from captured lead to engaged prospect, qualified opportunity, demo, proposal, customer, or nurture stage. Nexy orchestrates the execution. Contacts Intelligence defines the path.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-teal">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="10" r="4"/>
               <circle cx="20" cy="8" r="3" opacity=".5"/>
               <path d="M3 24c0-3.5 3.13-6 7-6h2"/>
               <path d="M20 14c2.5 0 4.5 2 4.5 4.5" opacity=".5"/>
@@ -773,24 +1005,338 @@
             </svg>
           </div>
           <div class="nxpl-feat-body">
-            <h3>Visitor persona matching for tailored communication</h3>
-            <p>Nexy matches each visitor to a customer persona based on their message content, stated context, and expressed intent — scoring across multiple attributes including industry, role, company profile, and buying pattern. The matched persona determines the communication approach for the remainder of the conversation, and re-matching occurs as the visitor reveals more about themselves.</p>
+            <h3>Supports Human-Governed Action</h3>
+            <p>Nexy can route sensitive replies, pricing discussions, high-value leads, complaints, or uncertain cases to human review before action is taken — transferring full contact context and conversation history to the right person.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nxy-position-box nxy-position-box-teal">
+        <p>"Nexy converts contact intelligence into intelligent business conversations. Contacts Intelligence maps the contact. Orbit grounds the message. Nexy carries the conversation forward — across every channel, after every reply, through every next step."</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ SECTION: HOW NEXY WORKS ═══════════════ -->
+  <section class="nxy-flow-dark" id="nexy-flow">
+    <div class="container nxy-flow-dark-inner">
+
+      <div class="nxy-section-head" style="max-width:680px;">
+        <span class="nxy-section-badge">Nexus Ecosystem</span>
+        <h2 class="nxy-section-h2">How Nexy Works Within the Nexus Ecosystem</h2>
+        <div class="nxy-section-lead">
+          <p>Nexy works after intelligence is prepared. It receives the contact context and recommended action, retrieves the approved knowledge, prepares the right communication, handles the response, and updates the contact journey.</p>
+        </div>
+      </div>
+
+      <div class="nxy-ecosystem-flow">
+
+        <div class="nxy-flow-node nxy-fn-contact">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <circle cx="12" cy="8" r="3.5" stroke="rgba(255,255,255,.65)" stroke-width="1.6"/>
+              <path d="M4 20c0-4.4 3.58-8 8-8s8 3.6 8 8" stroke="rgba(255,255,255,.65)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Step 1</div>
+            <div class="nxy-fn-title">Contact Captured</div>
+            <p class="nxy-fn-desc">A new contact enters the system through website chat, WhatsApp, email, cold outreach, or CRM activity.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-ci">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#a5c8ff" stroke-width="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#a5c8ff" stroke-width="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#a5c8ff" stroke-width="1.5"/>
+              <path d="M17.5 14v7M14 17.5h7" stroke="#a5c8ff" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Nexus Contacts Intelligence</div>
+            <div class="nxy-fn-title">Contact Profile &amp; Product Fit</div>
+            <p class="nxy-fn-desc">Understands contact persona, maps product and service fit, scores the lead, determines buying stage, and produces the next-best-action recommendation.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-orbit">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <ellipse cx="12" cy="6" rx="8" ry="3" stroke="#5dfbca" stroke-width="1.5"/>
+              <path d="M4 6v5c0 1.66 3.58 3 8 3s8-1.34 8-3V6" stroke="#5dfbca" stroke-width="1.4"/>
+              <path d="M4 11v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5" stroke="#5dfbca" stroke-width="1.4" opacity=".6"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Nexus Orbit</div>
+            <div class="nxy-fn-title">Approved Knowledge Layer</div>
+            <p class="nxy-fn-desc">Provides approved product knowledge, value propositions, FAQs, pricing notes, objection handling, references, and communication rules for Nexy to use.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-nexy">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <circle cx="12" cy="12" r="8" stroke="#5dfbca" stroke-width="1.6"/>
+              <circle cx="12" cy="12" r="3" fill="#5dfbca" opacity=".8"/>
+              <path d="M12 4v2M12 18v2M4 12H2M22 12h-2" stroke="#5dfbca" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Nexy — Agentic Candidate</div>
+            <div class="nxy-fn-title">Prepares and Conducts the Conversation</div>
+            <p class="nxy-fn-desc">Uses contact context and product-fit recommendations from Contacts Intelligence. Grounds messages in Orbit knowledge. Prepares the right message for the right channel at the right moment.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-channels">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <rect x="3" y="5" width="14" height="10" rx="2" stroke="#a5c8ff" stroke-width="1.5"/>
+              <path d="M17 9h2a2 2 0 012 2v6a2 2 0 01-2 2H9" stroke="#a5c8ff" stroke-width="1.4" opacity=".6"/>
+              <path d="M7 15l3 3" stroke="#a5c8ff" stroke-width="1.4" stroke-linecap="round" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Channels</div>
+            <div class="nxy-fn-title">Website Chat · WhatsApp · Email · CRM</div>
+            <p class="nxy-fn-desc">Nexy delivers communication through the appropriate channel — adapting format, length, and tone to each channel's context and the contact's preference.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-reply">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <path d="M9 10l-4 4 4 4" stroke="#a5c8ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5 14h9a5 5 0 005-5V8" stroke="#a5c8ff" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Reply / Engagement</div>
+            <div class="nxy-fn-title">Contact Responds</div>
+            <p class="nxy-fn-desc">The contact replies. Nexy classifies the reply type, retrieves relevant knowledge, and prepares the next message — or routes to human review if needed.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-update">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <path d="M4 12v6a2 2 0 002 2h12a2 2 0 002-2v-6" stroke="#5dfbca" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M16 6l-4-4-4 4M12 2v13" stroke="#5dfbca" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Nexy Updates</div>
+            <div class="nxy-fn-title">Contact Journey Written Back</div>
+            <p class="nxy-fn-desc">Nexy records the interaction outcome, reply status, interest level, and next-recommended action back into Nexus Contacts Intelligence — keeping the journey current.</p>
+          </div>
+        </div>
+
+        <div class="nxy-flow-arrow">↓</div>
+
+        <div class="nxy-flow-node nxy-fn-outcome">
+          <div class="nxy-fn-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="24" height="24">
+              <path d="M12 3L14.5 8.5H20.5L15.8 12.2L17.7 18L12 14.5L6.3 18L8.2 12.2L3.5 8.5H9.5L12 3Z" stroke="#f4a024" stroke-width="1.5" stroke-linejoin="round" fill="rgba(244,160,36,.25)"/>
+            </svg>
+          </div>
+          <div class="nxy-fn-body">
+            <div class="nxy-fn-label">Business Outcome</div>
+            <div class="nxy-fn-title">Qualified Opportunity · Human Handover · Follow-up</div>
+            <p class="nxy-fn-desc">The contact moves to the next stage — a qualified opportunity, scheduled demo, proposal, human handover, or structured follow-up sequence.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="nxy-flow-support">
+        <p>This creates a closed-loop growth system where every interaction improves the relationship context. Nexy works after intelligence is prepared — receiving contact context and recommended action, retrieving approved knowledge, preparing the right communication, handling the response, and writing the outcome back. Each cycle makes the next interaction smarter.</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ SECTION: CHANNEL VALUE ═══════════════ -->
+  <section class="nxy-section-white" id="nexy-channels">
+    <div class="container">
+
+      <div class="nxy-section-head">
+        <span class="nxy-section-badge nxy-badge-blue">Channel Coverage</span>
+        <h2 class="nxy-section-h2">One Agentic Candidate Across Website, WhatsApp, Email, and CRM.</h2>
+        <div class="nxy-section-lead">
+          <p>Nexy can operate across multiple communication channels while using the same intelligence foundation. Whether the contact comes from a website chat, WhatsApp conversation, email campaign, cold outreach reply, or CRM activity, Nexy uses the same contact context and approved knowledge to keep the communication consistent, personalised, and business-accurate.</p>
+        </div>
+      </div>
+
+      <div class="nxy-channel-grid">
+
+        <div class="nxy-channel-card">
+          <div class="nxy-ch-icon nxy-ch-web">
+            <svg viewBox="0 0 28 28" fill="none" width="26" height="26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 5H5a1 1 0 00-1 1v11a1 1 0 001 1h5l3.5 3.5L17 17h6a1 1 0 001-1V6a1 1 0 00-1-1Z"/>
+              <path d="M9 10.5h10M9 13.5h6"/>
+            </svg>
+          </div>
+          <div class="nxy-ch-label nxy-ch-web">Website Chat</div>
+          <h3>Engage Every Visitor From First Message</h3>
+          <p>Nexy engages website visitors, asks qualifying questions, uses Nexus Orbit knowledge to answer accurately, and updates Nexus Contacts Intelligence with visitor intent and journey milestones after every conversation.</p>
+        </div>
+
+        <div class="nxy-channel-card">
+          <div class="nxy-ch-icon nxy-ch-wa">
+            <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+              <path d="M14 3.5C8.2 3.5 3.5 8.2 3.5 14c0 2.5 1.1 4.8 2.8 6.4L5 24l3.9-1.7c1.3.7 2.8 1.2 4.4 1.2 5.8 0 10.5-4.7 10.5-10.5S19.8 3.5 14 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M10 11.5c0-.6.5-1 1-1 .8 1.4 1.4 2.2 1.8 3.2-.8.6-1.2 1.2-.9 1.8.6 1.3 2.2 2.4 3.3 3.1.5.3 1.2 0 1.5-.5.2-.4.5-.8.8-1.1.3-.2.6-.2.9-.1l1.5.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="nxy-ch-label nxy-ch-wa">WhatsApp</div>
+          <h3>Conversational Outreach at Scale</h3>
+          <p>Nexy prepares short, conversational messages, personalised follow-ups, reminders, and reply responses for WhatsApp — using the same contact context and Nexus Orbit knowledge as every other channel.</p>
+        </div>
+
+        <div class="nxy-channel-card">
+          <div class="nxy-ch-icon nxy-ch-email">
+            <svg viewBox="0 0 28 28" fill="none" width="26" height="26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="6" width="22" height="16" rx="2"/>
+              <path d="M3 8l11 8 11-8"/>
+            </svg>
+          </div>
+          <div class="nxy-ch-label nxy-ch-email">Email</div>
+          <h3>Outreach, Proposals, and Nurture</h3>
+          <p>Nexy prepares cold outreach drafts, marketing email content, proposal follow-ups, reply drafts, and nurture messages — grounded in product-fit recommendations and approved Orbit knowledge.</p>
+        </div>
+
+        <div class="nxy-channel-card">
+          <div class="nxy-ch-icon nxy-ch-crm">
+            <svg viewBox="0 0 28 28" fill="none" width="26" height="26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="20" height="20" rx="3"/>
+              <path d="M10 12l2.5 2.5L18 9"/>
+              <path d="M4 16h20" opacity=".3"/>
+            </svg>
+          </div>
+          <div class="nxy-ch-label nxy-ch-crm">CRM &amp; Human Handover</div>
+          <h3>Qualified Handoff With Full Context</h3>
+          <p>Nexy updates lead status, records interaction outcomes, creates handover notes, and routes qualified or sensitive conversations to the right human user — with complete contact and conversation context attached.</p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ SECTION: REPLY HANDLING ═══════════════ -->
+  <section class="nxy-section-light" id="nexy-replies">
+    <div class="container">
+
+      <div class="nxy-section-head">
+        <span class="nxy-section-badge nxy-badge-teal">Reply Intelligence</span>
+        <h2 class="nxy-section-h2">Nexy Carries the Conversation After the First Response.</h2>
+        <div class="nxy-section-lead">
+          <p>The first message is only the beginning. When a contact replies, Nexy uses the contact profile, previous journey, product-fit recommendation, and Nexus Orbit knowledge to prepare the next response — keeping the conversation coherent, relevant, and aligned with the contact's current stage.</p>
+        </div>
+      </div>
+
+      <div class="nxy-mech-box" style="margin-bottom:36px;">
+        <h3>Reply Types Nexy Can Handle</h3>
+        <div class="nxy-reply-chips" style="margin:16px 0 0;">
+          <span class="nxy-reply-chip">Interested</span>
+          <span class="nxy-reply-chip">Asked for Pricing</span>
+          <span class="nxy-reply-chip">Asked for Demo</span>
+          <span class="nxy-reply-chip">Asked for More Details</span>
+          <span class="nxy-reply-chip">Already Using Another System</span>
+          <span class="nxy-reply-chip">Not Interested</span>
+          <span class="nxy-reply-chip">Wrong Person</span>
+          <span class="nxy-reply-chip">Unsubscribe</span>
+          <span class="nxy-reply-chip">Out of Office</span>
+          <span class="nxy-reply-chip">Needs Human</span>
+          <span class="nxy-reply-chip">Complaint / Sensitive</span>
+        </div>
+      </div>
+
+      <div class="nxy-section-lead">
+        <p>For simple replies, Nexy can prepare the next message automatically according to approved rules and Nexus Orbit knowledge. For sensitive, high-value, pricing, negotiation, or uncertain cases, Nexy routes the conversation to human review with full contact context, conversation history, product-fit recommendation, and journey stage — so the human can continue without asking the contact to repeat themselves.</p>
+      </div>
+
+      <div class="nxy-position-box nxy-position-box-blue">
+        <p>"Nexy turns mapped contacts and governed knowledge into outreach, replies, follow-ups, and qualified opportunities. Every reply is a chance to move the conversation forward. Nexy converts that chance into the right action."</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════ SECTION: HUMAN GOVERNANCE ═══════════════ -->
+  <section class="nxy-section-white" id="nexy-governance">
+    <div class="container">
+
+      <div class="nxy-section-head">
+        <span class="nxy-section-badge nxy-badge-blue">Human Governance</span>
+        <h2 class="nxy-section-h2">Agentic Action With Human Governance.</h2>
+        <div class="nxy-section-lead">
+          <p>Nexy is designed to act within business-approved boundaries. It can prepare messages, suggest actions, and continue conversations — but the business decides which actions need human approval, which channels are eligible for each contact, and which conversations should escalate immediately to a human.</p>
+        </div>
+      </div>
+
+      <div class="nxy-feat-blocks-2col nxy-feat-blocks-blue">
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="9" height="9" rx="2"/>
+              <rect x="15" y="4" width="9" height="9" rx="2"/>
+              <rect x="4" y="15" width="9" height="9" rx="2"/>
+              <path d="M19.5 15v9M15 19.5h9" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Approval Rules</h3>
+            <p>Control when Nexy can send automatically and when a human must review and approve the prepared message before it is delivered. Approval rules can be set by channel, contact stage, message type, or lead value.</p>
           </div>
         </div>
 
         <div class="nxpl-feat-block">
           <div class="nxpl-feat-icon nxy-fi-teal">
             <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="16" width="3" height="8" rx="1"/>
-              <rect x="9.5" y="11" width="3" height="13" rx="1"/>
-              <rect x="15" y="7" width="3" height="17" rx="1"/>
-              <rect x="20.5" y="3" width="3" height="21" rx="1" opacity=".6"/>
-              <path d="M4 14l6-5 5 4 5-6" stroke-width="1.6" opacity=".8"/>
+              <circle cx="14" cy="14" r="9"/>
+              <path d="M10 14l3 3 5-5"/>
             </svg>
           </div>
           <div class="nxpl-feat-body">
-            <h3>Enquiry quality and intent scoring</h3>
-            <p>Every conversation is scored in real time across multiple dimensions — message clarity, intent strength, expressed urgency, and information depth. The score updates with each message exchange and provides a continuous picture of how serious and qualified this visitor's enquiry is, enabling Nexy to respond proportionally and surface high-quality conversations for human attention.</p>
+            <h3>Suppression and Consent</h3>
+            <p>Nexy respects unsubscribe requests, do-not-contact rules, channel eligibility settings, and communication preference records from Nexus Contacts Intelligence — ensuring every outreach action is within consent and suppression boundaries.</p>
+          </div>
+        </div>
+
+        <div class="nxpl-feat-block">
+          <div class="nxpl-feat-icon nxy-fi-blue">
+            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="14" cy="7" rx="8" ry="3"/>
+              <path d="M6 7v5c0 1.66 3.58 3 8 3s8-1.34 8-3V7"/>
+              <path d="M6 12v5c0 1.66 3.58 3 8 3s8-1.34 8-3v-5" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="nxpl-feat-body">
+            <h3>Knowledge Grounding</h3>
+            <p>Every message Nexy prepares is drawn from approved Nexus Orbit knowledge — not from model assumptions or unverified inference. This ensures accuracy, consistency, and brand alignment across every contact and every channel.</p>
           </div>
         </div>
 
@@ -804,183 +1350,36 @@
             </svg>
           </div>
           <div class="nxpl-feat-body">
-            <h3>Human escalation with full conversation context</h3>
-            <p>When a visitor's situation calls for human expertise — a complex requirement, a high-value opportunity, or a situation where AI should step aside — Nexy escalates to a human agent on your support desk. The full conversation history, journey milestone, persona match, enquiry score, and detected signals are passed to the agent so they can pick up without asking the visitor to repeat themselves.</p>
+            <h3>Human Handover</h3>
+            <p>Complex, sensitive, or high-value conversations are escalated to the right human with complete contact and conversation context — including journey stage, product-fit recommendation, reply classification, and next-best-action from Contacts Intelligence.</p>
           </div>
         </div>
 
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-teal">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="4" width="20" height="20" rx="4"/>
-              <path d="M9 4v4M19 4v4M4 12h20"/>
-              <circle cx="10" cy="18" r="1.5" fill="currentColor" stroke="none"/>
-              <circle cx="18" cy="18" r="1.5" fill="currentColor" stroke="none"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Meeting and consultation booking within the conversation</h3>
-            <p>When a visitor is ready for a more structured conversation, Nexy presents a meeting booking option directly within the chat — rendered as a calendar booking card linked to your configured calendar. The visitor can book a slot without leaving the conversation, and no manual intervention from your team is required.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Positioning statement -->
-      <div class="nxy-position-box nxy-position-box-teal">
-        <p>"Nexy does not just answer questions — it reads the visitor, tracks their journey, detects their signals, matches their persona, scores their intent, and calibrates every response to guide them toward a confident buying decision. All within your approved knowledge boundary. All without hallucination."</p>
-      </div>
-
-      <!-- CTA -->
-      <div class="nxpl-ws-cta" style="border-top-color:rgba(22,163,127,.15);">
-        <p>Experience how Nexy engages visitors with intelligence, not just information — from the very first message.</p>
-        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Chat with Nexy Now</a>
       </div>
 
     </div>
   </section>
 
 
-  <!-- ═══════════════ SECTION 2: INTELLIGENCE ENGINE ═══════════════ -->
-  <section class="nxy-section-go" id="nexy-intelligence-engine">
+  <!-- ═══════════════ CLOSING CTA ═══════════════ -->
+  <section class="nxy-closing-dark">
     <div class="container">
-
-      <div class="nxy-section-head">
-        <span class="nxy-section-badge nxy-badge-blue">Intelligence Engine</span>
-        <h2 class="nxy-section-h2">How Nexy Understands Every Visitor</h2>
-        <div class="nxy-go-desc">
-          <p>Behind every response Nexy delivers is a structured intelligence layer that processes each visitor's conversation in real time. This layer does not simply retrieve an answer — it first builds a contextual picture of the visitor and then generates a response calibrated to that picture.</p>
-          <p>The intelligence systems run on every message, continuously refining their understanding as the conversation deepens. The result is a companion that becomes more accurate and more effective as each exchange progresses — not one that simply pattern-matches keywords against a database.</p>
-        </div>
-      </div>
-
-      <!-- 6 Intelligence Systems — 2-column grid -->
-      <div class="nxy-feat-blocks-2col nxy-feat-blocks-blue">
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-blue">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="14" cy="14" r="9"/>
-              <path d="M14 9v5l3 3"/>
-              <path d="M7 14h2M19 14h2M14 7v2M14 19v2" opacity=".4"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Seven-Stage Journey Framework</h3>
-            <p>Nexy evaluates visitor messages against a seven-stage journey model: Awareness, Consideration, Intent, Decision, Action, Loyalty, and Advocacy. The current milestone is determined by the language, questions, and context the visitor expresses — and updated on every message. Journey stage directly governs how Nexy positions information and how directly it steers toward a decision.</p>
-          </div>
-        </div>
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-blue">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 20l5-9 4 5 4-7 5 3"/>
-              <path d="M22 8l3 3-3 3" opacity=".5"/>
-              <circle cx="4" cy="20" r="1.5" fill="currentColor" stroke="none"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Multi-Signal Buying Intent Detection</h3>
-            <p>Nexy scans each message for buying signals across several categories: pricing and budget expressions, direct comparison or alternative-seeking language, timeline or deadline signals, strong intent phrases, and explicit readiness cues. Detected signals accumulate a weighted profile that reflects how close the visitor is to making a buying decision — and shapes the urgency and direction of the response.</p>
-          </div>
-        </div>
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-blue">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="10" cy="10" r="5"/>
-              <circle cx="20" cy="9" r="3" opacity=".5"/>
-              <path d="M3 24c0-3.5 3.13-6 7-6h2"/>
-              <path d="M20 15c2.76 0 5 2 5 4.5" opacity=".5"/>
-              <path d="M15 22l2 2 4-4" opacity=".6"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Visitor Persona Matching and Re-Matching</h3>
-            <p>Nexy scores each visitor against your configured customer personas using weighted attributes — industry, company size, role, stated pain points, and buying pattern indicators. The highest-scoring persona match is applied at the start of the conversation and re-evaluated as the visitor provides more context. Persona determines the AI persona and playbook that govern the communication style for the remainder of the session.</p>
-          </div>
-        </div>
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-blue">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="14" width="3.5" height="10" rx="1"/>
-              <rect x="10" y="10" width="3.5" height="14" rx="1"/>
-              <rect x="16" y="6" width="3.5" height="18" rx="1"/>
-              <rect x="22" y="3" width="3.5" height="21" rx="1" opacity=".6"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Real-Time Enquiry Scoring</h3>
-            <p>Every conversation is scored continuously across multiple dimensions — clarity of need, expressed urgency, specificity of questions, depth of engagement, and intent strength. The score is updated with every message exchange and represents a live assessment of the visitor's enquiry quality. Conversations above certain score thresholds receive higher-priority treatment, including earlier escalation offers and more direct conversion steering.</p>
-          </div>
-        </div>
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-blue">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="4" width="9" height="9" rx="2"/>
-              <rect x="15" y="4" width="9" height="9" rx="2"/>
-              <rect x="4" y="15" width="9" height="9" rx="2"/>
-              <path d="M19.5 15v9M15 19.5h9" opacity=".5"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>AI Persona and Playbook Governance</h3>
-            <p>Nexy's responses are guided by the AI persona matched to the visitor — each persona carries a communication style profile, a discovery approach, a confidence threshold for escalation, and a playbook that defines how Nexy navigates certain types of visitor statements. Playbook rules are evaluated at each response to ensure the conversation remains within the boundaries you have configured for that visitor type.</p>
-          </div>
-        </div>
-
-        <div class="nxpl-feat-block">
-          <div class="nxpl-feat-icon nxy-fi-blue">
-            <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-              <path d="M9 9h10M9 12.5h6"/>
-              <path d="M20 20l5 5" opacity=".4"/>
-            </svg>
-          </div>
-          <div class="nxpl-feat-body">
-            <h3>Governed Escalation and Desk Handoff</h3>
-            <p>Escalation is not reactive — it is governed by the confluence of journey milestone, enquiry score, signal strength, and persona-defined confidence threshold. When these conditions indicate that human involvement will serve the visitor better than continued AI conversation, Nexy initiates escalation — transferring the full conversation context, enriched with journey stage, persona match, score, and detected signals — to your support desk.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- WhatsApp channel block -->
-      <div class="nxy-mech-box" style="margin-top:0;">
-        <h3>Same Intelligence Engine on WhatsApp</h3>
-        <p>Nexy's intelligence layer — journey tracking, buying signal detection, persona matching, enquiry scoring, escalation governance — operates identically on WhatsApp as it does on your website. WhatsApp contacts receive the same knowledge-grounded, persona-calibrated responses as website visitors. The only difference is the channel. The only exception is meeting booking via calendar card, which is rendered in the website chat widget and not in WhatsApp messaging.</p>
-      </div>
-
-      <!-- Positioning statement -->
-      <div class="nxy-position-box nxy-position-box-blue">
-        <p>"Every Nexy response is the output of a system that has already evaluated where this visitor is in their journey, what buying signals they are expressing, which persona fits them best, and how their enquiry scores against your qualification criteria — before a single word is generated."</p>
-      </div>
-
-      <!-- CTA -->
-      <div class="nxpl-ws-cta" style="border-top-color:rgba(33,77,187,.12);">
-        <p>Understand how Nexy's intelligence layer makes every conversation smarter than the last.</p>
-        <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">Talk to Nexy and See It in Action</a>
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ═══════════════ ORBIT CONNECTION CALLOUT ═══════════════ -->
-  <section class="nxy-orbit-callout">
-    <div class="container">
-      <div class="nxy-orbit-callout-inner">
+      <div class="nxy-closing-inner">
         <div>
-          <div class="nxy-orbit-callout-label">Built on NEXUS ORBIT</div>
-          <h2>Nexy Is Only as Good as What Your Business Has Approved</h2>
-          <p>Every product fact, service description, value proposition, and AI persona that Nexy uses in conversation is stored, validated, and published through Nexus Orbit — your AI knowledge foundation. No response goes beyond what you have approved. Every answer is traceable back to a specific knowledge source in your Orbit knowledge base.</p>
+          <div class="nxy-closing-label">Nexus Agentic Candidate</div>
+          <h2>Nexy Converts Intelligence Into Growth Movement.</h2>
+          <p>Nexus Contacts Intelligence understands the contact. Nexus Orbit provides the knowledge. Nexy activates both through real conversations and business actions.<br><br>With Nexy, every contact recommendation can become a message, every reply can become a next step, and every qualified interaction can move toward demo, proposal, follow-up, or human handover.</p>
         </div>
-        <a href="/nexus-platform" class="nxy-orbit-callout-link">
-          Explore Nexus Orbit
-          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
+        <div style="display:flex;flex-direction:column;gap:16px;align-items:flex-start;flex-shrink:0;">
+          <a href="#" class="nxy-closing-cta" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
+            Chat with Nexy Now
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="/nexus-contacts-intelligence" class="nxy-closing-cta" style="background:transparent;border-color:rgba(255,255,255,.18);">
+            Explore Contacts Intelligence
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -992,7 +1391,7 @@
 
       <div class="ncf-products-strip">
 
-        <!-- Card 1: Business Companion -->
+        <!-- Card 1: Agentic Conversation & Outreach -->
         <div class="ncf-prod-card">
           <span class="ncf-prod-icon" style="background:linear-gradient(135deg,#0b5438 0%,#16A37F 100%);border-radius:14px;display:flex;align-items:center;justify-content:center;width:52px;height:52px;flex-shrink:0;">
             <svg viewBox="0 0 28 28" fill="none" width="28" height="28">
@@ -1001,17 +1400,17 @@
             </svg>
           </span>
           <div class="ncf-prod-body">
-            <strong>Nexy as Business Companion</strong>
-            <span>Engages visitors and WhatsApp contacts through knowledge-grounded conversations — tracking journey milestones, detecting buying signals, matching personas, scoring enquiries, escalating to humans, and booking meetings.</span>
+            <strong>Agentic Conversation &amp; Outreach</strong>
+            <span>Nexy acts on contact recommendations and Orbit knowledge to conduct conversations, prepare outreach, handle replies, and follow up across website chat, WhatsApp, email, and CRM.</span>
             <div class="ncf-prod-tags">
-              <span>Website &amp; WhatsApp</span><span>Knowledge-Grounded</span><span>Intelligence-Driven</span>
+              <span>Knowledge-Grounded</span><span>Multi-Channel</span><span>Reply-Aware</span>
             </div>
           </div>
         </div>
 
         <div class="ncf-prod-sep"></div>
 
-        <!-- Card 2: Intelligence Engine -->
+        <!-- Card 2: Contact Journey Updates -->
         <div class="ncf-prod-card">
           <span class="ncf-prod-icon" style="background:linear-gradient(135deg,#071c52 0%,#4472e6 100%);border-radius:14px;display:flex;align-items:center;justify-content:center;width:52px;height:52px;flex-shrink:0;">
             <svg viewBox="0 0 28 28" fill="none" width="28" height="28">
@@ -1021,30 +1420,32 @@
             </svg>
           </span>
           <div class="ncf-prod-body">
-            <strong>Nexy Intelligence Engine</strong>
-            <span>Per-message evaluation of journey milestones, buying signals, persona match, and enquiry score — continuously updated across every conversation to calibrate tone, direction, and escalation decisions.</span>
+            <strong>Contact Journey Updates</strong>
+            <span>After every interaction, Nexy writes back the outcome, reply status, interest level, and next-recommended action to Nexus Contacts Intelligence — keeping the contact journey current and the intelligence loop closed.</span>
             <div class="ncf-prod-tags">
-              <span>Per-Message Analysis</span><span>Seven-Stage Journey</span><span>Signal Detection</span>
+              <span>Journey Tracking</span><span>Outcome Recording</span><span>Closed Loop</span>
             </div>
           </div>
         </div>
 
         <div class="ncf-prod-sep"></div>
 
-        <!-- Card 3: Powered by Nexus Orbit -->
+        <!-- Card 3: Human Governance & Handover -->
         <div class="ncf-prod-card">
           <span class="ncf-prod-icon" style="background:linear-gradient(135deg,#214dbb 0%,#16A37F 100%);border-radius:14px;display:flex;align-items:center;justify-content:center;width:52px;height:52px;flex-shrink:0;">
             <svg viewBox="0 0 28 28" fill="none" width="28" height="28">
-              <ellipse cx="14" cy="8" rx="9" ry="3" stroke="white" stroke-width="1.5"/>
-              <path d="M5 8v5c0 1.66 4.03 3 9 3s9-1.34 9-3V8" stroke="white" stroke-width="1.5"/>
-              <path d="M5 13v5c0 1.66 4.03 3 9 3s9-1.34 9-3v-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+              <circle cx="10" cy="9" r="4" stroke="white" stroke-width="1.5"/>
+              <circle cx="20" cy="8" r="3" stroke="white" stroke-width="1.4" opacity=".6"/>
+              <path d="M3 23c0-3.5 3.13-6 7-6h2" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M20 14c2.76 0 5 2 5 4.5" stroke="white" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>
+              <path d="M16 22l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
             </svg>
           </span>
           <div class="ncf-prod-body">
-            <strong>Powered by Nexus Orbit</strong>
-            <span>Every response Nexy gives is drawn from your published and approved Nexus Orbit knowledge base — keeping every visitor interaction accurate, on-brand, and fully traceable back to your business.</span>
+            <strong>Human Governance &amp; Handover</strong>
+            <span>Approval rules, suppression boundaries, consent checks, and structured human handover — Nexy operates within business-defined boundaries, escalating complex or high-value cases with full context.</span>
             <div class="ncf-prod-tags">
-              <span>No Hallucinations</span><span>Fully Auditable</span><span>Business-Approved</span>
+              <span>Approval Rules</span><span>Consent-Aware</span><span>Full Context Handoff</span>
             </div>
           </div>
         </div>
@@ -1053,8 +1454,8 @@
 
       <div class="ncf-cta-row">
         <div class="ncf-cta-text">
-          <h2>Start a conversation with Nexy — and see the intelligence layer in action</h2>
-          <p>Nexy is live on this website. Open a chat and experience how journey tracking, signal detection, persona matching, and knowledge grounding come together in a single conversation.</p>
+          <h2>Start a conversation with Nexy and see how contact intelligence becomes action</h2>
+          <p>Nexy is live on this website. Open a chat and experience how Nexus Contacts Intelligence, Nexus Orbit knowledge, and agentic conversation capability come together in a single interaction.</p>
         </div>
         <div class="ncf-actions">
           <a href="#" class="btn btn-primary" onclick="NexusChatWidget && NexusChatWidget.open(); return false;">
@@ -1074,6 +1475,7 @@
             <a href="/how-nexus-works" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">ORBIT ARCHITECTURE</a>
             <a href="/pricing" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.55)';">PRICING</a>
             <a href="/nexy" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXY</a>
+            <a href="/nexus-contacts-intelligence" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">CONTACTS INTELLIGENCE</a>
             <a href="/nexus-knowledge-browser" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.55);text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,.9)';" onmouseout="this.style.color='rgba(255,255,255,.55)';">NEXUS BROWSER</a>
           </nav>
           <span class="ncf-powered">Powered by <strong>Nexus AI</strong></span>
