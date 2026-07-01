@@ -3391,6 +3391,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 9px;
       flex: 1;
+      align-content: start;
     }
 
     .nexy-cap-chip {
@@ -3503,6 +3504,81 @@
       font-weight: 600;
     }
 
+    /* ── Cold Messaging highlight card ── */
+    .nexy-cold-card {
+      margin-top: 14px;
+      padding: 16px 18px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0a3d2b 0%, #0d5c3a 60%, #116a41 100%);
+      border: 1px solid rgba(37,211,102,.28);
+      box-shadow: 0 6px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.06);
+      position: relative;
+      overflow: hidden;
+    }
+    .nexy-cold-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 20%, rgba(37,211,102,.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .nexy-cold-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(37,211,102,.18);
+      border: 1px solid rgba(37,211,102,.40);
+      color: #4ade80;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .nexy-cold-label svg { flex-shrink: 0; }
+    .nexy-cold-title {
+      margin: 0 0 8px;
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.35;
+    }
+    .nexy-cold-body {
+      margin: 0 0 12px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: rgba(255,255,255,.78);
+    }
+    .nexy-cold-body strong { color: #6ee7a0; font-weight: 700; }
+    .nexy-cold-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    .nexy-cold-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 11.5px;
+      font-weight: 600;
+      color: rgba(255,255,255,.88);
+      line-height: 1.4;
+    }
+    .nexy-cold-item::before {
+      content: '→';
+      color: #4ade80;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    @media (max-width: 480px) { .nexy-cold-grid { grid-template-columns: 1fr; } }
+
     /* ── positioning footer ── */
     .nexy-panel-foot {
       padding: 16px 24px 22px;
@@ -3614,6 +3690,24 @@
             <span class="nexy-wa-chip">Automated lead qualification</span>
             <span class="nexy-wa-chip">On-brand conversation flow</span>
             <span class="nexy-wa-chip">Zero hallucination guarantee</span>
+          </div>
+
+          <!-- Cold Messaging highlight -->
+          <div class="nexy-cold-card">
+            <div class="nexy-cold-label">
+              <svg viewBox="0 0 16 16" fill="none" width="11" height="11"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 2 .7-4.1L2 5.4l4.2-.8L8 1z" fill="#4ade80"/></svg>
+              Highlighted Capability · Outbound
+            </div>
+            <h4 class="nexy-cold-title">Cold Messaging — Proactive WhatsApp Lead Generation</h4>
+            <p class="nexy-cold-body">Nexy doesn't wait for prospects to find you. Give Nexy a contact list — from your CRM, event registrations, or market segment — and it crafts <strong>personalised, knowledge-grounded opening messages</strong> and delivers them via WhatsApp. When a contact replies, Nexy <strong>picks up the conversation automatically</strong>, answers questions from your Orbit knowledge base, qualifies their intent, and either books a meeting or hands a scored lead to your sales team. <strong>Outbound lead generation at scale — fully governed, fully on-brand, zero manual effort.</strong></p>
+            <div class="nexy-cold-grid">
+              <div class="nexy-cold-item">Personalised outreach from your contact list</div>
+              <div class="nexy-cold-item">Knowledge-grounded opening messages</div>
+              <div class="nexy-cold-item">Auto-qualification on every reply</div>
+              <div class="nexy-cold-item">Buying signal detection in cold conversations</div>
+              <div class="nexy-cold-item">Meeting booking within the WhatsApp thread</div>
+              <div class="nexy-cold-item">Scored leads handed off to your sales team</div>
+            </div>
           </div>
         </div>
 
