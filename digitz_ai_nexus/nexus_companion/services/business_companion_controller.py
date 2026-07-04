@@ -689,6 +689,9 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         "pain_point_challenges": steering.get("pain_point_challenges"),
         "lead_entry_point": steering.get("lead_entry_point"),
         "selected_capability_area": steering.get("selected_capability_area"),
+        "check_matching_capability_reason": steering.get("internal_intent"),
+        "capability_fit_context_area": steering.get("methodology_context_area"),
+        "capability_fit_challenge": steering.get("pain_point_challenges"),
     },
 })
     
@@ -796,6 +799,7 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         "current_methodology_status": steering.get("current_methodology_status") or "",
         "lead_entry_point": steering.get("lead_entry_point") or "",
         "selected_capability_area": steering.get("selected_capability_area") or "",
+        "methodology_context_area": steering.get("methodology_context_area") or "",
         "business_context": steering.get("business_context") or "",
     }
     
@@ -820,6 +824,48 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
     if steering.get("decision") == "answer_next_step":
         return _handle_next_step_question(conversation, pending_action)
 
+    if steering.get("decision") == "capability_menu_declined":
+        _clear_companion_pending_action(conversation)
+
+        _companion_flow_debug("CAPABILITY MENU DECLINED", {
+            "conversation": conversation.name,
+            "visitor_message": visitor_message,
+            "challenge": steering.get("pain_point_challenges"),
+            "context_area": steering.get("methodology_context_area"),
+            "pending_action_cleared": True,
+        })
+
+        return {
+            "status": "success",
+            "access_status": "intent_handled",
+            "answer": (
+                "Understood. I do not want to force a fit where there is none.\n\n"
+                "I will stop here for now. If you later want help with visitor conversation, "
+                "requirement discovery, enquiry qualification, or representative handoff, I can assist."
+            ),
+            "confidence": 1.0,
+            "sources": [],
+            "citations": [],
+            "retrieval_result": {},
+            "fallback_used": 0,
+            "chat_mode": "controlled_companion_direct",
+            "companion_controller": True,
+            "conversion_action": None,
+            "pending_action": "",
+        }
+
+    # Unclear capability-menu selection — repeat the controller-owned menu
+    # deterministically instead of letting the LLM improvise. The stored
+    # pending action stays select_nexy_capability_area.
+    if (
+        steering.get("decision") == "bounce_back_to_nexy_capabilities"
+        and steering.get("internal_intent") == "visitor_selection_unclear"
+    ):
+        return _handle_no_matching_capability_menu(
+            steering.get("pain_point_challenges"),
+            repeat=True,
+        )
+
     # Persist collect_current_methodology BEFORE the LLM responds so the next
     # visitor turn always reads it from DB, even if the response path is async.
     if steering.get("decision") == "discover_current_methodology":
@@ -828,7 +874,8 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
             "collect_current_methodology",
             {
                 "decision": "discover_current_methodology",
-                "context_area": steering.get("methodology_context_area") or "lead_generation",
+                "context_area": steering.get("methodology_context_area")
+                or _infer_context_area_from_challenge(steering.get("pain_point_challenges") or ""),
                 "expected_slot": "current_methodology",
                 "challenge": steering.get("pain_point_challenges") or "",
                 "asked_by_decision": "discover_current_methodology",
@@ -869,6 +916,36 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
             conversation_context=conversation_context,
             loop_payload=loop_payload,
             controller_plan=controller_plan,
+        )
+
+    # When the capability-fit check finds no confirmed matching capability,
+    # never let the LLM improvise — return the controller-owned capability menu
+    # and wait for the visitor to pick a supported area.
+    if (
+        steering.get("decision") == "check_matching_capability"
+        and isinstance(response, dict)
+        and response.get("access_status") in {"controlled_no_context", "no_context", "low_confidence", "restricted"}
+    ):
+        _set_companion_pending_action(
+            conversation,
+            "select_nexy_capability_area",
+            {
+                "reason": "no_matching_capability",
+                "challenge": steering.get("pain_point_challenges") or "",
+                "context_area": steering.get("methodology_context_area") or "general_business",
+            },
+        )
+
+        _companion_flow_debug("CAPABILITY FIT NO MATCH", {
+            "conversation": conversation.name,
+            "challenge": steering.get("pain_point_challenges"),
+            "context_area": steering.get("methodology_context_area"),
+            "access_status": response.get("access_status"),
+            "pending_action": "select_nexy_capability_area",
+        })
+
+        return _handle_no_matching_capability_menu(
+            steering.get("pain_point_challenges")
         )
 
     if not isinstance(response, dict):
@@ -1189,6 +1266,56 @@ def _no_alternative_fallback(current_methodology, challenge):
     }
 
 
+_NEXY_CAPABILITY_MENU = (
+    "- Visitor conversation\n"
+    "- Requirement discovery\n"
+    "- Enquiry qualification\n"
+    "- Lead context capture\n"
+    "- Guided next step\n"
+    "- Representative handoff\n"
+    "- Appointment readiness"
+)
+
+
+def _handle_no_matching_capability_menu(challenge=None, repeat=False):
+    """
+    Controller-owned response when the capability-fit check finds no confirmed
+    matching Nexy capability. Deterministic — never LLM-generated — so the
+    system cannot invent capability it does not have.
+    """
+    challenge = (challenge or "your requirement").strip()
+
+    if repeat:
+        answer = (
+            "Here are the areas I can currently help with:\n\n"
+            f"{_NEXY_CAPABILITY_MENU}\n\n"
+            "Which of these would you like help with?"
+        )
+    else:
+        answer = (
+            f"I do not have a confirmed Nexy capability specifically matching {challenge} in my current knowledge base, "
+            "so I should not claim that I can solve it directly.\n\n"
+            "Here are the areas I can currently help with:\n\n"
+            f"{_NEXY_CAPABILITY_MENU}\n\n"
+            "Which of these would you like help with?"
+        )
+
+    return {
+        "status": "success",
+        "access_status": "controlled_no_context",
+        "answer": answer,
+        "confidence": 0.0,
+        "sources": [],
+        "citations": [],
+        "retrieval_result": {},
+        "fallback_used": 1,
+        "chat_mode": "controlled_companion_direct",
+        "companion_controller": True,
+        "conversion_action": None,
+        "pending_action": "select_nexy_capability_area",
+    }
+
+
 def _build_companion_knowledge_query(
     visitor_message,
     current_milestone,
@@ -1382,14 +1509,30 @@ def _build_companion_knowledge_query(
             "Also offer to book a short consultation."
         )
 
+    if decision == "check_matching_capability":
+        challenges = (steering.get("pain_point_challenges") or "").strip()
+        business_context = (steering.get("business_context") or "").strip()
+        context_area = (steering.get("methodology_context_area") or "general_business").strip()
+        return (
+            "Find confirmed Nexy or Nexus capability that directly matches the visitor's business need. "
+            f"Visitor business context: {business_context}. "
+            f"Visitor challenge or requirement: {challenges}. "
+            f"Context area: {context_area}. "
+            "Look only for confirmed capability, workflow, use case, limitation, or supported business outcome. "
+            "Do not use generic marketing language as proof. "
+            "Return capability only if the knowledge clearly supports this specific need."
+        )
+
     if decision == "drill_nexy_capability_area":
         selected_area = (steering.get("selected_capability_area") or "").strip()
         challenges = (steering.get("pain_point_challenges") or "").strip()
         return (
-            f"Approved Nexus Orbit knowledge for deep dive on Nexy capability: {selected_area}. "
-            f"Visitor challenge: {challenges}. "
+            f"Confirmed Nexy/Nexus capability details for capability area: {selected_area}. "
+            f"Visitor challenge/context: {challenges}. "
+            "Find only approved knowledge about what this capability does, how it helps, limits, and next step. "
             "Return all confirmed workflow, process, data capture, routing, or outcome details "
-            "for this specific capability area only."
+            "for this specific capability area only. "
+            "Do not invent capability details."
         )
 
     return visitor_message or ""
@@ -1577,43 +1720,52 @@ def _response_goal_for_steering(steering):
     if decision == "present_nexy_capability_visibility":
         methodology = (steering.get("current_methodology") or "your current source").strip()
         methodology_status = (steering.get("current_methodology_status") or "known").strip()
+        _lead_context = (steering.get("methodology_context_area") or "lead_generation").strip() == "lead_generation"
 
         if methodology_status == "none":
-            ack_example = "Got it — you do not have a clear lead source in place yet."
+            ack_example = (
+                "Got it — you do not have a clear lead source in place yet."
+                if _lead_context
+                else "Got it — you do not have a set approach in place for this yet."
+            )
         elif methodology_status == "unclear":
-            ack_example = "Got it — your current lead source is not clearly defined yet."
+            ack_example = (
+                "Got it — your current lead source is not clearly defined yet."
+                if _lead_context
+                else "Got it — your current approach is not clearly defined yet."
+            )
         elif methodology_status == "unknown":
-            ack_example = f"Got it — {methodology} is currently part of how leads come in for you."
+            ack_example = (
+                f"Got it — {methodology} is currently part of how people come in for you."
+                if _lead_context
+                else f"Got it — {methodology} is what you are currently using for this."
+            )
         else:
-            ack_example = f"Got it — {methodology} is how you are currently bringing people in."
+            ack_example = (
+                f"Got it — {methodology} is how people are currently coming in."
+                if _lead_context
+                else f"Got it — {methodology} is how you are currently handling this."
+            )
 
         return (
-            "The visitor has already answered the current methodology/source question. "
+            "The visitor has already answered the current source/current approach question. "
             "Do NOT ask how effective it is. "
             "Do NOT ask what results they are getting. "
             "Do NOT ask which area they want to improve as a discovery question. "
-            f"Start with a brief acknowledgement — for example: '{ack_example}' "
-            "If the method is unknown or custom, acknowledge it as their current approach without judging it. "
-            "If the method is none or unclear, acknowledge that naturally and proceed. "
-            "Then transition: 'From here, I can focus on what happens after an enquiry comes in: "
-            "understanding the visitor, capturing the requirement, qualifying the opportunity, and guiding the next step.' "
-            "Do NOT use technical or internal phrases like: 'grounding', 'methodology', 'qualification journey', "
-            "'enquiry channel', 'controlled flow', 'permitted knowledge', 'Nexus Orbit knowledge says', "
-            "'confirmed role', 'conversion journey', 'post-enquiry', 'capability visibility flow'. "
-            "Use natural, plain business language. "
-            f"Do NOT say Nexy improves, enhances, optimizes, streamlines, or boosts {methodology}, "
+            f"Start with a short natural acknowledgement, for example: '{ack_example}' "
+            "Then explain in visitor-facing language that your support starts after someone contacts the business. "
+            "Do NOT write 'From here, I can focus...' because it sounds like internal planning. "
+            "Use first person only: 'I can...', 'I help...', 'I do not replace...'. "
+            "Do NOT say 'Nexy is designed to', 'Nexy helps', 'Nexy can', or 'Nexy is'. "
+            "Do NOT use the heading 'Nexy Capability Summary'. "
+            "Use the heading: 'How I can help after the enquiry'. "
+            f"Do NOT say you improve, enhance, optimize, streamline, or boost {methodology}, "
             "ads, campaigns, targeting, budget, creatives, or the visitor's current lead source. "
-            "Do NOT invent industry-specific examples, service categories, quote processes, consultation steps, "
-            "marketing strategy outcomes, or follow-up workflows unless explicitly present in permitted Nexus knowledge "
-            "or stated by the visitor. "
-            "Show heading exactly as: 'Nexy Capability Summary'. "
-            "List only capabilities found in the permitted Nexus knowledge. "
-            "Use 2 to 6 concise bullets — each must be a confirmed capability with a short plain explanation. "
-            "Do not create or invent missing capabilities. "
-            "If no confirmed capability knowledge is available, say simply that there is not enough confirmed "
-            "information available yet, then ask the visitor to leave a note or question for a Nexy representative. "
-            "End with a single CTA: 'Would you like to explore this further or book a short session with a Nexy representative?' "
-            "Do NOT ask which area they want to understand better as the closing question. "
+            "List only capabilities found in permitted Nexus knowledge. "
+            "Use 2 to 5 concise first-person bullets. "
+            "If no confirmed capability knowledge is available, say there is not enough confirmed information yet. "
+            "End with this CTA only: 'Would you like to explore this further or book a short session with a Nexy representative?' "
+            "Do NOT ask which area they want to understand better. "
             "Do NOT ask for email directly in this turn."
         )
 
@@ -1634,6 +1786,34 @@ def _response_goal_for_steering(steering):
             "If the permitted knowledge is not enough to explain this area clearly, say clearly and simply that "
             "this specific point is not confirmed in the available Nexus knowledge, offer to save the question "
             "for a Nexy representative, and suggest a short consultation. "
+            "After answering, ask: 'Would you like me to explain another Nexy area, or would you prefer to book "
+            "a short demo/consultation with a Nexy representative to review this for your business?'"
+        )
+
+    if decision == "check_matching_capability":
+        challenges = (steering.get("pain_point_challenges") or "the visitor's challenge").strip()
+        return (
+            "Answer only from permitted Nexus Orbit knowledge. "
+            "If a matching Nexy capability is clearly confirmed, briefly explain the match in the visitor's business context. "
+            f"Connect the capability to this challenge: {challenges}. "
+            "Do not ask about current methodology. "
+            "Do not treat the visitor's requirement statement as their current lead source or current approach. "
+            "Do not claim implementation, automation, integration, software delivery, dashboards, or operational "
+            "capability unless confirmed in the permitted knowledge. "
+            "End with one simple next-step question."
+        )
+
+    if decision == "drill_nexy_capability_area":
+        selected_area = (steering.get("selected_capability_area") or "that area").strip().replace("_", " ")
+        return (
+            f"Explain the Nexy capability area '{selected_area}' in simple, plain business language using ONLY "
+            "the permitted Nexus knowledge. "
+            "Do NOT use technical or internal phrases such as: 'grounding', 'retrieval', 'methodology', "
+            "'enquiry channel', 'controlled flow', 'permitted knowledge', or 'confirmed role'. "
+            "Do NOT invent industry-specific examples, service categories, quote processes, CRM behavior, "
+            "dashboards, integrations, or automation unless explicitly present in the permitted Nexus knowledge. "
+            "If the permitted knowledge is not enough to explain this area clearly, say so simply and offer to "
+            "save the question for a Nexy representative. "
             "After answering, ask: 'Would you like me to explain another Nexy area, or would you prefer to book "
             "a short demo/consultation with a Nexy representative to review this for your business?'"
         )
@@ -1694,10 +1874,48 @@ def _response_goal_for_steering(steering):
         )
 
     if decision == "verify_email_for_consultancy":
+        _verify_internal = (steering.get("internal_intent") or "").strip()
+
+        if _verify_internal == "resent_verification_code":
+            return (
+                "A new verification code has just been emailed to the visitor. "
+                "Tell them clearly that a fresh code was sent and that the previous code no longer works. "
+                "Ask them to enter the new code, and suggest checking the spam folder if it does not arrive shortly."
+            )
+        if _verify_internal == "resend_verification_failed":
+            return (
+                "Sending a new verification code failed. "
+                "Apologize briefly and ask the visitor to type 'resend code' again in a moment. "
+                "Do not claim that a code was sent."
+            )
+        if _verify_internal == "resend_limit_reached":
+            return (
+                "The visitor has requested too many verification codes. "
+                "Explain politely that no more codes can be sent right now. "
+                "Offer to leave a note or question for the Nexy representative instead."
+            )
+        if _verify_internal == "verification_code_invalid":
+            return (
+                "The code the visitor entered did not match. "
+                "Tell them plainly that the code was incorrect and ask them to re-check and enter it again. "
+                "Mention they can type 'resend code' to receive a new one."
+            )
+        if _verify_internal == "verification_code_expired":
+            return (
+                "The visitor's verification code has expired or is no longer valid. "
+                "Tell them clearly and ask them to type 'resend code' so a fresh code can be emailed."
+            )
+        if _verify_internal == "verification_max_retries":
+            return (
+                "The visitor entered the wrong code too many times. "
+                "Tell them clearly and ask them to type 'resend code' to receive a fresh code and try again."
+            )
+
         return (
             "A verification code has been sent to the visitor's email address. "
             "Ask them to enter the verification code to confirm their email. "
             "If the visitor cannot find the code, suggest checking their spam folder. "
+            "If they did not receive it, tell them they can type 'resend code' to get a new one. "
             "If the visitor does not want to continue, offer to collect a note or question for the Nexy representative."
         )
 
@@ -2300,6 +2518,56 @@ def _looks_like_consultancy_interest(visitor_message):
     return any(t in text for t in terms)
 
 
+def _is_capability_menu_declined(message):
+    """
+    Detect visitor rejection after the controller-owned Nexy capability menu.
+
+    This is different from meeting decline. The visitor is saying the listed
+    capability areas are not relevant, so we should stop politely instead of
+    repeating the menu or collecting a note.
+    """
+    text = str(message or "").lower().strip()
+
+    if not text:
+        return False
+
+    # Handles phrasings like "None of this I am interested"
+    if "none" in text and "interested" in text:
+        return True
+
+    # Bare closers match only as the whole message — substring matching would
+    # false-positive on words like "send", "closely", or "stopped".
+    if text.rstrip(".!?,") in {"stop", "close", "end", "leave it"}:
+        return True
+
+    decline_markers = [
+        "none of this",
+        "none of these",
+        "none of them",
+        "nothing here",
+        "nothing from this",
+        "nothing in this",
+        "not relevant",
+        "not useful",
+        "not suitable",
+        "not matching",
+        "doesn't match",
+        "does not match",
+        "no match",
+        "irrelevant",
+        "i am not interested",
+        "i'm not interested",
+        "not interested",
+        "no interest",
+        "no thanks",
+        "no thank you",
+        "that's all",
+        "that is all",
+    ]
+
+    return any(marker in text for marker in decline_markers)
+
+
 # ---------------------------------------------------------------------------
 # Methodology slot classifier helpers
 # ---------------------------------------------------------------------------
@@ -2348,6 +2616,148 @@ def _looks_like_no_methodology(text):
         "no method", "no process", "nothing yet", "nothing in place",
     ]
     return any(m in t for m in markers)
+
+
+def _looks_like_resend_code_request(visitor_message):
+    """True when the visitor asks for the verification code to be sent again."""
+    text = str(visitor_message or "").lower().strip()
+    markers = [
+        "resend", "re-send", "re send",
+        "send again", "send it again", "send the code again",
+        "send a new code", "send new code", "send code again",
+        "new code", "another code", "one more code", "fresh code",
+        "didn't get", "did not get", "didnt get",
+        "didn't receive", "did not receive", "didnt receive",
+        "haven't received", "have not received", "havent received",
+        "not received", "never got", "never received",
+        "no email came", "nothing in my inbox",
+    ]
+    return any(m in text for m in markers)
+
+
+def _looks_like_solution_need(message):
+    """
+    True when the visitor states a requirement / solution need
+    ("we need software solution", "looking for a system", "nothing yet")
+    rather than describing what they currently use.
+    """
+    text = str(message or "").lower().strip()
+
+    need_markers = [
+        "need",
+        "looking for",
+        "want",
+        "require",
+        "required",
+        "solution",
+        "software solution",
+        "automation",
+        "platform",
+        "system",
+        "implementation support",
+        "we need",
+        "we want",
+        "we are looking",
+        "nothing",
+        "not using",
+        "don't have",
+        "do not have",
+        "dont have",
+        "no system",
+        "no software",
+        "need help",
+    ]
+
+    return any(marker in text for marker in need_markers)
+
+
+def _looks_like_current_methodology(message):
+    """
+    True when the message plausibly describes a current tool/channel/approach.
+    Negated statements ("not using anything", "we don't have a system") are
+    solution needs, not current methodology.
+    """
+    text = str(message or "").lower().strip()
+
+    negation_markers = [
+        "not using", "don't use", "do not use", "dont use",
+        "don't have", "do not have", "dont have",
+        "no system", "no software", "nothing",
+    ]
+    if any(marker in text for marker in negation_markers):
+        return False
+
+    current_markers = [
+        "using",
+        "we use",
+        "currently",
+        "facebook",
+        "google",
+        "whatsapp",
+        "excel",
+        "crm",
+        "erp",
+        "manual",
+        "vendor",
+        "third party",
+        "in-house",
+        "website",
+        "contact form",
+        "phone",
+        "email",
+        "hubspot",
+        "zoho",
+        "salesforce",
+        "referral",
+        "seo",
+    ]
+
+    return any(marker in text for marker in current_markers)
+
+
+def _infer_context_area_from_challenge(challenge):
+    """
+    Infer the business context area from the discovered challenge text.
+    Unlike _detect_context_area_from_challenge (used for fact storage), this
+    covers solution-need areas so requirements are not assumed to be
+    lead-generation related.
+    """
+    text = str(challenge or "").lower()
+
+    if any(k in text for k in ["lead", "sales", "enquiry", "inquiry", "follow up", "conversion", "customer acquisition"]):
+        return "lead_generation"
+
+    if any(k in text for k in ["implementation", "software", "system", "deployment", "integration", "customization", "configuration", "saas"]):
+        return "system_implementation"
+
+    if any(k in text for k in ["operation", "workflow", "process", "delivery", "service"]):
+        return "operations"
+
+    if any(k in text for k in ["support", "ticket", "customer support", "helpdesk"]):
+        return "customer_support"
+
+    return "general_business"
+
+
+def _detect_selected_nexy_capability_area(message):
+    """Map the visitor's reply to one of the controller-owned capability menu areas."""
+    text = str(message or "").lower().strip()
+
+    mapping = {
+        "requirement_discovery": ["requirement", "requirement discovery", "discovery"],
+        "enquiry_qualification": ["qualification", "qualify", "enquiry", "inquiry", "lead qualification"],
+        "lead_context_capture": ["context", "capture", "lead context"],
+        "guided_next_step": ["next step", "guided", "guide"],
+        "representative_handoff": ["handoff", "hand off", "representative", "human", "team member"],
+        "appointment_readiness": ["appointment", "booking", "schedule", "meeting"],
+        "visitor_conversation": ["visitor conversation", "chat", "conversation"],
+    }
+
+    for key, terms in mapping.items():
+        if any(term in text for term in terms):
+            return key
+
+    return None
 
 
 def _get_current_challenge_value(accumulated_discovery, context_area):
@@ -2565,6 +2975,101 @@ Classify as false for a new question like pricing, demo request, human handoff, 
     }
 
 
+_CAPABILITY_MENU_AREA_KEYS = {
+    "requirement_discovery",
+    "enquiry_qualification",
+    "lead_context_capture",
+    "guided_next_step",
+    "representative_handoff",
+    "appointment_readiness",
+    "visitor_conversation",
+}
+
+
+def _classify_capability_menu_reply(visitor_message):
+    """
+    Semantic classifier for the visitor's reply to the controller-owned Nexy
+    capability menu ("Which of these would you like help with?").
+
+    Keyword lists cannot cover every rejection phrasing ("None of the above",
+    "these don't help me", ...), so the routing decision is made by the LLM.
+
+    Returns a dict:
+        {"reply_type": "area_selection" | "declined" | "consultancy_interest" | "unclear",
+         "selected_area": "<area key or None>",
+         "reason": "short reason"}
+    or None on any LLM/parse failure — the caller falls back to the
+    deterministic keyword chain.
+    """
+    text = str(visitor_message or "").strip()
+    if not text:
+        return None
+
+    prompt = f"""You are classifying a visitor's reply in a business chat.
+
+Context: the assistant just told the visitor it has NO confirmed capability matching their
+specific need, listed the capability areas it CAN help with, and asked:
+"Which of these would you like help with?"
+
+The listed areas (with their keys) are:
+- visitor_conversation (Visitor conversation)
+- requirement_discovery (Requirement discovery)
+- enquiry_qualification (Enquiry qualification)
+- lead_context_capture (Lead context capture)
+- guided_next_step (Guided next step)
+- representative_handoff (Representative handoff)
+- appointment_readiness (Appointment readiness)
+
+Visitor reply: {text}
+
+Classify the reply as exactly one of:
+- "declined": the visitor indicates none of the listed areas match their need, is not
+  interested in them, or wants to stop/close the conversation — in ANY phrasing
+  (e.g. "None of the above", "none of this I am interested", "these don't help me",
+  "this isn't what I need", "forget it", "no thanks", "stop").
+- "area_selection": the visitor picks one of the listed areas. A negated mention
+  ("I'm not interested in requirement discovery") is NOT a selection — that is "declined".
+- "consultancy_interest": the visitor asks to book a meeting/demo/consultation or to
+  speak with a human/representative.
+- "unclear": vague or ambiguous replies like "maybe", "what", "not sure", "explain more".
+
+Return JSON only:
+{{"reply_type": "declined" | "area_selection" | "consultancy_interest" | "unclear",
+ "selected_area": "<area key from the list above, or null>",
+ "reason": "short reason"}}"""
+
+    try:
+        raw = (generate_answer(prompt) or "").strip()
+        if raw.startswith("```"):
+            raw = raw.strip("`").replace("json", "", 1).strip()
+        result = json.loads(raw)
+        if not isinstance(result, dict):
+            return None
+
+        reply_type = str(result.get("reply_type") or "").strip()
+        if reply_type not in {"declined", "area_selection", "consultancy_interest", "unclear"}:
+            return None
+
+        selected_area = result.get("selected_area")
+        selected_area = str(selected_area).strip() if selected_area else None
+        if reply_type == "area_selection" and selected_area not in _CAPABILITY_MENU_AREA_KEYS:
+            # Selection without a valid area key cannot be routed — repeat the menu.
+            reply_type = "unclear"
+            selected_area = None
+
+        return {
+            "reply_type": reply_type,
+            "selected_area": selected_area,
+            "reason": str(result.get("reason") or "llm_classified").strip(),
+        }
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Companion Controller: capability menu reply classifier failed",
+        )
+        return None
+
+
 def send_companion_email_verification(conversation, email):
     """
     Generate a 6-digit OTP, store its SHA-256 hash with a 10-minute expiry, and
@@ -2774,32 +3279,55 @@ def _sync_pending_action_from_decision(conversation, decision, steering=None):
         "capture_closing_feedback": "capture_closing_feedback",
         "appointment_declined_collect_note": "appointment_declined_collect_note",
         "email_declined_collect_note": "email_declined_collect_note",
+        # After a grounded capability-area explanation, offer another area or a
+        # consultation — the existing pending handler covers both routes.
+        "drill_nexy_capability_area": "ask_more_clarification_or_consultancy",
     }
     clear_decisions = {
         "show_meeting_booking_card",
         "confirm_consultancy_request",
         "close_conversation",
         "demo_rejected",
+        "capability_menu_declined",
     }
 
     if decision in action_map:
+        action = action_map[decision]
         ctx = {
             "decision": decision,
             "methodology_context_area": (steering or {}).get("methodology_context_area"),
             "current_methodology": (steering or {}).get("current_methodology"),
         }
-        _set_companion_pending_action(conversation, action_map[decision], ctx)
+        # Keep the verification resend counter across verify-stage turns so the
+        # resend limit cannot be bypassed by sending another message. A fresh
+        # email-collection stage naturally resets it.
+        if action in ("verify_email_for_consultancy", "verify_email_for_appointment"):
+            _existing_ctx = _get_companion_pending_context(conversation)
+            if _existing_ctx.get("resend_count"):
+                ctx["resend_count"] = _existing_ctx.get("resend_count")
+        _set_companion_pending_action(conversation, action, ctx)
     elif decision in clear_decisions:
         _clear_companion_pending_action(conversation)
     elif decision == "discover_current_methodology":
         ctx = {
             "decision": decision,
-            "context_area": (steering or {}).get("methodology_context_area") or "lead_generation",
+            "context_area": (steering or {}).get("methodology_context_area")
+            or _infer_context_area_from_challenge((steering or {}).get("pain_point_challenges") or ""),
             "expected_slot": "current_methodology",
             "challenge": (steering or {}).get("pain_point_challenges") or "",
             "asked_by_decision": "discover_current_methodology",
         }
         _set_companion_pending_action(conversation, "collect_current_methodology", ctx)
+    elif decision == "check_matching_capability":
+        # A grounded capability match was confirmed (the no-match path returns
+        # earlier with pending select_nexy_capability_area). Expect interest,
+        # clarification, or decline next — same as after capability visibility.
+        ctx = {
+            "decision": decision,
+            "methodology_context_area": (steering or {}).get("methodology_context_area"),
+            "pain_point_challenges": (steering or {}).get("pain_point_challenges"),
+        }
+        _set_companion_pending_action(conversation, "confirm_nexy_companion_interest", ctx)
     elif decision == "present_nexy_capability_visibility":
         ctx = {
             "decision": decision,
@@ -2841,6 +3369,61 @@ def _load_accumulated_discovery(conversation):
         return json.loads(enquiry.discovery_data or "{}")
     except Exception:
         return {}
+
+def _capability_presentation_steering(
+    intent,
+    confidence,
+    challenge,
+    current_methodology,
+    methodology_status,
+    business_context,
+    fact_context_area,
+    internal_intent="present_nexy_value_after_methodology_capture",
+):
+    """
+    After the methodology slot is filled, decide how Nexy value is presented.
+
+    Lead-generation / enquiry handling is Nexy's confirmed home domain, so those
+    challenges get the full capability-visibility summary. Any other challenge
+    area (system implementation, operations, customer support, general) must
+    first pass the challenge-specific capability-fit check — Nexy must never
+    present a capability summary that implies it can solve a challenge outside
+    its confirmed knowledge (e.g. "Hospital Management System Implementation").
+    """
+    fit_area = _infer_context_area_from_challenge(challenge)
+
+    if fit_area == "lead_generation":
+        return {
+            "decision": "present_nexy_capability_visibility",
+            "knowledge_needed": True,
+            "redirect_to_milestone": False,
+            "visitor_external_intent": intent,
+            "external_intent_confidence": confidence,
+            "internal_intent": internal_intent,
+            "milestone_policy": "solution_mapping",
+            "methodology_context_area": fact_context_area,
+            "current_methodology": current_methodology,
+            "current_methodology_status": methodology_status,
+            "pain_point_challenges": challenge,
+            "business_context": business_context,
+            "grounding_mode": "nexus_knowledge_only",
+        }
+
+    return {
+        "decision": "check_matching_capability",
+        "knowledge_needed": True,
+        "redirect_to_milestone": False,
+        "visitor_external_intent": intent,
+        "external_intent_confidence": confidence,
+        "internal_intent": "check_capability_fit_for_non_lead_challenge",
+        "milestone_policy": "capability_fit_check",
+        "pain_point_challenges": challenge,
+        "current_methodology": current_methodology,
+        "current_methodology_status": methodology_status,
+        "methodology_context_area": fit_area,
+        "business_context": business_context,
+    }
+
 
 def _decide_steering(
     conversation,
@@ -3046,6 +3629,105 @@ def _decide_steering(
         }
 
     # ------------------------------------------------------------------
+    # B1a. Pending: select Nexy capability area
+    # The controller showed the capability menu after a failed capability-fit
+    # check and is waiting for the visitor to pick an area. Consultancy
+    # interest and declines still route to the existing booking/note flows.
+    # ------------------------------------------------------------------
+    if pending_action == "select_nexy_capability_area":
+        _sel_pctx = _get_companion_pending_context(conversation)
+        _sel_challenge = _sel_pctx.get("challenge") or _nf_challenge_text or ""
+
+        # Route the menu reply semantically — hardcoded phrase lists cannot cover
+        # every rejection phrasing ("None of the above", "these don't help me", ...).
+        # The keyword helpers below act only as the fallback when the classifier
+        # call fails, so the turn still routes safely without the LLM.
+        _menu_cls = _classify_capability_menu_reply(visitor_message)
+
+        if _menu_cls:
+            _menu_route = _menu_cls["reply_type"]
+            _menu_area = _menu_cls.get("selected_area")
+        elif _is_capability_menu_declined(visitor_message):
+            _menu_route, _menu_area = "declined", None
+        elif _looks_like_consultancy_interest(visitor_message):
+            _menu_route, _menu_area = "consultancy_interest", None
+        elif _looks_like_meeting_decline(visitor_message):
+            _menu_route, _menu_area = "meeting_decline", None
+        else:
+            _menu_area = _detect_selected_nexy_capability_area(visitor_message)
+            _menu_route = "area_selection" if _menu_area else "unclear"
+
+        _companion_flow_debug("CAPABILITY MENU REPLY ROUTE", {
+            "classifier_used": bool(_menu_cls),
+            "route": _menu_route,
+            "selected_area": _menu_area,
+            "reason": (_menu_cls or {}).get("reason"),
+        })
+
+        if _menu_route == "declined":
+            return {
+                "decision": "capability_menu_declined",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "visitor_declined_available_nexy_capability_areas",
+                "milestone_policy": "closing",
+                "pain_point_challenges": _sel_challenge,
+                "methodology_context_area": _infer_context_area_from_challenge(_sel_challenge),
+            }
+
+        if _menu_route == "consultancy_interest":
+            return {
+                "decision": "collect_email_for_consultancy",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "collect_email_after_consultancy_interest",
+                "milestone_policy": "appointment_booking",
+                "pain_point_challenges": _sel_challenge,
+                "methodology_context_area": _infer_context_area_from_challenge(_sel_challenge),
+            }
+
+        if _menu_route == "meeting_decline":
+            return {
+                "decision": "appointment_declined_collect_note",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "collect_note_after_meeting_declined",
+                "milestone_policy": "note_collection",
+            }
+
+        if _menu_route == "area_selection" and _menu_area:
+            return {
+                "decision": "drill_nexy_capability_area",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": "capability_area_selection",
+                "external_intent_confidence": 1.0,
+                "internal_intent": "explain_selected_nexy_capability_area",
+                "milestone_policy": "capability_explanation",
+                "selected_capability_area": _menu_area,
+                "pain_point_challenges": _sel_challenge,
+                "methodology_context_area": _infer_context_area_from_challenge(_sel_challenge),
+                "business_context": _build_business_context(_nf),
+            }
+
+        return {
+            "decision": "bounce_back_to_nexy_capabilities",
+            "knowledge_needed": False,
+            "redirect_to_milestone": False,
+            "visitor_external_intent": "unclear_capability_selection",
+            "external_intent_confidence": 0.5,
+            "internal_intent": "visitor_selection_unclear",
+            "milestone_policy": "capability_menu",
+            "pain_point_challenges": _sel_challenge,
+        }
+
+    # ------------------------------------------------------------------
     # B1. Pending: collect current methodology slot
     # The controller asked "what are you currently using?" and is waiting
     # for the visitor's answer. Classify the reply and fill the slot.
@@ -3056,6 +3738,28 @@ def _decide_steering(
         _pctx = _get_companion_pending_context(conversation)
         _cm_context_area = _pctx.get("context_area") or _nf_context_area or "lead_generation"
         _cm_challenge = _pctx.get("challenge") or _nf_challenge_text or ""
+
+        # Requirement / solution-need statements ("we need software solution",
+        # "nothing yet", "looking for a system") are NOT a current methodology.
+        # Verify capability fit against Nexus Orbit before making any claim,
+        # instead of storing the requirement as the visitor's lead source.
+        if _looks_like_solution_need(visitor_message) and not _looks_like_current_methodology(visitor_message):
+            _cf_challenge = _cm_challenge or visitor_message
+            _cf_context_area = _infer_context_area_from_challenge(_cf_challenge)
+
+            return {
+                "decision": "check_matching_capability",
+                "knowledge_needed": True,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": "visitor_needs_solution_not_current_methodology",
+                "milestone_policy": "capability_fit_check",
+                "pain_point_challenges": _cf_challenge,
+                "current_methodology": "",
+                "methodology_context_area": _cf_context_area,
+                "business_context": _build_business_context(_nf),
+            }
 
         # Deterministic fast path for common source/method answers.
         # This prevents "Facebook ads" from falling into result-discovery.
@@ -3087,20 +3791,16 @@ def _decide_steering(
 
             _clear_companion_pending_action(conversation)
 
-            return {
-                "decision": "present_nexy_capability_visibility",
-                "knowledge_needed": True,
-                "redirect_to_milestone": False,
-                "visitor_external_intent": "methodology_answer",
-                "external_intent_confidence": 1.0,
-                "internal_intent": "present_nexy_value_after_methodology_capture",
-                "milestone_policy": "solution_mapping",
-                "methodology_context_area": _cm_context_area,
-                "current_methodology": _cm_value,
-                "current_methodology_status": _cm_status,
-                "pain_point_challenges": _cm_challenge,
-                "business_context": _nf.get("industry") or _nf.get("business_type") or "",
-            }
+            return _capability_presentation_steering(
+                intent="methodology_answer",
+                confidence=1.0,
+                challenge=_cm_challenge,
+                current_methodology=_cm_value,
+                methodology_status=_cm_status,
+                business_context=_nf.get("industry") or _nf.get("business_type") or "",
+                fact_context_area=_cm_context_area,
+                internal_intent="present_nexy_value_after_methodology_capture",
+            )
 
         slot = _classify_current_methodology_slot_answer(
             visitor_message=visitor_message,
@@ -3132,21 +3832,16 @@ def _decide_steering(
                 signal=None,
             )
             _clear_companion_pending_action(conversation)
-            return {
-                "decision": "present_nexy_capability_visibility",
-                "knowledge_needed": True,
-                "redirect_to_milestone": False,
-                "visitor_external_intent": "methodology_answer",
-                "external_intent_confidence": 1.0,
-                "internal_intent": "present_nexy_value_after_methodology_capture",
-                "milestone_policy": "solution_mapping",
-                "methodology_context_area": _cm_context_area,
-                "current_methodology": _cm_value,
-                "current_methodology_status": _cm_status,
-                "pain_point_challenges": _cm_challenge,
-                "business_context": _nf.get("industry") or _nf.get("business_type") or "",
-                "grounding_mode": "nexus_knowledge_only",
-            }
+            return _capability_presentation_steering(
+                intent="methodology_answer",
+                confidence=1.0,
+                challenge=_cm_challenge,
+                current_methodology=_cm_value,
+                methodology_status=_cm_status,
+                business_context=_nf.get("industry") or _nf.get("business_type") or "",
+                fact_context_area=_cm_context_area,
+                internal_intent="present_nexy_value_after_methodology_capture",
+            )
 
         # Not a methodology answer — handle recognised intents directly so the
         # E/F challenge-methodology routing cannot intercept and re-ask methodology.
@@ -3226,21 +3921,16 @@ def _decide_steering(
                     signal=None,
                 )
                 _clear_companion_pending_action(conversation)
-                return {
-                    "decision": "present_nexy_capability_visibility",
-                    "knowledge_needed": True,
-                    "redirect_to_milestone": False,
-                    "visitor_external_intent": "methodology_answer",
-                    "external_intent_confidence": 0.5,
-                    "internal_intent": "present_nexy_value_after_unclear_methodology",
-                    "milestone_policy": "solution_mapping",
-                    "methodology_context_area": _cm_context_area,
-                    "current_methodology": _cm_value_fb,
-                    "current_methodology_status": "unclear",
-                    "pain_point_challenges": _cm_challenge,
-                    "business_context": _nf.get("industry") or _nf.get("business_type") or "",
-                    "grounding_mode": "nexus_knowledge_only",
-                }
+                return _capability_presentation_steering(
+                    intent="methodology_answer",
+                    confidence=0.5,
+                    challenge=_cm_challenge,
+                    current_methodology=_cm_value_fb,
+                    methodology_status="unclear",
+                    business_context=_nf.get("industry") or _nf.get("business_type") or "",
+                    fact_context_area=_cm_context_area,
+                    internal_intent="present_nexy_value_after_unclear_methodology",
+                )
             # First unclear — re-ask the methodology question once
             update_enquiry(
                 conversation,
@@ -3338,6 +4028,70 @@ def _decide_steering(
     # ------------------------------------------------------------------
     if pending_action in ("verify_email_for_appointment", "verify_email_for_consultancy"):
         import re as _re
+
+        # Resend request — issue a fresh code. send_companion_email_verification
+        # overwrites the stored hash and resets the retry counter, so the
+        # previous code stops validating the moment the new one is sent.
+        if _looks_like_resend_code_request(visitor_message):
+            _vp_ctx = _get_companion_pending_context(conversation)
+            _resend_count = int(_vp_ctx.get("resend_count") or 0)
+            _resend_email = (
+                frappe.db.get_value(
+                    "Nexus Live Conversation", conversation.name, "visitor_email"
+                ) or ""
+            ).strip()
+
+            if not _resend_email:
+                return {
+                    "decision": "collect_email_for_consultancy",
+                    "knowledge_needed": False,
+                    "redirect_to_milestone": False,
+                    "visitor_external_intent": intent,
+                    "external_intent_confidence": confidence,
+                    "internal_intent": "re_collect_email_for_resend",
+                    "milestone_policy": "appointment_booking",
+                }
+
+            if _resend_count >= 3:
+                return {
+                    "decision": "verify_email_for_consultancy",
+                    "knowledge_needed": False,
+                    "redirect_to_milestone": False,
+                    "visitor_external_intent": intent,
+                    "external_intent_confidence": confidence,
+                    "internal_intent": "resend_limit_reached",
+                    "milestone_policy": "appointment_booking",
+                }
+
+            _resend_result = send_companion_email_verification(conversation, _resend_email)
+            _set_companion_pending_action(
+                conversation,
+                pending_action,
+                {**_vp_ctx, "resend_count": _resend_count + 1},
+            )
+
+            _companion_flow_debug("VERIFICATION CODE RESENT", {
+                "conversation": conversation.name,
+                "email": _resend_email,
+                "resend_count": _resend_count + 1,
+                "send_status": _resend_result.get("status"),
+            })
+
+            return {
+                "decision": "verify_email_for_consultancy",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": (
+                    "resent_verification_code"
+                    if _resend_result.get("status") == "sent"
+                    else "resend_verification_failed"
+                ),
+                "milestone_policy": "appointment_booking",
+                "collected_email": _resend_email,
+            }
+
         _code_match = _re.search(r'\b\d{4,8}\b', visitor_message)
         if _code_match:
             _verify_result = verify_companion_email_code(conversation, _code_match.group(0))
@@ -3372,6 +4126,27 @@ def _decide_steering(
                     "internal_intent": "show_booking_card_after_verification",
                     "milestone_policy": "appointment_booking",
                 }
+
+            # Code entered but validation failed — tell the visitor why and
+            # how to recover (re-enter or ask for a fresh code) instead of
+            # silently repeating "enter the code".
+            _vfail_reason = (_verify_result.get("reason") or "invalid_code").strip()
+            _vfail_intent = {
+                "code_expired": "verification_code_expired",
+                "max_retries_exceeded": "verification_max_retries",
+                # No hash stored — the old code cannot validate; a fresh one is needed.
+                "no_pending_verification": "verification_code_expired",
+            }.get(_vfail_reason, "verification_code_invalid")
+
+            return {
+                "decision": "verify_email_for_consultancy",
+                "knowledge_needed": False,
+                "redirect_to_milestone": False,
+                "visitor_external_intent": intent,
+                "external_intent_confidence": confidence,
+                "internal_intent": _vfail_intent,
+                "milestone_policy": "appointment_booking",
+            }
         _msg_low_verify = visitor_message.lower().strip()
         if any(w in _msg_low_verify for w in ["skip", "cancel", "no code", "don't have", "not interested"]):
             if not _nf_representative_note_collected:
@@ -3782,20 +4557,16 @@ def _decide_steering(
     # E. Challenge + methodology known → main value moment
     # ------------------------------------------------------------------
     if _nf_challenge_text and _nf_methodology_known:
-        return {
-            "decision": "present_nexy_capability_visibility",
-            "knowledge_needed": True,
-            "redirect_to_milestone": False,
-            "visitor_external_intent": intent,
-            "external_intent_confidence": confidence,
-            "internal_intent": "present_nexy_capability_visibility_after_methodology",
-            "milestone_policy": "solution_mapping",
-            "current_methodology": _nf_methodology,
-            "current_methodology_status": _nf_methodology_status,
-            "methodology_context_area": _nf_context_area,
-            "pain_point_challenges": _nf_challenge_text,
-            "business_context": _nf.get("industry") or _nf.get("business_type") or "",
-        }
+        return _capability_presentation_steering(
+            intent=intent,
+            confidence=confidence,
+            challenge=_nf_challenge_text,
+            current_methodology=_nf_methodology,
+            methodology_status=_nf_methodology_status,
+            business_context=_nf.get("industry") or _nf.get("business_type") or "",
+            fact_context_area=_nf_context_area,
+            internal_intent="present_nexy_capability_visibility_after_methodology",
+        )
 
     # ------------------------------------------------------------------
     # F. Challenge known, methodology unknown → ask methodology
@@ -3856,19 +4627,16 @@ def _decide_steering(
                 else str(raw_sys)
             ).strip()
 
-        return {
-            "decision": "present_nexy_capability_visibility",
-            "knowledge_needed": True,
-            "redirect_to_milestone": False,
-            "visitor_external_intent": intent,
-            "external_intent_confidence": confidence,
-            "internal_intent": "present_nexy_capability_visibility_after_methodology",
-            "milestone_policy": "solution_mapping",
-            "current_methodology": current_methodology_value,
-            "methodology_context_area": context_area,
-            "pain_point_challenges": challenge_text,
-            "business_context": accumulated.get("industry") or accumulated.get("business_type") or "",
-        }
+        return _capability_presentation_steering(
+            intent=intent,
+            confidence=confidence,
+            challenge=challenge_text,
+            current_methodology=current_methodology_value,
+            methodology_status=_get_current_methodology_status(accumulated, context_area),
+            business_context=accumulated.get("industry") or accumulated.get("business_type") or "",
+            fact_context_area=context_area,
+            internal_intent="present_nexy_capability_visibility_after_methodology",
+        )
 
     if intent == "solution_fit_question":
         return {
@@ -4064,6 +4832,8 @@ def _looks_like_wrong_nexy_capability_visibility_answer(answer):
     text = str(answer or "").lower()
 
     wrong_markers = [
+        "from here, i can focus",
+        "nexy capability summary",
         "how effective",
         "how effective have you found",
         "what kind of results",
@@ -4075,30 +4845,49 @@ def _looks_like_wrong_nexy_capability_visibility_answer(answer):
         "specific aspects of your lead generation process",
         "what could be improved",
         "what do you feel could be improved",
+        "nexy is designed",
+        "nexy helps",
+        "nexy can",
+        "nexy focuses",
+        "nexy works",
+        "nexy supports",
     ]
 
     return any(marker in text for marker in wrong_markers)
 
 
 def _build_safe_nexy_capability_visibility_answer(steering):
+    
     methodology = (steering.get("current_methodology") or "your current lead source").strip()
+    methodology_status = (steering.get("current_methodology_status") or "known").strip()
+
+    if methodology_status == "none":
+        opening = "Got it — you do not have a clear lead source in place yet."
+        clarifier = "I can support the conversation once someone contacts your business."
+    elif methodology_status == "unclear":
+        opening = "Got it — your current lead source is not clearly defined yet."
+        clarifier = "I can support the conversation once someone contacts your business."
+    else:
+        opening = f"Got it — {methodology} is how people are currently coming in."
+        clarifier = (
+            f"To be clear, I do not replace or manage {methodology}. "
+            f"{methodology} may bring people in; I support what happens after someone contacts your business."
+        )
 
     return (
-        f"Got it — {methodology} is how you are currently bringing people in.\n\n"
-        "From here, Nexy focuses on what happens after an enquiry comes in: understanding the visitor, "
-        "capturing the requirement, qualifying the opportunity, and guiding the next step.\n\n"
-        "**Nexy Capability Summary:**\n"
-        "- **Structured visitor conversation:** Nexy can guide visitors through a focused conversation instead of leaving them in an open-ended chat.\n"
-        "- **Requirement discovery:** Nexy can capture what the visitor is looking for, their challenge, and their business context.\n"
-        "- **Buying signal understanding:** Nexy can identify engagement signals from the conversation and help highlight visitors who may need priority follow-up.\n"
-        "- **Guided next step:** Nexy can guide interested visitors toward a demo, consultation, or representative handoff when appropriate.\n"
-        "- **Knowledge-grounded answers:** Nexy answers from approved Nexus knowledge instead of guessing product or service details.\n\n"
-        f"To be clear, Nexy does not replace or manage {methodology}. "
-        f"{methodology} may bring people in — Nexy focuses on the conversation after someone contacts your business.\n\n"
-        "Which area would you like to understand better?"
+        f"{opening}\n\n"
+        "Once an enquiry comes in, I help structure the conversation, understand the requirement, "
+        "qualify the opportunity, and guide the visitor toward the right next step.\n\n"
+        "**How I can help after the enquiry:**\n"
+        "- **Visitor conversation:** I can guide the visitor through a focused conversation instead of leaving the chat open-ended.\n"
+        "- **Requirement discovery:** I can capture what the visitor is looking for, their challenge, and their business context.\n"
+        "- **Buying signal understanding:** I can identify useful signals from the conversation so the team can see which enquiries need attention.\n"
+        "- **Guided next step:** I can guide interested visitors toward a demo, consultation, or representative handoff when appropriate.\n"
+        "- **Knowledge-based answers:** I answer from approved Nexus knowledge instead of guessing product or service details.\n\n"
+        f"{clarifier}\n\n"
+        "Would you like to explore this further or book a short session with a Nexy representative?"
     )
-
-
+    
 def _ensure_nexy_capability_visibility_response(response, steering):
     if not isinstance(response, dict):
         response = {}
@@ -4162,6 +4951,7 @@ def _apply_grounding_policy(steering):
         "answer_solution_fit",
         "explain_solution_method",
         "check_methodology_knowledge",
+        "check_matching_capability",
         "present_alternative_solution",
     }
     if decision in nexus_knowledge_decisions:
@@ -4174,6 +4964,7 @@ def _apply_grounding_policy(steering):
         "ask_more_clarification_or_consultancy",
         "offer_demo_or_consultancy",
         "bounce_back_to_nexy_capabilities",
+        "capability_menu_declined",
         "collect_email_for_consultancy",
         "verify_email_for_consultancy",
         "collect_email_for_appointment",
@@ -4620,7 +5411,9 @@ def _build_meeting_booking_response(conversation, scheduling_link):
         "answer": (
             "Your email has been verified. You can now choose a suitable time to meet with "
             "a Nexy representative using the booking link below.\n\n"
-            f"{scheduling_link}"
+            f"{scheduling_link}\n\n"
+            "Thank you for your time — we look forward to speaking with you!\n\n"
+            "If you would like to discuss another topic, please refresh this page to start a new chat."
         ),
         "confidence": 1.0,
         "sources": [],

@@ -183,6 +183,550 @@
     </div>
   </div>
 
+  <section class="nx-benefits-section" id="business-benefits">
+	<style>
+		.nx-benefits-section {
+			--nxb-blue: #123f99;
+			--nxb-blue-dark: #0b2b72;
+			--nxb-orange: #f4a024;
+			--nxb-green: #19b89b;
+			--nxb-text: #17213a;
+			--nxb-muted: #69758f;
+
+			position: relative;
+			padding: 58px 18px 54px;
+			background:
+				radial-gradient(circle at 88% 8%, rgba(25,184,155,0.07), transparent 30%),
+				radial-gradient(circle at 6% 90%, rgba(46,112,255,0.08), transparent 32%),
+				linear-gradient(180deg, #ffffff 0%, #f6faff 55%, #f0f6ff 100%);
+			font-family: Inter, Arial, sans-serif;
+			overflow: hidden;
+		}
+
+		.nx-benefits-section * { box-sizing: border-box; }
+
+		.nxb-wrap {
+			position: relative;
+			z-index: 2;
+			max-width: 1320px;
+			margin: 0 auto;
+		}
+
+		.nxb-head {
+			max-width: 860px;
+			margin: 0 auto 34px;
+			text-align: center;
+		}
+
+		.nxb-eyebrow {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			padding: 10px 20px 10px 16px;
+			border-radius: 999px;
+			background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 55%, #e7f0ff 100%);
+			border: 1px solid rgba(18,63,153,0.16);
+			box-shadow:
+				0 12px 26px rgba(18,63,153,0.09),
+				inset 0 1px 0 rgba(255,255,255,0.90);
+			color: var(--nxb-blue-dark);
+			font-size: 12px;
+			font-weight: 950;
+			letter-spacing: 0.16em;
+			text-transform: uppercase;
+			line-height: 1;
+			white-space: nowrap;
+		}
+
+		.nxb-eyebrow::before {
+			content: "";
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 35% 35%, #7be8d2, var(--nxb-green) 70%);
+			box-shadow:
+				0 0 0 5px rgba(25,184,155,0.14),
+				0 0 18px rgba(25,184,155,0.40);
+			flex: 0 0 auto;
+		}
+
+		.nxb-head h2 {
+			margin: 18px 0 0;
+			color: var(--nxb-text);
+			font-size: clamp(28px, 3.4vw, 44px);
+			line-height: 1.04;
+			letter-spacing: -0.04em;
+			font-weight: 950;
+		}
+
+		.nxb-head p {
+			margin: 16px auto 0;
+			max-width: 780px;
+			color: var(--nxb-muted);
+			font-size: 15px;
+			line-height: 1.65;
+		}
+
+		.nxb-grid {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2.08fr);
+			gap: 16px;
+			align-items: stretch;
+		}
+
+		.nxb-subgrid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 16px;
+		}
+
+		.nxb-card {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			padding: 20px;
+			border-radius: 22px;
+			background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+			border: 1px solid rgba(18,63,153,0.13);
+			box-shadow:
+				0 18px 34px rgba(15,48,110,0.08),
+				0 4px 10px rgba(18,63,153,0.04);
+			overflow: hidden;
+			transition: transform .25s ease, box-shadow .25s ease;
+		}
+
+		.nxb-card:hover {
+			transform: translateY(-4px);
+			box-shadow:
+				0 26px 46px rgba(15,48,110,0.13),
+				0 6px 14px rgba(18,63,153,0.06);
+		}
+
+		.nxb-card::after {
+			content: "";
+			position: absolute;
+			right: -34px;
+			top: -34px;
+			width: 96px;
+			height: 96px;
+			border-radius: 50%;
+			background: rgba(18,63,153,0.045);
+			pointer-events: none;
+		}
+
+		.nxb-icon {
+			width: 42px;
+			height: 42px;
+			border-radius: 13px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			background: rgba(18,63,153,0.08);
+			color: var(--nxb-blue);
+			box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+			margin-bottom: 13px;
+			flex: 0 0 auto;
+		}
+
+		.nxb-icon svg { width: 21px; height: 21px; }
+
+		.nxb-card.green .nxb-icon {
+			background: rgba(25,184,155,0.11);
+			color: #0e917b;
+		}
+
+		.nxb-card.amber .nxb-icon {
+			background: rgba(244,160,36,0.13);
+			color: #c47707;
+		}
+
+		.nxb-card strong {
+			display: block;
+			color: var(--nxb-text);
+			font-size: 16.5px;
+			font-weight: 950;
+			line-height: 1.15;
+			letter-spacing: -0.02em;
+			margin-bottom: 8px;
+		}
+
+		.nxb-card p {
+			margin: 0 0 14px;
+			color: var(--nxb-muted);
+			font-size: 12.5px;
+			line-height: 1.58;
+			flex: 1 1 auto;
+		}
+
+		.nxb-tags {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			margin-top: auto;
+		}
+
+		.nxb-tag {
+			padding: 6px 10px;
+			border-radius: 999px;
+			background: rgba(18,63,153,0.07);
+			color: var(--nxb-blue);
+			font-size: 10px;
+			font-weight: 900;
+			letter-spacing: 0.03em;
+			white-space: nowrap;
+		}
+
+		.nxb-card.green .nxb-tag {
+			background: rgba(25,184,155,0.10);
+			color: #0e917b;
+		}
+
+		.nxb-card.amber .nxb-tag {
+			background: rgba(244,160,36,0.11);
+			color: #b06e08;
+		}
+
+		/* ---- Featured card ---- */
+		.nxb-featured {
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			padding: 28px 26px;
+			border-radius: 26px;
+			background: linear-gradient(150deg, #1b3f9e 0%, #2e5cc8 62%, #2f6ad4 100%);
+			border: 1px solid rgba(18,63,153,0.30);
+			box-shadow:
+				0 28px 56px rgba(15,48,110,0.22),
+				inset 0 1px 0 rgba(255,255,255,0.16);
+			color: #ffffff;
+			overflow: hidden;
+			transition: transform .25s ease, box-shadow .25s ease;
+		}
+
+		.nxb-featured:hover {
+			transform: translateY(-4px);
+			box-shadow:
+				0 34px 66px rgba(15,48,110,0.28),
+				inset 0 1px 0 rgba(255,255,255,0.16);
+		}
+
+		.nxb-featured::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background:
+				radial-gradient(circle at 12% 14%, rgba(255,255,255,0.13), transparent 30%),
+				radial-gradient(circle at 90% 92%, rgba(25,184,155,0.20), transparent 36%),
+				linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+				linear-gradient(180deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+			background-size: auto, auto, 34px 34px, 34px 34px;
+			pointer-events: none;
+		}
+
+		.nxb-featured > * { position: relative; z-index: 2; }
+
+		.nxb-featured-flag {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			width: fit-content;
+			padding: 8px 13px;
+			border-radius: 999px;
+			background: rgba(255,255,255,0.12);
+			border: 1px solid rgba(255,255,255,0.18);
+			color: rgba(255,255,255,0.92);
+			font-size: 10px;
+			font-weight: 950;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			margin-bottom: 20px;
+		}
+
+		.nxb-featured-flag::before {
+			content: "";
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: radial-gradient(circle at 35% 35%, #ffd38a, var(--nxb-orange) 70%);
+			box-shadow: 0 0 12px rgba(244,160,36,0.60);
+		}
+
+		.nxb-featured .nxb-icon {
+			width: 54px;
+			height: 54px;
+			border-radius: 17px;
+			background: rgba(255,255,255,0.14);
+			color: #ffffff;
+			box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
+			margin-bottom: 16px;
+		}
+
+		.nxb-featured .nxb-icon svg { width: 26px; height: 26px; }
+
+		.nxb-featured strong {
+			display: block;
+			font-size: clamp(22px, 2vw, 27px);
+			font-weight: 950;
+			line-height: 1.06;
+			letter-spacing: -0.03em;
+			margin-bottom: 12px;
+		}
+
+		.nxb-featured p {
+			margin: 0 0 18px;
+			color: rgba(255,255,255,0.82);
+			font-size: 13.5px;
+			line-height: 1.66;
+			flex: 1 1 auto;
+		}
+
+		.nxb-featured .nxb-tag {
+			background: rgba(255,255,255,0.12);
+			color: rgba(255,255,255,0.94);
+			border: 1px solid rgba(255,255,255,0.14);
+		}
+
+		.nxb-closing {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 14px;
+			margin-top: 30px;
+			text-align: center;
+		}
+
+		.nxb-closing-rule {
+			flex: 0 1 120px;
+			height: 1.5px;
+			background: linear-gradient(90deg, transparent, rgba(18,63,153,0.22));
+		}
+
+		.nxb-closing-rule.right {
+			background: linear-gradient(90deg, rgba(18,63,153,0.22), transparent);
+		}
+
+		.nxb-closing p {
+			margin: 0;
+			max-width: 640px;
+			color: var(--nxb-muted);
+			font-size: 13.5px;
+			font-weight: 600;
+			line-height: 1.6;
+		}
+
+		.nxb-closing p em {
+			font-style: normal;
+			color: var(--nxb-blue);
+			font-weight: 800;
+		}
+
+		@media (max-width: 1150px) {
+			.nxb-grid {
+				grid-template-columns: 1fr;
+			}
+			.nxb-subgrid {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+		}
+
+		@media (max-width: 760px) {
+			.nx-benefits-section {
+				padding: 42px 14px 40px;
+			}
+			.nxb-head { margin-bottom: 26px; }
+			.nxb-subgrid {
+				grid-template-columns: 1fr;
+			}
+			.nxb-featured { padding: 22px 20px; }
+			.nxb-closing { flex-direction: column; gap: 10px; }
+			.nxb-closing-rule { display: none; }
+		}
+	</style>
+
+	<div class="nxb-wrap">
+
+		<div class="nxb-head">
+			<span class="nxb-eyebrow">Nexus AI Business Benefits</span>
+			<h2>AI That Converts Visitors, Supports Customers, and Activates Contacts</h2>
+			<p>
+				Nexus AI helps businesses use secured business knowledge across website chat,
+				WhatsApp, customer support, lead generation, contact intelligence, offers, and
+				human escalation. It understands visitor intent, matches needs with business
+				capabilities, and guides conversations toward the right next action.
+			</p>
+		</div>
+
+		<div class="nxb-grid">
+
+			<!-- Featured: Website AI Sales Companion -->
+			<div class="nxb-featured">
+				<span class="nxb-featured-flag">Flagship Benefit</span>
+				<span class="nxb-icon" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+						<path d="M12 8.5l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="currentColor" stroke="none"/>
+					</svg>
+				</span>
+				<strong>Website AI Sales Companion</strong>
+				<p>
+					Present products and services through intelligent website conversations.
+					Nexus AI understands visitor requirements, matches them with business
+					capabilities, identifies customer personas, detects buying signals, and
+					guides the visitor toward a demo, enquiry, or human escalation.
+				</p>
+				<div class="nxb-tags">
+					<span class="nxb-tag">Product Matching</span>
+					<span class="nxb-tag">Persona Mapping</span>
+					<span class="nxb-tag">Demo Routing</span>
+				</div>
+			</div>
+
+			<div class="nxb-subgrid">
+
+				<!-- AI Website Customer Support -->
+				<div class="nxb-card green">
+					<span class="nxb-icon" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M3 12a9 9 0 0118 0v4a2 2 0 01-2 2h-1a1 1 0 01-1-1v-4a1 1 0 011-1h3M3 12v4a2 2 0 002 2h1a1 1 0 001-1v-4a1 1 0 00-1-1H3"/>
+							<path d="M18 18v1a2 2 0 01-2 2h-3"/>
+						</svg>
+					</span>
+					<strong>AI Website Customer Support</strong>
+					<p>
+						Provide instant support through the website using approved business
+						knowledge — answer questions, clarify service details, collect issue
+						information, and escalate when human attention is required.
+					</p>
+					<div class="nxb-tags">
+						<span class="nxb-tag">Support Chat</span>
+						<span class="nxb-tag">Knowledge-Based Answers</span>
+						<span class="nxb-tag">Escalation</span>
+					</div>
+				</div>
+
+				<!-- WhatsApp AI Lead Generation -->
+				<div class="nxb-card">
+					<span class="nxb-icon" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M21 11.5a8.5 8.5 0 01-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1121 11.5z"/>
+							<path d="M9 12h.01M12.5 12h.01M16 12h.01"/>
+						</svg>
+					</span>
+					<strong>WhatsApp AI Lead Generation</strong>
+					<p>
+						Generate and qualify leads through WhatsApp conversations — understand
+						prospect needs, explain relevant products or services, and move
+						interested leads toward the next business action.
+					</p>
+					<div class="nxb-tags">
+						<span class="nxb-tag">WhatsApp Leads</span>
+						<span class="nxb-tag">Qualification</span>
+						<span class="nxb-tag">Follow-up</span>
+					</div>
+				</div>
+
+				<!-- WhatsApp AI Customer Support -->
+				<div class="nxb-card green">
+					<span class="nxb-icon" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M21 11.5a8.5 8.5 0 01-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1121 11.5z"/>
+							<path d="M9.2 12.8l1.8 1.8 3.8-3.8"/>
+						</svg>
+					</span>
+					<strong>WhatsApp AI Customer Support</strong>
+					<p>
+						Handle customer support through WhatsApp with AI-powered messaging —
+						customers ask questions, share issues, receive guided responses, and
+						reach a human when the situation requires it.
+					</p>
+					<div class="nxb-tags">
+						<span class="nxb-tag">WhatsApp Support</span>
+						<span class="nxb-tag">Issue Collection</span>
+						<span class="nxb-tag">Human Handover</span>
+					</div>
+				</div>
+
+				<!-- Centralised Contact Intelligence -->
+				<div class="nxb-card">
+					<span class="nxb-icon" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="9" cy="8" r="3"/>
+							<path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+							<circle cx="17.5" cy="7" r="2"/>
+							<path d="M16.5 13.5c2.5.4 4.5 2.3 4.5 5"/>
+						</svg>
+					</span>
+					<strong>Centralised Contact Intelligence</strong>
+					<p>
+						Maintain a central intelligence layer for contacts, leads, customers,
+						and prospects — understand contact profiles, match them with suitable
+						products or services, and support systematic messaging over time.
+					</p>
+					<div class="nxb-tags">
+						<span class="nxb-tag">Contact Intelligence</span>
+						<span class="nxb-tag">Product Fit</span>
+						<span class="nxb-tag">Smart Segmentation</span>
+					</div>
+				</div>
+
+				<!-- Offers Management & AI Push -->
+				<div class="nxb-card amber">
+					<span class="nxb-icon" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L3 13V3h10l7.6 7.6a2 2 0 010 2.8z"/>
+							<circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/>
+						</svg>
+					</span>
+					<strong>Offers Management &amp; AI Push</strong>
+					<p>
+						Manage business offers and promote them through WhatsApp with AI
+						interaction — push relevant offers, explain benefits, respond to
+						queries, and guide interested contacts toward action.
+					</p>
+					<div class="nxb-tags">
+						<span class="nxb-tag">Offer Push</span>
+						<span class="nxb-tag">Campaign Messaging</span>
+						<span class="nxb-tag">AI Interaction</span>
+					</div>
+				</div>
+
+				<!-- Human Escalation -->
+				<div class="nxb-card amber">
+					<span class="nxb-icon" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="7" r="3.2"/>
+							<path d="M5.5 21c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/>
+							<path d="M18.5 3.5v5M16 6h5"/>
+						</svg>
+					</span>
+					<strong>Human Escalation</strong>
+					<p>
+						When AI identifies sensitive cases, high-value opportunities, complex
+						questions, or low-confidence responses, it routes the conversation to
+						the right human team member with proper context.
+					</p>
+					<div class="nxb-tags">
+						<span class="nxb-tag">Safe Handover</span>
+						<span class="nxb-tag">Sales Escalation</span>
+						<span class="nxb-tag">Support Escalation</span>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="nxb-closing">
+			<span class="nxb-closing-rule"></span>
+			<p>
+				From first visitor interaction to customer support and recurring engagement,
+				<em>Nexus AI keeps every conversation connected to your secured business knowledge.</em>
+			</p>
+			<span class="nxb-closing-rule right"></span>
+		</div>
+
+	</div>
+  </section>
+
   <section class="nexus-ecosystem-section">
 	<style>
 		.nexus-ecosystem-section {

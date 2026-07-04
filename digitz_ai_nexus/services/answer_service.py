@@ -9,6 +9,7 @@ from digitz_ai_nexus.engine.prompt import (
     ROUTE_TO_KNOWLEDGE_TOKEN,
 )
 from digitz_ai_nexus.engine.llm import generate_answer
+from digitz_ai_nexus.engine.chat_agent_loop import strip_instruction_narration
 from digitz_ai_nexus.services.question_correlation import get_correlated_questions_for_answer
 
 
@@ -73,7 +74,13 @@ def route_intent(payload, llm_provider=None):
         answer = (intent or {}).get("decline_response") or "That option is not available in this context."
         return {"action": "declined", "answer": answer}
 
-    return {"action": "conversational", "answer": response}
+    conversational_answer = strip_instruction_narration(response)
+    if not conversational_answer:
+        # Reply was pure instruction narration — treat as knowledge-seeking
+        # so the governed RAG path produces the visitor-facing answer instead.
+        return {"action": "knowledge_seeking"}
+
+    return {"action": "conversational", "answer": conversational_answer}
 
 
 def run_retrieval_pipeline(
@@ -233,7 +240,7 @@ def handle_query_too_long(payload, llm_provider=None):
     Friendly LLM response when the user message exceeds MAX_QUERY_CHARS.
     """
     prompt = build_query_too_long_prompt(payload)
-    answer = (generate_answer(prompt, provider=llm_provider) or "").strip()
+    answer = strip_instruction_narration((generate_answer(prompt, provider=llm_provider) or "").strip())
     if not answer:
         answer = (
             "Your message is quite long — could you summarise your question in a few words? "
@@ -352,7 +359,7 @@ def answer_query(
         )
 
     prompt = build_prompt(payload, chunks)
-    answer = (generate_answer(prompt, provider=llm_provider) or "").strip()
+    answer = strip_instruction_narration((generate_answer(prompt, provider=llm_provider) or "").strip())
 
     if not answer or is_fallback_answer(answer):
         return _fallback(
