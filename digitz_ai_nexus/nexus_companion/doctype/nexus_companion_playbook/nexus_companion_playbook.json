@@ -27,7 +27,10 @@
   "column_break_4",
   "escalation_triggers",
   "section_next_steps",
-  "next_step_options"
+  "next_step_options",
+  "section_capability_summary",
+  "capability_summary_heading",
+  "capability_items"
  ],
  "fields": [
   {
@@ -150,6 +153,25 @@
    "fieldtype": "Long Text",
    "label": "Available Next Steps",
    "description": "One per line \u2014 e.g. Schedule a Demo, Request Proposal, Talk to an Advisor"
+  },
+  {
+   "fieldname": "section_capability_summary",
+   "fieldtype": "Section Break",
+   "label": "Capability Summary"
+  },
+  {
+   "fieldname": "capability_summary_heading",
+   "fieldtype": "Data",
+   "label": "Capability Summary Heading",
+   "default": "Nexy Capability Summary",
+   "description": "Heading shown above the capability pitch in chat"
+  },
+  {
+   "fieldname": "capability_items",
+   "fieldtype": "Table",
+   "label": "Capability Items",
+   "options": "Nexus Companion Playbook Capability",
+   "description": "The capability pitch shown by present_nexy_capability_visibility \u2014 rendered deterministically, identical in every conversation"
   }
  ],
  "links": [],

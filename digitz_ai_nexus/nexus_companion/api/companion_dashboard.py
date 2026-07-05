@@ -86,6 +86,46 @@ def get_tenants():
     return frappe.get_all("Nexus Tenant", fields=["name", "tenant_name"], filters={"disabled": 0})
 
 
+@frappe.whitelist()
+def get_conversation_transcript(conversation):
+    """
+    Read-only transcript for the dashboard chat viewer.
+    `conversation` is the Nexus Live Conversation docname
+    (Nexus Companion Enquiry.conversation).
+    """
+    if not conversation or not frappe.db.exists("Nexus Live Conversation", conversation):
+        frappe.throw("Conversation not found", frappe.DoesNotExistError)
+
+    conv = frappe.db.get_value(
+        "Nexus Live Conversation",
+        conversation,
+        [
+            "name", "conversation_id", "visitor_name", "visitor_email",
+            "status", "chat_category", "started_on", "last_message_at", "human_agent",
+        ],
+        as_dict=True,
+    )
+
+    conv["human_agent_name"] = (
+        frappe.db.get_value("User", conv.human_agent, "full_name") if conv.human_agent else None
+    )
+
+    messages = frappe.get_all(
+        "Nexus Live Message",
+        filters={"conversation": conversation},
+        fields=["name", "sender_type", "sender_agent", "message", "confidence", "message_time"],
+        order_by="message_time asc, creation asc",
+        limit_page_length=500,
+    )
+
+    for m in messages:
+        m["message_time"] = str(m["message_time"]) if m["message_time"] else None
+    conv["started_on"] = str(conv.started_on) if conv.started_on else None
+    conv["last_message_at"] = str(conv.last_message_at) if conv.last_message_at else None
+
+    return {"conversation": conv, "messages": messages}
+
+
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 _STAGE_ORDER = [

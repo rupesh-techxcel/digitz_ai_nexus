@@ -203,6 +203,71 @@ class NexusCompanionDashboard {
 }
 .ncd-filter-row select:focus, .ncd-filter-row input:focus { border-color: #3b5ce6; }
 .ncd-filter-row .btn-refresh { margin-left: auto; }
+
+/* ── Chat transcript panel (read-only widget replica) ── */
+.ncd-chat-panel {
+  background: #fff; width: 380px; max-width: 92vw; flex-shrink: 0;
+  border-right: 1px solid #e4e9f7;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: -4px 0 24px rgba(0,0,0,.12);
+}
+@media (max-width: 900px) { .ncd-chat-panel { display: none !important; } }
+.ncd-chat-header {
+  padding: 14px 18px; border-bottom: 1px solid #e4e9f7;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: #f8f9ff;
+}
+.ncd-chat-title { font-size: 0.9rem; font-weight: 600; color: #1e293b; }
+.ncd-chat-sub { font-size: 0.72rem; color: #6b7a99; margin-top: 2px; word-break: break-word; }
+.ncd-chat-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ncd-chat-readonly-badge {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  background: #eef1fd; color: #3b5ce6; border-radius: 10px; padding: 2px 8px; white-space: nowrap;
+}
+.ncd-chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  background: #fff;
+}
+.ncd-chat-messages::-webkit-scrollbar { width: 4px; }
+.ncd-chat-messages::-webkit-scrollbar-thumb { background: #d1dce8; border-radius: 4px; }
+.ncd-chat-msg { display: flex; flex-direction: column; max-width: 80%; }
+.ncd-chat-msg-agent       { align-self: flex-start; }
+.ncd-chat-msg-visitor     { align-self: flex-end; }
+.ncd-chat-msg-human-agent { align-self: flex-start; }
+.ncd-chat-msg-system      { align-self: center; max-width: 90%; }
+.ncd-chat-bubble {
+  padding: 9px 13px; border-radius: 16px;
+  font-size: 13.5px; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+}
+.ncd-chat-msg-agent .ncd-chat-bubble,
+.ncd-chat-msg-human-agent .ncd-chat-bubble { white-space: normal; }
+.ncd-chat-bubble p { margin: 0 0 .55em; }
+.ncd-chat-bubble p:last-child { margin-bottom: 0; }
+.ncd-chat-msg-agent .ncd-chat-bubble {
+  background: #f0f4ff; color: #1a2942; border-bottom-left-radius: 4px;
+}
+.ncd-chat-msg-visitor .ncd-chat-bubble {
+  background: #2158c7; color: #fff; border-bottom-right-radius: 4px;
+}
+.ncd-chat-msg-human-agent .ncd-chat-bubble {
+  background: #f0fff8; color: #1a2942; border-bottom-left-radius: 4px;
+  border: 1px solid #c6f6d5;
+}
+.ncd-chat-bubble-system {
+  background: #fefcbf; color: #744210; border-radius: 8px;
+  padding: 7px 12px; font-size: 11.5px; font-style: italic; text-align: center;
+}
+.ncd-chat-bubble-token { font-style: italic; opacity: .85; }
+.ncd-chat-sender-label {
+  font-size: 10px; font-weight: 700; color: #2158c7;
+  margin-bottom: 2px; text-transform: uppercase; letter-spacing: .4px;
+}
+.ncd-chat-msg-human-agent .ncd-chat-sender-label { color: #276749; }
+.ncd-chat-time { font-size: 10px; color: #a0aec0; margin-top: 2px; }
+.ncd-chat-msg-visitor .ncd-chat-time { text-align: right; }
+.ncd-chat-empty { text-align: center; color: #9ca3af; font-size: 0.85rem; padding: 30px 10px; }
 `;
 		document.head.appendChild(s);
 	}
@@ -547,6 +612,7 @@ class NexusCompanionDashboard {
 
 		const overlay = $(`
 			<div class="ncd-detail-overlay" id="ncd-detail-overlay">
+				<div class="ncd-chat-panel" id="ncd-chat-panel" style="display:none;"></div>
 				<div class="ncd-detail-panel">
 					<div class="ncd-detail-header">
 						<div>
@@ -634,6 +700,7 @@ class NexusCompanionDashboard {
 						<button class="btn btn-sm btn-primary" onclick="frappe.set_route('Form','Nexus Companion Enquiry','${enq.name}')">
 							Open Full Record
 						</button>
+						${enq.conversation ? `<button class="btn btn-sm btn-default" id="ncd-view-chat">View Chat</button>` : ""}
 						${enq.conversation ? `<button class="btn btn-sm btn-default" onclick="frappe.set_route('Form','Nexus Live Conversation','${enq.conversation}')">View Conversation</button>` : ""}
 						<button class="btn btn-sm btn-default" id="ncd-close-detail-btn">Close</button>
 					</div>
@@ -651,6 +718,112 @@ class NexusCompanionDashboard {
 				$(".ncd-detail-overlay").remove();
 			}
 		});
+		$("#ncd-view-chat").on("click", () => {
+			const panel = $("#ncd-chat-panel");
+			if (panel.is(":visible")) {
+				panel.hide();
+				return;
+			}
+			panel.show();
+			this._load_transcript(enq.conversation);
+		});
+	}
+
+	// ── Chat transcript (read-only widget replica) ────────────────────────────
+
+	_load_transcript(conversation) {
+		const panel = $("#ncd-chat-panel");
+		panel.html(`<div class="ncd-loading" style="padding:40px 10px;"><div class="ncd-spinner"></div>Loading transcript…</div>`);
+		frappe.call({
+			method: "digitz_ai_nexus.nexus_companion.api.companion_dashboard.get_conversation_transcript",
+			args: { conversation },
+			callback: (r) => {
+				if (r.message) this._render_transcript(r.message, conversation);
+			},
+			error: () => panel.html(`<div class="ncd-chat-empty">Could not load conversation.</div>`),
+		});
+	}
+
+	_render_transcript(data, conversation) {
+		const conv = data.conversation || {};
+		const msgs = data.messages || [];
+		const sub = [conv.chat_category, conv.status, conv.conversation_id ? "#" + conv.conversation_id : ""]
+			.filter(Boolean).join(" · ");
+		const header = `
+			<div class="ncd-chat-header">
+				<div>
+					<div class="ncd-chat-title">${this._esc(conv.visitor_name || conv.visitor_email || "Visitor")}</div>
+					<div class="ncd-chat-sub">${this._esc(sub)}</div>
+				</div>
+				<div class="ncd-chat-header-actions">
+					<span class="ncd-chat-readonly-badge">Read only</span>
+					<button class="btn btn-xs btn-default" id="ncd-chat-refresh" title="Refresh">&#8635;</button>
+					<button class="ncd-detail-close" id="ncd-chat-close">✕</button>
+				</div>
+			</div>`;
+		const body = msgs.length
+			? msgs.map(m => this._render_chat_message(m)).join("")
+			: `<div class="ncd-chat-empty">No messages in this conversation yet.</div>`;
+		const panel = $("#ncd-chat-panel");
+		panel.html(header + `<div class="ncd-chat-messages" id="ncd-chat-messages">${body}</div>`);
+		const scroller = panel.find("#ncd-chat-messages")[0];
+		if (scroller) scroller.scrollTop = scroller.scrollHeight;
+		panel.find("#ncd-chat-refresh").on("click", () => this._load_transcript(conversation));
+		panel.find("#ncd-chat-close").on("click", () => panel.hide());
+	}
+
+	_render_chat_message(m) {
+		const st = m.sender_type;
+		const side = (st === "Visitor" || st === "User") ? "visitor"
+			: st === "Human Agent" ? "human-agent"
+			: st === "System" ? "system"
+			: "agent";
+		const pretty = this._pretty_chat_text(m.message || "");
+		if (side === "system") {
+			return `<div class="ncd-chat-msg ncd-chat-msg-system"><div class="ncd-chat-bubble-system">${this._esc(pretty.text)}</div></div>`;
+		}
+		const is_agent = side === "agent" || side === "human-agent";
+		const label = side === "human-agent"
+			? `<div class="ncd-chat-sender-label">${this._esc(m.sender_agent || "Agent")}</div>`
+			: "";
+		const conf = (side === "agent" && m.confidence != null && m.confidence !== "")
+			? ` · AI ${Math.round(Number(m.confidence) * (Number(m.confidence) <= 1 ? 100 : 1))}%`
+			: "";
+		const time = m.message_time
+			? `<div class="ncd-chat-time">${this._fmt_chat_time(m.message_time)}${conf}</div>`
+			: "";
+		const bubble_cls = "ncd-chat-bubble" + (pretty.is_token ? " ncd-chat-bubble-token" : "");
+		return `<div class="ncd-chat-msg ncd-chat-msg-${side}">${label}<div class="${bubble_cls}">${this._format_chat_message(pretty.text, is_agent)}</div>${time}</div>`;
+	}
+
+	_pretty_chat_text(raw) {
+		// Widget control tokens may be stored verbatim; show a friendly label instead.
+		if (raw.startsWith("__cat__:")) return { text: "Selected topic: " + raw.slice(8), is_token: true };
+		if (raw.startsWith("__faq__:")) return { text: "Selected a suggested question", is_token: true };
+		if (raw.startsWith("__visitor_email__:")) return { text: "Shared email: " + raw.slice(18), is_token: true };
+		if (raw === "__idv_advance__") return { text: "Identity verified", is_token: true };
+		return { text: raw, is_token: false };
+	}
+
+	_esc(s) {
+		return frappe.utils.escape_html(String(s == null ? "" : s));
+	}
+
+	_format_chat_message(raw, is_agent) {
+		// Mirrors format_message() in nexus_chat_widget.bundle.js
+		const safe = this._esc(raw);
+		if (!is_agent) return safe;
+		const paras = safe.split(/\n{2,}/);
+		if (paras.length === 1) return safe.replace(/\n/g, "<br>");
+		return paras.map(p => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
+	}
+
+	_fmt_chat_time(dt) {
+		try {
+			return new Date(String(dt).replace(" ", "T")).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+		} catch (e) {
+			return "";
+		}
 	}
 
 	// ── Helpers ───────────────────────────────────────────────────────────────

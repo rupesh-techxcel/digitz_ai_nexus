@@ -864,6 +864,7 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         return _handle_no_matching_capability_menu(
             steering.get("pain_point_challenges"),
             repeat=True,
+            playbook=_get_companion_playbook_doc(conversation, agent),
         )
 
     # Persist collect_current_methodology BEFORE the LLM responds so the next
@@ -882,13 +883,32 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
             },
         )
 
-    response = run_controlled_companion_loop(
-        payload=loop_payload,
-        controller_plan=controller_plan,
-    )
-
+    # Playbook-owned capability summary: the primary pitch renders
+    # deterministically from the playbook's capability items — identical in
+    # every conversation, no LLM. Falls back to the knowledge-grounded LLM
+    # path when no playbook items are configured. Knowledge sources remain
+    # the grounding for drill-down clarification questions.
+    _pcs_playbook = None
     if steering.get("decision") == "present_nexy_capability_visibility":
-        response = _ensure_nexy_capability_visibility_response(response, steering)
+        _pcs_playbook = _get_companion_playbook_doc(conversation, agent)
+
+    if _pcs_playbook and _get_playbook_capability_items(_pcs_playbook):
+        response = _build_playbook_capability_summary(steering, _pcs_playbook)
+        _companion_flow_debug("CAPABILITY SUMMARY FROM PLAYBOOK", {
+            "conversation": conversation.name,
+            "playbook": _pcs_playbook.name,
+            "item_count": len(_get_playbook_capability_items(_pcs_playbook)),
+            "methodology": steering.get("current_methodology"),
+            "methodology_status": steering.get("current_methodology_status"),
+        })
+    else:
+        response = run_controlled_companion_loop(
+            payload=loop_payload,
+            controller_plan=controller_plan,
+        )
+
+        if steering.get("decision") == "present_nexy_capability_visibility":
+            response = _ensure_nexy_capability_visibility_response(response, steering)
 
     _companion_flow_debug("06 CONTROLLED LOOP RESPONSE", {
         "steering_decision": steering.get("decision"),
@@ -945,7 +965,8 @@ def handle_companion_turn(conversation, agent, payload, core_payload):
         })
 
         return _handle_no_matching_capability_menu(
-            steering.get("pain_point_challenges")
+            steering.get("pain_point_challenges"),
+            playbook=_get_companion_playbook_doc(conversation, agent),
         )
 
     if not isinstance(response, dict):
@@ -1277,18 +1298,167 @@ _NEXY_CAPABILITY_MENU = (
 )
 
 
-def _handle_no_matching_capability_menu(challenge=None, repeat=False):
+def _get_companion_playbook_doc(conversation, agent=None):
+    """
+    Resolve the enabled Nexus Companion Playbook for this conversation:
+    the agent profile passed into handle_companion_turn first, then the
+    assigned agent profile from the conversation record.
+    """
+    playbook_name = ""
+    if agent is not None:
+        playbook_name = (getattr(agent, "companion_playbook", None) or "").strip()
+
+    if not playbook_name:
+        agent_name = _get_conversation_assigned_agent(conversation)
+        if agent_name:
+            playbook_name = (
+                frappe.db.get_value(
+                    "Nexus AI Agent Profile", agent_name, "companion_playbook"
+                )
+                or ""
+            ).strip()
+
+    if not playbook_name:
+        return None
+
+    try:
+        playbook = frappe.get_doc("Nexus Companion Playbook", playbook_name)
+        if not int(getattr(playbook, "enabled", 0) or 0):
+            return None
+        return playbook
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Companion Controller: playbook resolution failed",
+        )
+        return None
+
+
+def _get_playbook_capability_items(playbook):
+    """Enabled capability rows with a display title, in configured order."""
+    if not playbook:
+        return []
+    return [
+        row for row in (playbook.get("capability_items") or [])
+        if int(getattr(row, "enabled", 0) or 0)
+        and (getattr(row, "display_title", "") or "").strip()
+    ]
+
+
+def _build_playbook_capability_summary(steering, playbook):
+    """
+    Deterministic capability summary rendered from the playbook's capability
+    items — the primary pitch moment. No LLM involved, so the pitch is
+    identical in every conversation and editable by admins on the playbook.
+    Knowledge sources remain the grounding for drill-down questions.
+    """
+    items = _get_playbook_capability_items(playbook)
+    heading = (playbook.get("capability_summary_heading") or "Nexy Capability Summary").strip()
+
+    methodology = (steering.get("current_methodology") or "").strip()
+    status = (steering.get("current_methodology_status") or "known").strip()
+    lead_context = (
+        (steering.get("methodology_context_area") or "lead_generation").strip()
+        == "lead_generation"
+    )
+
+    # Acknowledgement line — same phrasing rules as the LLM response goal used.
+    if status == "none":
+        ack = (
+            "Got it — you do not have a clear lead source in place yet."
+            if lead_context
+            else "Got it — you do not have a set approach in place for this yet."
+        )
+    elif status == "unclear":
+        ack = (
+            "Got it — your current lead source is not clearly defined yet."
+            if lead_context
+            else "Got it — your current approach is not clearly defined yet."
+        )
+    elif status == "unknown":
+        mref = methodology or "that approach"
+        ack = (
+            f"Got it — {mref} is currently part of how leads come in for you."
+            if lead_context
+            else f"Got it — {mref} is what you are currently using for this."
+        )
+    else:
+        mref = methodology or "your current source"
+        ack = (
+            f"Got it — {mref} is how you are currently bringing people in."
+            if lead_context
+            else f"Got it — {mref} is how you are currently handling this."
+        )
+
+    transition = (
+        "From here, I can focus on what happens after an enquiry comes in: "
+        "understanding the visitor, capturing the requirement, qualifying the "
+        "opportunity, and guiding the next step."
+    )
+
+    bullet_lines = []
+    for row in items:
+        title = (row.display_title or "").strip()
+        desc = (getattr(row, "short_description", "") or "").strip()
+        bullet_lines.append(f"- **{title}:** {desc}" if desc else f"- **{title}**")
+    bullets = "\n".join(bullet_lines)
+
+    parts = [ack, transition, f"**{heading}:**\n{bullets}"]
+
+    # Positioning boundary — same conditions as _apply_nexy_summary_guard.
+    if methodology and status not in ("none", "unclear", "not_disclosed"):
+        if lead_context:
+            parts.append(
+                f"To be clear, Nexy does not replace or manage {methodology}. "
+                f"{methodology} may bring people in — Nexy focuses on the conversation "
+                "after someone contacts your business."
+            )
+        else:
+            parts.append(f"To be clear, Nexy does not replace or manage {methodology}.")
+
+    parts.append(
+        "Would you like to explore this further or book a short session with a Nexy representative?"
+    )
+
+    return {
+        "status": "success",
+        "access_status": "intent_handled",
+        "answer": "\n\n".join(parts),
+        "confidence": 1.0,
+        "sources": [],
+        "citations": [],
+        "retrieval_result": {},
+        "fallback_used": 0,
+        "chat_mode": "controlled_companion_direct",
+        "companion_controller": True,
+        "conversion_action": None,
+        "nexy_capability_visibility": True,
+        "capability_summary_presented": True,
+        "nexy_capability_source": "playbook",
+    }
+
+
+def _handle_no_matching_capability_menu(challenge=None, repeat=False, playbook=None):
     """
     Controller-owned response when the capability-fit check finds no confirmed
     matching Nexy capability. Deterministic — never LLM-generated — so the
     system cannot invent capability it does not have.
+
+    When the playbook defines capability items, the menu lists exactly those —
+    keeping the menu consistent with the playbook-rendered capability summary.
     """
     challenge = (challenge or "your requirement").strip()
+
+    playbook_items = _get_playbook_capability_items(playbook)
+    if playbook_items:
+        menu = "\n".join(f"- {row.display_title.strip()}" for row in playbook_items)
+    else:
+        menu = _NEXY_CAPABILITY_MENU
 
     if repeat:
         answer = (
             "Here are the areas I can currently help with:\n\n"
-            f"{_NEXY_CAPABILITY_MENU}\n\n"
+            f"{menu}\n\n"
             "Which of these would you like help with?"
         )
     else:
@@ -1296,7 +1466,7 @@ def _handle_no_matching_capability_menu(challenge=None, repeat=False):
             f"I do not have a confirmed Nexy capability specifically matching {challenge} in my current knowledge base, "
             "so I should not claim that I can solve it directly.\n\n"
             "Here are the areas I can currently help with:\n\n"
-            f"{_NEXY_CAPABILITY_MENU}\n\n"
+            f"{menu}\n\n"
             "Which of these would you like help with?"
         )
 
@@ -2986,13 +3156,17 @@ _CAPABILITY_MENU_AREA_KEYS = {
 }
 
 
-def _classify_capability_menu_reply(visitor_message):
+def _classify_capability_menu_reply(visitor_message, menu_items=None):
     """
     Semantic classifier for the visitor's reply to the controller-owned Nexy
     capability menu ("Which of these would you like help with?").
 
     Keyword lists cannot cover every rejection phrasing ("None of the above",
     "these don't help me", ...), so the routing decision is made by the LLM.
+
+    menu_items: optional list of playbook capability rows — when provided, the
+    prompt lists the exact display titles the visitor saw, so a reply echoing a
+    playbook title maps to the right canonical area key.
 
     Returns a dict:
         {"reply_type": "area_selection" | "declined" | "consultancy_interest" | "unclear",
@@ -3005,6 +3179,23 @@ def _classify_capability_menu_reply(visitor_message):
     if not text:
         return None
 
+    if menu_items:
+        area_lines = "\n".join(
+            f"- {row.capability_area} ({(row.display_title or '').strip()})"
+            for row in menu_items
+            if (getattr(row, "capability_area", "") or "").strip()
+        )
+    else:
+        area_lines = (
+            "- visitor_conversation (Visitor conversation)\n"
+            "- requirement_discovery (Requirement discovery)\n"
+            "- enquiry_qualification (Enquiry qualification)\n"
+            "- lead_context_capture (Lead context capture)\n"
+            "- guided_next_step (Guided next step)\n"
+            "- representative_handoff (Representative handoff)\n"
+            "- appointment_readiness (Appointment readiness)"
+        )
+
     prompt = f"""You are classifying a visitor's reply in a business chat.
 
 Context: the assistant just told the visitor it has NO confirmed capability matching their
@@ -3012,13 +3203,7 @@ specific need, listed the capability areas it CAN help with, and asked:
 "Which of these would you like help with?"
 
 The listed areas (with their keys) are:
-- visitor_conversation (Visitor conversation)
-- requirement_discovery (Requirement discovery)
-- enquiry_qualification (Enquiry qualification)
-- lead_context_capture (Lead context capture)
-- guided_next_step (Guided next step)
-- representative_handoff (Representative handoff)
-- appointment_readiness (Appointment readiness)
+{area_lines}
 
 Visitor reply: {text}
 
@@ -3052,7 +3237,17 @@ Return JSON only:
 
         selected_area = result.get("selected_area")
         selected_area = str(selected_area).strip() if selected_area else None
-        if reply_type == "area_selection" and selected_area not in _CAPABILITY_MENU_AREA_KEYS:
+        # Valid keys are the ones actually shown to the visitor: the playbook's
+        # capability areas when configured, otherwise the canonical set.
+        valid_keys = (
+            {
+                (getattr(row, "capability_area", "") or "").strip()
+                for row in menu_items
+            }
+            if menu_items
+            else _CAPABILITY_MENU_AREA_KEYS
+        )
+        if reply_type == "area_selection" and selected_area not in valid_keys:
             # Selection without a valid area key cannot be routed — repeat the menu.
             reply_type = "unclear"
             selected_area = None
@@ -3642,7 +3837,14 @@ def _decide_steering(
         # every rejection phrasing ("None of the above", "these don't help me", ...).
         # The keyword helpers below act only as the fallback when the classifier
         # call fails, so the turn still routes safely without the LLM.
-        _menu_cls = _classify_capability_menu_reply(visitor_message)
+        # Pass the playbook capability rows so the classifier sees the exact menu
+        # titles the visitor was shown.
+        _menu_cls = _classify_capability_menu_reply(
+            visitor_message,
+            menu_items=_get_playbook_capability_items(
+                _get_companion_playbook_doc(conversation)
+            ),
+        )
 
         if _menu_cls:
             _menu_route = _menu_cls["reply_type"]
