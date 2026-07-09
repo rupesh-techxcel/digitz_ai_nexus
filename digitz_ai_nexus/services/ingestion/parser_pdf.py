@@ -1,7 +1,9 @@
-import fitz
-
-
 def extract_pdf_text(file_path):
+    # Imported lazily so a missing PyMuPDF (fitz) only affects PDF parsing — it must
+    # not make this module (and the whole ingestion processor) unimportable, which
+    # would otherwise break processing of Manual/TXT/DOCX sources too.
+    import fitz
+
     text_parts = []
 
     with fitz.open(file_path) as doc:
