@@ -106,7 +106,10 @@ fixtures = [
 
 # before_install = "digitz_ai_nexus.install.before_install"
 after_install = "digitz_ai_nexus.setup.install.after_install"
-after_migrate = "digitz_ai_nexus.devtools.sync_workspace_blocks.sync_all_workspace_blocks"
+after_migrate = [
+	"digitz_ai_nexus.devtools.sync_workspace_blocks.sync_all_workspace_blocks",
+	"digitz_ai_nexus.devtools.seed_digitz_docs_knowledge.run",
+]
 
 # Uninstallation
 # ------------
