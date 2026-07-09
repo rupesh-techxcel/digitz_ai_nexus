@@ -31,11 +31,10 @@ import os
 
 import frappe
 
-from digitz_ai_nexus.setup.access_seed import (
-	ensure_access_category,
-	seed_default_access_governance,
-)
-from digitz_ai_nexus.services.ingestion.processor import process_knowledge_source
+# NOTE: heavy imports (access_seed, ingestion processor) are done lazily inside run()
+# so that resolving this after_migrate hook can never fail at import time — the
+# processor pulls in embedding/LLM modules that may not import cleanly in every
+# environment, and a migrate hook must not abort the migration over that.
 
 TENANT_CODE = "DIGITZ-PRIME"
 TENANT_NAME = "DIGITZ Prime"
@@ -124,6 +123,11 @@ def run(enqueue=True, process_sources=True):
 	process_sources=False -> create/update sources but skip embedding entirely.
 	"""
 	try:
+		from digitz_ai_nexus.setup.access_seed import (
+			ensure_access_category,
+			seed_default_access_governance,
+		)
+
 		tenant = _ensure_tenant()
 		seed_default_access_governance(tenant=tenant)
 		_ensure_business_unit(tenant)
@@ -166,6 +170,10 @@ def run(enqueue=True, process_sources=True):
 							source_name=name,
 						)
 					else:
+						from digitz_ai_nexus.services.ingestion.processor import (
+							process_knowledge_source,
+						)
+
 						process_knowledge_source(name)
 					processed += 1
 				except Exception:
