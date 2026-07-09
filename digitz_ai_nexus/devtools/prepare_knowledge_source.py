@@ -75,6 +75,8 @@ def run(
     generation_method: str = "Heuristic",
     auto_publish: bool = False,
     skip_if_published: bool = True,
+    bulk_approve: bool = False,
+    min_pass_rate: float = 1.0,
 ):
     """
     Prepare a Nexus Knowledge Source end-to-end through all 7 steps.
@@ -204,6 +206,16 @@ def run(
             _warn(f"{counts['pending']} question(s) need human review (40–79% confidence) — check Nexus Studio")
         summary["step3"] = {"ok": True, **counts}
 
+        # Optional: approve the remaining Pending-Review answers so the whole
+        # question set is retrievable (used for auto-published public knowledge).
+        # Runs before validation/tests so those steps cover the approved set.
+        if bulk_approve:
+            from digitz_ai_nexus.api.nexus_knowledge_studio import bulk_approve_source_answers
+            approve_res = bulk_approve_source_answers(source_name)
+            frappe.db.commit()
+            _ok(f"bulk-approved pending answers: {approve_res.get('approved_count', 0)}")
+            summary["step3"]["bulk_approved"] = approve_res.get("approved_count", 0)
+
     except Exception as exc:
         _fail(str(exc))
         frappe.log_error(frappe.get_traceback(), "prepare_knowledge_source: step 3 failed")
@@ -229,6 +241,11 @@ def run(
     _step(5, f"TEST CASES — generate {test_count} cases")
     try:
         from digitz_ai_nexus.api.nexus_knowledge_studio import generate_source_test_cases
+        # Test generation requires a Published source. Earlier steps (e.g. validation)
+        # can move the status off "Published"; re-assert it so generation isn't skipped.
+        if frappe.db.get_value("Nexus Knowledge Source", source_name, "status") != "Published":
+            frappe.db.set_value("Nexus Knowledge Source", source_name, "status", "Published", update_modified=False)
+            frappe.db.commit()
         result5 = generate_source_test_cases(
             source_name,
             test_count=test_count,
@@ -285,12 +302,16 @@ def run(
                 {"knowledge_source": source_name, "archived": 0, "disabled": 0, "embedding_status": "Completed"},
             )
 
-            # Gate: retrieval_ready=1 only when all 7 steps are satisfied
+            # Gate: retrieval_ready=1 requires tests present, not skipped, and a
+            # pass-rate at or above min_pass_rate (default 1.0 = every test must pass).
             step6 = summary.get("step6", {})
+            total_t = step6.get("total", 0)
+            passed_t = step6.get("passed", 0)
+            pass_rate = (passed_t / total_t) if total_t else 0.0
             tests_ok = (
-                step6.get("total", 0) > 0
-                and step6.get("failed", 0) == 0
+                total_t > 0
                 and not step6.get("skipped")
+                and pass_rate >= min_pass_rate
             )
             retrieval_ready_val = 1 if tests_ok else 0
 
