@@ -30,7 +30,9 @@
   "next_step_options",
   "section_capability_summary",
   "capability_summary_heading",
-  "capability_items"
+  "capability_items",
+  "section_product_catalogue",
+  "product_items"
  ],
  "fields": [
   {
@@ -172,6 +174,18 @@
    "label": "Capability Items",
    "options": "Nexus Companion Playbook Capability",
    "description": "The capability pitch shown by present_nexy_capability_visibility \u2014 rendered deterministically, identical in every conversation"
+  },
+  {
+   "fieldname": "section_product_catalogue",
+   "fieldtype": "Section Break",
+   "label": "Product Catalogue"
+  },
+  {
+   "fieldname": "product_items",
+   "fieldtype": "Table",
+   "label": "Product Items",
+   "options": "Nexus Companion Playbook Product",
+   "description": "The multi-product summary shown by present_product_catalogue \u2014 rendered deterministically from these rows (product-enquiry companions). Heading reuses Capability Summary Heading."
   }
  ],
  "links": [],
