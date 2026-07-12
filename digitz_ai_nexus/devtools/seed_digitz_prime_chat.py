@@ -401,6 +401,11 @@ def run(origins=None):
     playbook = _ensure_playbook()
     _ensure_persona()
     agent = _ensure_agent(playbook)
+    # Bind the agent as the channel's default so the widget can resolve an eligible
+    # agent the moment it opens — before any category/route is selected. Without a
+    # default_agent, start_chat raises "No approved idle AI agent" and the widget
+    # shows "Could not connect".
+    frappe.db.set_value("Nexus Live Channel", channel, "default_agent", agent, update_modified=False)
     category = _ensure_category(channel)
     products = _ensure_products(category)
     playbook_products = _ensure_playbook_products(playbook, products)
