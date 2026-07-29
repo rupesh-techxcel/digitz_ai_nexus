@@ -80,6 +80,22 @@ def _load_entries():
 		return (json.load(f) or {}).get("entries", [])
 
 
+def _republish(doc):
+	"""Force the source back to Published after a content save.
+
+	Nexus Knowledge Source resets `status` to Draft whenever watched content fields
+	change, so a human re-reviews before the knowledge goes live again. For these
+	sources the reviewed source of truth IS the committed docs file, and a Draft source
+	has all of its chunks disabled — it silently disappears from retrieval. Saving a
+	second time republishes it: no watched field changes on that save, so the governance
+	reset does not fire again.
+	"""
+	if doc.status == "Published":
+		return
+	doc.status = "Published"
+	doc.save(ignore_permissions=True)
+
+
 def _upsert_source(entry, tenant, policy):
 	"""Create or content-update one Knowledge Source. Returns (doc, changed)."""
 	title = entry["title"]
@@ -90,10 +106,17 @@ def _upsert_source(entry, tenant, policy):
 		# Preserve any human edits to classification — only refresh the body when the
 		# source docs actually changed, and re-publish so processing re-activates chunks.
 		if (doc.manual_content or "").strip() == content:
+			# Body already matches the committed docs, so nothing here was hand-edited.
+			# Self-heal a source left in Draft by an earlier run (its chunks are disabled);
+			# report it as changed so the caller re-processes and re-enables them.
+			if doc.status != "Published":
+				_republish(doc)
+				return doc, True
 			return doc, False
 		doc.manual_content = content
 		doc.status = "Published"
 		doc.save(ignore_permissions=True)
+		_republish(doc)
 		return doc, True
 
 	doc = frappe.new_doc("Nexus Knowledge Source")

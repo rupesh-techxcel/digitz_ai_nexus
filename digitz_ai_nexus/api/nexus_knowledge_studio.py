@@ -3686,7 +3686,9 @@ def _generate_deterministic_source_test_cases(
             "expected_fallback": False,
             "expected_source_required": True,
             "minimum_confidence": DIRECT_MIN_CONFIDENCE,
-            "required_keywords": _keywords_from_test_generation_text(f"{topic} {context}"),
+            # Topic only. `context` is the retrieval context code (e.g. DIGITZ-CRM),
+            # which an answer states as prose ("DIGITZ CRM") or not at all.
+            "required_keywords": _keywords_from_test_generation_text(str(topic)),
             "forbidden_keywords": [],
         })
 
@@ -3714,7 +3716,10 @@ def _generate_deterministic_source_test_cases(
             "expected_fallback": False,
             "expected_source_required": True,
             "minimum_confidence": FOLLOWUP_MIN_CONFIDENCE,
-            "required_keywords": _keywords_from_test_generation_text(str(topic)),
+            # A follow-up is deliberately vague ("explain that in more detail"), so the
+            # answer is not expected to echo the topic. Groundedness is already asserted
+            # by expected_source_required + the confidence floor.
+            "required_keywords": [],
             "forbidden_keywords": [],
         })
 
@@ -3781,17 +3786,39 @@ def _split_test_generation_keywords(value: str) -> list:
 
 
 def _keywords_from_test_generation_text(value: str) -> list:
+    """Content words a grounded answer is expected to contain.
+
+    required_keywords is asserted with AND semantics against the generated answer, so
+    anything in here that a natural answer would not say makes the test fail on a
+    correct answer. Two classes are therefore excluded:
+
+      * identifier-shaped tokens (`digitz-crm`, `hr_payroll`) — these are context codes
+        and slugs, written with hyphens/underscores; an answer says "DIGITZ CRM";
+      * structural words from section titles (`overview`, `summary`, `key`) — they name
+        the document's shape, not its subject, so an answer need never echo them.
+
+    This mirrors the guidance already given to the LLM generator: keep required_keywords
+    minimal, and use none unless the answer text genuinely must contain a source term.
+    """
     words = re.findall(r"[A-Za-z0-9][A-Za-z0-9_-]+", str(value or "").lower())
 
     stop_words = {
         "the", "and", "for", "with", "from", "this", "that", "what",
         "how", "why", "when", "where", "into", "about", "explain",
         "use", "used", "using", "business", "operations",
+        # structural / document-shape words — never assert these
+        "overview", "introduction", "summary", "summaries", "details", "detail",
+        "key", "concepts", "concept", "guide", "section", "page", "reference",
+        "getting", "started", "listing", "list", "about",
     }
 
     keywords = []
     for word in words:
         if word in stop_words:
+            continue
+
+        # Context codes and slugs (digitz-crm, nexus_ai) — not natural-language terms.
+        if "-" in word or "_" in word:
             continue
 
         if word not in keywords:

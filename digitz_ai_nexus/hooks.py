@@ -109,6 +109,10 @@ after_install = "digitz_ai_nexus.setup.install.after_install"
 after_migrate = [
 	"digitz_ai_nexus.devtools.sync_workspace_blocks.sync_all_workspace_blocks",
 	"digitz_ai_nexus.devtools.seed_digitz_docs_knowledge.run",
+	# Finishes the governance pipeline (index -> approval -> validation -> tests ->
+	# publish) so the docs sources become retrieval_ready. No-ops when they already
+	# are; otherwise enqueues, so migrate never waits on the LLM work.
+	"digitz_ai_nexus.devtools.ensure_docs_retrieval_ready.run",
 ]
 
 # Uninstallation
