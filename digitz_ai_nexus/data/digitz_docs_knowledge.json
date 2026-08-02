@@ -1,7 +1,207 @@
 {
 	"generated_from": "digitz_prime.App Documentation",
-	"count": 93,
+	"count": 112,
 	"entries": [
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Getting Started",
+			"topic": "Overview",
+			"entity": "Overview",
+			"anchor": "overview",
+			"title": "DIGITZ HR-Payroll — Overview",
+			"content": "**DIGITZ HR-Payroll** manages the complete employee lifecycle — from the employee record and the documents that must stay valid, through shifts, biometric attendance and leave, to the salary that results from all of it.\n\nThe defining characteristic is that **payroll is calculated from attendance, not entered alongside it**. A salary slip is built from the units an employee actually worked, the leave they took and the nature of that leave, the holidays they worked, the overtime they earned, and any loan instalment due — every one of which is a record elsewhere in the system rather than a figure typed into the slip.\n\nThe cycle runs:\n\n1. **Workforce** — employee records, documents, departments and designations\n2. **Time** — shifts define expected working time; shift allocation assigns it per person per day\n3. **Capture** — biometric devices record check-ins, which are reconciled into attendance under human review\n4. **Leave** — policies allocate entitlement; applications consume it and mark attendance\n5. **Payroll** — a payroll entry reads all of the above and produces salary slips\n\nOversight sits across the whole cycle through the **HR Dashboard**, which measures not just who was present but how much attendance still needs human intervention."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Workforce",
+			"topic": "Employee",
+			"entity": "Employee",
+			"anchor": "employee",
+			"title": "DIGITZ HR-Payroll — Employee",
+			"content": "The **Employee** record is the master every other part of the module refers to.\n\n### Purpose\n\nTo hold one record per person — identity, position, reporting line, employment status, and the links to their pay and system access.\n\n### How It Works\n\nEmployees are named automatically in the series `E-####` and additionally carry an **Employee Code**, which is the identifier biometric devices report against.\n\nPosition is described by **Department**, **Designation** and a **Reporting To** link to another employee, which builds the reporting hierarchy. **Employee Type** distinguishes `Staff` from `Outsourced`.\n\nEmployment progresses through a six-stage **Status**: `On Boarding`, `On Training`, `On Probation`, `On Job`, `Resigned`, `Terminated`. This status is what the employee listing filters on and what the dashboard uses to decide who counts as active.\n\nFor pay, the employee is linked to a **Salary Group** and carries an **Overtime Applicable** flag that governs whether overtime is earned at all. An **ERP User** link connects the person to their system login, and **Higher Authority** marks approvers.\n\n### Key Fields\n\n- **Employee Name** and **Employee Code** - Identity, and the code biometric devices report.\n- **Employee Type** - `Staff` or `Outsourced`.\n- **Department / Designation / Reporting To** - Position and reporting line.\n- **Status** - Employment stage, from `On Boarding` through to `Terminated`.\n- **Date of Joining** and **Qualification** - Employment history details.\n- **Overtime Applicable** - Whether the employee earns overtime.\n- **Salary Group** - Grouping used when running payroll.\n- **ERP User** - The system login belonging to this person.\n- **Higher Authority** - Marks the employee as an approver.\n- **Company Email / Mobile** and **Personal Email / Mobile** - Kept separately.\n- **Address** and **Permanent Address** - Current and home addresses.\n- **Documents** - Table of identity and contract documents with their expiry."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Workforce",
+			"topic": "Employee Documents",
+			"entity": "Employee Documents",
+			"anchor": "employee-documents",
+			"title": "DIGITZ HR-Payroll — Employee Documents",
+			"content": "**Employee Documents** track the papers that must stay valid for a person to keep working.\n\n### Purpose\n\nTo hold each document against the employee it belongs to, record when it expires, and track the renewal through to completion — so an expiry is noticed before it becomes a compliance problem.\n\n### How It Works\n\nDocuments are recorded on the employee as a table. Each row names the document and classifies it as `Passport`, `Visa`, `Emirates Id`, `Labour Contract`, `Insurance` or `Other`, and the file itself is attached to the row.\n\nValidity is expressed as a **Validity In Months** and a **Next Expiry Date**, and the row carries a **Status** of `Active` or `Expired`. Renewal is tracked separately through **Renewal Action Status** — `Not Started`, `Processing`, `Completed` — so a document that has expired but is already being renewed is distinguishable from one nobody has picked up.\n\nThe **Employee Documents Report** lists documents across all employees and can be filtered by status, which is how upcoming and lapsed expiries are reviewed.\n\n### Key Fields\n\n- **Document Name** and **Document Type** - What the document is.\n- **Validity In Months** - How long the document is valid for.\n- **Next Expiry Date** - When it next needs renewing.\n- **Status** - `Active` or `Expired`.\n- **Renewal Action Status** - `Not Started`, `Processing` or `Completed`.\n- **Document** - The attached file."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Workforce",
+			"topic": "Departments and Designations",
+			"entity": "Departments and Designations",
+			"anchor": "departments-and-designations",
+			"title": "DIGITZ HR-Payroll — Departments and Designations",
+			"content": "**Departments** and **Designations** organise the workforce and drive several behaviours beyond simple grouping.\n\n### How It Works\n\nEach employee belongs to a **Department** and holds a **Designation**. Both are simple masters, but they are used as operating dimensions across the module:\n\n- **Salary Structures** are defined against a designation, and the structure's *Get Employees* action pulls in everyone holding it.\n- **Leave Policy Assignments** are rolled out by designation for a leave period.\n- The **Employee Attendance Tool** filters by department and designation when marking attendance in bulk.\n- **Attendance** records carry the department, so attendance reporting can be grouped without joining back to the employee.\n- Two reports — **Department wise Employee Report** and **Designation wise Employee Report** — present the workforce along each dimension.\n\nBecause of this, designation is worth treating as a payroll-relevant field rather than a job title: changing it affects which salary structure and leave policy an employee is picked up by."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Time & Attendance",
+			"topic": "Shift",
+			"entity": "Shift",
+			"anchor": "shift",
+			"title": "DIGITZ HR-Payroll — Shift",
+			"content": "A **Shift** defines what a working day is expected to look like, and what overtime beyond it is worth.\n\n### Purpose\n\nTo state the expected start, end, break and working hours for a pattern of work, together with the overtime rules that apply once that pattern is exceeded.\n\n### How It Works\n\nA shift records **Start Time**, **End Time**, **Break In Minutes** and **Pickup Time In Minutes**, from which the **Standard Working Hours** for the day follow. Output is also expressed as **No Of Units Per Day** against a **Shift Payment Unit** — the unit pay is calculated in, such as `HRS`.\n\nOvertime is configured on the shift itself:\n\n- **Overtime Applicable** - whether the shift earns overtime at all\n- **Overtime 1 Slab** - the threshold at which the first overtime band starts\n- **Overtime Rate Percentage** and **Overtime 2 Rate Percentage** - the uplift for each band\n- **Holiday Overtime Percentage** - the uplift for overtime worked on a holiday\n\nA shift is a **submittable** document, so a pattern in use cannot be altered casually. **HR Settings** nominates a **Default Shift** for employees with no specific allocation, holds equivalent company-wide overtime slabs and percentages, and can make shift allocation mandatory.\n\n### Key Fields\n\n- **Shift Name** and **Shift Owner** - Identity and the employee responsible.\n- **Start Time / End Time / Break In Minutes** - The working pattern.\n- **Standard Working Hours** - Expected hours for the day.\n- **Shift Payment Unit** and **No Of Units Per Day** - The unit pay is measured in, and how many are expected.\n- **Overtime Applicable, Overtime 1 Slab, Overtime and Overtime 2 Rate Percentage** - Overtime bands and uplifts.\n- **Holiday Overtime Percentage** - Uplift for overtime on a holiday.\n- **Disabled** - Retires a shift without removing history."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Time & Attendance",
+			"topic": "Shift Allocation",
+			"entity": "Shift Allocation",
+			"anchor": "shift-allocation",
+			"title": "DIGITZ HR-Payroll — Shift Allocation",
+			"content": "**Shift Allocation** assigns a shift to an employee for a specific date — the roster that attendance is later measured against.\n\n### Purpose\n\nTo state, per person per day, which pattern of work applies, what is expected of it, and what overtime is anticipated.\n\n### How It Works\n\nAn allocation names the **Employee**, the **Shift Date** and the **Shift**. From the shift it carries forward the start time, break, payment unit and expected end time, and records what is expected of the day: **Expected OT**, **Payment Units Per Day**, **Expected No Of Units**, and **Standard No Of Units Per Holiday**.\n\n**OT Applicable** is held both from the employee and on the allocation, so overtime can be authorised for a particular day rather than as a standing arrangement.\n\nWhere **Shift Allocation Mandatory** is set in HR Settings, an employee must have an allocation for the day before their attendance can be processed. Where it is not, the **Default Shift** from HR Settings applies.\n\nThe **HR Dashboard** reports how many active employees currently have no shift information, since an unallocated employee cannot have their attendance measured correctly.\n\n### Key Fields\n\n- **Employee** and **Shift Date** - Who, and for which day.\n- **Shift** - The pattern being applied.\n- **Expected End Time** - Including any pickup time.\n- **Expected OT** - Overtime anticipated for the day.\n- **Payment Units Per Day / Expected No Of Units** - What the day should produce.\n- **Standard No Of Units Per Holiday** - The equivalent when the day is a holiday.\n- **OT Applicable** - Whether overtime is authorised for this allocation."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Time & Attendance",
+			"topic": "Devices and Employee Check-in",
+			"entity": "Devices and Employee Check-in",
+			"anchor": "devices-and-employee-checkin",
+			"title": "DIGITZ HR-Payroll — Devices and Employee Check-in",
+			"content": "**Devices** and **Employee Check-ins** are the raw record of who was physically present, before any interpretation is applied.\n\n### Purpose\n\nTo capture punches from biometric readers as unedited facts, so that the attendance derived from them can always be traced back to what the device actually reported.\n\n### How It Works\n\nEach reader is registered as a **Device** with its **Device ID**, **Location** and the **Company** it belongs to. A device no longer in service is disabled rather than deleted.\n\nEvery punch becomes an **Employee Checkin** recording the employee, the **Log Type** (`IN` or `OUT`), the exact **Time**, the **Shift** in force, and the **Device** with its location. Check-ins are never edited into attendance directly — they are inputs to reconciliation.\n\nBecause each device carries a company, a punch made on a device belonging to a different company to the employee is identifiable. The HR Dashboard reports these as **inter-company employee days**, which matters where staff move between entities in the same group.\n\n### Key Fields\n\n- **Employee** - Matched from the code the device reported.\n- **Log Type** - `IN` or `OUT`.\n- **Time** - Exact timestamp of the punch.\n- **Shift** - The shift in force at the time.\n- **Device** and **Device Location** - Which reader recorded it and where."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Time & Attendance",
+			"topic": "Check-in Reconciliation",
+			"entity": "Check-in Reconciliation",
+			"anchor": "checkin-reconciliation",
+			"title": "DIGITZ HR-Payroll — Check-in Reconciliation",
+			"content": "**Check-in Reconciliation** turns raw punches into attendance under human review. It is the operational heart of the module.\n\n### Purpose\n\nBiometric data is never clean — punches are missed, doubled, made on the wrong reader, or made outside the shift. Reconciliation exposes each day's raw punches, proposes an outcome, and requires a person to accept or override it before any attendance is created.\n\n### How It Works\n\nThe process runs in stages, driven from the **Employee Checkin Approval** page:\n\n1. **Preview** — the raw check-ins for a date range are assembled per employee per day, filtered by company, department, designation or individual, before anything is committed.\n2. **Generate** — an **Employee Checkin Reconciliation** record is created per employee per day, holding the check-ins it was built from.\n3. **Review** — each record is inspected and a decision recorded.\n4. **Submit** — approved records are submitted.\n5. **Process** — submitted records are converted into **Attendance**.\n\nEach reconciliation record computes **Worked Hours**, **Late Entry Hours**, **Required Hours** and **Satisfied Hours**, and marks itself `Valid` or `Error`. The proposed outcome follows a fixed rule:\n\n- worked hours **at or above** required hours → **Present**\n- worked hours **at or above half** the required hours → **Half Day**\n- otherwise → **Absent**\n\nRequired hours come from the shift — explicitly where the shift states them, otherwise computed from its start and end times. **Shifts that run past midnight are handled**: an end time earlier than the start rolls into the following day rather than producing a negative span.\n\nA reviewer can override the proposal through **Approved Attendance**, and the record is flagged **User Reconciled** so that manual intervention stays visible afterwards. The HR Dashboard reports manually reconciled days and days still pending reconciliation as distinct measures.\n\n### Key Fields\n\n- **Employee** and **Date** - The employee-day being reconciled.\n- **Shift** - The pattern the day is measured against.\n- **Worked Hours / Required Hours / Satisfied Hours** - The measurement.\n- **Late Entry Hours** - Lateness against the shift start.\n- **Status** - `Valid` or `Error`.\n- **Approved Attendance** - The outcome: `Present`, `Half Day` or `Absent`.\n- **User Reconciled** - Records that a person intervened.\n- **Checkin Details** - The raw check-ins this record was built from."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Time & Attendance",
+			"topic": "Attendance",
+			"entity": "Attendance",
+			"anchor": "attendance",
+			"title": "DIGITZ HR-Payroll — Attendance",
+			"content": "**Attendance** is the settled record of a working day, and the input payroll reads.\n\n### Purpose\n\nTo state, for one employee on one date, what happened — present, absent, on leave or partly so — together with the hours and units that determine pay.\n\n### How It Works\n\nAttendance is a **submittable** document carrying an **Attendance Status** of `Present`, `Absent`, `Leave`, `Half Day Morning`, `Half Day Afternoon` or `Work From Home`.\n\nBeyond the status it records the measurement that payroll depends on: **Worked Hours**, **Actual No Of Units** and **Effective No Of Units** against the **Standard No Of Units** expected, plus **Attendance OT** for overtime earned. **Late Entry** and **Early Exit** are flagged, and **Is A Holiday** marks a day worked on a holiday, which is paid differently.\n\nAttendance is created three ways, and keeps a link back to its origin in each case:\n\n- from **Check-in Reconciliation**, through the **Checkin Recon Record** link\n- from an approved **Leave Application**, through the **Leave Record** link, with **Created Via Leave** set\n- manually, including in bulk through the **Employee Attendance Tool**\n\n### Key Fields\n\n- **Employee**, **Attendance Date** and **Shift** - The employee-day and the pattern applied.\n- **Attendance Status** - The outcome for the day.\n- **Attendance Start / End Time** and **Worked Hours** - When and how long.\n- **Actual and Effective No Of Units** against **Standard No Of Units** - What payroll measures.\n- **Attendance OT** - Overtime earned on the day.\n- **Late Entry / Early Exit** - Exceptions against the shift.\n- **Is A Holiday** - Marks a holiday worked, paid at the holiday rate.\n- **Leave Record / Checkin Recon Record** - Where the record came from."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Time & Attendance",
+			"topic": "Holiday List and Exceptions",
+			"entity": "Holiday List and Exceptions",
+			"anchor": "holiday-list-and-exceptions",
+			"title": "DIGITZ HR-Payroll — Holiday List and Exceptions",
+			"content": "**Holiday Lists** state which days are not working days, and **Holiday Exceptions** authorise an individual to work one anyway.\n\n### Purpose\n\nTo define the non-working calendar per leave period, assign it to employees, and handle the case where someone works a holiday — which is paid on a different basis to an ordinary day.\n\n### How It Works\n\nA **Holiday List** is a submittable document covering a **Leave Period** between two dates. Holidays are added individually, and a **Weekly Off** generator adds every occurrence of a chosen weekday across the period in one action. One list can be marked **Default For The Leave Period**.\n\n**Employee Holiday List** assigns a specific list to an employee for a leave period, so different groups can follow different calendars in the same business.\n\nAn **Employee Holiday Exception** authorises one employee to work one specific holiday. It carries its own **Overtime Applicable** flag and a **Status** of `Pending` or `Approved`, so working a holiday is a deliberate, approved act rather than an accident of a punch.\n\nHolidays affect leave as well as pay: a leave type can be set to count holidays falling inside a leave as leave, or to exclude them, and a leave application reports how many holidays fell within the period applied for.\n\n### Key Fields\n\n- **Holiday List Name**, **Leave Period**, **From** and **To Date** - The calendar and its span.\n- **Weekly Off** - Generates every occurrence of a weekday across the period.\n- **Default For The Leave Period** - The list used when no other is assigned.\n- **Holidays** - The dated entries themselves.\n- **Employee Holiday List** - Assigns a list to an individual for a period.\n- **Employee Holiday Exception** - Authorises one employee to work one holiday, with its own overtime flag and approval."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Leave",
+			"topic": "Leave Types and Policies",
+			"entity": "Leave Types and Policies",
+			"anchor": "leave-types-and-policies",
+			"title": "DIGITZ HR-Payroll — Leave Types and Policies",
+			"content": "**Leave Types** define the rules of each kind of leave, and **Leave Policies** allocate entitlement against them.\n\n### Purpose\n\nTo express how each kind of leave behaves — how much is allowed, when it may be taken, and crucially how it is paid — so that payroll can later value a day of leave without being told.\n\n### How It Works\n\nA **Leave Type** carries the rules:\n\n- **Max Leaves Allowed** - the ceiling for the type\n- **Applicable After** - a qualifying period before the type may be used\n- **Maximum Consecutive Leaves Allowed** - a limit on an unbroken run\n- **Is Leave Without Pay** - the day is unpaid\n- **Is Partially Paid Leave** with **Fraction Of Salary** - the day is paid at a stated fraction\n- **Is Compensatory Leave** - the day is paid in full as compensation for time already given\n- **Count Holidays In Leaves As Leaves** - whether holidays inside a leave consume entitlement\n\nA **Leave Policy** is a submittable document listing an **Annual Allocation** per leave type. A **Leave Policy Assignment** then rolls a policy out to a **Leave Period** for everyone holding a given **Designation**, listing the employees it covers.\n\nThe payment behaviour set here is what the salary calculation reads. A day of leave is not valued by payroll directly — it is valued by the nature of the leave type it was taken under.\n\n### Key Fields\n\n- **Leave Type Name** - The kind of leave.\n- **Max Leaves Allowed / Applicable After / Maximum Consecutive** - The limits.\n- **Is Leave Without Pay / Is Partially Paid Leave / Fraction Of Salary / Is Compensatory Leave** - How the day is paid.\n- **Count Holidays In Leaves As Leaves** - Whether holidays consume entitlement.\n- **Leave Policy** with **Annual Allocation** per type - The entitlement.\n- **Leave Policy Assignment** - Rolls the policy out by designation and period."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Leave",
+			"topic": "Leave Application",
+			"entity": "Leave Application",
+			"anchor": "leave-application",
+			"title": "DIGITZ HR-Payroll — Leave Application",
+			"content": "The **Leave Application** records a request for leave, checks it against entitlement, and produces the records that attendance and payroll consume.\n\n### Purpose\n\nTo take a request, confirm the employee is entitled to it, and turn approval into the day-by-day records that mark attendance and value the salary.\n\n### How It Works\n\nAn application names the employee, the **Leave Type**, and a **From** and **To** date. **Leave Duration** supports a full day or a half day, and where a half day is taken the application can **mark attendance for the other half of the day**, so the working half is not left unrecorded.\n\nBefore approval the system checks the request against the employee's entitlement under their assigned leave policy for the period, and reports the balance on the application. It also counts **holidays falling within the period applied for**, since whether those consume entitlement depends on the leave type.\n\n**Leave Status** moves from `Applied` to `Approved`. On approval each day becomes an **Employee Leave Record**, and it is this record — not the application — that carries the day's nature forward: whether it was without pay, partially paid and at what fraction, or compensatory. Attendance for the day is created with **Created Via Leave** set and linked to that record.\n\nThis is what allows payroll to value leave correctly without any further input: it reads the leave record attached to the day.\n\n### Key Fields\n\n- **Employee** and **Leave Type** - Who, and what kind of leave.\n- **Leave From Date / Leave To Date** - The span requested.\n- **Leave Duration** - Full day, or half day morning or afternoon.\n- **Mark Attendance For The Other Half Of The Day** - Records the working half.\n- **Leave Status** - `Applied` or `Approved`.\n- **No Of Leaves** and **No Of Holidays During Leave Period** - What was consumed.\n- **Leave Balances** - Entitlement checked at the time of application.\n- **Employee Leave Record** - One per day, carrying how the day is paid."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Payroll",
+			"topic": "Salary Components and Structure",
+			"entity": "Salary Components and Structure",
+			"anchor": "salary-components-and-structure",
+			"title": "DIGITZ HR-Payroll — Salary Components and Structure",
+			"content": "The **Salary Structure** states what an employee is paid, built from reusable **Salary Components**.\n\n### Purpose\n\nTo define earnings and deductions once, per designation, and assign them to employees with the individual rates that overtime and holiday working are paid at.\n\n### How It Works\n\nA **Salary Component** is a named earning or deduction with an abbreviation. A component can be marked **Use For Additional Salary**, which makes it available for one-off payments outside the standard structure.\n\nA **Salary Structure** is a submittable document holding an **Earnings** table and a **Deductions** table, effective from a stated date and defined against a **Designation**. It totals to a net salary, and its *Get Employees* action pulls in everyone holding that designation.\n\nCrucially the structure carries an **Overtime Rate** and a **Holiday Rate**, and its **Salary Structure Assignment** table repeats both per employee — so an individual can be assigned the structure while being paid a different rate for overtime or for holiday working than their peers.\n\nA **Salary Structure Template** holds a reusable set of earnings and deductions that a new structure can be created from, so common arrangements do not have to be rebuilt each time.\n\n### Key Fields\n\n- **Structure Name** and **Designation** - What it is and who it applies to.\n- **From Date** - When the structure takes effect.\n- **Earnings / Deductions** - The components and their amounts.\n- **Overtime Rate / Holiday Rate** - Defaults for the structure.\n- **Salary Structure Assignment** - Per-employee assignment, with individual overtime and holiday rates.\n- **Fetch From A Template** - Builds the structure from a saved template."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Payroll",
+			"topic": "Payroll Entry and Salary Slip",
+			"entity": "Payroll Entry and Salary Slip",
+			"anchor": "payroll-entry-and-salary-slip",
+			"title": "DIGITZ HR-Payroll — Payroll Entry and Salary Slip",
+			"content": "The **Payroll Entry** runs payroll for a period, and the **Salary Slip** is the result for one employee.\n\n### Purpose\n\nTo generate salary slips for a whole period in one action, with a review step that exposes problems before anything is committed.\n\n### How It Works\n\nA **Payroll Entry** covers a **Start Date** to **End Date** with a posting date, and creates salary slips for the employees in scope. Before generating, a **review** step reports **missing attendances** — employee-days in the period with no attendance record — since a missing day would otherwise silently reduce someone's pay.\n\nEach **Salary Slip** is a submittable document for one employee covering **Salary From Date** to **Salary To Date**. It holds the earnings and deductions that were actually applied, the **Salary Payable Amount**, and the settlement: **Salary Payment Status** of `Unpaid` or `Paid`, the **Salary Paid Date**, and whether it was **Paid Through** `Cash` or `Bank Transfer`.\n\nAlongside the slip a **Salary Report Record** stores the full working for the month — basic salary, deductions for leave, overtime trips, rate and amount, holiday days, rate, salary, overtime and deductions, shutdown and other categories, gross salary, advance deduction, total deductions and net salary. This is what the **Salary Detailed Report** and **Salary Register** present.\n\n### Key Fields\n\n- **Start Date / End Date / Posting Date** - The payroll period.\n- **Missing Attendances** - Employee-days with no attendance, surfaced before generating.\n- **Salary From / To Date** - The period a slip covers.\n- **Earnings And Deductions** - What was actually applied.\n- **Salary Payable Amount** - The net result.\n- **Salary Payment Status / Salary Paid Date / Paid Through** - Settlement.\n- **Salary Report Record** - The month's full working, per employee."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Payroll",
+			"topic": "How Salary Is Calculated",
+			"entity": "How Salary Is Calculated",
+			"anchor": "how-salary-is-calculated",
+			"title": "DIGITZ HR-Payroll — How Salary Is Calculated",
+			"content": "Salary is **derived from attendance**, not entered. This section describes what the calculation reads and how each element is valued.\n\n### The unit basis\n\nAttendance records **Effective No Of Units** against the **Standard No Of Units** expected for the day. The comparison between the two is what drives pay: a day that delivered its standard units is paid in full, and a shortfall is deducted proportionately.\n\n### Leave\n\nA day of leave is valued by the **nature of the leave type it was taken under**, read from the Employee Leave Record attached to the day:\n\n- **Leave without pay** — the day is deducted\n- **Partially paid leave** — the day is deducted in proportion to the leave type's **Fraction Of Salary**\n- **Compensatory leave** — no deduction\n\nWhere attendance is marked as a half day, the calculation looks for a leave record covering the other half and reports a warning if none is found — so a half day that was never accounted for does not pass silently.\n\n### Holidays worked\n\nA day flagged as a holiday is paid at the **Holiday Rate** rather than the ordinary rate, and the units matter:\n\n- units delivered **equal** the standard → the holiday rate is paid in full\n- units delivered **fall short** → the holiday rate is still paid, with a proportionate holiday deduction recorded separately\n- units delivered **exceed** the standard → the excess is paid as **holiday overtime** at the overtime rate\n\n### Overtime\n\nOvertime accumulated on attendance is valued at the **Overtime Rate** from the employee's salary structure assignment, which may differ from the structure default. Whether overtime is earned at all depends on the flags on the employee, the shift and the shift allocation.\n\n### Additions and recoveries\n\n**Additional Salary** entries in the period are added, valued either as a lump sum or as quantity multiplied by rate. The earliest **pending loan instalment** due on or after the payroll date is taken as a recovery deduction.\n\n### What this means in practice\n\nBecause every input is a record rather than a figure, a salary can be explained back to the days that produced it — and correcting attendance or a leave record and re-running payroll produces the corrected result."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Payroll",
+			"topic": "Additional Salary",
+			"entity": "Additional Salary",
+			"anchor": "additional-salary",
+			"title": "DIGITZ HR-Payroll — Additional Salary",
+			"content": "**Additional Salary** records a one-off payment outside the standard salary structure.\n\n### Purpose\n\nTo pay something that is not part of the recurring structure — an allowance, a bonus, a reimbursement — without altering the structure itself.\n\n### How It Works\n\nAn **Additional Salary Component** nominates a salary component and states how it is valued: **Lumpsum**, or **Qty and Rate**. Only components marked **Use For Additional Salary** are available here.\n\nAn **Additional Salary** entry is a submittable document naming the employee, the date, the component, and either the lump sum or the quantity and rate that produce the **Amount**. Its **Status** moves from `Pending` to `Processed` once payroll has taken it up.\n\nWhen a payroll entry runs, additional salary entries falling within the payroll period are read and added to the employee's pay. **Additional Salary Enabled** in HR Settings controls whether the mechanism is in use at all.\n\n### Key Fields\n\n- **Employee** and **Date** - Who is being paid, and when it falls.\n- **Additional Salary Component** - The component and its valuation basis.\n- **Qty / Rate / Amount** - The value, entered as a lump sum or as quantity by rate.\n- **Status** - `Pending` until payroll processes it.\n- **Note / Remarks** - Why the payment was made."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Payroll",
+			"topic": "Employee Loan",
+			"entity": "Employee Loan",
+			"anchor": "employee-loan",
+			"title": "DIGITZ HR-Payroll — Employee Loan",
+			"content": "**Employee Loan** records an advance to an employee and recovers it through payroll.\n\n### Purpose\n\nTo lend against future salary and have the repayment happen automatically, so recovery is not tracked outside the system or forgotten.\n\n### How It Works\n\nA loan is a submittable document recording the **Loan Amount**, the **Loan Date**, a **Recovery Start Date**, a **Monthly Deduction Amount** and the **No Of Instalments For Recovery**. From these a schedule of **Deduction Records** is held, each with its own date and a status of `Pending` or `Deducted`.\n\nThe loan tracks its own progress through **Total Deducted Amount** and **Balance To Be Deducted**, and moves through a **Loan Status** of `Requested`, `Approved` and `On Going`.\n\nWhen payroll runs, the **earliest pending deduction record** dated on or after the payroll date is taken for that employee and applied as an advance deduction against the salary — but only for loans that are submitted and either approved or on going. The deduction is recorded on the Salary Report Record as **Advance Deduction**.\n\nThe salary component used for the recovery is nominated in HR Settings as the **Loan Deduction Salary Component**.\n\n### Key Fields\n\n- **Employee** and **Loan Amount** - Who, and how much.\n- **Loan Date / Recovery Start Date** - When it was given and when recovery begins.\n- **Monthly Deduction Amount / No Of Instalments** - The repayment schedule.\n- **Deduction Records** - Each instalment with its date and status.\n- **Total Deducted Amount / Balance To Be Deducted** - Progress.\n- **Loan Status** - `Requested`, `Approved` or `On Going`."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Insights",
+			"topic": "HR Dashboard",
+			"entity": "HR Dashboard",
+			"anchor": "hr-dashboard",
+			"title": "DIGITZ HR-Payroll — HR Dashboard",
+			"content": "The **HR Dashboard** is the oversight screen for the module — and it measures the quality of the attendance data, not just the headcount.\n\n### Purpose\n\nTo show, for a chosen period, how much of the workforce is accounted for, where the exceptions are, and what administrative gaps would distort payroll if left alone.\n\n### How It Works\n\nThe dashboard is organised into sections:\n\n- **Workforce Summary** — active employees, and how many have a salary structure assigned and a current shift allocation, expressed as coverage\n- **Workforce Disposition** — every employee-day in the period classified as `Present`, `Exception`, `Approved Leave`, `Applied Leave`, `Unauthorised Absence` or `Leave Conflict`\n- **Attendance & Leave** — check-in days, reconciliation days, attendance posted, and leave applied against leave approved\n- **Exception Breakdown** — the exceptions behind those numbers, including late entry, early exit and inter-company days\n- **Leave Overview** — applied, approved and conflicting leave\n- **Alerts** — graded findings that need attention\n- **Quick Actions** — direct routes to Employees, Attendance, Leave Applications and Salary Slips\n- **Administration Actions** — specific gaps to close, such as employees with no shift information\n\n### What makes it useful\n\nTwo of its measures are about the process rather than the people: **manually reconciled days** and **reconciliation pending days**. Together they show how much attendance still required human intervention and how much has not been settled at all — which is the real indicator of whether payroll can be run for the period."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Insights",
+			"topic": "Pages and Tools",
+			"entity": "Pages and Tools",
+			"anchor": "pages-and-tools",
+			"title": "DIGITZ HR-Payroll — Pages and Tools",
+			"content": "Beyond the standard forms, the module provides purpose-built screens for the tasks that would otherwise be slow.\n\n### Employee Checkin Approval\n\nThe screen the reconciliation process is run from. It previews raw check-ins for a date range — filtered by company, department, designation or individual — generates reconciliation records, lets a reviewer set the outcome per employee-day, submits the approved records and processes them into attendance. This is where the daily attendance exceptions are worked through.\n\n### Employee List\n\nA filtered listing of the workforce with tabs by employment stage: **On Job**, **On Boarding**, **On Probation**, **Resigning** (covering both resigned and terminated) and **Other**, which catches anyone whose status falls outside the known set.\n\n### Employee Directory\n\nA browsable directory view of employees.\n\n### Employee Attendance Tool\n\nMarks attendance for many employees at once for a chosen date, filtered by department and designation — used for days that do not come from biometric capture, such as an office closure or a site-wide event.\n\n### HR Dashboard\n\nThe oversight screen described in the previous section."
+		},
+		{
+			"app": "DIGITZ HR-Payroll",
+			"context": "DIGITZ-HR-PAYROLL",
+			"sub_context": "Insights",
+			"topic": "HR and Payroll Reports",
+			"entity": "HR and Payroll Reports",
+			"anchor": "hr-and-payroll-reports",
+			"title": "DIGITZ HR-Payroll — HR and Payroll Reports",
+			"content": "The module's reports cover the workforce, its attendance and leave, and the resulting pay.\n\n### Workforce\n\n**Department wise Employee Report** and **Designation wise Employee Report** present the workforce along each organisational dimension.\n\n**Employee Documents Report** lists documents across all employees with their next expiry date, renewal action status and whether they are active or expired — filterable by status, which is how upcoming and lapsed expiries are reviewed.\n\n### Attendance and leave\n\n**Attendance Report** presents attendance across employees and dates.\n\n**Employee Leave Report** presents leave taken, against the entitlement it was drawn from.\n\n### Payroll\n\n**Salary Register** presents the payroll for a period across employees — the summary view of what was paid.\n\n**Salary Detailed Report** presents the full working behind each employee's pay, drawn from the Salary Report Record: basic, leave deductions, overtime, holiday pay and deductions, other categories, gross, advance deduction and net."
+		},
 		{
 			"app": "DIGITZ ERP",
 			"context": "DIGITZ-ERP",
@@ -911,16 +1111,6 @@
 			"anchor": "overview",
 			"title": "DIGITZ Project Accounting — Overview",
 			"content": "**Every Project's Finances — Visible in Real Time.**\n\nTrack budgets, costs, billing, and profitability project by project — with real-time visibility and complete control over every project's financial health.\n\n*Detailed documentation for this app is being written — check back soon, or [send an enquiry](/#apps) and our team will walk you through it.*"
-		},
-		{
-			"app": "DIGITZ HR-Payroll",
-			"context": "DIGITZ-HR-PAYROLL",
-			"sub_context": "Getting Started",
-			"topic": "Overview",
-			"entity": "Overview",
-			"anchor": "overview",
-			"title": "DIGITZ HR-Payroll — Overview",
-			"content": "**Your People & Payroll — Managed with Accuracy & Compliance.**\n\nStreamline the complete employee lifecycle — onboarding, attendance, leave, and payroll — with automated calculations and built-in statutory compliance at every step.\n\n*Detailed documentation for this app is being written — check back soon, or [send an enquiry](/#apps) and our team will walk you through it.*"
 		},
 		{
 			"app": "Nexus AI",
