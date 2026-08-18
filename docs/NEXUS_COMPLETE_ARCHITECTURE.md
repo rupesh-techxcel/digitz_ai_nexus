@@ -1038,7 +1038,7 @@ The intersection with `primitive_public_policies` is unconditional. If a profile
 | Rebuild chat widget (JS changes) | `bench build --app digitz_ai_nexus_live` |
 | Rebuild platform CSS (digitz_ai_nexus_site.css changes) | `bench build --app digitz_ai_nexus` |
 | Apply DocType schema changes | `bench migrate` |
-| Update bundle hash in www pages | Update `nexus_chat_widget.bundle.XXXXXXXX.js` in `index.html`, `nexus-platform.html`, `how-nexus-works.html` |
+| Update bundle hash in www pages | **Not required.** `index.html`, `nexus-platform.html` and `how-nexus-works.html` all use `{{ include_script('nexus_chat_widget.bundle.js') }}`, which resolves the content-hashed filename through `assets.json` on every request. Hard-coding a hash here would pin the page to a stale bundle at the next build |
 | www HTML inline `<style>` changes | Live immediately — no build needed |
 
 ---
